@@ -1,8 +1,0 @@
-title: 'Textinhalt'
-description: ''
-fields:
-  - { name: model.title, label: Titel, type: text, colspan: 6 }
-  - { name: model.summary, label: Zusammenfassung, type: richText, colspan: 12 }
-  - { name: model.text, label: Text, type: richText, colspan: 12 }
-
-
