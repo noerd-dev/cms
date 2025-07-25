@@ -1,0 +1,28 @@
+{
+    "name": "noerd/cms",
+    "description": "",
+    "type": "library",
+    "version": "dev-master",
+    "license": "proprietary",
+    "require": {
+        "livewire/livewire": "^3.4",
+        "livewire/volt": "^v1.6.7",
+        "noerd/noerd": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "Noerd\\Cms\\": "src/",
+            "Noerd\\Cms\\Tests\\": "tests/",
+            "Noerd\\Cms\\Database\\Factories\\": "database/factories/",
+            "Noerd\\Cms\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "minimum-stability": "dev",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Noerd\\Cms\\Providers\\CmsServiceProvider"
+            ]
+        }
+    }
+}

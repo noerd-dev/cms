@@ -1,0 +1,9 @@
+title: 'Projekt'
+titleList: 'Projekte'
+key: 'PROJECTS'
+buttonList: 'Neues Projekt'
+description: ''
+fields:
+  - { name: model.name, label: Name, type: translatableText, colspan: 6 }
+  - { name: image, label: Bild, type: image, colspan: 6 }
+#  - { name: model.category, label: 'Kategorie', type: select, options: ['as', 'asd'], colspan: 6 }

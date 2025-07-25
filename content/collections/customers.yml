@@ -1,0 +1,9 @@
+title: 'Kunde'
+titleList: 'Kunden'
+key: 'CUSTOMERS'
+buttonList: 'Neuer Kunde'
+description: ''
+fields:
+  - { name: model.name, label: Name, type: translatableText, colspan: 4 }
+  - { name: model.description, label: Beschreibung, type: translatableText, colspan: 8 }
+#  - { name: model.category, label: 'Kategorie', type: select, options: ['as', 'asd'], colspan: 6 }

@@ -1,0 +1,6 @@
+title: 'Zusatzfeld'
+description: 'Ein Zusatzfeld wird im Checkout angezeigt. Den übermittelten Wert kannst Du in der Bestellübersicht und E-Mail einsehen.'
+fields:
+  - { name: model.title, label: Name, type: text, colspan: 6 }
+  - { name: model.type, label: Typ, type: picklist, picklistField: additionalFieldTypes, colspan: 6 }
+  - { name: model.required, label: Pflichfeld?, type: checkbox, colspan: 6 }

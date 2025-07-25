@@ -1,0 +1,11 @@
+title: ''
+description: ''
+fields:
+  - { name: site.name, label: Name, type: text, colspan: 6 }
+  - { name: site.strasse, label: Anschrift, type: text, colspan: 6 }
+  - { name: site.plz, label: PLZ, type: text, colspan: 6 }
+  - { name: site.ort, label: Ort, type: text, colspan: 6 }
+  - { name: site.land, label: Land, type: picklist, picklistField: countryList, colspan: 6 }
+  - { name: site.ansprechpartner, label: Ansprechpartner, type: text, colspan: 6 }
+  - { name: site.region, label: Region, type: text, colspan: 6 }
+  - { name: site.standort, label: Standort, type: text, colspan: 6 }
