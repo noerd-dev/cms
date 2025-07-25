@@ -1,0 +1,5 @@
+title: 'Seite'
+description: ''
+fields:
+  - { name: model.name, label: Titel, type: translatableText, colspan: 6 }
+  - { name: model.slug, label: URL, type: translatableText, colspan: 6 }

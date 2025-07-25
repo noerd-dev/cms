@@ -1,0 +1,5 @@
+title: 'Globaler Parameter'
+description: 'Globaler Parameter sind Werte, die in der gesamten Anwendung verwendet werden können.'
+fields:
+  - { name: model.key, label: Schlüssel, type: text, colspan: 6 }
+  - { name: model.value, label: Wert, type: translatableText, colspan: 6 }

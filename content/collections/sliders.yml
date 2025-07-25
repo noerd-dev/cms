@@ -1,0 +1,8 @@
+title: 'Slider'
+titleList: 'Startseiten Slider'
+key: 'SLIDERS'
+buttonList: 'Neuer Slider'
+description: ''
+fields:
+  - { name: image, label: Bild, type: image, colspan: 6 }
+#  - { name: model.category, label: 'Kategorie', type: select, options: ['as', 'asd'], colspan: 6 }
