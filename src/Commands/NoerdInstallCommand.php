@@ -11,14 +11,14 @@ class NoerdInstallCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'noerd:install-content {--force : Overwrite existing files without asking} {--dry-run : Show what would be copied without actually copying}';
+    protected $signature = 'noerd:install-cms {--force : Overwrite existing files without asking} {--dry-run : Show what would be copied without actually copying}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Install noerd content to the local content directory';
+    protected $description = 'Install noerd cms content to the local content directory';
 
     /**
      * Execute the console command.
