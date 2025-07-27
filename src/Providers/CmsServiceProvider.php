@@ -4,6 +4,7 @@ namespace Noerd\Cms\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Livewire\Volt\Volt;
+use Noerd\Cms\Commands\NoerdCmsInstallCommand;
 use Noerd\Cms\Middleware\CmsMiddleware;
 
 class CmsServiceProvider extends ServiceProvider
@@ -22,5 +23,12 @@ class CmsServiceProvider extends ServiceProvider
         $router->aliasMiddleware('cms', CmsMiddleware::class);
 
         Volt::mount(__DIR__ . '/../../resources/views/livewire');
+
+        // Register commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                NoerdCmsInstallCommand::class,
+            ]);
+        }
     }
 }
