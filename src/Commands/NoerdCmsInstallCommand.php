@@ -4,7 +4,7 @@ namespace Noerd\Cms\Commands;
 
 use Illuminate\Console\Command;
 
-class NoerdInstallCommand extends Command
+class NoerdCmsInstallCommand extends Command
 {
     /**
      * The name and signature of the console command.
