@@ -2,7 +2,10 @@
 
 namespace Noerd\Cms\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 class NoerdCmsInstallCommand extends Command
 {
@@ -60,7 +63,7 @@ class NoerdCmsInstallCommand extends Command
             }
 
             return 0;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->error('Error installing noerd content: ' . $e->getMessage());
             return 1;
         }
@@ -78,14 +81,14 @@ class NoerdCmsInstallCommand extends Command
             'overwritten_files' => 0,
         ];
 
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($sourceDir, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::SELF_FIRST
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($sourceDir, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST,
         );
 
         foreach ($iterator as $item) {
             $sourcePath = $item->getPathname();
-            $relativePath = substr($sourcePath, strlen($sourceDir) + 1);
+            $relativePath = mb_substr($sourcePath, mb_strlen($sourceDir) + 1);
             $targetPath = $targetDir . DIRECTORY_SEPARATOR . $relativePath;
 
             if ($item->isDir()) {
@@ -93,7 +96,7 @@ class NoerdCmsInstallCommand extends Command
                 if (!is_dir($targetPath)) {
                     if (!$this->option('dry-run')) {
                         if (!mkdir($targetPath, 0755, true)) {
-                            throw new \Exception("Failed to create directory: {$targetPath}");
+                            throw new Exception("Failed to create directory: {$targetPath}");
                         }
                     }
                     $this->line("<info>Created directory:</info> {$relativePath}");
@@ -112,14 +115,15 @@ class NoerdCmsInstallCommand extends Command
                         $choice = $this->choice(
                             "File already exists: {$relativePath}. What do you want to do?",
                             ['skip', 'overwrite', 'overwrite-all'],
-                            'skip'
+                            'skip',
                         );
 
                         if ($choice === 'skip') {
                             $this->line("<comment>Skipped:</comment> {$relativePath}");
                             $results['skipped_files']++;
                             continue;
-                        } elseif ($choice === 'overwrite-all') {
+                        }
+                        if ($choice === 'overwrite-all') {
                             // Set force option for remaining files
                             $this->input->setOption('force', true);
                         }
@@ -135,7 +139,7 @@ class NoerdCmsInstallCommand extends Command
                 // Copy the file (unless dry-run)
                 if (!$this->option('dry-run')) {
                     if (!copy($sourcePath, $targetPath)) {
-                        throw new \Exception("Failed to copy file: {$sourcePath} to {$targetPath}");
+                        throw new Exception("Failed to copy file: {$sourcePath} to {$targetPath}");
                     }
                 }
             }
@@ -158,7 +162,7 @@ class NoerdCmsInstallCommand extends Command
                 ['Files copied', $results['copied_files']],
                 ['Files overwritten', $results['overwritten_files']],
                 ['Files skipped', $results['skipped_files']],
-            ]
+            ],
         );
     }
 }

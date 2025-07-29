@@ -9,9 +9,7 @@ use Noerd\Cms\Middleware\CmsMiddleware;
 
 class CmsServiceProvider extends ServiceProvider
 {
-    public function register(): void
-    {
-    }
+    public function register(): void {}
 
     public function boot(): void
     {

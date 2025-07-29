@@ -4,12 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
         if (!Schema::hasTable('global_parameters')) {
-            Schema::create('global_parameters', function (Blueprint $table) {
+            Schema::create('global_parameters', function (Blueprint $table): void {
                 $table->id();
                 $table->unsignedBigInteger('tenant_id');
                 $table->string('key');
