@@ -27,7 +27,7 @@ new class extends Component {
     #[Computed]
     public function elements()
     {
-        return Element::where('tenant_id', auth()->user()->selected_tenant_id)->get();
+        return FieldHelper::getAllElements();
     }
 
     public function mount(Page $page): void
@@ -75,15 +75,19 @@ new class extends Component {
         $this->closeModalProcess(self::LIST_COMPONENT);
     }
 
-    public function addElement($elementId)
+    public function addElement($elementKey)
     {
         $sortElement = ElementPage::where('page_id', $this->modelId)
             ->orderBy('sort', 'desc')
             ->first();
-        $element = Element::find($elementId);
-        $this->page->elements()->attach($element->id, [
-            'sort' => $sortElement?->sort ?? 0 + 1,
+        
+        ElementPage::create([
+            'page_id' => $this->modelId,
+            'element_key' => $elementKey,
+            'sort' => ($sortElement?->sort ?? 0) + 1,
+            'data' => '{}',
         ]);
+        
         $this->lastChangeTime = time();
     }
 
@@ -119,6 +123,16 @@ new class extends Component {
     {
         $this->dispatch('$refresh');
     }
+
+    public function openElements()
+    {
+        $this->dispatch(
+            event: 'noerdModal',
+            component: 'element-page-component',
+            source: self::COMPONENT,
+            arguments: ['modelId' => $this->pageId],
+        );
+    }
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">
@@ -131,12 +145,17 @@ new class extends Component {
     @include('noerd::components.detail.block', $pageLayout)
 
     @if($this->page->id)
-        <div x-noerd::sort="$wire.elementSort($item, $position)">
-            @foreach($this->page->elements as $element)
-                <div x-noerd::sort:item="{{$element->pivot->id}}">
+
+        <button wire:click="openElements">
+            Seitenelemente bearbeiten
+        </button>
+
+        <div x-sort="$wire.elementSort($item, $position)">
+            @foreach($this->page->elements as $elementPage)
+                <div x-sort:item="{{$elementPage->id}}">
                     <livewire:element-page-component
-                        wire:key="{{$element->pivot->id . $lastChangeTime}}"
-                        :modelId="$element->pivot->id"
+                        wire:key="{{$elementPage->id . $lastChangeTime}}"
+                        :modelId="$elementPage->id"
                     >
                     </livewire:element-page-component>
                 </div>
@@ -148,7 +167,7 @@ new class extends Component {
             <div class="mt-4">
                 <div class="grid grid-cols-3 gap-8">
                     @foreach($this->elements() as $element)
-                        <div wire:click="addElement({{$element->id}})"
+                        <div wire:click="addElement('{{$element->element_key}}')"
                              class="text-sm hover:bg-gray-200 bg-gray-100 cursor-pointer border-dotted border p-4 text-center">
                             <div class="font-bold"> {{$element->name}} </div>
                             {{$element->description}}

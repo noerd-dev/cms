@@ -1,5 +1,6 @@
 <?php
 
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
@@ -18,8 +19,7 @@ new class extends Component {
     public const LIST_COMPONENT = 'element-pages-table';
     public const ID = 'elementPageId';
 
-    #[Url(keep: false, except: '')]
-    public ?int $modelId = null;
+    public ?string $modelId = null;
 
     public array $elementLayout;
     public $model;
@@ -35,13 +35,20 @@ new class extends Component {
         if ($this->modelId) {
             $elementPage = ElementPage::find($this->modelId);
         }
-        $this->elementLayout = FieldHelper::getElementFields($elementPage->element->element_key);
+        $this->elementLayout = FieldHelper::getElementFields($elementPage->element_key);
 
-        $this->model = FieldHelper::parseElementToData($elementPage->element->element_key,
+        $this->model = FieldHelper::parseElementToData($elementPage->element_key,
             json_decode($elementPage->data, true));
 
         $this->modelId = $elementPage->id;
         $this->elementPage = $elementPage;
+    }
+
+    #[Computed]
+    public function elementName()
+    {
+        $elementFields = FieldHelper::getElementFields($this->elementPage->element_key);
+        return $elementFields['title'] ?: ucwords(str_replace('_', ' ', $this->elementPage->element_key));
     }
 
     #[On('storeElements')]
@@ -57,7 +64,7 @@ new class extends Component {
     {
         $elementPage = ElementPage::find($this->modelId);
         $elementPage->delete();
-        $this->closeModalProcess(self::LIST_COMPONENT);
+        $this->dispatch('reloadPageComponent');
     }
 
     public function updatedImages()
@@ -83,7 +90,7 @@ new class extends Component {
 <div>
     <div class="p-4 border border-b-gray-200 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-gray-950/[2.5%] after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-gray-950/5 dark:after:inset-ring-white/10 bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-gray-950)]/5 dark:[--pattern-fg:var(--color-white)]/10
     ">
-        <div class="text-sm">{{$elementPage->element->name}}  </div>
+        <div class="text-sm">{{$this->elementName()}}  </div>
 
         <x-noerd::buttons.delete
             class="!absolute !right-4"

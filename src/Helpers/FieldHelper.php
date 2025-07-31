@@ -9,8 +9,12 @@ class FieldHelper
 {
     public static function getElementFields(string $element): array
     {
-        $content = file_get_contents(resource_path('views/components/elements/' . $element . '.yml'));
-        return Yaml::parse($content ?: '');
+        if (file_exists(base_path('content/elements/' . $element . '.yml'))) {
+            $content = file_get_contents(base_path('content/elements/' . $element . '.yml'));
+
+            return Yaml::parse($content ?: '');
+        }
+        throw new \Exception("Element '{$element}' not found.");
     }
 
     public static function parseElementToData(string $element, ?array $data): array
@@ -66,6 +70,32 @@ class FieldHelper
         }
 
         return $model;
+    }
+
+    public static function getAllElements(): array
+    {
+        $elements = [];
+        $elementPath = base_path('content/elements');
+        
+        if (!is_dir($elementPath)) {
+            return $elements;
+        }
+
+        $files = glob($elementPath . '/*.yml');
+        
+        foreach ($files as $file) {
+            $elementKey = basename($file, '.yml');
+            $content = file_get_contents($file);
+            $yaml = Yaml::parse($content ?: '');
+            
+            $elements[] = (object) [
+                'element_key' => $elementKey,
+                'name' => $yaml['title'] ?: ucwords(str_replace('_', ' ', $elementKey)),
+                'description' => $yaml['description'] ?? ''
+            ];
+        }
+        
+        return $elements;
     }
 
     private static function isJsonAndDecode($value): mixed
