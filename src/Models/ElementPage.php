@@ -12,8 +12,8 @@ class ElementPage extends Model
     protected $guarded = [];
     protected $table = 'element_page';
 
-    public function element()
+    public function page()
     {
-        return $this->belongsTo(Element::class);
+        return $this->belongsTo(Page::class);
     }
 }

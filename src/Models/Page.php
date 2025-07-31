@@ -13,7 +13,7 @@ class Page extends Model
 
     public function elements()
     {
-        return $this->belongsToMany(Element::class)->withPivot('id', 'sort', 'data')->orderBy('sort');
+        return $this->hasMany(ElementPage::class)->orderBy('sort');
     }
 
     public function collection()
