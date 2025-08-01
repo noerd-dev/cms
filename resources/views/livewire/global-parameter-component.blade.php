@@ -16,7 +16,7 @@ new class extends Component {
     public const LIST_COMPONENT = 'global-parameters-table';
     public const ID = 'globalParameterId';
     #[Url(keep: false, except: '')]
-    public ?int $modelId = null;
+    public ?string $modelId = null;
 
     public array $model;
     public GlobalParameter $globalParameter;
