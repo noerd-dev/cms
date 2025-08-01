@@ -1,0 +1,138 @@
+<?php
+
+use Livewire\Volt\Volt;
+use Noerd\Noerd\Models\User;
+use Noerd\Cms\Models\GlobalParameter;
+
+uses(Tests\TestCase::class);
+
+$testSettings = [
+    'componentName' => 'global-parameter-component',
+    'listName' => 'global-parameters-table',
+    'id' => 'modelId',
+];
+
+it('test the route', function (): void {
+    $user = User::factory()->withContentModule()->create();
+
+    $this->actingAs($user);
+
+    $response = $this->get('/cms/global-parameters');
+    $response->assertStatus(200);
+});
+
+it('validates the data', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+
+    $this->actingAs($user);
+
+    Volt::test($testSettings['componentName'])
+        ->set('model.key', '')
+        ->set('model.value', '')
+        ->call('store')
+        ->assertHasErrors(['model.key', 'model.value']);
+});
+
+it('successfully stores the data', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+
+    $this->actingAs($user);
+    $parameterKey = fake()->word;
+    $parameterValue = fake()->sentence;
+
+    Volt::test($testSettings['componentName'])
+        ->set('model.key', $parameterKey)
+        ->set('model.value', $parameterValue)
+        ->call('store')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('global_parameters', [
+        'key' => $parameterKey,
+        'value' => json_encode($parameterValue),
+    ]);
+});
+
+it('sets a table key for the list', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+
+    $this->actingAs($user);
+
+    Volt::test($testSettings['listName'])
+        ->assertNotSet('tableId', '');
+});
+
+it('validates that key is required', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+
+    $this->actingAs($user);
+
+    Volt::test($testSettings['componentName'])
+        ->set('model.value', fake()->sentence)
+        ->call('store')
+        ->assertHasErrors(['model.key']);
+});
+
+it('validates that value is required', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+
+    $this->actingAs($user);
+
+    Volt::test($testSettings['componentName'])
+        ->set('model.key', fake()->word)
+        ->set('model.value', '')
+        ->call('store')
+        ->assertHasErrors(['model.value']);
+});
+
+it('can retrieve existing global parameter data', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+
+    $this->actingAs($user);
+
+    $existingParameter = GlobalParameter::create([
+        'key' => 'test_key',
+        'value' => json_encode('test_value'),
+        'tenant_id' => $user->selected_tenant_id,
+    ]);
+
+    $this->assertDatabaseHas('global_parameters', [
+        'id' => $existingParameter->id,
+        'key' => 'test_key',
+        'value' => json_encode('test_value'),
+    ]);
+});
+
+it('validates key is string and has max length', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+
+    $this->actingAs($user);
+
+    // Test max length validation
+    $longKey = str_repeat('a', 256); // Over 255 characters
+
+    Volt::test($testSettings['componentName'])
+        ->set('model.key', $longKey)
+        ->set('model.value', 'test value')
+        ->call('store')
+        ->assertHasErrors(['model.key']);
+});
+
+it('stores data with tenant_id', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+
+    $this->actingAs($user);
+    $parameterKey = fake()->word;
+    $parameterValue = fake()->sentence;
+
+    Volt::test($testSettings['componentName'])
+        ->set('model.key', $parameterKey)
+        ->set('model.value', $parameterValue)
+        ->call('store')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('global_parameters', [
+        'key' => $parameterKey,
+        'value' => json_encode($parameterValue),
+        'tenant_id' => $user->selected_tenant_id,
+    ]);
+});
