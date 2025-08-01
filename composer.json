@@ -2,7 +2,7 @@
     "name": "noerd/cms",
     "description": "",
     "type": "library",
-    "version": "v1.0.0",
+    "version": "v1.0.1",
     "license": "proprietary",
     "require": {
         "livewire/livewire": "^3.4",
