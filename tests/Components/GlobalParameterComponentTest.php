@@ -1,8 +1,8 @@
 <?php
 
 use Livewire\Volt\Volt;
-use Noerd\Noerd\Models\User;
 use Noerd\Cms\Models\GlobalParameter;
+use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
 
@@ -84,7 +84,7 @@ it('validates that value is required', function () use ($testSettings): void {
         ->assertHasErrors(['model.value']);
 });
 
-it('can retrieve existing global parameter data', function () use ($testSettings): void {
+it('can retrieve existing global parameter data', function (): void {
     $user = User::factory()->withContentModule()->create();
 
     $this->actingAs($user);

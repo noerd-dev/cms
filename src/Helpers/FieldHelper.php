@@ -2,6 +2,7 @@
 
 namespace Noerd\Cms\Helpers;
 
+use Exception;
 use Noerd\Noerd\Helpers\StaticConfigHelper;
 use Symfony\Component\Yaml\Yaml;
 
@@ -14,7 +15,7 @@ class FieldHelper
 
             return Yaml::parse($content ?: '');
         }
-        throw new \Exception("Element '{$element}' not found.");
+        throw new Exception("Element '{$element}' not found.");
     }
 
     public static function parseElementToData(string $element, ?array $data): array
@@ -76,25 +77,25 @@ class FieldHelper
     {
         $elements = [];
         $elementPath = base_path('content/elements');
-        
+
         if (!is_dir($elementPath)) {
             return $elements;
         }
 
         $files = glob($elementPath . '/*.yml');
-        
+
         foreach ($files as $file) {
             $elementKey = basename($file, '.yml');
             $content = file_get_contents($file);
             $yaml = Yaml::parse($content ?: '');
-            
+
             $elements[] = (object) [
                 'element_key' => $elementKey,
                 'name' => $yaml['title'] ?: ucwords(str_replace('_', ' ', $elementKey)),
-                'description' => $yaml['description'] ?? ''
+                'description' => $yaml['description'] ?? '',
             ];
         }
-        
+
         return $elements;
     }
 

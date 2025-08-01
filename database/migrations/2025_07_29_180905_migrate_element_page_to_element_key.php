@@ -2,11 +2,10 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
@@ -20,7 +19,7 @@ return new class extends Migration
 
         // Add element_key column if it doesn't exist
         if (!Schema::hasColumn('element_page', 'element_key')) {
-            Schema::table('element_page', function (Blueprint $table) {
+            Schema::table('element_page', function (Blueprint $table): void {
                 $table->string('element_key')->nullable()->after('page_id');
             });
         }
@@ -34,19 +33,19 @@ return new class extends Migration
 
         // Remove foreign key constraint if it exists and drop element_id column
         try {
-            Schema::table('element_page', function (Blueprint $table) {
+            Schema::table('element_page', function (Blueprint $table): void {
                 $table->dropForeign('element_page_element_id_foreign');
             });
         } catch (\Exception $e) {
             // Foreign key constraint might not exist
         }
-        
-        Schema::table('element_page', function (Blueprint $table) {
+
+        Schema::table('element_page', function (Blueprint $table): void {
             $table->dropColumn('element_id');
         });
 
         // Make element_key not nullable now that all records are updated
-        Schema::table('element_page', function (Blueprint $table) {
+        Schema::table('element_page', function (Blueprint $table): void {
             $table->string('element_key')->nullable(false)->change();
             $table->index('element_key');
         });
@@ -58,7 +57,7 @@ return new class extends Migration
     public function down(): void
     {
         // Re-add element_id column
-        Schema::table('element_page', function (Blueprint $table) {
+        Schema::table('element_page', function (Blueprint $table): void {
             $table->unsignedBigInteger('element_id')->nullable()->after('page_id');
         });
 
@@ -77,13 +76,13 @@ return new class extends Migration
         }
 
         // Re-add foreign key constraint and make element_id not nullable
-        Schema::table('element_page', function (Blueprint $table) {
+        Schema::table('element_page', function (Blueprint $table): void {
             $table->unsignedBigInteger('element_id')->nullable(false)->change();
             $table->foreign('element_id')->references('id')->on('elements');
         });
 
         // Drop element_key column
-        Schema::table('element_page', function (Blueprint $table) {
+        Schema::table('element_page', function (Blueprint $table): void {
             $table->dropColumn('element_key');
         });
     }
