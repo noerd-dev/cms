@@ -16,7 +16,9 @@ new class extends Component {
 
     public const COMPONENT = 'collection-component';
     public const LIST_COMPONENT = 'collections-table';
-    public const ID = 'modelId';
+    public const ID = 'collectionId';
+    #[Url(keep: false, except: '')]
+    public ?string $collectionId = null;
 
     public array $model;
     public Collection $collectionModel;
@@ -40,6 +42,7 @@ new class extends Component {
         $this->pageLayout = CollectionHelper::getCollectionFields($this->key);
         $this->modelId = $collection->id;
         $this->sort = $collection->sort ?? 0;
+        $this->collectionId = $collection->id;
     }
 
     public function store(): void

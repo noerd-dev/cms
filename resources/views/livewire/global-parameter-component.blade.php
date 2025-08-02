@@ -16,24 +16,18 @@ new class extends Component {
     public const LIST_COMPONENT = 'global-parameters-table';
     public const ID = 'globalParameterId';
     #[Url(keep: false, except: '')]
-    public ?string $modelId = null;
+    public ?string $globalParameterId = null;
 
     public array $model;
     public GlobalParameter $globalParameter;
 
-    public function mount(GlobalParameter $globalParameter): void
+    public function mount(GlobalParameter $model): void
     {
-        $this->pageLayout = StaticConfigHelper::getComponentFields('globalParameter');
         if ($this->modelId) {
-            $globalParameter = GlobalParameter::find($this->modelId);
+            $model = GlobalParameter::find($this->modelId);
         }
 
-        $this->model = $globalParameter->toArray();
-        $this->model = FieldHelper::parseComponentToData('globalParameter', $globalParameter->toArray());
-
-        $this->modelId = $globalParameter->id;
-        $this->globalParameter = $globalParameter;
-        $this->lastChangeTime = time();
+        $this->mountModalProcess(self::COMPONENT, $model);
     }
 
     public function store(): void

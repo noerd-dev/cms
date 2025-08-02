@@ -9,7 +9,7 @@ uses(Tests\TestCase::class);
 $testSettings = [
     'componentName' => 'global-parameter-component',
     'listName' => 'global-parameters-table',
-    'id' => 'modelId',
+    'id' => 'globalParameterId',
 ];
 
 it('test the route', function (): void {
@@ -135,4 +135,22 @@ it('stores data with tenant_id', function () use ($testSettings): void {
         'value' => json_encode($parameterValue),
         'tenant_id' => $user->selected_tenant_id,
     ]);
+});
+
+it('it sets and removes the model id in url', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+
+    $this->actingAs($user);
+    $model = GlobalParameter::factory()->withTenantId($user->selected_tenant_id)->create();
+
+    Volt::test($testSettings['listName'])->call('tableAction', $model->id)
+        ->assertDispatched('noerdModal', component: $testSettings['componentName']);
+
+    Volt::test($testSettings['componentName'], [$model->id])
+        ->assertSet('model.id', $model->id)
+        ->assertSet($testSettings['id'], $model->id) // URL Parameter
+        ->call('delete')
+        ->assertDispatched('reloadTable-' . $testSettings['listName'])
+        ->assertSet($testSettings['id'], '') // URL Parameter should be removed
+        ->assertHasNoErrors();
 });

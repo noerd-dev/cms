@@ -30,18 +30,18 @@ new class extends Component {
         return FieldHelper::getAllElements();
     }
 
-    public function mount(Page $page): void
+    public function mount(Page $model): void
     {
-        $this->pageLayout = StaticConfigHelper::getComponentFields('page');
         if ($this->modelId) {
-            $page = Page::find($this->modelId);
+            $model = Page::find($this->modelId);
         }
 
-        $this->model = $page->toArray();
-        $this->model = FieldHelper::parseComponentToData('page', $page->toArray());
+        $this->page = $model;
+        $this->mountModalProcess(self::COMPONENT, $model);
 
-        $this->pageId = $page->id;
-        $this->page = $page;
+        // Special case for Page/Element fields
+        $this->model = FieldHelper::parseComponentToData('page-component', $model->toArray());
+
         $this->lastChangeTime = time();
     }
 
@@ -80,14 +80,14 @@ new class extends Component {
         $sortElement = ElementPage::where('page_id', $this->modelId)
             ->orderBy('sort', 'desc')
             ->first();
-        
+
         ElementPage::create([
             'page_id' => $this->modelId,
             'element_key' => $elementKey,
             'sort' => ($sortElement?->sort ?? 0) + 1,
             'data' => '{}',
         ]);
-        
+
         $this->lastChangeTime = time();
     }
 
