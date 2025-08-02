@@ -11,44 +11,49 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        // First, migrate existing data to use element_key instead of element_id
-        $elementPages = DB::table('element_page')
-            ->join('elements', 'element_page.element_id', '=', 'elements.id')
-            ->select('element_page.id', 'elements.element_key')
-            ->get();
-
-        // Add element_key column if it doesn't exist
-        if (!Schema::hasColumn('element_page', 'element_key')) {
-            Schema::table('element_page', function (Blueprint $table): void {
-                $table->string('element_key')->nullable()->after('page_id');
-            });
-        }
-
-        // Update existing records with element_key
-        foreach ($elementPages as $elementPage) {
-            DB::table('element_page')
-                ->where('id', $elementPage->id)
-                ->update(['element_key' => $elementPage->element_key]);
-        }
-
-        // Remove foreign key constraint if it exists and drop element_id column
         try {
+
+
+            // First, migrate existing data to use element_key instead of element_id
+            $elementPages = DB::table('element_page')
+                ->join('elements', 'element_page.element_id', '=', 'elements.id')
+                ->select('element_page.id', 'elements.element_key')
+                ->get();
+
+            // Add element_key column if it doesn't exist
+            if (!Schema::hasColumn('element_page', 'element_key')) {
+                Schema::table('element_page', function (Blueprint $table): void {
+                    $table->string('element_key')->nullable()->after('page_id');
+                });
+            }
+
+            // Update existing records with element_key
+            foreach ($elementPages as $elementPage) {
+                DB::table('element_page')
+                    ->where('id', $elementPage->id)
+                    ->update(['element_key' => $elementPage->element_key]);
+            }
+
+            // Remove foreign key constraint if it exists and drop element_id column
+            try {
+                Schema::table('element_page', function (Blueprint $table): void {
+                    $table->dropForeign('element_page_element_id_foreign');
+                });
+            } catch (\Exception $e) {
+                // Foreign key constraint might not exist
+            }
+
             Schema::table('element_page', function (Blueprint $table): void {
-                $table->dropForeign('element_page_element_id_foreign');
+                $table->dropColumn('element_id');
+            });
+
+            // Make element_key not nullable now that all records are updated
+            Schema::table('element_page', function (Blueprint $table): void {
+                $table->string('element_key')->nullable(false)->change();
+                $table->index('element_key');
             });
         } catch (\Exception $e) {
-            // Foreign key constraint might not exist
         }
-
-        Schema::table('element_page', function (Blueprint $table): void {
-            $table->dropColumn('element_id');
-        });
-
-        // Make element_key not nullable now that all records are updated
-        Schema::table('element_page', function (Blueprint $table): void {
-            $table->string('element_key')->nullable(false)->change();
-            $table->index('element_key');
-        });
     }
 
     /**
