@@ -182,13 +182,13 @@ it('creates page automatically when hasPage is true in yml config', function ():
     // Verify that collections with hasPage: true create pages when stored
     // This tests the actual functionality by simulating a POST request
     $initialPageCount = Page::count();
-    
+
     // Create a collection that should trigger page creation
     $collection = Collection::create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'CONTACTS',
         'data' => json_encode([
-            'name' => ['de' => 'Test Kontakt', 'en' => 'Test Contact']
+            'name' => ['de' => 'Test Kontakt', 'en' => 'Test Contact'],
         ]),
     ]);
 
@@ -196,7 +196,7 @@ it('creates page automatically when hasPage is true in yml config', function ():
     // Since we can't easily test the Livewire component due to the key dependency,
     // we'll test the logic directly
     $collectionFields = \Noerd\Cms\Helpers\CollectionHelper::getCollectionFields('contacts');
-    
+
     if (!$collection->page_id && ($collectionFields['hasPage'] ?? false)) {
         $page = new Page();
         $page->name = '{"de":"CollectionPage","en":"CollectionPage"}';
@@ -205,7 +205,7 @@ it('creates page automatically when hasPage is true in yml config', function ():
         $collection->page_id = $page->id;
         $collection->save();
     }
-    
+
     // Verify page was created
     $this->assertNotNull($collection->fresh()->page_id);
     $this->assertEquals($initialPageCount + 1, Page::count());
@@ -221,19 +221,19 @@ it('does not create page when hasPage is false in yml config', function (): void
         ->assertSee('Slider'); // Title from sliders.yml
 
     $initialPageCount = Page::count();
-    
+
     // Create a collection that should NOT trigger page creation
     $collection = Collection::create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'SLIDERS',
         'data' => json_encode([
-            'image' => '/test/image.jpg'
+            'image' => '/test/image.jpg',
         ]),
     ]);
 
     // Manually trigger the page creation logic for testing
     $collectionFields = \Noerd\Cms\Helpers\CollectionHelper::getCollectionFields('sliders');
-    
+
     if (!$collection->page_id && ($collectionFields['hasPage'] ?? false)) {
         $page = new Page();
         $page->name = '{"de":"CollectionPage","en":"CollectionPage"}';
@@ -242,7 +242,7 @@ it('does not create page when hasPage is false in yml config', function (): void
         $collection->page_id = $page->id;
         $collection->save();
     }
-    
+
     // Verify NO page was created
     $this->assertNull($collection->fresh()->page_id);
     $this->assertEquals($initialPageCount, Page::count());
