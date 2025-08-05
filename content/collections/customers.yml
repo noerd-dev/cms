@@ -3,6 +3,7 @@ titleList: 'Kunden'
 key: 'CUSTOMERS'
 buttonList: 'Neuer Kunde'
 description: ''
+hasPage: false
 fields:
   - { name: model.name, label: Name, type: translatableText, colspan: 4 }
   - { name: model.description, label: Beschreibung, type: translatableText, colspan: 8 }

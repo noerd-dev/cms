@@ -55,7 +55,8 @@ new class extends Component {
             'data' => json_encode($this->model),
         ]);
 
-        if (!$collection->page_id) {
+        // Only create a page if hasPage is set to true in the collection yml file
+        if (!$collection->page_id && ($this->pageLayout['hasPage'] ?? false)) {
             $page = new Page();
             // TOOD refactor
             $page->name = '{"de":"CollectionPage","en":"CollectionPage"}';
@@ -134,7 +135,7 @@ new class extends Component {
 
     @include('noerd::components.detail.block', $pageLayout)
 
-    @if($modelId)
+    @if($modelId && ($pageLayout['hasPage'] ?? false) && $collectionModel->page_id)
         <x-noerd::primary-button
             wire:click="$dispatch('noerdModal', {component: 'page-component', arguments: {modelId: {{$collectionModel->page_id}} }})">
             Seite bearbeiten

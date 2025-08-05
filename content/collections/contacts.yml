@@ -3,6 +3,7 @@ titleList: 'Kontaktseiten'
 key: 'CONTACTS'
 buttonList: 'Neue Kontaktseite'
 description: ''
+hasPage: true
 fields:
   - { name: model.name, label: Name, type: translatableText, colspan: 6 }
   - { name: image, label: Bild, type: image, colspan: 6 }
