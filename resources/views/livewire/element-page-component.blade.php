@@ -8,12 +8,12 @@ use Livewire\WithFileUploads;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Traits\NoerdModelTrait;
+use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component {
 
     use WithFileUploads;
-    use NoerdModelTrait;
+    use Noerd;
 
     public const COMPONENT = 'element-page-component';
     public const LIST_COMPONENT = 'element-pages-table';

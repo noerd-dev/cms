@@ -2,11 +2,11 @@
 
 use Livewire\Volt\Component;
 use Noerd\Cms\Models\GlobalParameter;
-use Noerd\Noerd\Traits\NoerdTableTrait;
+use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component {
 
-    use NoerdTableTrait;
+    use Noerd;
 
     public const COMPONENT = 'global-parameters-table';
 

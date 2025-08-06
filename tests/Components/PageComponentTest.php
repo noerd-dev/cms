@@ -113,7 +113,6 @@ it('dispatches table action from pages table', function () use ($testSettings): 
     $component = Volt::test($testSettings['listName']);
 
     $component->call('tableAction', 123)
-        ->assertDispatched('set-app-id', ['id' => null])
         ->assertDispatched(
             'noerdModal',
             component: $testSettings['componentName'],

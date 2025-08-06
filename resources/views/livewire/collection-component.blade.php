@@ -7,11 +7,11 @@ use Livewire\WithFileUploads;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Traits\NoerdModelTrait;
+use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component {
 
-    use NoerdModelTrait;
+    use Noerd;
     use WithFileUploads;
 
     public const COMPONENT = 'collection-component';
