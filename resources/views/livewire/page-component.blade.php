@@ -9,11 +9,11 @@ use Noerd\Cms\Models\Element;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Helpers\StaticConfigHelper;
-use Noerd\Noerd\Traits\NoerdModelTrait;
+use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component {
 
-    use NoerdModelTrait;
+    use Noerd;
 
     public const COMPONENT = 'page-component';
     public const LIST_COMPONENT = 'pages-table';

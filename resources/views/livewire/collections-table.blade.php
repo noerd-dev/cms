@@ -4,16 +4,15 @@ use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
-use Noerd\Noerd\Traits\NoerdTableTrait;
+use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component {
 
-    use NoerdTableTrait;
+    use Noerd;
 
     public const COMPONENT = 'collections-table';
 
     public $tableLayout;
-    public $pageLayout;
 
     #[Url]
     public ?string $key = null;
@@ -38,8 +37,6 @@ new class extends Component {
 
     public function tableAction(mixed $modelId = null, mixed $relationId = null): void
     {
-
-
         $this->dispatch(
             event: 'noerdModal',
             component: 'collection-component',
