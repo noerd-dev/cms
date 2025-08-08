@@ -103,6 +103,25 @@ new class extends Component {
         $this->model[$fieldName] = null;
     }
 
+    public function openSelectMediaModal(string $fieldName): void
+    {
+        $this->dispatch(
+            event: 'noerdModal',
+            component: 'media-select-modal',
+            arguments: ['context' => $fieldName],
+        );
+    }
+
+    #[On('mediaSelected')]
+    public function mediaSelected(int $mediaId, ?string $fieldName = 'image'): void
+    {
+        $media = Media::find($mediaId);
+        if (!$media) {
+            return;
+        }
+        $this->model[$fieldName ?? 'image'] = Storage::disk($media->disk)->url($media->path);
+    }
+
     #[On('reloadPageComponent')]
     public function reloadPage()
     {
