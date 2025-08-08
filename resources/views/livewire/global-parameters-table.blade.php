@@ -3,6 +3,7 @@
 use Livewire\Volt\Component;
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Noerd\Traits\Noerd;
+use Noerd\Noerd\Helpers\StaticConfigHelper;
 
 new class extends Component {
 
@@ -45,8 +46,11 @@ new class extends Component {
             }
         }
 
+        $tableConfig = StaticConfigHelper::getTableConfig('global-parameters-table');
+
         return [
             'rows' => $rows,
+            'tableConfig' => $tableConfig,
         ];
     }
 
@@ -64,23 +68,6 @@ new class extends Component {
 
 <x-noerd::page :disableModal="$disableModal">
     <div>
-        @include('noerd::components.table.table-build',
-        [
-            'title' => __('Globale Parameter'),
-            'newLabel' => __('Neuer Parameter'),
-            'redirectAction' => '',
-            'table' => [
-                [
-                    'width' => 30,
-                    'field' => 'key',
-                    'label' => __('Schlüssel'),
-                ],
-                [
-                    'width' => 30,
-                    'field' => 'value',
-                    'label' => __('Wert'),
-                ],
-            ],
-        ])
+        @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
     </div>
 </x-noerd::page>

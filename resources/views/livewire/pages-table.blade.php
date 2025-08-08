@@ -3,11 +3,11 @@
 use Livewire\Volt\Component;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Traits\Noerd;
+use Noerd\Noerd\Helpers\StaticConfigHelper;
 
 new class extends Component {
 
     use Noerd;
-
     public const COMPONENT = 'pages-table';
 
     public function tableAction(mixed $modelId = null, mixed $relationId = null): void
@@ -45,8 +45,11 @@ new class extends Component {
             }
         }
 
+        $tableConfig = StaticConfigHelper::getTableConfig('pages-table');
+
         return [
             'rows' => $rows,
+            'tableConfig' => $tableConfig,
         ];
     }
 
@@ -64,19 +67,6 @@ new class extends Component {
 
 <x-noerd::page :disableModal="$disableModal">
     <div>
-        @include('noerd::components.table.table-build',
-        [
-            'title' => __('Seite'),
-            'newLabel' => __('Neue Seite'),
-            'redirectAction' => '',
-            'disableSearch' => false,
-            'table' => [
-                [
-                    'width' => 30,
-                    'field' => 'name',
-                    'label' => __('Name'),
-                ],
-            ],
-        ])
+        @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
     </div>
 </x-noerd::page>
