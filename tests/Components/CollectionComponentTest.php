@@ -7,6 +7,7 @@ use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Models\User;
+use Nywerk\Media\Models\Media as MediaModel;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
@@ -28,7 +29,7 @@ it('uploads an image via images.field binding and stores path into model', funct
     $user = User::factory()->withContentModule()->create();
     $this->actingAs($user);
 
-    Storage::fake('public');
+    Storage::fake('images');
 
     // Create a collection so the component has a model to load
     $collection = Collection::factory()->create([
@@ -40,10 +41,22 @@ it('uploads an image via images.field binding and stores path into model', funct
 
     $fakeImage = UploadedFile::fake()->image('photo.jpg', 1200, 800);
 
+    $before = MediaModel::count();
+
     // Set the Livewire-bound temporary file; component must process it
     Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'key' => 'projects'])
         ->set('images.image', $fakeImage)
-        ->assertSet('model.image', fn ($value) => is_string($value) && str_starts_with($value, '/storage/uploads/'));
+        ->assertSet('model.image', fn ($value) => is_string($value) && $value !== '');
+
+    expect(MediaModel::count())->toBe($before + 1);
+
+    $media = MediaModel::latest('id')->first();
+    expect($media->tenant_id)->toBe($user->selected_tenant_id)
+        ->and($media->disk)->toBe('images')
+        ->and($media->name)->toBe('photo.jpg')
+        ->and($media->extension)->toBe('jpg')
+        ->and($media->path)->not->toBe('')
+        ->and($media->thumbnail)->not->toBeNull();
 });
 
 it('deletes an image value from model', function () use ($testSettings): void {

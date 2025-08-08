@@ -4,10 +4,15 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Traits\Noerd;
+use Nywerk\Media\Models\Media;
+use Nywerk\Media\Services\MediaUploadService;
 
 new class extends Component {
 
@@ -86,9 +91,10 @@ new class extends Component {
     // Dies aber ähnlich, wie in element-page-component lösen
     public function updatedImages(): void
     {
+        $mediaUploadService = app()->make(MediaUploadService::class);
         foreach ($this->images as $key => $image) {
-            $link = $image->storePublicly(path: 'uploads', options: 'public');
-            $this->model[$key] = '/storage/' . $link;
+            $media = $mediaUploadService->storeFromUploadedFile($image);
+            $this->model[$key] = Storage::disk('images')->url($media->path);
         }
     }
 
