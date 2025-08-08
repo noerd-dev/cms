@@ -25,8 +25,7 @@ new class extends Component {
 
     public int $sort = 0;
 
-    public $image;
-    public $image2;
+    public array $images = [];
 
     #[Url]
     public ?string $key = null;
@@ -35,7 +34,6 @@ new class extends Component {
     {
         if ($this->modelId) {
             $collection = Collection::find($this->modelId);
-            $this->collectionModel = $collection;
             $this->model = json_decode($collection->data, true);
         }
 
@@ -43,6 +41,7 @@ new class extends Component {
         $this->modelId = $collection->id;
         $this->sort = $collection->sort ?? 0;
         $this->collectionId = $collection->id;
+        $this->collectionModel = $collection;
     }
 
     public function store(): void
@@ -85,20 +84,17 @@ new class extends Component {
 
     // TODO: Slider brauchen in einer Colleciton noch Bilder
     // Dies aber ähnlich, wie in element-page-component lösen
-    public function updatedImage()
+    public function updatedImages(): void
     {
-        $this->storeFile();
+        foreach ($this->images as $key => $image) {
+            $link = $image->storePublicly(path: 'uploads', options: 'public');
+            $this->model[$key] = '/storage/' . $link;
+        }
     }
 
-    public function storeFile()
+    public function deleteImage(string $fieldName): void
     {
-        $link = $this->image->storePublicly(path: 'uploads', options: 'public');
-        $this->model['image'] = '/storage/' . $link;
-    }
-
-    public function deleteImage()
-    {
-        $this->model['image'] = null;
+        $this->model[$fieldName] = null;
     }
 
     #[On('reloadPageComponent')]
