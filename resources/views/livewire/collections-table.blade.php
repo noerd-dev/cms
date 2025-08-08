@@ -5,11 +5,11 @@ use Livewire\Volt\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Noerd\Traits\Noerd;
+use Noerd\Noerd\Helpers\StaticConfigHelper;
 
 new class extends Component {
 
     use Noerd;
-
     public const COMPONENT = 'collections-table';
 
     public $tableLayout;
@@ -86,21 +86,16 @@ new class extends Component {
         }
 
 
+        $tableConfig = StaticConfigHelper::getTableConfig('collections-table');
+        
         return [
             'rows' => $arrayRows,
+            'tableConfig' => $tableConfig,
         ];
     }
 
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">
-    @include('noerd::components.table.table-build',
-      [
-          'title' => $pageLayout['titleList'],
-          'description' => '',
-          'newLabel' => $pageLayout['buttonList'],
-          'redirectAction' => '',
-          'disableSearch' => true,
-          'table' => $tableLayout,
-      ])
+    @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
 </x-noerd::page>
