@@ -81,13 +81,11 @@ new class extends Component {
                 }
             }
 
-            // ADD to row
             $arrayRows[] = $row;
         }
 
-
         $tableConfig = StaticConfigHelper::getTableConfig('collections-table');
-        
+
         return [
             'rows' => $arrayRows,
             'tableConfig' => $tableConfig,
@@ -97,5 +95,5 @@ new class extends Component {
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">
-    @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
+    @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig, 'table' => $tableLayout])
 </x-noerd::page>
