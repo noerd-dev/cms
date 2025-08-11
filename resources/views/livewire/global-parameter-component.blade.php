@@ -28,6 +28,14 @@ new class extends Component {
         }
 
         $this->mountModalProcess(self::COMPONENT, $model);
+
+        // Normalize value for editing: decode JSON into PHP value (string or array)
+        if (isset($this->model['value']) && is_string($this->model['value'])) {
+            $decoded = json_decode($this->model['value'], true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $this->model['value'] = $decoded;
+            }
+        }
     }
 
     public function store(): void
@@ -39,8 +47,14 @@ new class extends Component {
 
         $model = $this->model;
         $model['tenant_id'] = auth()->user()->selected_tenant_id;
-        // TODO auto detect if value is an array and convert it to JSON
-        $model['value'] = json_encode($this->model['value']);
+        // auto detect if value is an array and convert it to JSON; if string, encode plain string
+        $value = $this->model['value'];
+        // If array with languages, keep as is; else wrap in current language if available
+        if (is_array($value)) {
+            $model['value'] = json_encode($value);
+        } else {
+            $model['value'] = json_encode((string) $value);
+        }
         $globalParameter = GlobalParameter::updateOrCreate(['id' => $this->modelId],
             $model);
 

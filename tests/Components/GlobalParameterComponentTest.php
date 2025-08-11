@@ -154,3 +154,33 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
         ->assertSet($testSettings['id'], '') // URL Parameter should be removed
         ->assertHasNoErrors();
 });
+
+it('loads existing string value into component model for editing', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+    $this->actingAs($user);
+
+    $existingParameter = GlobalParameter::create([
+        'key' => 'test_key_string',
+        'value' => json_encode('test_value_string'),
+        'tenant_id' => $user->selected_tenant_id,
+    ]);
+
+    Volt::test($testSettings['componentName'], [$existingParameter->id])
+        ->assertSet('model.key', 'test_key_string')
+        ->assertSet('model.value', 'test_value_string');
+});
+
+it('loads existing array value into component model for editing', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+    $this->actingAs($user);
+
+    $existingParameter = GlobalParameter::create([
+        'key' => 'test_key_array',
+        'value' => json_encode(['de' => 'Hallo', 'en' => 'Hello']),
+        'tenant_id' => $user->selected_tenant_id,
+    ]);
+
+    Volt::test($testSettings['componentName'], [$existingParameter->id])
+        ->assertSet('model.key', 'test_key_array')
+        ->assertSet('model.value', fn ($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+});
