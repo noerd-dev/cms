@@ -9,6 +9,8 @@ use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Traits\Noerd;
+use Nywerk\Media\Models\Media;
+use Illuminate\Support\Facades\Storage;
 
 new class extends Component {
 
@@ -84,6 +86,25 @@ new class extends Component {
     public function languageChanged()
     {
         $this->dispatch('$refresh');
+    }
+
+    public function openSelectMediaModal(string $fieldName): void
+    {
+        $this->dispatch(
+            event: 'noerdModal',
+            component: 'media-select-modal',
+            arguments: ['context' => $fieldName],
+        );
+    }
+
+    #[On('mediaSelected')]
+    public function mediaSelected(int $mediaId, ?string $fieldName = 'image'): void
+    {
+        $media = Media::find($mediaId);
+        if (!$media) {
+            return;
+        }
+        $this->model[$fieldName ?? 'image'] = Storage::disk($media->disk)->url($media->path);
     }
 } ?>
 
