@@ -103,7 +103,7 @@ return new class extends Migration {
             return null;
         }
 
-        if (!class_exists(\Nywerk\Media\Models\Media::class)) {
+        if (!class_exists(\Noerd\Media\Models\Media::class)) {
             return null;
         }
 
@@ -118,7 +118,7 @@ return new class extends Migration {
 
     private function resolveExistingMediaId(?int $tenantId, string $value): ?int
     {
-        $query = \Nywerk\Media\Models\Media::query();
+        $query = \Noerd\Media\Models\Media::query();
         if ($tenantId) { $query->where('tenant_id', $tenantId); }
         $medias = $query->select(['id','disk','path'])->get();
         foreach ($medias as $media) {
@@ -190,7 +190,7 @@ return new class extends Migration {
 
     private function createMediaRecord(?int $tenantId, string $disk, string $path): ?int
     {
-        if (!class_exists(\Nywerk\Media\Models\Media::class)) { return null; }
+        if (!class_exists(\Noerd\Media\Models\Media::class)) { return null; }
 
         // Try derive meta
         $name = basename($path);
@@ -201,7 +201,7 @@ return new class extends Migration {
         // Create thumbnail via service if possible
         $thumbPath = null;
         try {
-            $service = app()->make(\Nywerk\Media\Services\ImagePreviewService::class);
+            $service = app()->make(\Noerd\Media\Services\ImagePreviewService::class);
             $thumbPath = $service->createPreviewForFile([
                 'name' => $name,
                 'extension' => $ext,
@@ -209,7 +209,7 @@ return new class extends Migration {
             ], $path);
         } catch (Throwable $e) {}
 
-        $media = \Nywerk\Media\Models\Media::create([
+        $media = \Noerd\Media\Models\Media::create([
             'tenant_id' => $tenantId,
             'type' => 'image',
             'name' => $name,

@@ -9,7 +9,7 @@ use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Traits\Noerd;
-use Nywerk\Media\Models\Media;
+use Noerd\Media\Models\Media;
 use Illuminate\Support\Facades\Storage;
 
 new class extends Component {

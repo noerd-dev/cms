@@ -126,12 +126,12 @@ return new class extends Migration {
 
     private function resolveMediaIdFromValue(?int $tenantId, string $value): ?int
     {
-        if (!class_exists(\Nywerk\Media\Models\Media::class)) {
+        if (!class_exists(\Noerd\Media\Models\Media::class)) {
             return null;
         }
 
         // Try by matching URL generated from media path
-        $query = \Nywerk\Media\Models\Media::query();
+        $query = \Noerd\Media\Models\Media::query();
         if ($tenantId) {
             $query->where('tenant_id', $tenantId);
         }
