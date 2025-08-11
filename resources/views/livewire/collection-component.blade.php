@@ -155,7 +155,7 @@ new class extends Component {
     </div>
 
     @include('noerd::components.detail.block', $pageLayout)
-{{$modelId}} - {{$pageLayout['hasPage'] ?? false}} - {{$collectionModel->page_id}}
+
     @if($modelId && ($pageLayout['hasPage'] ?? false) && $collectionModel->page_id)
         <x-noerd::primary-button
             wire:click="$dispatch('noerdModal', {component: 'page-component', arguments: {modelId: {{$collectionModel->page_id}} }})">

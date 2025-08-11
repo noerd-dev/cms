@@ -1,10 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class () extends Migration {
     public function up(): void
     {
         // Migrate Collections
@@ -22,6 +20,11 @@ return new class extends Migration {
         }
     }
 
+    public function down(): void
+    {
+        // no-op: cannot reliably revert ids back to urls
+    }
+
     private function migrateCollections(): void
     {
         if (!class_exists(\Noerd\Cms\Models\Collection::class)) {
@@ -31,7 +34,7 @@ return new class extends Migration {
 
         foreach ($collections as $collection) {
             $data = json_decode($collection->data ?? '[]', true) ?: [];
-            $key = strtolower($collection->collection_key ?? '');
+            $key = mb_strtolower($collection->collection_key ?? '');
 
             // Determine image fields from YAML config
             $imageFieldNames = [];
@@ -158,11 +161,4 @@ return new class extends Migration {
 
         return null;
     }
-
-    public function down(): void
-    {
-        // no-op: cannot reliably revert ids back to urls
-    }
 };
-
-

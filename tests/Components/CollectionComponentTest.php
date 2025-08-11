@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Models\User;
 use Noerd\Media\Models\Media as MediaModel;
+use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
@@ -46,7 +46,7 @@ it('uploads an image via images.field binding and stores path into model', funct
     // Set the Livewire-bound temporary file; component must process it
     Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'key' => 'projects'])
         ->set('images.image', $fakeImage)
-        ->assertSet('model.image', fn ($value) => is_string($value) && $value !== '');
+        ->assertSet('model.image', fn($value) => is_string($value) && $value !== '');
 
     expect(MediaModel::count())->toBe($before + 1);
 

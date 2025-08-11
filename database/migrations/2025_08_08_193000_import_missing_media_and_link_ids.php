@@ -4,21 +4,34 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-return new class extends Migration {
+return new class () extends Migration {
     public function up(): void
     {
-        try { $this->processCollections(); } catch (Throwable $e) {}
-        try { $this->processElementPages(); } catch (Throwable $e) {}
+        try {
+            $this->processCollections();
+        } catch (Throwable $e) {
+        }
+        try {
+            $this->processElementPages();
+        } catch (Throwable $e) {
+        }
+    }
+
+    public function down(): void
+    {
+        // not reversible
     }
 
     private function processCollections(): void
     {
-        if (!class_exists(\Noerd\Cms\Models\Collection::class)) { return; }
+        if (!class_exists(\Noerd\Cms\Models\Collection::class)) {
+            return;
+        }
         $collections = \Noerd\Cms\Models\Collection::query()->get();
 
         foreach ($collections as $collection) {
             $data = json_decode($collection->data ?? '[]', true) ?: [];
-            $key = strtolower($collection->collection_key ?? '');
+            $key = mb_strtolower($collection->collection_key ?? '');
 
             // Collect image fields
             $imageFields = [];
@@ -33,7 +46,9 @@ return new class extends Migration {
                 // no config, skip
             }
 
-            if (empty($imageFields)) { continue; }
+            if (empty($imageFields)) {
+                continue;
+            }
 
             $changed = false;
             foreach ($imageFields as $fieldName) {
@@ -54,7 +69,9 @@ return new class extends Migration {
 
     private function processElementPages(): void
     {
-        if (!class_exists(\Noerd\Cms\Models\ElementPage::class)) { return; }
+        if (!class_exists(\Noerd\Cms\Models\ElementPage::class)) {
+            return;
+        }
         $elementPages = \Noerd\Cms\Models\ElementPage::query()->with('page')->get();
 
         foreach ($elementPages as $elementPage) {
@@ -74,7 +91,9 @@ return new class extends Migration {
                 // no config, skip
             }
 
-            if (empty($imageFields)) { continue; }
+            if (empty($imageFields)) {
+                continue;
+            }
 
             $changed = false;
             foreach ($imageFields as $fieldName) {
@@ -109,7 +128,9 @@ return new class extends Migration {
 
         // Try resolve to existing media
         $mediaId = $this->resolveExistingMediaId($tenantId, $value);
-        if ($mediaId) { return $mediaId; }
+        if ($mediaId) {
+            return $mediaId;
+        }
 
         // Try to import file to images disk and create media
         $importedId = $this->importFileAsMedia($tenantId, $value);
@@ -119,16 +140,23 @@ return new class extends Migration {
     private function resolveExistingMediaId(?int $tenantId, string $value): ?int
     {
         $query = \Noerd\Media\Models\Media::query();
-        if ($tenantId) { $query->where('tenant_id', $tenantId); }
+        if ($tenantId) {
+            $query->where('tenant_id', $tenantId);
+        }
         $medias = $query->select(['id','disk','path'])->get();
         foreach ($medias as $media) {
             try {
                 $url = Storage::disk($media->disk)->url($media->path);
-                if ($url === $value) { return (int) $media->id; }
-            } catch (Throwable $e) {}
+                if ($url === $value) {
+                    return (int) $media->id;
+                }
+            } catch (Throwable $e) {
+            }
         }
         foreach ($medias as $media) {
-            if (str_contains($value, (string) $media->path)) { return (int) $media->id; }
+            if (str_contains($value, (string) $media->path)) {
+                return (int) $media->id;
+            }
         }
         return null;
     }
@@ -137,8 +165,14 @@ return new class extends Migration {
     {
         // Detect disk and relative path from URL-like value
         $candidates = [];
-        try { $candidates['images'] = $this->relativePathFromUrl('images', $value); } catch (Throwable $e) {}
-        try { $candidates['public'] = $this->relativePathFromUrl('public', $value); } catch (Throwable $e) {}
+        try {
+            $candidates['images'] = $this->relativePathFromUrl('images', $value);
+        } catch (Throwable $e) {
+        }
+        try {
+            $candidates['public'] = $this->relativePathFromUrl('public', $value);
+        } catch (Throwable $e) {
+        }
 
         // If file exists on images disk already, just register media if missing
         if (!empty($candidates['images']) && Storage::disk('images')->exists($candidates['images'])) {
@@ -154,14 +188,16 @@ return new class extends Migration {
             $stream = Storage::disk('public')->readStream($candidates['public']);
             if ($stream) {
                 Storage::disk('images')->put($destinationPath, $stream);
-                if (is_resource($stream)) { fclose($stream); }
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
                 return $this->createMediaRecord($tenantId, 'images', $destinationPath);
             }
         }
 
         // As a last resort, try to read by stripping leading '/storage/' to public disk
         if (str_starts_with($value, '/storage/')) {
-            $rel = substr($value, strlen('/storage/'));
+            $rel = mb_substr($value, mb_strlen('/storage/'));
             if (Storage::disk('public')->exists($rel)) {
                 $originalName = basename($rel);
                 $randomName = Str::random() . '_' . $originalName;
@@ -169,7 +205,9 @@ return new class extends Migration {
                 $stream = Storage::disk('public')->readStream($rel);
                 if ($stream) {
                     Storage::disk('images')->put($destinationPath, $stream);
-                    if (is_resource($stream)) { fclose($stream); }
+                    if (is_resource($stream)) {
+                        fclose($stream);
+                    }
                     return $this->createMediaRecord($tenantId, 'images', $destinationPath);
                 }
             }
@@ -180,9 +218,9 @@ return new class extends Migration {
 
     private function relativePathFromUrl(string $disk, string $value): ?string
     {
-        $base = rtrim(Storage::disk($disk)->url('/'), '/');
+        $base = mb_rtrim(Storage::disk($disk)->url('/'), '/');
         if (str_starts_with($value, $base)) {
-            $rel = ltrim(substr($value, strlen($base)), '/');
+            $rel = mb_ltrim(mb_substr($value, mb_strlen($base)), '/');
             return $rel ?: null;
         }
         return null;
@@ -190,13 +228,18 @@ return new class extends Migration {
 
     private function createMediaRecord(?int $tenantId, string $disk, string $path): ?int
     {
-        if (!class_exists(\Noerd\Media\Models\Media::class)) { return null; }
+        if (!class_exists(\Noerd\Media\Models\Media::class)) {
+            return null;
+        }
 
         // Try derive meta
         $name = basename($path);
         $ext = pathinfo($name, PATHINFO_EXTENSION);
         $size = 0;
-        try { $size = Storage::disk($disk)->size($path) ?: 0; } catch (Throwable $e) {}
+        try {
+            $size = Storage::disk($disk)->size($path) ?: 0;
+        } catch (Throwable $e) {
+        }
 
         // Create thumbnail via service if possible
         $thumbPath = null;
@@ -207,7 +250,8 @@ return new class extends Migration {
                 'extension' => $ext,
                 'size' => $size,
             ], $path);
-        } catch (Throwable $e) {}
+        } catch (Throwable $e) {
+        }
 
         $media = \Noerd\Media\Models\Media::create([
             'tenant_id' => $tenantId,
@@ -223,11 +267,4 @@ return new class extends Migration {
 
         return (int) $media->id;
     }
-
-    public function down(): void
-    {
-        // not reversible
-    }
 };
-
-
