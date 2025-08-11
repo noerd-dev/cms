@@ -104,7 +104,14 @@ new class extends Component {
         if (!$media) {
             return;
         }
-        $this->model[$fieldName ?? 'image'] = Storage::disk($media->disk)->url($media->path);
+        $this->model[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
+    }
+
+    private function urlWithoutDomain(Media $media): string
+    {
+        $url = Storage::disk($media->disk)->url($media->path);
+
+        return strstr($url, '/storage');
     }
 } ?>
 
