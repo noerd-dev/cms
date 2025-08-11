@@ -1,18 +1,16 @@
 <?php
 
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Traits\Noerd;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Services\MediaUploadService;
+use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component {
 
@@ -87,14 +85,12 @@ new class extends Component {
         $this->closeModalProcess(self::LIST_COMPONENT);
     }
 
-    // TODO: Slider brauchen in einer Colleciton noch Bilder
-    // Dies aber ähnlich, wie in element-page-component lösen
     public function updatedImages(): void
     {
         $mediaUploadService = app()->make(MediaUploadService::class);
         foreach ($this->images as $key => $image) {
             $media = $mediaUploadService->storeFromUploadedFile($image);
-            $this->model[$key] = Storage::disk('images')->url($media->path);
+            $this->model[$key] = $this->urlWithoutDomain($media);
         }
     }
 
@@ -119,7 +115,7 @@ new class extends Component {
         if (!$media) {
             return;
         }
-        $this->model[$fieldName ?? 'image'] = Storage::disk($media->disk)->url($media->path);
+        $this->model[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
     }
 
     #[On('reloadPageComponent')]
@@ -132,6 +128,13 @@ new class extends Component {
     public function refresh()
     {
         $this->dispatch('$refresh');
+    }
+
+    private function urlWithoutDomain(Media $media): string
+    {
+        $url = Storage::disk($media->disk)->url($media->path);
+
+        return strstr($url, '/storage');
     }
 } ?>
 
