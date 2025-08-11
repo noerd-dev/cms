@@ -101,21 +101,27 @@ new class extends Component {
 
     public function openSelectMediaModal(string $fieldName): void
     {
+        $token = uniqid('media_', true);
+        $this->model['__mediaToken'] = $token;
         $this->dispatch(
             event: 'noerdModal',
             component: 'media-select-modal',
-            arguments: ['context' => $fieldName],
+            arguments: ['context' => $fieldName, 'token' => $token],
         );
     }
 
     #[On('mediaSelected')]
-    public function mediaSelected(int $mediaId, ?string $fieldName = 'image'): void
+    public function mediaSelected(int $mediaId, ?string $fieldName = 'image', ?string $token = null): void
     {
+        if (($this->model['__mediaToken'] ?? null) !== $token) {
+            return; // ignore events not intended for this instance
+        }
         $media = Media::find($mediaId);
         if (!$media) {
             return;
         }
         $this->model[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
+        unset($this->model['__mediaToken']);
     }
 
     #[On('reloadPageComponent')]

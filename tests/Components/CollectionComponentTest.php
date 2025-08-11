@@ -188,3 +188,42 @@ it('does not create page when hasPage is false in yml config', function (): void
     $this->assertNull($collection->fresh()->page_id);
     $this->assertEquals($initialPageCount, Page::count());
 });
+
+it('does not update image on mediaSelected when token mismatches; updates when token matches', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+    $this->actingAs($user);
+
+    Storage::fake('media');
+
+    $collection = Collection::factory()->create([
+        'tenant_id' => $user->selected_tenant_id,
+        'collection_key' => 'PROJECTS',
+        'data' => json_encode([]),
+        'sort' => 0,
+    ]);
+
+    $path = $user->selected_tenant_id . '/test-select.jpg';
+    Storage::disk('media')->put($path, 'x');
+    $media = MediaModel::create([
+        'tenant_id' => $user->selected_tenant_id,
+        'type' => 'image',
+        'name' => 'test-select.jpg',
+        'extension' => 'jpg',
+        'path' => $path,
+        'disk' => 'media',
+        'size' => 1,
+        'ai_access' => true,
+    ]);
+
+    $component = Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'key' => 'projects'])
+        ->set('model.__mediaToken', 'token-abc')
+        ->set('model.image', 'UNCHANGED');
+
+    // Wrong token -> should not change
+    $component->call('mediaSelected', $media->id, 'image', 'wrong-token')
+        ->assertSet('model.image', 'UNCHANGED');
+
+    // Correct token -> should change
+    $component->call('mediaSelected', $media->id, 'image', 'token-abc')
+        ->assertSet('model.image', fn($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED');
+});
