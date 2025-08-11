@@ -36,5 +36,3 @@ it('parses element data with defaults and translations', function (): void {
         }
     }
 });
-
-
