@@ -80,7 +80,7 @@ return new class extends Migration {
         }
 
         if (is_numeric($value)) {
-            $media = \Nywerk\Media\Models\Media::find((int) $value);
+            $media = \Noerd\Media\Models\Media::find((int) $value);
             if ($media) {
                 try { $url = Storage::disk($media->disk)->url($media->thumbnail ?? $media->path); } catch (Throwable $e) { $url = null; }
                 return $url ? '@' . $url : null;
@@ -92,7 +92,7 @@ return new class extends Migration {
             // value is URL/path; try to convert to canonical @url
             $mediaId = $this->tryFindMediaIdByString($tenantId, $value);
             if ($mediaId) {
-                $media = \Nywerk\Media\Models\Media::find($mediaId);
+                $media = \Noerd\Media\Models\Media::find($mediaId);
                 if ($media) {
                     try { $url = Storage::disk($media->disk)->url($media->thumbnail ?? $media->path); } catch (Throwable $e) { $url = null; }
                     return $url ? '@' . $url : null;
@@ -112,7 +112,7 @@ return new class extends Migration {
 
     private function tryFindMediaIdByString(?int $tenantId, string $value): ?int
     {
-        $query = \Nywerk\Media\Models\Media::query();
+        $query = \Noerd\Media\Models\Media::query();
         if ($tenantId) { $query->where('tenant_id', $tenantId); }
         $medias = $query->select(['id','disk','path'])->get();
         foreach ($medias as $media) {

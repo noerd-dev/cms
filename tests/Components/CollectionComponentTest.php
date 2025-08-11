@@ -7,7 +7,7 @@ use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Models\User;
-use Nywerk\Media\Models\Media as MediaModel;
+use Noerd\Media\Models\Media as MediaModel;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
