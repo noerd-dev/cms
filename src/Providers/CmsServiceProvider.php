@@ -15,6 +15,7 @@ class CmsServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'contents');
+        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'cms');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/content-routes.php');
 
         $router = $this->app['router'];
