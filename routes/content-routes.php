@@ -11,6 +11,7 @@ Route::prefix('cms')
         Volt::route('global-parameters', 'global-parameters-table')->name('global-parameters');
 
         Volt::route('/collections', 'collections-table')->name('collections');
+        Volt::route('/form-requests', 'form-requests-table')->name('form-requests');
 
         Route::get('test', function (): void {
             dd(auth('web')->user());
