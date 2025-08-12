@@ -11,6 +11,7 @@ return new class () extends Migration {
             Schema::create('form_requests', function (Blueprint $table): void {
                 $table->id();
                 $table->unsignedBigInteger('tenant_id');
+                $table->string('form');
                 $table->json('data')->nullable();
                 $table->timestamps();
 

@@ -1,0 +1,12 @@
+tableId: form-requests
+title: Form Requests
+columns:
+  - name: id
+    label: ID
+  - name: created_at
+    label: Eingegangen am
+actions:
+  - label: Anzeigen
+    action: tableAction
+
+
