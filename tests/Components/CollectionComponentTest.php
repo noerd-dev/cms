@@ -212,7 +212,6 @@ it('does not update image on mediaSelected when token mismatches; updates when t
         'path' => $path,
         'disk' => 'media',
         'size' => 1,
-        'ai_access' => true,
     ]);
 
     $component = Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'key' => 'projects'])
