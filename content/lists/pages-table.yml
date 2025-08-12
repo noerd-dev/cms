@@ -1,0 +1,8 @@
+title: 'Seiten'
+newLabel: 'Neue Seite'
+component: 'page-component'
+disableSearch: false
+redirectAction: ''
+columns:
+  - { field: name, label: 'Name', width: 30 }
+  - { field: slug, label: 'Slug', width: 20 }
