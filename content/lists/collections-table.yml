@@ -1,0 +1,9 @@
+title: 'Collections'
+newLabel: 'Neuer Datensatz'
+component: 'collection-component'
+disableSearch: false
+redirectAction: ''
+columns:
+  - { field: name, label: 'Name', width: 30 }
+  - { field: key, label: 'Key', width: 20 }
+  - { field: updated_at, label: 'Zuletzt aktualisiert', width: 15, type: date }
