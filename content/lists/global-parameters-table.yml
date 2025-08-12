@@ -1,0 +1,14 @@
+title: 'Globale Parameter'
+newLabel: 'Neuer Parameter'
+component: global-parameter-component
+disableSearch: false
+redirectAction: ''
+columns:
+  -
+    field: key
+    label: Schlüssel
+    width: 30
+  -
+    field: value
+    label: Value
+    width: 50
