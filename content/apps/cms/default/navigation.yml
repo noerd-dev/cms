@@ -1,0 +1,14 @@
+-
+  title: Cms
+  name: cms
+  hidden: true
+  route: cms
+  block_menus:
+    -
+      title: CMS
+      navigations: [{ title: Seiten, route: cms.pages, icon: icons.document }, { title: 'Globale Parameter', route: cms.global-parameters, heroicon: globe-alt }, { title: 'Form Requests', route: cms.form-requests, icon: icons.list-bullet }]
+    -
+      title: Collections
+      navigations: [{ title: Projects, link: '/cms/collections?key=projects', icon: icons.list-bullet }, { title: Leistungen, link: '/cms/collections?key=services', icon: icons.list-bullet }, { title: Customers, link: '/cms/collections?key=customers', icon: icons.list-bullet }, { title: Kontaktseiten, link: '/cms/collections?key=contacts', icon: icons.list-bullet }, { title: Slider, link: '/cms/collections?key=sliders', icon: icons.list-bullet }]
+
+
