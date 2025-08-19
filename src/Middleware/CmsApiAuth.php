@@ -23,7 +23,7 @@ class CmsApiAuth
 
         $authHeader = $request->header('Authorization');
         if (is_string($authHeader) && preg_match('/^Bearer\s+(.+)$/i', $authHeader, $m)) {
-            $token = trim($m[1]);
+            $token = mb_trim($m[1]);
         }
         if (!$token) {
             $token = (string) $request->header('X-API-Key', '');
@@ -48,5 +48,3 @@ class CmsApiAuth
         return $next($request);
     }
 }
-
-

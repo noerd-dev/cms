@@ -41,5 +41,3 @@ class FormRequestController extends Controller
         ], 201);
     }
 }
-
-

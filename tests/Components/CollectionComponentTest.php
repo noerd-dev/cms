@@ -29,7 +29,7 @@ it('uploads an image via images.field binding and stores path into model', funct
     $user = User::factory()->withContentModule()->create();
     $this->actingAs($user);
 
-    Storage::fake('images');
+    Storage::fake('media');
 
     // Create a collection so the component has a model to load
     $collection = Collection::factory()->create([
@@ -52,7 +52,7 @@ it('uploads an image via images.field binding and stores path into model', funct
 
     $media = MediaModel::latest('id')->first();
     expect($media->tenant_id)->toBe($user->selected_tenant_id)
-        ->and($media->disk)->toBe('images')
+        ->and($media->disk)->toBe('media')
         ->and($media->name)->toBe('photo.jpg')
         ->and($media->extension)->toBe('jpg')
         ->and($media->path)->not->toBe('')

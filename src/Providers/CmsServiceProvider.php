@@ -5,8 +5,8 @@ namespace Noerd\Cms\Providers;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Commands\NoerdCmsInstallCommand;
-use Noerd\Cms\Middleware\CmsMiddleware;
 use Noerd\Cms\Middleware\CmsApiAuth;
+use Noerd\Cms\Middleware\CmsMiddleware;
 
 class CmsServiceProvider extends ServiceProvider
 {

@@ -9,5 +9,3 @@ Route::prefix('api/cms')
     ->group(function (): void {
         Route::post('/form-requests', [FormRequestController::class, 'store'])->name('form-requests.store');
     });
-
-

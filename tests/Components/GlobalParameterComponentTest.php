@@ -182,5 +182,5 @@ it('loads existing array value into component model for editing', function () us
 
     Volt::test($testSettings['componentName'], [$existingParameter->id])
         ->assertSet('model.key', 'test_key_array')
-        ->assertSet('model.value', fn ($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+        ->assertSet('model.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
 });
