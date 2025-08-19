@@ -12,3 +12,4 @@ columns:
     field: created_at
     label: 'Created At'
     width: 30
+
