@@ -33,17 +33,18 @@ new class extends Component {
         $this->dispatch('languageChanged');
     }
 } ?>
-
 <div class="w-full flex">
-    <div class="ml-auto flex">
-        @foreach($languages as $language)
-            <a @class([
-                'cursor-pointer ml-2',
-                'text-black underline' => session('selectedLanguage') === $language['code'],
-                'text-gray-500' => session('selectedLanguage') !== $language['code'],
-            ]) wire:click="setLanguage('{{$language['code']}}')">
-                {{ strtoupper($language['code']) }}
-            </a>
-        @endforeach
-    </div>
+    @if(count($languages) > 1)
+        <div class="ml-auto flex">
+            @foreach($languages as $language)
+                <a @class([
+                    'cursor-pointer ml-2',
+                    'text-black underline' => session('selectedLanguage') === $language['code'],
+                    'text-gray-500' => session('selectedLanguage') !== $language['code'],
+                ]) wire:click="setLanguage('{{$language['code']}}')">
+                    {{ strtoupper($language['code']) }}
+                </a>
+            @endforeach
+        </div>
+    @endif
 </div>
