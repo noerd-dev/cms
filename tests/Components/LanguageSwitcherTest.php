@@ -31,4 +31,16 @@ it('changes session language on click', function (): void {
     expect(session('selectedLanguage'))->toBe('en');
 });
 
+it('does not render switcher if only one language exists', function (): void {
+    $user = User::factory()->withContentModule()->create();
+    $this->actingAs($user);
+
+    Language::create(['tenant_id' => $user->selected_tenant_id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => true, 'sort_order' => 1]);
+
+    $html = Volt::test('language-switcher')->html();
+    expect($html)->toBeString();
+    // Should not contain the anchor for the single language code
+    expect(str_contains($html, 'DE'))->toBeFalse();
+});
+
 
