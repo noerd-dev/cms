@@ -39,6 +39,17 @@ new class extends Component {
             'tableConfig' => $tableConfig,
         ];
     }
+
+    public function rendering()
+    {
+        if ((int)request()->formRequestId) {
+            $this->tableAction(request()->formRequestId);
+        }
+
+        if (request()->create) {
+            $this->tableAction();
+        }
+    }
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">
