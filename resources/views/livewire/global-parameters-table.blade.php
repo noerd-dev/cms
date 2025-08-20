@@ -39,7 +39,7 @@ new class extends Component {
 
             $oldName = $row->value;
             $row->value = json_decode($row->value, true);
-            $row->value = $row->value[session('selectedLanguage')] ?? $row->value;
+            $row->value = $row->value[session('selectedLanguage')] ?? array_values($row->value)[0] ?? $row->value;
 
             if (strlen($row->value) == 0) {
                 $row->value = $oldName;
