@@ -64,7 +64,8 @@ new class extends Component {
             // NAME
             if (isset($row['name'])) {
                 $oldName = $row['name'];
-                $row['name'] = $row['name'][session('selectedLanguage')] ?? $row['name'];
+
+                $row['name'] = $row['name'][session('selectedLanguage')] ?? array_values($row['name'])[0] ?? $row['name'];
 
                 if (strlen($row['name']) == 0) {
                     $row['name'] = $oldName;
@@ -74,7 +75,7 @@ new class extends Component {
             // DESCRIPTION
             if (isset($row['description'])) {
                 $oldName = $row['description'];
-                $row['description'] = $row['description'][session('selectedLanguage')] ?? $row['description'];
+                $row['description'] = $row['description'][session('selectedLanguage')] ?? array_values($row['description'])[0] ?? $row['description'];
 
                 if (strlen($row['description']) == 0) {
                     $row['description'] = $oldName;

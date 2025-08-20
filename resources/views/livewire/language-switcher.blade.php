@@ -1,37 +1,49 @@
 <?php
 
 use Livewire\Volt\Component;
+use Noerd\Cms\Models\Language;
 
 new class extends Component {
 
-    public function setDE()
+    public array $languages = [];
+
+    public function mount(): void
     {
-        session(['selectedLanguage' => 'de']);
-        $this->dispatch('languageChanged');
+        $this->languages = Language::where('tenant_id', auth()->user()->selected_tenant_id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['code', 'name'])
+            ->toArray();
+
+        if (!session('selectedLanguage')) {
+            $default = Language::where('tenant_id', auth()->user()->selected_tenant_id)
+                ->where('is_active', true)
+                ->where('is_default', true)
+                ->orderBy('sort_order')
+                ->first();
+            if ($default) {
+                session(['selectedLanguage' => $default->code]);
+            }
+        }
     }
 
-    public function setEN()
+    public function setLanguage(string $code): void
     {
-        session(['selectedLanguage' => 'en']);
+        session(['selectedLanguage' => $code]);
         $this->dispatch('languageChanged');
     }
 } ?>
 
 <div class="w-full flex">
     <div class="ml-auto flex">
-        <a @class([
-        'cursor-pointer ml-2',
-        'text-black underline' => session('selectedLanguage') === 'de',
-        'text-gray-500' => session('selectedLanguage') !== 'de',
-    ]) wire:click="setDE">
-            DE
-        </a>
-        <a @class([
-        'cursor-pointer ml-2',
-        'text-black underline' => session('selectedLanguage') === 'en',
-        'text-gray-500' => session('selectedLanguage') !== 'en',
-    ]) wire:click="setEN">
-            EN
-        </a>
+        @foreach($languages as $language)
+            <a @class([
+                'cursor-pointer ml-2',
+                'text-black underline' => session('selectedLanguage') === $language['code'],
+                'text-gray-500' => session('selectedLanguage') !== $language['code'],
+            ]) wire:click="setLanguage('{{$language['code']}}')">
+                {{ strtoupper($language['code']) }}
+            </a>
+        @endforeach
     </div>
 </div>
