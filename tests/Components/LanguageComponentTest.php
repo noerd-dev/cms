@@ -125,5 +125,3 @@ it('deletes a language', function () use ($testSettings): void {
 
     $this->assertDatabaseMissing('cms_languages', ['id' => $language->id]);
 });
-
-
