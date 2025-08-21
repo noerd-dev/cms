@@ -8,6 +8,7 @@ Route::prefix('cms')
     ->middleware(['web', 'auth', 'verified', 'cms'])
     ->group(function (): void {
         Volt::route('/pages', 'pages-table')->name('pages');
+        Volt::route('/navigation', 'navigation-table')->name('navigation');
         Volt::route('global-parameters', 'global-parameters-table')->name('global-parameters');
 
         Volt::route('/collections', 'collections-table')->name('collections');

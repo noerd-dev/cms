@@ -42,5 +42,3 @@ it('does not render switcher if only one language exists', function (): void {
     // Should not contain the anchor for the single language code
     expect(str_contains($html, 'DE'))->toBeFalse();
 });
-
-

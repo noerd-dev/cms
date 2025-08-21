@@ -1,0 +1,13 @@
+title: 'Navigation'
+newLabel: 'Neuer Navigationspunkt'
+component: 'navigation-component'
+disableSearch: false
+redirectAction: ''
+columns:
+  - { field: name, label: 'Name', width: 30 }
+  - { field: navigation_key, label: 'Key', width: 20 }
+  - { field: page_id, label: 'Page', width: 10 }
+  - { field: link, label: 'Link', width: 20 }
+  - { field: new_tab, label: 'New Tab', width: 10 }
+
+
