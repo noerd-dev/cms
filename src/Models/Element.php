@@ -6,8 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Element extends Model
 {
-    public function pages(): void
+    protected $guarded = [];
+
+    public function pages()
     {
-        $this->belongsToMany(Page::class);
+        return $this->belongsToMany(Page::class);
+    }
+
+    public function elementPages()
+    {
+        return $this->hasMany(ElementPage::class);
     }
 }

@@ -48,4 +48,3 @@ class CmsApiAuth
         return $next($request);
     }
 }
-

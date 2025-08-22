@@ -27,4 +27,3 @@ class Navigation extends Model
         return $this->belongsTo(Collection::class);
     }
 }
-
