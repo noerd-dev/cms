@@ -13,4 +13,3 @@ class FormRequest extends Model
 
     protected $table = 'form_requests';
 }
-
