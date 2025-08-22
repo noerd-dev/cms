@@ -100,3 +100,4 @@ it('respects language switching behavior for page selection display', function (
         ->call('pageSelected', $page->id)
         ->assertHasNoErrors();
 });
+
