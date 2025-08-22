@@ -54,6 +54,7 @@ new class extends Component {
 
         if (isset($model['link'])) {
             $model['link'] = trim((string) $model['link']) ?: null;
+            $model['page_id'] = null;
         }
         $model['new_tab'] = !empty($model['new_tab']) ? 1 : 0;
 
