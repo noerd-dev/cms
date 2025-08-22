@@ -45,3 +45,4 @@ it('rejects requests with missing or invalid token', function (): void {
         ->postJson('/api/cms/form-requests', $payload)
         ->assertStatus(401);
 });
+
