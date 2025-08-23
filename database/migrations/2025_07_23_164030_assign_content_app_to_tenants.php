@@ -53,13 +53,6 @@ return new class () extends Migration {
                 $skippedCount++;
             }
         }
-
-        // Log the results (visible in migration output)
-        echo "Content/CMS App Assignment Summary:\n";
-        echo "- CMS App ID: {$cmsAppId}\n";
-        echo "- Total tenants: " . $tenants->count() . "\n";
-        echo "- Tenants assigned CMS access: {$assignedCount}\n";
-        echo "- Tenants skipped (already had access): {$skippedCount}\n";
     }
 
     /**
