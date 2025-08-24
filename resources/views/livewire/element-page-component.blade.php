@@ -44,6 +44,12 @@ new class extends Component {
 
         $this->modelId = $elementPage->id;
         $this->elementPage = $elementPage;
+
+        // Send initial data to parent component for live preview
+        $this->dispatch('updateLiveElementData', 
+            elementPageId: $this->modelId,
+            data: $this->model
+        );
     }
 
     #[Computed]
@@ -62,6 +68,17 @@ new class extends Component {
         $this->dispatch('reloadPageComponent');
     }
 
+    public function updated($propertyName, $value): void
+    {
+        // When any model property changes, dispatch the live data to parent
+        if (str_starts_with($propertyName, 'model.')) {
+            $this->dispatch('updateLiveElementData', 
+                elementPageId: $this->modelId,
+                data: $this->model
+            );
+        }
+    }
+
     public function delete(): void
     {
         $elementPage = ElementPage::find($this->modelId);
@@ -75,11 +92,23 @@ new class extends Component {
             $link = $image->storePublicly(path: 'uploads', options: 'public');
             $this->model[$key] = '/storage/' . $link;
         }
+
+        // Notify parent to refresh live preview with updated image paths
+        $this->dispatch('updateLiveElementData',
+            elementPageId: $this->modelId,
+            data: $this->model
+        );
     }
 
     public function deleteImage($key)
     {
         $this->model[$key] = null;
+
+        // Notify parent to refresh live preview after deletion
+        $this->dispatch('updateLiveElementData',
+            elementPageId: $this->modelId,
+            data: $this->model
+        );
     }
 
     #[On('languageChanged')]
@@ -111,6 +140,12 @@ new class extends Component {
         }
         $this->model[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
         unset($this->model['__mediaToken']);
+
+        // Notify parent to refresh live preview after media selection
+        $this->dispatch('updateLiveElementData',
+            elementPageId: $this->modelId,
+            data: $this->model
+        );
     }
 
     private function urlWithoutDomain(Media $media): string

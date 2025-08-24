@@ -45,6 +45,65 @@ new class extends Component {
         return $pageElementService->processPageElements($this->page, $selectedLanguage);
     }
 
+    public array $liveElementData = [];
+    public int $previewTick = 0;
+
+    #[Computed] 
+    public function livePreviewElements()
+    {
+        if (!$this->page->id) {
+            return [];
+        }
+
+        try {
+            // Get the base elements from database
+            $pageElementService = app(PageElementService::class);
+            $selectedLanguage = session('selectedLanguage', 'de');
+            $elements = $pageElementService->processPageElements($this->page, $selectedLanguage);
+
+            // Merge with live element data from form inputs
+            foreach ($elements as $index => $element) {
+                $elementPageId = $element['id'] ?? ($this->page->elements[$index]->id ?? null);
+                if ($elementPageId && isset($this->liveElementData[$elementPageId])) {
+                    // Ensure both are arrays before merging
+                    $baseData = is_array($element['data'] ?? []) ? ($element['data'] ?? []) : [];
+                    $liveData = is_array($this->liveElementData[$elementPageId]) ? $this->liveElementData[$elementPageId] : [];
+                    
+                    // Process live data to ensure proper localization format
+                    $processedLiveData = [];
+                    foreach ($liveData as $key => $value) {
+                        // If the value is already localized (array with language keys), keep it
+                        if (is_array($value) && isset($value[$selectedLanguage])) {
+                            $processedLiveData[$key] = $value[$selectedLanguage];
+                        } elseif (is_array($value)) {
+                            // If it's an array but not localized, try to get the first value or convert to string
+                            $processedLiveData[$key] = is_string(reset($value)) ? reset($value) : json_encode($value);
+                        } else {
+                            // If it's already a string or simple value, use it directly
+                            $processedLiveData[$key] = $value;
+                        }
+                    }
+                    
+                    $elements[$index]['data'] = array_merge($baseData, $processedLiveData);
+                }
+            }
+
+            return $elements;
+        } catch (\Exception $e) {
+            // Fallback to regular preview elements if something goes wrong
+            \Log::error('Error in livePreviewElements: ' . $e->getMessage());
+            return $this->previewElements;
+        }
+    }
+
+    #[On('updateLiveElementData')]
+    public function updateLiveElementData($elementPageId, $data)
+    {
+        $this->liveElementData[$elementPageId] = $data;
+        // Bump preview tick to force remount of preview child components only
+        $this->previewTick++;
+    }
+
     #[Computed]
     public function componentMapping()
     {
@@ -314,31 +373,32 @@ new class extends Component {
         <x-noerd::modal-title>Seite</x-noerd::modal-title>
     </x-slot:header>
 
-    <livewire:language-switcher/>
+    <!-- View Mode Switch - Fixed Position -->
+    <div class="sticky top-20 right-6 z-50 mb-6">
+        <div class="flex space-x-1 bg-white p-1 rounded-lg w-fit shadow-xl border border-gray-200">
+            <button
+                wire:click="setViewMode('content')"
+                class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'content' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
+            >
+                Content
+            </button>
+            <button
+                wire:click="setViewMode('preview')"
+                class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'preview' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
+            >
+                Vorschau
+            </button>
+            <div class="ml-auto mr-6 my-auto border-l border-gray-200 pl-4">
+                <livewire:language-switcher/>
+            </div>
+        </div>
+    </div>
 
     @include('noerd::components.detail.block', $pageLayout)
 
     @if($this->page->id)
-
-        <!-- View Mode Switch -->
-        <div class="mb-6">
-            <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
-                <button
-                    wire:click="setViewMode('content')"
-                    class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'content' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}"
-                >
-                    Content
-                </button>
-                <button
-                    wire:click="setViewMode('preview')"
-                    class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'preview' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}"
-                >
-                    Vorschau
-                </button>
-            </div>
-        </div>
-
-        @if($viewMode === 'content')
+        <div x-data="{ viewMode: @entangle('viewMode').live }">
+            <div x-show="viewMode === 'content'">
             <!-- Content View (Original Backend Editing) -->
             <button wire:click="openElements">
                 Seitenelemente bearbeiten
@@ -370,23 +430,32 @@ new class extends Component {
                     </div>
                 </div>
             </div>
-        @else
+            </div>
+            <div x-show="viewMode === 'preview'">
             <!-- Preview View (Frontend Rendering) -->
             <div class="border border-gray-200 rounded-lg bg-white">
                 <div class="p-4 border-b border-gray-200 bg-gray-50">
-                    <h3 class="text-lg font-medium text-gray-900">Frontend Vorschau</h3>
-                    <p class="text-sm text-gray-600 mt-1">So wird die Seite im Frontend dargestellt</p>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Frontend Vorschau</h3>
+                            <p class="text-sm text-gray-600 mt-1">So wird die Seite im Frontend dargestellt</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span class="text-xs text-green-600 font-medium">Live</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="p-6">
-                    @if(count($this->previewElements) > 0)
-                        @foreach($this->previewElements as $element)
+                    @if(count($this->livePreviewElements) > 0)
+                        @foreach($this->livePreviewElements as $element)
                             @php
                                 $componentName = $this->componentMapping[$element['key']] ?? null;
                             @endphp
 
                             @if($componentName)
-                                @livewire($componentName, ['data' => $element['data']], key('preview-element-' . $loop->index))
+                                @livewire($componentName, ['data' => $element['data']], key('preview-element-' . $loop->index . '-' . $previewTick))
                             @else
                                 <!-- Fallback for missing or invalid element template -->
                                 <div class="p-4 bg-yellow-50 border border-yellow-200 rounded mb-4">
@@ -408,7 +477,7 @@ new class extends Component {
                     @endif
                 </div>
             </div>
-        @endif
+        </div>
     @endif
 
     <x-slot:footer>
