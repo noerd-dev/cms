@@ -4,14 +4,13 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('cms_settings', function (Blueprint $table) {
+        Schema::create('cms_settings', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
             $table->unsignedBigInteger('homepage_page_id')->nullable();
@@ -28,7 +27,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('cms_settings', function (Blueprint $table) {
+        Schema::table('cms_settings', function (Blueprint $table): void {
             $table->dropForeign(['tenant_id']);
             $table->dropForeign(['homepage_page_id']);
         });

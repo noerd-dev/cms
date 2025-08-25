@@ -70,5 +70,3 @@ it('loads and displays page options with localized names and saves selection', f
     expect($setting)->not->toBeNull();
     expect($setting->homepage_page_id)->toBe($page2->id);
 });
-
-
