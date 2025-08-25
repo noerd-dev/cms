@@ -8,7 +8,7 @@ use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Language;
 use Noerd\Cms\Models\Page;
-use Noerd\CmsFrontend\Services\PageElementService;
+use Noerd\Website\Services\PageElementService;
 use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component {
@@ -48,7 +48,7 @@ new class extends Component {
     public array $liveElementData = [];
     public int $previewTick = 0;
 
-    #[Computed] 
+    #[Computed]
     public function livePreviewElements()
     {
         if (!$this->page->id) {
@@ -68,7 +68,7 @@ new class extends Component {
                     // Ensure both are arrays before merging
                     $baseData = is_array($element['data'] ?? []) ? ($element['data'] ?? []) : [];
                     $liveData = is_array($this->liveElementData[$elementPageId]) ? $this->liveElementData[$elementPageId] : [];
-                    
+
                     // Process live data to ensure proper localization format
                     $processedLiveData = [];
                     foreach ($liveData as $key => $value) {
@@ -83,7 +83,7 @@ new class extends Component {
                             $processedLiveData[$key] = $value;
                         }
                     }
-                    
+
                     $elements[$index]['data'] = array_merge($baseData, $processedLiveData);
                 }
             }
@@ -438,11 +438,6 @@ new class extends Component {
                     <div class="flex items-center justify-between">
                         <div>
                             <h3 class="text-lg font-medium text-gray-900">Frontend Vorschau</h3>
-                            <p class="text-sm text-gray-600 mt-1">So wird die Seite im Frontend dargestellt</p>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span class="text-xs text-green-600 font-medium">Live</span>
                         </div>
                     </div>
                 </div>
