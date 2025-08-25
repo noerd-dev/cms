@@ -14,6 +14,9 @@ Route::prefix('cms')
         Volt::route('/collections', 'collections-table')->name('collections');
         Volt::route('/form-requests', 'form-requests-table')->name('form-requests');
 
+        // CMS Settings page (homepage selection)
+        Volt::route('/settings', 'cms-settings-component')->name('settings');
+
         Route::get('test', function (): void {
             dd(auth('web')->user());
         })->name('dashboard');
