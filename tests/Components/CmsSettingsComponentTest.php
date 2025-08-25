@@ -55,7 +55,7 @@ it('loads and displays page options with localized names and saves selection', f
 
     // Auswahl treffen und speichern
     $component
-        ->set('form.homepage_page_id', (string) $page2->id)
+        ->set('model.homepage_page_id', (string) $page2->id)
         ->call('store')
         ->assertDispatched('toast');
 

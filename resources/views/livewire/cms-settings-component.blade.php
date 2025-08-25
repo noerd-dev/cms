@@ -9,9 +9,10 @@ new class extends Component {
 
     use Noerd;
 
+    public const ID = 'cmsSettingsId';
     public const COMPONENT = 'cms-settings-component';
 
-    public $form = [
+    public $model = [
         'homepage_page_id' => null,
     ];
 
@@ -19,22 +20,27 @@ new class extends Component {
     {
         $tenantId = auth()->user()?->selected_tenant_id;
         $settings = CmsSetting::query()->firstOrCreate(['tenant_id' => $tenantId]);
-        $this->form['homepage_page_id'] = $settings->homepage_page_id;
+        $this->model['homepage_page_id'] = $settings->homepage_page_id;
     }
 
     public function store(): void
     {
-        $tenantId = auth()->user()?->selected_tenant_id;
-
         $this->validate([
-            'form.homepage_page_id' => ['nullable', 'exists:pages,id'],
+            'model.homepage_page_id' => ['nullable', 'exists:pages,id'],
         ]);
 
-        CmsSetting::query()->updateOrCreate(
+        $tenantId = auth()->user()->selected_tenant_id;
+
+        // Ensure one row per tenant: overwrite existing settings instead of inserting new rows
+        $model = CmsSetting::updateOrCreate(
             ['tenant_id' => $tenantId],
-            ['homepage_page_id' => $this->form['homepage_page_id']]
+            [
+                'tenant_id' => $tenantId,
+                'homepage_page_id' => $this->model['homepage_page_id'],
+            ]
         );
 
+        $this->storeProcess($model);
         $this->dispatch('toast', [
             'title' => 'Gespeichert',
             'description' => 'Die Einstellungen wurden gespeichert.',
@@ -76,7 +82,7 @@ new class extends Component {
         <div>
             <x-noerd::title>Startseite</x-noerd::title>
             <div class="mt-2">
-                <select wire:model="form.homepage_page_id" class="border rounded px-3 py-2 w-full">
+                <select wire:model="model.homepage_page_id" class="border rounded px-3 py-2 w-full">
                     <option value="">- Keine ausgewählt -</option>
                     @foreach(Page::orderBy('name')->get() as $p)
                         <option value="{{$p->id}}">{{$this->formatName($p->name)}}</option>
