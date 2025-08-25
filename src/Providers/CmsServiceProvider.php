@@ -15,9 +15,9 @@ class CmsServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
-        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'contents');
+        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cms');
         $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'cms');
-        $this->loadRoutesFrom(__DIR__ . '/../../routes/content-routes.php');
+        $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-routes.php');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-api.php');
 
         $router = $this->app['router'];
