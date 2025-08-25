@@ -12,19 +12,19 @@ class FieldHelper
     {
         // Convert element key to kebab-case for yml file lookup (same as blade component naming)
         $elementFileName = str_replace('_', '-', $element);
-        
+
         // Check in livewire elements directory (co-located with components)
-        if (file_exists(base_path('app-modules/cms-frontend/resources/views/livewire/elements/' . $elementFileName . '.yml'))) {
-            $content = file_get_contents(base_path('app-modules/cms-frontend/resources/views/livewire/elements/' . $elementFileName . '.yml'));
+        if (file_exists(base_path('app-modules/website/resources/views/livewire/elements/' . $elementFileName . '.yml'))) {
+            $content = file_get_contents(base_path('app-modules/website/resources/views/livewire/elements/' . $elementFileName . '.yml'));
             return Yaml::parse($content ?: '');
         }
-        
+
         // Fallback to old location for backward compatibility (will be removed)
         if (file_exists(base_path('content/elements/' . $element . '.yml'))) {
             $content = file_get_contents(base_path('content/elements/' . $element . '.yml'));
             return Yaml::parse($content ?: '');
         }
-        
+
         throw new Exception("Element '{$element}' not found.");
     }
 
@@ -86,22 +86,22 @@ class FieldHelper
     public static function getAllElements(): array
     {
         $elements = [];
-        
+
         // Get all livewire element components from app-modules
         $livewireElementFiles = glob(base_path('app-modules/*/resources/views/livewire/elements/*.blade.php'));
-        
+
         foreach ($livewireElementFiles as $livewireFile) {
             $fileName = basename($livewireFile, '.blade.php');
             // Convert kebab-case filename to snake_case for element key
             $elementKey = str_replace('-', '_', $fileName);
-            
+
             // Try to find corresponding yml definition (co-located with livewire component, same naming as blade file)
-            $ymlFile = base_path('app-modules/cms-frontend/resources/views/livewire/elements/' . $fileName . '.yml');
-            
+            $ymlFile = base_path('app-modules/website/resources/views/livewire/elements/' . $fileName . '.yml');
+
             if (file_exists($ymlFile)) {
                 $content = file_get_contents($ymlFile);
                 $yaml = Yaml::parse($content ?: '');
-                
+
                 $elements[] = (object) [
                     'element_key' => $elementKey,
                     'name' => $yaml['title'] ?: ucwords(str_replace('_', ' ', $elementKey)),
