@@ -217,3 +217,41 @@ it('sets correct element layout', function () use ($testSettings): void {
         ->assertSet('elementPage.element_key', 'text_block_1_column')
         ->assertNotSet('elementLayout', []);
 });
+
+it('shows a content error when element layout is missing', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+    $this->actingAs($user);
+
+    // Create a Page first
+    $page = Page::create([
+        'name' => json_encode(['en' => 'Test Page']),
+        'slug' => json_encode(['en' => 'test-page']),
+        'tenant_id' => $user->selected_tenant_id,
+    ]);
+
+    $element = new Element();
+    $element->tenant_id = $user->selected_tenant_id;
+    $element->name = 'Missing';
+    $element->element_key = '____missing____';
+    $element->description = 'Test';
+    $element->save();
+
+    $elementPage = ElementPage::create([
+        'page_id' => $page->id,
+        'element_id' => $element->id,
+        'data' => json_encode(['foo' => 'bar']),
+        'sort' => 1,
+    ]);
+    if (! Schema::hasColumn('element_page', 'element_key')) {
+        Schema::table('element_page', function (Blueprint $table): void {
+            $table->string('element_key')->nullable();
+        });
+    }
+    $elementPage->element_key = '____missing____';
+    $elementPage->save();
+
+    Volt::test($testSettings['componentName'], [$elementPage])
+        ->assertSee('Element component not found:')
+        ->assertSee('Please create both the .yml and .blade.php files in the elements folder.')
+        ->assertSee('____missing____');
+});

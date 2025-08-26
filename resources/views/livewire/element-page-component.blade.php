@@ -37,7 +37,7 @@ new class extends Component {
         if ($this->modelId) {
             $elementPage = ElementPage::find($this->modelId);
         }
-        $this->elementLayout = FieldHelper::getElementFields($elementPage->element_key);
+        $this->elementLayout = FieldHelper::getElementFields($elementPage->element_key) ?? [];
 
         $this->model = FieldHelper::parseElementToData($elementPage->element_key,
             json_decode($elementPage->data, true));
@@ -45,8 +45,8 @@ new class extends Component {
         $this->modelId = $elementPage->id;
         $this->elementPage = $elementPage;
 
-        // Send initial data to parent component for live preview
-        $this->dispatch('updateLiveElementData', 
+        // Send initial data to a parent component for live preview
+        $this->dispatch('updateLiveElementData',
             elementPageId: $this->modelId,
             data: $this->model
         );
@@ -72,7 +72,7 @@ new class extends Component {
     {
         // When any model property changes, dispatch the live data to parent
         if (str_starts_with($propertyName, 'model.')) {
-            $this->dispatch('updateLiveElementData', 
+            $this->dispatch('updateLiveElementData',
                 elementPageId: $this->modelId,
                 data: $this->model
             );
@@ -157,17 +157,28 @@ new class extends Component {
 } ?>
 
 <div>
-    <div class="p-4 border border-b-gray-200 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-gray-950/[2.5%] after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-gray-950/5 dark:after:inset-ring-white/10 bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-gray-950)]/5 dark:[--pattern-fg:var(--color-white)]/10
+    @if($elementLayout)
+        <div class="p-4 border border-b-gray-200 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-gray-950/[2.5%] after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-gray-950/5 dark:after:inset-ring-white/10 bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-gray-950)]/5 dark:[--pattern-fg:var(--color-white)]/10
     ">
-        <div class="text-sm">{{$this->elementName()}}  </div>
+            <div class="text-sm">{{$this->elementName()}}  </div>
 
-        <x-noerd::buttons.delete
-            class="!absolute !right-4"
-            wire:click="delete"
-            wire:confirm="{{ __('Really delete element?') }}"
-        >
-        </x-noerd::buttons.delete>
+            <x-noerd::buttons.delete
+                class="!absolute !right-4"
+                wire:click="delete"
+                wire:confirm="{{ __('Really delete element?') }}"
+            >
+            </x-noerd::buttons.delete>
 
-        @include('noerd::components.detail.block', $elementLayout)
-    </div>
+            @include('noerd::components.detail.block', $elementLayout)
+        </div>
+    @else
+        <div class="p-4 border border-red-300 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-red-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-red-500/10">
+            <p class="text-sm font-semibold text-red-800">{{ __('Element component not found:') }} {{ $this->elementPage->element_key }}</p>
+            <p class="text-xs text-red-700 mt-2">{{ __('Please create both the .yml and .blade.php files in the elements folder.') }}</p>
+            <details class="mt-2">
+                <summary class="text-xs text-red-600 cursor-pointer">{{ __('Show data') }}</summary>
+                <pre class="text-xs mt-2 text-red-700">{{ json_encode($this->model ?? [], JSON_PRETTY_PRINT) }}</pre>
+            </details>
+        </div>
+    @endif
 </div>

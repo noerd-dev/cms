@@ -5,10 +5,9 @@ use Noerd\Cms\Helpers\FieldHelper;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
-it('throws when element yml is missing', function (): void {
-    $this->expectException(Exception::class);
-    $this->expectExceptionMessage("Element '____missing____' not found.");
-    FieldHelper::getElementFields('____missing____');
+it('returns null when element yml is missing', function (): void {
+    $fields = FieldHelper::getElementFields('____missing____');
+    expect($fields)->toBeNull();
 });
 
 it('parses element data with defaults and translations', function (): void {

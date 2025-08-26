@@ -2,13 +2,12 @@
 
 namespace Noerd\Cms\Helpers;
 
-use Exception;
 use Noerd\Noerd\Helpers\StaticConfigHelper;
 use Symfony\Component\Yaml\Yaml;
 
 class FieldHelper
 {
-    public static function getElementFields(string $element): array
+    public static function getElementFields(string $element): ?array
     {
         // Convert element key to kebab-case for yml file lookup (same as blade component naming)
         $elementFileName = str_replace('_', '-', $element);
@@ -25,13 +24,17 @@ class FieldHelper
             return Yaml::parse($content ?: '');
         }
 
-        throw new Exception("Element '{$element}' not found.");
+        return null;
     }
 
-    public static function parseElementToData(string $element, ?array $data): array
+    public static function parseElementToData(string $element, ?array $data): ?array
     {
         $model = [];
         $elementFields = self::getElementFields($element);
+
+        if(!$elementFields) {
+            return null;
+        }
 
         foreach ($elementFields['fields'] as $elementField) {
             if (in_array($elementField['type'], ['translatableText', 'translatableRichText'])) {
@@ -102,14 +105,14 @@ class FieldHelper
                 $content = file_get_contents($ymlFile);
                 $yaml = Yaml::parse($content ?: '');
 
-                $elements[] = (object) [
+                $elements[] = (object)[
                     'element_key' => $elementKey,
                     'name' => $yaml['title'] ?: ucwords(str_replace('_', ' ', $elementKey)),
                     'description' => $yaml['description'] ?? '',
                 ];
             } else {
                 // If no yml file exists, create a basic element entry
-                $elements[] = (object) [
+                $elements[] = (object)[
                     'element_key' => $elementKey,
                     'name' => ucwords(str_replace(['_', '-'], ' ', $elementKey)),
                     'description' => 'Auto-detected from Livewire component',
@@ -123,7 +126,7 @@ class FieldHelper
     private static function isJsonAndDecode($value): mixed
     {
         // First check if it's a string (JSON must be a string)
-        if (! is_string($value)) {
+        if (!is_string($value)) {
             return false;
         }
 
