@@ -5,6 +5,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Models\CollectionRow;
 use Noerd\Cms\Models\Page;
 use Noerd\Media\Models\Media as MediaModel;
 use Noerd\Noerd\Models\User;
@@ -32,9 +33,14 @@ it('uploads an image via images.field binding and stores path into model', funct
     Storage::fake('media');
 
     // Create a collection so the component has a model to load
-    $collection = Collection::factory()->create([
+    $parentCollection = Collection::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'PROJECTS',
+    ]);
+    
+    $collection = CollectionRow::factory()->create([
+        'tenant_id' => $user->selected_tenant_id,
+        'collection_id' => $parentCollection->id,
         'data' => json_encode([]),
         'sort' => 0,
     ]);
@@ -63,9 +69,14 @@ it('deletes an image value from model', function () use ($testSettings): void {
     $user = User::factory()->withContentModule()->create();
     $this->actingAs($user);
 
-    $collection = Collection::factory()->create([
+    $parentCollection = Collection::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'PROJECTS',
+    ]);
+    
+    $collection = CollectionRow::factory()->create([
+        'tenant_id' => $user->selected_tenant_id,
+        'collection_id' => $parentCollection->id,
         'data' => json_encode(['image' => '/storage/uploads/any.jpg']),
         'sort' => 0,
     ]);
@@ -78,9 +89,14 @@ it('deletes an image value from model', function () use ($testSettings): void {
 it('tests collection factory without page', function (): void {
     $user = User::factory()->withDeliveryAndMenu()->create();
 
-    $collection = Collection::factory()->create([
+    $parentCollection = Collection::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'PROJECTS',
+    ]);
+
+    $collection = CollectionRow::factory()->create([
+        'tenant_id' => $user->selected_tenant_id,
+        'collection_id' => $parentCollection->id,
         'page_id' => null,
     ]);
 
@@ -90,20 +106,25 @@ it('tests collection factory without page', function (): void {
 it('tests collection with sort functionality', function (): void {
     $user = User::factory()->withDeliveryAndMenu()->create();
 
-    $collection1 = Collection::factory()->create([
+    $parentCollection = Collection::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'PROJECTS',
+    ]);
+
+    $collection1 = CollectionRow::factory()->create([
+        'tenant_id' => $user->selected_tenant_id,
+        'collection_id' => $parentCollection->id,
         'sort' => 1,
     ]);
 
-    $collection2 = Collection::factory()->create([
+    $collection2 = CollectionRow::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
-        'collection_key' => 'PROJECTS',
+        'collection_id' => $parentCollection->id,
         'sort' => 2,
     ]);
 
-    $collections = Collection::where('tenant_id', $user->selected_tenant_id)
-        ->where('collection_key', 'PROJECTS')
+    $collections = CollectionRow::where('tenant_id', $user->selected_tenant_id)
+        ->where('collection_id', $parentCollection->id)
         ->orderBy('sort')
         ->get();
 
@@ -125,9 +146,15 @@ it('creates page automatically when hasPage is true in yml config', function ():
     $initialPageCount = Page::count();
 
     // Create a collection that should trigger page creation
-    $collection = Collection::create([
+    $parentCollection = Collection::create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'CONTACTS',
+        'name' => 'Contacts',
+    ]);
+    
+    $collection = CollectionRow::create([
+        'tenant_id' => $user->selected_tenant_id,
+        'collection_id' => $parentCollection->id,
         'data' => json_encode([
             'name' => ['de' => 'Test Kontakt', 'en' => 'Test Contact'],
         ]),
@@ -164,9 +191,15 @@ it('does not create page when hasPage is false in yml config', function (): void
     $initialPageCount = Page::count();
 
     // Create a collection that should NOT trigger page creation
-    $collection = Collection::create([
+    $parentCollection = Collection::create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'SLIDERS',
+        'name' => 'Sliders',
+    ]);
+    
+    $collection = CollectionRow::create([
+        'tenant_id' => $user->selected_tenant_id,
+        'collection_id' => $parentCollection->id,
         'data' => json_encode([
             'image' => '/test/image.jpg',
         ]),
@@ -195,9 +228,14 @@ it('does not update image on mediaSelected when token mismatches; updates when t
 
     Storage::fake('media');
 
-    $collection = Collection::factory()->create([
+    $parentCollection = Collection::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'PROJECTS',
+    ]);
+    
+    $collection = CollectionRow::factory()->create([
+        'tenant_id' => $user->selected_tenant_id,
+        'collection_id' => $parentCollection->id,
         'data' => json_encode([]),
         'sort' => 0,
     ]);

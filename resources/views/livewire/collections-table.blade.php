@@ -4,6 +4,7 @@ use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Models\CollectionRow;
 use Noerd\Noerd\Traits\Noerd;
 use Noerd\Noerd\Helpers\StaticConfigHelper;
 
@@ -47,9 +48,16 @@ new class extends Component {
 
     public function with(): array
     {
-        $collectionRows = Collection::where('tenant_id', auth()->user()->selected_tenant_id)
+        // Find the collection by key and tenant
+        $collection = Collection::where('tenant_id', auth()->user()->selected_tenant_id)
             ->where('collection_key', strtoupper($this->key))
-            ->paginate(self::PAGINATION);
+            ->first();
+            
+        if (!$collection) {
+            $collectionRows = collect();
+        } else {
+            $collectionRows = $collection->rows()->paginate(self::PAGINATION);
+        }
 
         $rows = [];
         foreach ($collectionRows as $collectionRow) {

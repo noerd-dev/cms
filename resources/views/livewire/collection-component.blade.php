@@ -7,6 +7,7 @@ use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Models\CollectionRow;
 use Noerd\Cms\Models\Page;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Services\MediaUploadService;
@@ -24,7 +25,7 @@ new class extends Component {
     public ?string $collectionId = null;
 
     public array $model;
-    public Collection $collectionModel;
+    public CollectionRow $collectionModel;
 
     public int $sort = 0;
 
@@ -33,10 +34,10 @@ new class extends Component {
     #[Url]
     public ?string $key = null;
 
-    public function mount(Collection $collection): void
+    public function mount(CollectionRow $collection): void
     {
         if ($this->modelId) {
-            $collection = Collection::find($this->modelId);
+            $collection = CollectionRow::find($this->modelId);
             $this->model = json_decode($collection->data, true);
         }
 
@@ -51,9 +52,17 @@ new class extends Component {
     {
         $this->model['tenant_id'] = auth()->user()->selected_tenant_id;
 
-        $collection = Collection::updateOrCreate(['id' => $this->modelId], [
+        // Find or create the parent Collection
+        $parentCollection = Collection::firstOrCreate([
             'tenant_id' => auth()->user()->selected_tenant_id,
             'collection_key' => strtoupper($this->key),
+        ], [
+            'name' => ucfirst($this->key), // Default name based on key
+        ]);
+
+        $collection = CollectionRow::updateOrCreate(['id' => $this->modelId], [
+            'tenant_id' => auth()->user()->selected_tenant_id,
+            'collection_id' => $parentCollection->id,
             'data' => json_encode($this->model),
         ]);
 
@@ -80,7 +89,7 @@ new class extends Component {
 
     public function delete(): void
     {
-        $collection = Collection::find($this->modelId);
+        $collection = CollectionRow::find($this->modelId);
         $collection->delete();
         $this->closeModalProcess(self::LIST_COMPONENT);
     }

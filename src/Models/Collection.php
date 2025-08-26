@@ -11,9 +11,19 @@ class Collection extends Model
 
     protected $guarded = [];
 
-    public function page()
+    protected $table = 'collections';
+
+    public function rows()
     {
-        return $this->belongsTo(Page::class);
+        return $this->hasMany(CollectionRow::class, 'collection_id');
+    }
+
+    public function pages()
+    {
+        return $this->belongsToMany(Page::class, 'page_collection')
+            ->withPivot('sort_order', 'tenant_id')
+            ->withTimestamps()
+            ->orderBy('page_collection.sort_order');
     }
 
     protected static function newFactory()

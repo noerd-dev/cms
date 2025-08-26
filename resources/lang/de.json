@@ -50,7 +50,11 @@
     "Edit Page": "Seite bearbeiten",
     "Homepage": "Startseite",
     "None selected": "Keine ausgewählt",
-    "Really delete element?": "Element wirklich löschen?"
+    "Really delete element?": "Element wirklich löschen?",
+    "Linked Collections": "Verknüpfte Collections",
+    "No collections linked to this page": "Keine Collections mit dieser Seite verknüpft",
+    "Remove collection from page?": "Collection von Seite entfernen?",
+    "Update Collections": "Collections aktualisieren"
 }
 
 
