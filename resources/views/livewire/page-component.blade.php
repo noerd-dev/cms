@@ -374,7 +374,7 @@ new class extends Component {
     public function deleteElement(int $elementPageId): void
     {
         $element = ElementPage::find($elementPageId);
-        if ($element && (int) $element->page_id === (int) $this->modelId) {
+        if ($element && (int)$element->page_id === (int)$this->modelId) {
             $element->delete();
             $this->lastChangeTime = time();
             $this->dispatch('reloadPageComponent');
@@ -415,7 +415,7 @@ new class extends Component {
                 return;
             }
 
-            $index = (int) str_replace('insert-', '', $token);
+            $index = (int)str_replace('insert-', '', $token);
             $this->insertElementAt($index, $elementKey);
         }
     }
@@ -465,8 +465,10 @@ new class extends Component {
                 <div x-sort="$wire.elementSort($item, $position)">
                     @foreach($this->page->elements as $loopIndex => $elementPage)
                         <div class="my-2">
-                            <div x-data="{hover:false}" @mouseenter="hover=true" @mouseleave="hover=false" class="relative h-0.5 bg-transparent">
-                                <button x-show="hover" class="absolute -top-3 left-0 right-0 mx-auto w-full max-w-sm flex items-center justify-center gap-2 text-white bg-blue-600/90 hover:bg-blue-700 rounded-full py-1 text-xs shadow"
+                            <div x-data="{hover:false}" @mouseenter="hover=true" @mouseleave="hover=false"
+                                 class="relative h-0.5 bg-transparent">
+                                <button x-show="hover"
+                                        class="absolute -top-3 left-0 right-0 mx-auto w-full max-w-sm flex items-center justify-center gap-2 text-white bg-blue-600/90 hover:bg-blue-700 rounded-full py-1 text-xs shadow"
                                         wire:click="$dispatch('noerdModal', {component: 'element-picker-modal', arguments: { token: 'insert-{{$loopIndex}}' }})">
                                     + {{ __('Add Element') }}
                                 </button>
@@ -483,8 +485,10 @@ new class extends Component {
                     @endforeach
 
                     <div class="my-2">
-                        <div x-data="{hover:false}" @mouseenter="hover=true" @mouseleave="hover=false" class="relative h-0.5 bg-transparent">
-                            <button x-show="hover" class="absolute -top-3 left-0 right-0 mx-auto w-full max-w-sm flex items-center justify-center gap-2 text-white bg-blue-600/90 hover:bg-blue-700 rounded-full py-1 text-xs shadow"
+                        <div x-data="{hover:false}" @mouseenter="hover=true" @mouseleave="hover=false"
+                             class="relative h-0.5 bg-transparent">
+                            <button x-show="hover"
+                                    class="absolute -top-3 left-0 right-0 mx-auto w-full max-w-sm flex items-center justify-center gap-2 text-white bg-blue-600/90 hover:bg-blue-700 rounded-full py-1 text-xs shadow"
                                     wire:click="$dispatch('noerdModal', {component: 'element-picker-modal', arguments: { token: 'insert-end' }})">
                                 + {{ __('Add Element') }}
                             </button>
@@ -495,7 +499,8 @@ new class extends Component {
                 <div class="mt-8 mb-8">
                     <x-noerd::title>{{__('Add Element')}}</x-noerd::title>
                     <div class="mt-4">
-                        <x-noerd::primary-button wire:click="$dispatch('noerdModal', {component: 'element-picker-modal', arguments: { token: 'insert-end' }})">
+                        <x-noerd::primary-button
+                            wire:click="$dispatch('noerdModal', {component: 'element-picker-modal', arguments: { token: 'insert-end' }})">
                             {{ __('Add Element') }}
                         </x-noerd::primary-button>
                     </div>
@@ -524,19 +529,24 @@ new class extends Component {
                                     @livewire($componentName, ['data' => $element['data']], key('preview-element-' . $loop->index . '-' . $previewTick))
                                 @else
                                     <!-- Fallback for missing or invalid element template -->
-                                    <div class="p-4 border border-red-300 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-red-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-red-500/10">
+                                    <div
+                                        class="p-4 border border-red-300 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-red-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-red-500/10">
                                         <div class="flex items-start justify-between gap-4">
                                             <div class="flex-1">
                                                 <p class="text-sm font-semibold text-red-800">{{ __('Element component not found:') }} {{ $element['key'] ?? 'unknown' }}</p>
                                                 <p class="text-xs text-red-700 mt-2">{{ __('Please create both the .yml and .blade.php files in the elements folder.') }}</p>
                                             </div>
                                             <div>
-                                                <x-noerd::buttons.delete wire:confirm="{{ __('Really delete element?') }}" wire:click="deleteElement({{ (int) ($this->page->elements[$loop->index]->id ?? 0) }})"></x-noerd::buttons.delete>
+                                                <x-noerd::buttons.delete
+                                                    wire:confirm="{{ __('Really delete element?') }}"
+                                                    wire:click="deleteElement({{ (int) ($this->page->elements[$loop->index]->id ?? 0) }})"></x-noerd::buttons.delete>
                                             </div>
                                         </div>
                                         <details class="mt-2">
-                                            <summary class="text-xs text-red-600 cursor-pointer">{{ __('Show data') }}</summary>
-                                            <pre class="text-xs mt-2 text-red-700">{{ json_encode($element['data'] ?? [], JSON_PRETTY_PRINT) }}</pre>
+                                            <summary
+                                                class="text-xs text-red-600 cursor-pointer">{{ __('Show data') }}</summary>
+                                            <pre
+                                                class="text-xs mt-2 text-red-700">{{ json_encode($element['data'] ?? [], JSON_PRETTY_PRINT) }}</pre>
                                         </details>
                                     </div>
                                 @endif
@@ -551,8 +561,9 @@ new class extends Component {
                 </div>
             </div>
             @endif
+        </div>
+        <x-slot:footer>
+            <x-noerd::delete-save-bar :showDelete="isset($page->id)"/>
+        </x-slot:footer>
 
-            <x-slot:footer>
-                <x-noerd::delete-save-bar :showDelete="isset($page->id)"/>
-            </x-slot:footer>
 </x-noerd::page>
