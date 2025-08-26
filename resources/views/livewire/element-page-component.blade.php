@@ -173,8 +173,15 @@ new class extends Component {
         </div>
     @else
         <div class="p-4 border border-red-300 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-red-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-red-500/10">
-            <p class="text-sm font-semibold text-red-800">{{ __('Element component not found:') }} {{ $this->elementPage->element_key }}</p>
-            <p class="text-xs text-red-700 mt-2">{{ __('Please create both the .yml and .blade.php files in the elements folder.') }}</p>
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                    <p class="text-sm font-semibold text-red-800">{{ __('Element component not found:') }} {{ $this->elementPage->element_key }}</p>
+                    <p class="text-xs text-red-700 mt-2">{{ __('Please create both the .yml and .blade.php files in the elements folder.') }}</p>
+                </div>
+                <div>
+                    <x-noerd::buttons.delete wire:confirm="{{ __('Really delete element?') }}" wire:click="delete"></x-noerd::buttons.delete>
+                </div>
+            </div>
             <details class="mt-2">
                 <summary class="text-xs text-red-600 cursor-pointer">{{ __('Show data') }}</summary>
                 <pre class="text-xs mt-2 text-red-700">{{ json_encode($this->model ?? [], JSON_PRETTY_PRINT) }}</pre>
