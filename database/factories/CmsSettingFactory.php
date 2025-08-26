@@ -25,5 +25,3 @@ class CmsSettingFactory extends Factory
         ];
     }
 }
-
-

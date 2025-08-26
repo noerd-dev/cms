@@ -164,7 +164,7 @@ new class extends Component {
         <x-noerd::buttons.delete
             class="!absolute !right-4"
             wire:click="delete"
-            wire:confirm="Element wirklich löschen?"
+            wire:confirm="{{ __('Really delete element?') }}"
         >
         </x-noerd::buttons.delete>
 

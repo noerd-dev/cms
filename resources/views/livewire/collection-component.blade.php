@@ -153,7 +153,7 @@ new class extends Component {
 
     <div class="flex w-full">
         <div class="flex ml-auto">
-            <label class="pt-2.5 text-sm">Sortierung</label>
+            <label class="pt-2.5 text-sm">{{ __('Sort') }}</label>
             <x-noerd::text-input
                 label="Sortierung"
                 type="number"
@@ -168,7 +168,7 @@ new class extends Component {
     @if($modelId && ($pageLayout['hasPage'] ?? false) && $collectionModel->page_id)
         <x-noerd::primary-button
             wire:click="$dispatch('noerdModal', {component: 'page-component', arguments: {modelId: {{$collectionModel->page_id}} }})">
-            Seite bearbeiten
+            {{ __('Edit Page') }}
         </x-noerd::primary-button>
     @endif
 
