@@ -560,10 +560,11 @@ new class extends Component {
                     </div>
                 </div>
             </div>
-            @endif
         </div>
-        <x-slot:footer>
-            <x-noerd::delete-save-bar :showDelete="isset($page->id)"/>
-        </x-slot:footer>
+    @endif
+
+    <x-slot:footer>
+        <x-noerd::delete-save-bar :showDelete="isset($page->id)"/>
+    </x-slot:footer>
 
 </x-noerd::page>
