@@ -370,11 +370,11 @@ new class extends Component {
 
 <x-noerd::page :disableModal="$disableModal">
     <x-slot:header>
-        <x-noerd::modal-title>Seite</x-noerd::modal-title>
+        <x-noerd::modal-title>{{ __('Page') }}</x-noerd::modal-title>
     </x-slot:header>
 
     <!-- View Mode Switch - Fixed Position -->
-    <div class="sticky top-20 right-6 z-50 mb-6">
+    <div class="ml-auto flex mb-6">
         <div class="flex space-x-1 bg-white p-1 rounded-lg w-fit shadow-xl border border-gray-200">
             <button
                 wire:click="setViewMode('content')"
@@ -386,7 +386,7 @@ new class extends Component {
                 wire:click="setViewMode('preview')"
                 class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'preview' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
             >
-                Vorschau
+                {{ __('Preview') }}
             </button>
             <div class="ml-auto mr-6 my-auto border-l border-gray-200 pl-4">
                 <livewire:language-switcher/>
@@ -401,7 +401,7 @@ new class extends Component {
             <div x-show="viewMode === 'content'">
             <!-- Content View (Original Backend Editing) -->
             <button wire:click="openElements">
-                Seitenelemente bearbeiten
+                {{ __('Edit Page Elements') }}
             </button>
 
             <div x-sort="$wire.elementSort($item, $position)">
@@ -417,7 +417,7 @@ new class extends Component {
             </div>
 
             <div class="mt-4">
-                <x-noerd::title>Element hinzufügen</x-noerd::title>
+                <x-noerd::title>{{__('Add Element')}}</x-noerd::title>
                 <div class="mt-4">
                     <div class="grid grid-cols-3 gap-8">
                         @foreach($this->elements() as $element)
@@ -437,7 +437,7 @@ new class extends Component {
                 <div class="p-4 border-b border-gray-200 bg-gray-50">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-lg font-medium text-gray-900">Frontend Vorschau</h3>
+                            <h3 class="text-lg font-medium text-gray-900">{{ __('Frontend Preview') }}</h3>
                         </div>
                     </div>
                 </div>
@@ -454,10 +454,9 @@ new class extends Component {
                             @else
                                 <!-- Fallback for missing or invalid element template -->
                                 <div class="p-4 bg-yellow-50 border border-yellow-200 rounded mb-4">
-                                    <p class="text-sm text-yellow-800 font-medium">Element-Komponente nicht
-                                        gefunden: {{ $element['key'] ?? 'unknown' }}</p>
+                                    <p class="text-sm text-yellow-800 font-medium">{{ __('Element component not found:') }} {{ $element['key'] ?? 'unknown' }}</p>
                                     <details class="mt-2">
-                                        <summary class="text-xs text-yellow-600 cursor-pointer">Daten anzeigen</summary>
+                                        <summary class="text-xs text-yellow-600 cursor-pointer">{{ __('Show data') }}</summary>
                                         <pre
                                             class="text-xs mt-2 text-yellow-700">{{ json_encode($element['data'] ?? [], JSON_PRETTY_PRINT) }}</pre>
                                     </details>
@@ -466,8 +465,8 @@ new class extends Component {
                         @endforeach
                     @else
                         <div class="text-center py-8 text-gray-500">
-                            <p>Keine Elemente vorhanden</p>
-                            <p class="text-sm mt-1">Wechseln Sie zum Content-Modus, um Elemente hinzuzufügen</p>
+                            <p>{{ __('No elements available') }}</p>
+                            <p class="text-sm mt-1">{{ __('Switch to content mode to add elements') }}</p>
                         </div>
                     @endif
                 </div>

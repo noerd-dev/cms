@@ -36,8 +36,23 @@
     "to": "bis",
     "Form": "Formular",
     "Form Requests": "Formularanfragen",
-    "Created At": "Erstellt am"
+    "Add Element": "Element hinzufügen",
+    "Created At": "Erstellt am",
+    "Preview": "Vorschau",
+    "Edit Page Elements": "Seitenelemente bearbeiten",
+    "Frontend Preview": "Frontend Vorschau",
+    "Element component not found:": "Element-Komponente nicht gefunden:",
+    "Show data": "Daten anzeigen",
+    "No elements available": "Keine Elemente vorhanden",
+    "Switch to content mode to add elements": "Wechseln Sie zum Content-Modus, um Elemente hinzuzufügen",
+    "Select Page": "Seite auswählen",
+    "Sort": "Sortierung",
+    "Edit Page": "Seite bearbeiten",
+    "Homepage": "Startseite",
+    "None selected": "Keine ausgewählt",
+    "Really delete element?": "Element wirklich löschen?"
 }
+
 
 
 

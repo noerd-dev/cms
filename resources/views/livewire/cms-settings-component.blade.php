@@ -75,15 +75,15 @@ new class extends Component {
 
 <x-noerd::page>
     <x-slot:header>
-        <x-noerd::modal-title>Einstellungen</x-noerd::modal-title>
+        <x-noerd::modal-title>{{ __('Settings') }}</x-noerd::modal-title>
     </x-slot:header>
 
     <div class="grid gap-6">
         <div>
-            <x-noerd::title>Startseite</x-noerd::title>
+            <x-noerd::title>{{ __('Homepage') }}</x-noerd::title>
             <div class="mt-2">
                 <select wire:model="model.homepage_page_id" class="border rounded px-3 py-2 w-full">
-                    <option value="">- Keine ausgewählt -</option>
+                    <option value="">- {{ __('None selected') }} -</option>
                     @foreach(Page::orderBy('name')->get() as $p)
                         <option value="{{$p->id}}">{{$this->formatName($p->name)}}</option>
                     @endforeach

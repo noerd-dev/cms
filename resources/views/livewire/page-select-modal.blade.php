@@ -45,12 +45,13 @@ new class extends Component {
 
 <x-noerd::page :disableModal="$disableModal">
     <x-slot:header>
-        <x-noerd::modal-title>{{ __('Seite auswählen') }}</x-noerd::modal-title>
+        <x-noerd::modal-title>{{ __('Select Page') }}</x-noerd::modal-title>
     </x-slot:header>
 
     @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
 
 </x-noerd::page>
+
 
 
 
