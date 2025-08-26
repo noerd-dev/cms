@@ -4,6 +4,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
+use Livewire\Volt\Volt;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Language;
@@ -399,82 +400,83 @@ new class extends Component {
     @if($this->page->id)
         <div x-data="{ viewMode: @entangle('viewMode').live }">
             <div x-show="viewMode === 'content'">
-            <!-- Content View (Original Backend Editing) -->
-            <button wire:click="openElements">
-                {{ __('Edit Page Elements') }}
-            </button>
+                <!-- Content View (Original Backend Editing) -->
+                <button wire:click="openElements">
+                    {{ __('Edit Page Elements') }}
+                </button>
 
-            <div x-sort="$wire.elementSort($item, $position)">
-                @foreach($this->page->elements as $elementPage)
-                    <div x-sort:item="{{$elementPage->id}}">
-                        <livewire:element-page-component
-                            wire:key="{{$elementPage->id . $lastChangeTime}}"
-                            :modelId="$elementPage->id"
-                        >
-                        </livewire:element-page-component>
-                    </div>
-                @endforeach
-            </div>
+                <div x-sort="$wire.elementSort($item, $position)">
+                    @foreach($this->page->elements as $elementPage)
+                        <div x-sort:item="{{$elementPage->id}}">
+                            <livewire:element-page-component
+                                wire:key="{{$elementPage->id . $lastChangeTime}}"
+                                :modelId="$elementPage->id"
+                            >
+                            </livewire:element-page-component>
+                        </div>
+                    @endforeach
+                </div>
 
-            <div class="mt-4">
-                <x-noerd::title>{{__('Add Element')}}</x-noerd::title>
-                <div class="mt-4">
-                    <div class="grid grid-cols-3 gap-8">
-                        @foreach($this->elements() as $element)
-                            <div wire:click="addElement('{{$element->element_key}}')"
-                                 class="text-sm hover:bg-gray-200 bg-gray-100 cursor-pointer border-dotted border p-4 text-center">
-                                <div class="font-bold"> {{$element->name}} </div>
-                                {{$element->description}}
-                            </div>
-                        @endforeach
+                <div class="mt-8 mb-8">
+                    <x-noerd::title>{{__('Add Element')}}</x-noerd::title>
+                    <div class="mt-4">
+                        <div class="grid grid-cols-3 gap-8">
+                            @foreach($this->elements() as $element)
+                                <div wire:click="addElement('{{$element->element_key}}')"
+                                     class="text-sm hover:bg-gray-200 bg-gray-100 cursor-pointer border-dotted border p-4 text-center">
+                                    <div class="font-bold"> {{$element->name}} </div>
+                                    {{$element->description}}
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
-            </div>
             </div>
             <div x-show="viewMode === 'preview'">
-            <!-- Preview View (Frontend Rendering) -->
-            <div class="border border-gray-200 rounded-lg bg-white">
-                <div class="p-4 border-b border-gray-200 bg-gray-50">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="text-lg font-medium text-gray-900">{{ __('Frontend Preview') }}</h3>
+                <!-- Preview View (Frontend Rendering) -->
+                <div class="border border-gray-200 rounded-lg bg-white">
+                    <div class="p-4 border-b border-gray-200 bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">{{ __('Frontend Preview') }}</h3>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="p-6">
-                    @if(count($this->livePreviewElements) > 0)
-                        @foreach($this->livePreviewElements as $element)
-                            @php
-                                $componentName = $this->componentMapping[$element['key']] ?? null;
-                            @endphp
+                    <div class="p-6">
+                        @if(count($this->livePreviewElements) > 0)
+                            @foreach($this->livePreviewElements as $element)
+                                @php
+                                    $componentName = $this->componentMapping[$element['key']] ?? null;
+                                    $componentExists = $componentName ? app(\Noerd\Website\Services\PageElementService::class)->elementDefinitionExists($componentName) : false;
+                                @endphp
 
-                            @if($componentName)
-                                @livewire($componentName, ['data' => $element['data']], key('preview-element-' . $loop->index . '-' . $previewTick))
-                            @else
-                                <!-- Fallback for missing or invalid element template -->
-                                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded mb-4">
-                                    <p class="text-sm text-yellow-800 font-medium">{{ __('Element component not found:') }} {{ $element['key'] ?? 'unknown' }}</p>
-                                    <details class="mt-2">
-                                        <summary class="text-xs text-yellow-600 cursor-pointer">{{ __('Show data') }}</summary>
-                                        <pre
-                                            class="text-xs mt-2 text-yellow-700">{{ json_encode($element['data'] ?? [], JSON_PRETTY_PRINT) }}</pre>
-                                    </details>
-                                </div>
-                            @endif
-                        @endforeach
-                    @else
-                        <div class="text-center py-8 text-gray-500">
-                            <p>{{ __('No elements available') }}</p>
-                            <p class="text-sm mt-1">{{ __('Switch to content mode to add elements') }}</p>
-                        </div>
-                    @endif
+                                @if($componentExists)
+                                    @livewire($componentName, ['data' => $element['data']], key('preview-element-' . $loop->index . '-' . $previewTick))
+                                @else
+                                    <!-- Fallback for missing or invalid element template -->
+                                    <div class="p-4 border border-red-300 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-red-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-red-500/10">
+                                        <p class="text-sm font-semibold text-red-800">{{ __('Element component not found:') }} {{ $element['key'] ?? 'unknown' }}</p>
+                                        <p class="text-xs text-red-700 mt-2">{{ __('Please create both the .yml and .blade.php files in the elements folder.') }}</p>
+                                        <details class="mt-2">
+                                            <summary class="text-xs text-red-600 cursor-pointer">{{ __('Show data') }}</summary>
+                                            <pre class="text-xs mt-2 text-red-700">{{ json_encode($element['data'] ?? [], JSON_PRETTY_PRINT) }}</pre>
+                                        </details>
+                                    </div>
+                                @endif
+                            @endforeach
+                        @else
+                            <div class="text-center py-8 text-gray-500">
+                                <p>{{ __('No elements available') }}</p>
+                                <p class="text-sm mt-1">{{ __('Switch to content mode to add elements') }}</p>
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
-        </div>
-    @endif
+            @endif
 
-    <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="isset($page->id)"/>
-    </x-slot:footer>
+            <x-slot:footer>
+                <x-noerd::delete-save-bar :showDelete="isset($page->id)"/>
+            </x-slot:footer>
 </x-noerd::page>
