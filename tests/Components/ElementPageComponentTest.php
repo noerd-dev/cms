@@ -251,7 +251,7 @@ it('shows a content error when element layout is missing', function () use ($tes
     $elementPage->save();
 
     Volt::test($testSettings['componentName'], [$elementPage])
-        ->assertSee('Element component not found:')
+        ->assertSee('Element-Komponente nicht gefunden:')
         ->assertSee('Please create both the .yml and .blade.php files in the elements folder.')
         ->assertSee('____missing____');
 });
