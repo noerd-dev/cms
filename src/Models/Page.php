@@ -18,7 +18,15 @@ class Page extends Model
 
     public function collection()
     {
-        return $this->hasOne(Collection::class);
+        return $this->hasOne(CollectionRow::class, 'page_id');
+    }
+
+    public function collections()
+    {
+        return $this->belongsToMany(Collection::class, 'page_collection')
+            ->withPivot('sort_order', 'tenant_id')
+            ->withTimestamps()
+            ->orderBy('page_collection.sort_order');
     }
 
     protected static function newFactory()

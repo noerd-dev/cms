@@ -14,7 +14,11 @@
   "Edit Page": "Edit Page",
   "Homepage": "Homepage",
   "None selected": "None selected",
-  "Really delete element?": "Really delete element?"
+      "Really delete element?": "Really delete element?",
+    "Linked Collections": "Linked Collections",
+    "No collections linked to this page": "No collections linked to this page",
+    "Remove collection from page?": "Remove collection from page?",
+    "Update Collections": "Update Collections"
 }
 
 
