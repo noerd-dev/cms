@@ -32,7 +32,7 @@ class FieldHelper
         $model = [];
         $elementFields = self::getElementFields($element);
 
-        if(!$elementFields) {
+        if (!$elementFields) {
             return null;
         }
 
@@ -105,14 +105,14 @@ class FieldHelper
                 $content = file_get_contents($ymlFile);
                 $yaml = Yaml::parse($content ?: '');
 
-                $elements[] = (object)[
+                $elements[] = (object) [
                     'element_key' => $elementKey,
                     'name' => $yaml['title'] ?: ucwords(str_replace('_', ' ', $elementKey)),
                     'description' => $yaml['description'] ?? '',
                 ];
             } else {
                 // If no yml file exists, create a basic element entry
-                $elements[] = (object)[
+                $elements[] = (object) [
                     'element_key' => $elementKey,
                     'name' => ucwords(str_replace(['_', '-'], ' ', $elementKey)),
                     'description' => 'Auto-detected from Livewire component',

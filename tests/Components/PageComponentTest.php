@@ -1,9 +1,9 @@
 <?php
 
 use Livewire\Volt\Volt;
-use Noerd\Cms\Models\Page;
 use Noerd\Cms\Models\Element;
 use Noerd\Cms\Models\ElementPage;
+use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
