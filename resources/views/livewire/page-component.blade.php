@@ -323,9 +323,9 @@ new class extends Component {
             }
         }
 
-        // TODO auto detect if value is an array and convert it to JSON
-        $model['slug'] = json_encode($cleanSlugData);
-        $model['name'] = json_encode($this->model['name']);
+        // Laravel automatically casts these as JSON due to model casts
+        $model['slug'] = $cleanSlugData;
+        $model['name'] = $this->model['name'];
 
 
         $page = Page::updateOrCreate(['id' => $this->modelId],
@@ -380,8 +380,8 @@ new class extends Component {
                 $slugData['de'] = '/collection-page';
             }
             
-            $pageData['name'] = json_encode($nameData);
-            $pageData['slug'] = json_encode($slugData);
+            $pageData['name'] = $nameData;
+            $pageData['slug'] = $slugData;
             $pageData['is_active'] = true;
         } else {
             // For collections with hasPage: false, use minimal page data
