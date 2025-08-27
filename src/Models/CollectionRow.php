@@ -28,5 +28,3 @@ class CollectionRow extends Model
         return \Noerd\Cms\Database\Factories\CollectionRowFactory::new();
     }
 }
-
-

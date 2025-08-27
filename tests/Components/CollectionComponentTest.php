@@ -37,7 +37,7 @@ it('uploads an image via images.field binding and stores path into model', funct
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'PROJECTS',
     ]);
-    
+
     $collection = CollectionRow::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
@@ -73,7 +73,7 @@ it('deletes an image value from model', function () use ($testSettings): void {
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'PROJECTS',
     ]);
-    
+
     $collection = CollectionRow::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
@@ -151,7 +151,7 @@ it('creates page automatically when hasPage is true in yml config', function ():
         'collection_key' => 'CONTACTS',
         'name' => 'Contacts',
     ]);
-    
+
     $collection = CollectionRow::create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
@@ -196,7 +196,7 @@ it('does not create page when hasPage is false in yml config', function (): void
         'collection_key' => 'SLIDERS',
         'name' => 'Sliders',
     ]);
-    
+
     $collection = CollectionRow::create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
@@ -232,7 +232,7 @@ it('does not update image on mediaSelected when token mismatches; updates when t
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'PROJECTS',
     ]);
-    
+
     $collection = CollectionRow::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
