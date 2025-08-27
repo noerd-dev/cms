@@ -4,12 +4,24 @@ namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Noerd\Cms\Database\Factories\PageFactory;
 
 class Page extends Model
 {
     use HasFactory;
 
     protected $guarded = [];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'data' => 'array',
+        'name' => 'array',
+        'slug' => 'array',
+    ];
+
+    protected $attributes = [
+        'is_active' => true,
+    ];
 
     public function elements()
     {
@@ -18,31 +30,11 @@ class Page extends Model
 
     public function collection()
     {
-        return $this->hasOne(CollectionRow::class, 'page_id');
-    }
-
-    public function collections()
-    {
-        return $this->belongsToMany(Collection::class, 'page_collection')
-            ->withPivot('sort_order', 'tenant_id')
-            ->withTimestamps()
-            ->orderBy('page_collection.sort_order');
+        return $this->belongsTo(Collection::class);
     }
 
     protected static function newFactory()
     {
-        return \Noerd\Cms\Database\Factories\PageFactory::new();
+        return PageFactory::new();
     }
-
-    /*
-    public function toArray()
-    {
-        $data = parent::toArray();
-
-        // TODO: auto decode JSON fields
-        $data['name'] = json_decode($data['name'], true) ?? $data['name'];
-
-        return $data;
-    }
-    */
 }

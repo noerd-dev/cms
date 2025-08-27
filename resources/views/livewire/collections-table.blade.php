@@ -4,7 +4,7 @@ use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
-use Noerd\Cms\Models\CollectionRow;
+use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Traits\Noerd;
 use Noerd\Noerd\Helpers\StaticConfigHelper;
 
@@ -40,9 +40,9 @@ new class extends Component {
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'collection-component',
+            component: 'page-component',
             source: self::COMPONENT,
-            arguments: ['modelId' => $modelId, 'relationId' => $relationId],
+            arguments: ['modelId' => $modelId, 'relationId' => $relationId, 'collectionKey' => $this->key],
         );
     }
 
@@ -52,42 +52,35 @@ new class extends Component {
         $collection = Collection::where('tenant_id', auth()->user()->selected_tenant_id)
             ->where('collection_key', strtoupper($this->key))
             ->first();
-            
+
         if (!$collection) {
-            $collectionRows = collect();
+            $pages = collect();
         } else {
-            $collectionRows = $collection->rows()->paginate(self::PAGINATION);
+            $pages = Page::where('collection_id', $collection->id)
+                ->where('tenant_id', auth()->user()->selected_tenant_id)
+                ->orderBy('sort')
+                ->paginate(self::PAGINATION);
         }
 
         $rows = [];
-        foreach ($collectionRows as $collectionRow) {
-            $row = json_decode($collectionRow->data, true);
-            $row['id'] = $collectionRow->id;
+        foreach ($pages as $page) {
+            $row = $page->data ?? [];
+            $row['id'] = $page->id;
 
             $rows[] = $row;
         }
 
         $arrayRows = [];
-        foreach ($rows as $row) {
-            // NAME
-            if (isset($row['name'])) {
-                $oldName = $row['name'];
-
-                $row['name'] = $row['name'][session('selectedLanguage')] ?? array_values($row['name'])[0] ?? $row['name'];
-
-                if (strlen($row['name']) == 0) {
-                    $row['name'] = $oldName;
+        foreach ($rows as $columns) {
+            $row = [];
+            foreach ($columns as $key => $column) {
+                if(is_array($column)) {
+                    $value = $column[session('selectedLanguage')] ?? array_values($column)[0] ?? '';
                 }
-            }
-
-            // DESCRIPTION
-            if (isset($row['description'])) {
-                $oldName = $row['description'];
-                $row['description'] = $row['description'][session('selectedLanguage')] ?? array_values($row['description'])[0] ?? $row['description'];
-
-                if (strlen($row['description']) == 0) {
-                    $row['description'] = $oldName;
+                else {
+                    $value = $column;
                 }
+                $row[$key] = $value;
             }
 
             $arrayRows[] = $row;
