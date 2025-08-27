@@ -16,8 +16,16 @@ class PageFactory extends Factory
 
         return [
             'tenant_id' => 1,
-            'name' => '{"de":"' . $deTitle . '","en":"' . $enTitle . '"}',
-            'slug' => '{"de":"/' . $this->generateSlug($deTitle) . '","en":"/' . $this->generateSlug($enTitle) . '"}',
+            'name' => $deTitle,
+            'is_active' => $this->faker->boolean(80),
+            'slug' => str($deTitle)->slug()->toString(),
+            'data' => [
+                'name' => [
+                    'de' => $deTitle,
+                    'en' => $enTitle,
+                ],
+            ],
+            'sort' => $this->faker->numberBetween(1, 100),
             'created_at' => now(),
             'updated_at' => now(),
         ];

@@ -4,6 +4,7 @@ namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Noerd\Cms\Database\Factories\CollectionFactory;
 
 class Collection extends Model
 {
@@ -15,7 +16,7 @@ class Collection extends Model
 
     public function rows()
     {
-        return $this->hasMany(CollectionRow::class, 'collection_id');
+        return $this->hasMany(Page::class, 'collection_id')->orderBy('sort');
     }
 
     public function pages()
@@ -28,6 +29,6 @@ class Collection extends Model
 
     protected static function newFactory()
     {
-        return \Noerd\Cms\Database\Factories\CollectionFactory::new();
+        return CollectionFactory::new();
     }
 }

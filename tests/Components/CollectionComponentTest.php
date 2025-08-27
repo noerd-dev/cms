@@ -5,7 +5,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Collection;
-use Noerd\Cms\Models\CollectionRow;
 use Noerd\Cms\Models\Page;
 use Noerd\Media\Models\Media as MediaModel;
 use Noerd\Noerd\Models\User;
@@ -13,9 +12,9 @@ use Noerd\Noerd\Models\User;
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
 $testSettings = [
-    'componentName' => 'collection-component',
+    'componentName' => 'page-component',
     'listName' => 'collections-table',
-    'id' => 'collectionId',
+    'id' => 'pageId',
 ];
 
 it('opens the collections page', function (): void {
@@ -38,10 +37,10 @@ it('uploads an image via images.field binding and stores path into model', funct
         'collection_key' => 'PROJECTS',
     ]);
 
-    $collection = CollectionRow::factory()->create([
+    $collection = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
-        'data' => json_encode([]),
+        'data' => [],
         'sort' => 0,
     ]);
 
@@ -50,7 +49,7 @@ it('uploads an image via images.field binding and stores path into model', funct
     $before = MediaModel::count();
 
     // Set the Livewire-bound temporary file; component must process it
-    Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'key' => 'projects'])
+    Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'collectionKey' => 'projects'])
         ->set('images.image', $fakeImage)
         ->assertSet('model.image', fn($value) => is_string($value) && $value !== '');
 
@@ -74,14 +73,14 @@ it('deletes an image value from model', function () use ($testSettings): void {
         'collection_key' => 'PROJECTS',
     ]);
 
-    $collection = CollectionRow::factory()->create([
+    $collection = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
-        'data' => json_encode(['image' => '/storage/uploads/any.jpg']),
+        'data' => ['image' => '/storage/uploads/any.jpg'],
         'sort' => 0,
     ]);
 
-    Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'key' => 'projects'])
+    Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'collectionKey' => 'projects'])
         ->call('deleteImage', 'image')
         ->assertSet('model.image', null);
 });
@@ -94,13 +93,12 @@ it('tests collection factory without page', function (): void {
         'collection_key' => 'PROJECTS',
     ]);
 
-    $collection = CollectionRow::factory()->create([
+    $collection = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
-        'page_id' => null,
     ]);
 
-    $this->assertNull($collection->page_id);
+    $this->assertNotNull($collection->id);
 });
 
 it('tests collection with sort functionality', function (): void {
@@ -111,19 +109,19 @@ it('tests collection with sort functionality', function (): void {
         'collection_key' => 'PROJECTS',
     ]);
 
-    $collection1 = CollectionRow::factory()->create([
+    $collection1 = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
         'sort' => 1,
     ]);
 
-    $collection2 = CollectionRow::factory()->create([
+    $collection2 = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
         'sort' => 2,
     ]);
 
-    $collections = CollectionRow::where('tenant_id', $user->selected_tenant_id)
+    $collections = Page::where('tenant_id', $user->selected_tenant_id)
         ->where('collection_id', $parentCollection->id)
         ->orderBy('sort')
         ->get();
@@ -152,12 +150,15 @@ it('creates page automatically when hasPage is true in yml config', function ():
         'name' => 'Contacts',
     ]);
 
-    $collection = CollectionRow::create([
+    $collection = Page::create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
-        'data' => json_encode([
+        'name' => 'Test Kontakt',
+        'slug' => 'test-kontakt',
+        'is_active' => true,
+        'data' => [
             'name' => ['de' => 'Test Kontakt', 'en' => 'Test Contact'],
-        ]),
+        ],
     ]);
 
     // Manually trigger the page creation logic for testing
@@ -165,17 +166,8 @@ it('creates page automatically when hasPage is true in yml config', function ():
     // we'll test the logic directly
     $collectionFields = \Noerd\Cms\Helpers\CollectionHelper::getCollectionFields('contacts');
 
-    if (!$collection->page_id && ($collectionFields['hasPage'] ?? false)) {
-        $page = new Page();
-        $page->name = '{"de":"CollectionPage","en":"CollectionPage"}';
-        $page->tenant_id = $user->selected_tenant_id;
-        $page->save();
-        $collection->page_id = $page->id;
-        $collection->save();
-    }
-
-    // Verify page was created
-    $this->assertNotNull($collection->fresh()->page_id);
+    // The collection itself is already a page now
+    // Verify page was created (collection is a page)
     $this->assertEquals($initialPageCount + 1, Page::count());
 });
 
@@ -197,29 +189,49 @@ it('does not create page when hasPage is false in yml config', function (): void
         'name' => 'Sliders',
     ]);
 
-    $collection = CollectionRow::create([
+    $collection = Page::create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
-        'data' => json_encode([
+        'name' => 'Test Slider',
+        'slug' => 'test-slider',
+        'is_active' => true,
+        'data' => [
             'image' => '/test/image.jpg',
-        ]),
+        ],
     ]);
 
-    // Manually trigger the page creation logic for testing
-    $collectionFields = \Noerd\Cms\Helpers\CollectionHelper::getCollectionFields('sliders');
+    // The collection itself is already a page now
+    // In the new system, collection pages are always created
+    $this->assertEquals($initialPageCount + 1, Page::count());
+});
 
-    if (!$collection->page_id && ($collectionFields['hasPage'] ?? false)) {
-        $page = new Page();
-        $page->name = '{"de":"CollectionPage","en":"CollectionPage"}';
-        $page->tenant_id = $user->selected_tenant_id;
-        $page->save();
-        $collection->page_id = $page->id;
-        $collection->save();
-    }
+it('handles collections without page features (hasPage: false)', function () use ($testSettings): void {
+    $user = User::factory()->withContentModule()->create();
+    $this->actingAs($user);
 
-    // Verify NO page was created
-    $this->assertNull($collection->fresh()->page_id);
-    $this->assertEquals($initialPageCount, Page::count());
+    // Create a collection for customers (hasPage: false)
+    $parentCollection = Collection::factory()->create([
+        'tenant_id' => $user->selected_tenant_id,
+        'collection_key' => 'CUSTOMERS',
+    ]);
+
+    // Test the page-component with customers collection key
+    $component = Volt::test($testSettings['componentName'], ['collectionKey' => 'customers'])
+        ->assertSet('collectionKey', 'customers')
+        ->assertSet('collectionLayout.hasPage', false)
+        ->assertSet('hasPageFeatures', false)
+        ->set('model.name', ['de' => 'Test Kunde', 'en' => 'Test Customer'])
+        ->set('model.description', ['de' => 'Test Beschreibung', 'en' => 'Test Description'])
+        ->call('store')
+        ->assertHasNoErrors();
+
+    // Verify page was created with minimal page data
+    $page = Page::latest('id')->first();
+    expect($page->collection_id)->toBe($parentCollection->id)
+        ->and($page->name)->toBeNull() // No name for hasPage: false
+        ->and($page->slug)->toBeNull() // No slug for hasPage: false
+        ->and($page->is_active)->toBeNull() // No is_active for hasPage: false  
+        ->and($page->data)->toHaveKeys(['name', 'description']);
 });
 
 it('does not update image on mediaSelected when token mismatches; updates when token matches', function () use ($testSettings): void {
@@ -233,10 +245,10 @@ it('does not update image on mediaSelected when token mismatches; updates when t
         'collection_key' => 'PROJECTS',
     ]);
 
-    $collection = CollectionRow::factory()->create([
+    $collection = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_id' => $parentCollection->id,
-        'data' => json_encode([]),
+        'data' => [],
         'sort' => 0,
     ]);
 
@@ -252,7 +264,7 @@ it('does not update image on mediaSelected when token mismatches; updates when t
         'size' => 1,
     ]);
 
-    $component = Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'key' => 'projects'])
+    $component = Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'collectionKey' => 'projects'])
         ->set('model.__mediaToken', 'token-abc')
         ->set('model.image', 'UNCHANGED');
 
