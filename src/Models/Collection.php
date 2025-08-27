@@ -19,13 +19,6 @@ class Collection extends Model
         return $this->hasMany(Page::class, 'collection_id')->orderBy('sort');
     }
 
-    public function pages()
-    {
-        return $this->belongsToMany(Page::class, 'page_collection')
-            ->withPivot('sort_order', 'tenant_id')
-            ->withTimestamps()
-            ->orderBy('page_collection.sort_order');
-    }
 
     protected static function newFactory()
     {
