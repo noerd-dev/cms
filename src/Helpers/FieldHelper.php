@@ -19,8 +19,8 @@ class FieldHelper
         }
 
         // Fallback to old location for backward compatibility (will be removed)
-        if (file_exists(base_path('content/elements/' . $element . '.yml'))) {
-            $content = file_get_contents(base_path('content/elements/' . $element . '.yml'));
+        if (file_exists(storage_path('environment/elements/' . $element . '.yml'))) {
+            $content = file_get_contents(storage_path('environment/elements/' . $element . '.yml'));
             return Yaml::parse($content ?: '');
         }
 

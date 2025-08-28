@@ -16,7 +16,7 @@ it('parses element data with defaults and translations', function (): void {
 
     $elementFileName = str_replace('_', '-', $element);
     if (! file_exists(base_path('app-modules/website/resources/views/livewire/elements/' . $elementFileName . '.yml')) &&
-        ! file_exists(base_path('content/elements/' . $element . '.yml'))
+        ! file_exists(storage_path('environment/elements/' . $element . '.yml'))
     ) {
         $this->markTestSkipped('No element yml found for parsing test');
     }

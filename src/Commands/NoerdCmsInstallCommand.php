@@ -18,7 +18,7 @@ class NoerdCmsInstallCommand extends Command
         $this->info('Installing noerd content...');
 
         $sourceDir = base_path('vendor/noerd/cms/content');
-        $targetDir = base_path('content');
+        $targetDir = storage_path('environment');
 
         if (!is_dir($sourceDir)) {
             $this->error("Source directory not found: {$sourceDir}");
