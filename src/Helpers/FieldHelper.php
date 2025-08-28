@@ -109,6 +109,7 @@ class FieldHelper
                     'element_key' => $elementKey,
                     'name' => $yaml['title'] ?: ucwords(str_replace('_', ' ', $elementKey)),
                     'description' => $yaml['description'] ?? '',
+                    'group' => $yaml['group'] ?? 'General',
                 ];
             } else {
                 // If no yml file exists, create a basic element entry
@@ -116,11 +117,39 @@ class FieldHelper
                     'element_key' => $elementKey,
                     'name' => ucwords(str_replace(['_', '-'], ' ', $elementKey)),
                     'description' => 'Auto-detected from Livewire component',
+                    'group' => 'General',
                 ];
             }
         }
 
         return $elements;
+    }
+
+    public static function getAllElementsGrouped(): array
+    {
+        $elements = self::getAllElements();
+        $groupedElements = [];
+
+        foreach ($elements as $element) {
+            $group = $element->group ?? 'General';
+            if (!isset($groupedElements[$group])) {
+                $groupedElements[$group] = [];
+            }
+            $groupedElements[$group][] = $element;
+        }
+
+        // Sort groups alphabetically, but keep General at the top if it exists
+        uksort($groupedElements, function ($a, $b) {
+            if ($a === 'General') {
+                return -1;
+            }
+            if ($b === 'General') {
+                return 1;
+            }
+            return strcmp($a, $b);
+        });
+
+        return $groupedElements;
     }
 
     private static function isJsonAndDecode($value): mixed
