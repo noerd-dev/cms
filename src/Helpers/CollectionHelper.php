@@ -6,9 +6,13 @@ use Symfony\Component\Yaml\Yaml;
 
 class CollectionHelper
 {
-    public static function getCollectionFields(string $collection): array
+    public static function getCollectionFields(string $collection): ?array
     {
-        $content = file_get_contents(base_path('content/collections/' . $collection . '.yml'));
+        try {
+            $content = file_get_contents(storage_path('environment/collections/' . $collection . '.yml'));
+        } catch (\Exception $e) {
+            return null;
+        }
         $fields = Yaml::parse($content ?: '');
 
         foreach ($fields['fields'] as $key => $item) {
