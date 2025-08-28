@@ -18,6 +18,12 @@ new class extends Component {
         return FieldHelper::getAllElements();
     }
 
+    #[Computed]
+    public function groupedElements()
+    {
+        return FieldHelper::getAllElementsGrouped();
+    }
+
     public function pick(string $elementKey): void
     {
         $this->dispatch('elementPicked', elementKey: $elementKey, token: $this->token);
@@ -31,16 +37,23 @@ new class extends Component {
     </x-slot:header>
 
     <div class="mt-4">
-        <div class="grid grid-cols-3 gap-8">
-            @foreach($this->elements() as $element)
-                <div wire:click="pick('{{$element->element_key}}')"
-                     class="text-sm hover:bg-gray-200 bg-gray-100 cursor-pointer border-dotted border p-4 text-center">
-                    <div class="font-bold"> {{$element->name}} </div>
-                    {{$element->description}}
+        @foreach($this->groupedElements() as $groupName => $groupElements)
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">
+                    {{ $groupName }}
+                </h3>
+                <div class="grid grid-cols-3 gap-4">
+                    @foreach($groupElements as $element)
+                        <div wire:click="pick('{{$element->element_key}}')"
+                             class="text-sm hover:bg-gray-200 bg-gray-100 cursor-pointer border-dotted border p-4 text-center rounded-md transition-colors">
+                            <div class="font-bold mb-1">{{$element->name}}</div>
+                            <div class="text-gray-600 text-xs">{{$element->description}}</div>
+                        </div>
+                    @endforeach
                 </div>
-            @endforeach
-        </div>
+            </div>
+        @endforeach
     </div>
-
 </x-noerd::page>
+
 
