@@ -159,6 +159,11 @@ new class extends Component {
             $this->model = FieldHelper::parseComponentToData('page-component', $model->toArray());
         }
 
+        // Ensure sort field is available for collections
+        if ($this->collectionKey) {
+            $this->model['sort'] = $this->model['sort'] ?? $model->sort ?? 0;
+        }
+
         // Fix slug field if it's malformed or shows [object Object]
         if (isset($this->model['slug'])) {
             // If slug is not an array or is malformed, reset it
@@ -357,7 +362,7 @@ new class extends Component {
             'tenant_id' => auth()->user()->selected_tenant_id,
             'collection_id' => $parentCollection->id,
             'data' => $this->model,
-            'sort' => $this->model['sort'] ?? 0,
+            'sort' => (int) ($this->model['sort'] ?? 0),
         ];
 
         if ($hasPageFeatures) {
@@ -584,28 +589,62 @@ new class extends Component {
     <!-- View Mode Switch - Fixed Position -->
     @if($this->hasPageFeatures)
         <div class="ml-auto flex mb-6">
-            <div class="flex space-x-1 bg-white p-1 rounded-lg w-fit shadow-xl border border-gray-200">
-                <button
-                    wire:click="setViewMode('content')"
-                    class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'content' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
-                >
-                    Content
-                </button>
-                <button
-                    wire:click="setViewMode('preview')"
-                    class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'preview' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
-                >
-                    {{ __('Preview') }}
-                </button>
-                <div class="ml-auto mr-6 my-auto border-l border-gray-200 pl-4">
-                    <livewire:language-switcher/>
+            <div class="flex items-center space-x-4">
+                <!-- Sort Field for Collections -->
+                @if($collectionKey)
+                    <div class="flex items-center space-x-2">
+                        <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
+                        <flux:input 
+                            wire:model="model.sort"
+                            id="sort"
+                            type="number"
+                            class="w-16 text-sm"
+                            min="0"
+                            step="1"
+                        />
+                    </div>
+                @endif
+                
+                <div class="flex space-x-1 bg-white p-1 rounded-lg w-fit shadow-xl border border-gray-200">
+                    <button
+                        wire:click="setViewMode('content')"
+                        class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'content' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
+                    >
+                        Content
+                    </button>
+                    <button
+                        wire:click="setViewMode('preview')"
+                        class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'preview' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
+                    >
+                        {{ __('Preview') }}
+                    </button>
+                    <div class="ml-auto mr-6 my-auto border-l border-gray-200 pl-4">
+                        <livewire:language-switcher/>
+                    </div>
                 </div>
             </div>
         </div>
     @else
-        <!-- Language switcher only for collections without page features -->
+        <!-- Language switcher and Sort field for collections without page features -->
         <div class="ml-auto flex mb-6">
-            <livewire:language-switcher/>
+            <div class="flex items-center space-x-4">
+                <!-- Sort Field for Collections -->
+                @if($collectionKey)
+                    <div class="flex items-center space-x-2">
+                        <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
+                        <flux:input 
+                            wire:model="model.sort"
+                            id="sort"
+                            type="number"
+                            class="w-16 text-sm"
+                            min="0"
+                            step="1"
+                        />
+                    </div>
+                @endif
+                
+                <livewire:language-switcher/>
+            </div>
         </div>
     @endif
 
