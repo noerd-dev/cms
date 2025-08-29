@@ -40,15 +40,17 @@ it('successfully stores the data', function () use ($testSettings): void {
 
     $this->actingAs($user);
 
-    Volt::test($testSettings['componentName'])
+    $component = Volt::test($testSettings['componentName'])
         ->set('model.name.de', 'Test Seite')
         ->set('model.name.en', 'Test Page')
+        ->set('model.layout', 'weblayout')
         ->call('store')
         ->assertOk();
 
     $this->assertDatabaseHas('pages', [
         'tenant_id' => $user->selected_tenant_id,
         'name' => '{"de":"Test Seite","en":"Test Page"}',
+        'layout' => 'weblayout',
     ]);
 });
 

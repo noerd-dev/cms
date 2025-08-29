@@ -134,6 +134,29 @@ new class extends Component {
         return $pageElementService->getComponentMapping();
     }
 
+    /**
+     * Returns available website layouts as key => label.
+     */
+    public function layoutOptions(): array
+    {
+        $layoutsDirectory = base_path('app-modules/website/resources/views/components/layouts');
+        $options = [];
+
+        if (is_dir($layoutsDirectory)) {
+            foreach (glob($layoutsDirectory . '/*.blade.php') as $filePath) {
+                $fileName = basename($filePath, '.blade.php');
+                $options[$fileName] = $fileName;
+            }
+        }
+
+        // Fallback to a sensible default if directory is empty
+        if (empty($options)) {
+            $options['weblayout'] = 'weblayout';
+        }
+
+        return $options;
+    }
+
     public function mount(Page $model, ?string $collectionKey = null): void
     {
         if ($this->modelId) {
@@ -157,6 +180,12 @@ new class extends Component {
         } else {
             // For regular pages, use the standard page fields
             $this->model = FieldHelper::parseComponentToData('page-component', $model->toArray());
+        }
+
+        // Ensure a layout is always preselected
+        $availableLayouts = $this->layoutOptions();
+        if (!isset($this->model['layout']) || empty($this->model['layout'])) {
+            $this->model['layout'] = array_key_first($availableLayouts);
         }
 
         // Ensure sort field is available for collections
@@ -318,6 +347,11 @@ new class extends Component {
         $model = $this->model;
         $model['tenant_id'] = auth()->user()->selected_tenant_id;
 
+        // Ensure layout is set before saving
+        if (empty($model['layout'])) {
+            $model['layout'] = array_key_first($this->layoutOptions());
+        }
+
         // Clean up slug data before saving - remove empty values
         $cleanSlugData = [];
         if (isset($this->model['slug']) && is_array($this->model['slug'])) {
@@ -364,6 +398,10 @@ new class extends Component {
             'data' => $this->model,
             'sort' => (int) ($this->model['sort'] ?? 0),
         ];
+
+        // Persist selected layout for collections as well
+        $availableLayouts = $this->layoutOptions();
+        $pageData['layout'] = $this->model['layout'] ?? array_key_first($availableLayouts);
 
         if ($hasPageFeatures) {
             // For collections with hasPage: true, store name and slug as JSON (translatable)

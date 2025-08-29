@@ -2,6 +2,7 @@
 
 namespace Noerd\Cms\Helpers;
 
+use Exception;
 use Symfony\Component\Yaml\Yaml;
 
 class CollectionHelper
@@ -10,7 +11,7 @@ class CollectionHelper
     {
         try {
             $content = file_get_contents(storage_path('environment/collections/' . $collection . '.yml'));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return null;
         }
         $fields = Yaml::parse($content ?: '');
