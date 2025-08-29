@@ -43,7 +43,10 @@ new class extends Component {
 
     public function deleteFile($fileName): void
     {
-        $filePath = storage_path('environment/collections/' . $fileName);
+        $filePath = base_path('content/collections/' . $fileName);
+        if (!file_exists($filePath)) {
+            $filePath = storage_path('environment/collections/' . $fileName);
+        }
 
         if (File::exists($filePath)) {
             File::delete($filePath);
@@ -56,7 +59,10 @@ new class extends Component {
 
     public function with(): array
     {
-        $collectionsPath = storage_path('environment/collections');
+        $collectionsPath = base_path('content/collections');
+        if (!is_dir($collectionsPath)) {
+            $collectionsPath = storage_path('environment/collections');
+        }
         $files = [];
 
         if (File::exists($collectionsPath)) {

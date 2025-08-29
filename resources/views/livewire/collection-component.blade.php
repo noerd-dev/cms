@@ -33,7 +33,10 @@ new class extends Component {
 
     private function loadFile(): void
     {
-        $filePath = storage_path('environment/collections/' . $this->fileName);
+        $filePath = base_path('content/collections/' . $this->fileName);
+        if (!File::exists($filePath)) {
+            $filePath = storage_path('environment/collections/' . $this->fileName);
+        }
 
         if (File::exists($filePath)) {
             $this->yamlContent = File::get($filePath);
@@ -80,6 +83,12 @@ fields:
 
         // Check if filename changed and new file already exists
         if ($this->isNewFile || $fileName !== $this->originalFileName) {
+            $filePath = base_path('content/collections/' . $fileName);
+            if (File::exists($filePath)) {
+                $this->addError('fileName', 'Eine Datei mit diesem Namen existiert bereits.');
+                return;
+            }
+            // fallback check
             $filePath = storage_path('environment/collections/' . $fileName);
             if (File::exists($filePath)) {
                 $this->addError('fileName', 'Eine Datei mit diesem Namen existiert bereits.');
@@ -94,12 +103,19 @@ fields:
         }
 
         // Save file
-        $filePath = storage_path('environment/collections/' . $fileName);
+        $filePath = base_path('content/collections/' . $fileName);
+        if (!File::exists(dirname($filePath))) {
+            // Ensure directory exists in content; if not, fall back to storage
+            $filePath = storage_path('environment/collections/' . $fileName);
+        }
         File::put($filePath, $this->yamlContent);
 
         // If filename changed, delete old file
         if (!$this->isNewFile && $fileName !== $this->originalFileName) {
-            $oldFilePath = storage_path('environment/collections/' . $this->originalFileName);
+            $oldFilePath = base_path('content/collections/' . $this->originalFileName);
+            if (!File::exists($oldFilePath)) {
+                $oldFilePath = storage_path('environment/collections/' . $this->originalFileName);
+            }
             if (File::exists($oldFilePath)) {
                 File::delete($oldFilePath);
             }
@@ -117,7 +133,10 @@ fields:
     public function delete(): void
     {
         if (!$this->isNewFile && $this->originalFileName) {
-            $filePath = storage_path('environment/collections/' . $this->originalFileName);
+            $filePath = base_path('content/collections/' . $this->originalFileName);
+            if (!File::exists($filePath)) {
+                $filePath = storage_path('environment/collections/' . $this->originalFileName);
+            }
 
             if (File::exists($filePath)) {
                 File::delete($filePath);
