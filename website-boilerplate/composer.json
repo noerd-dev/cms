@@ -1,0 +1,28 @@
+{
+    "name": "noerd/website",
+    "description": "Noerd Website module",
+    "type": "library",
+    "version": "v0.1.0",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.2",
+        "livewire/livewire": "^3.4",
+        "livewire/volt": "^v1.6.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Noerd\\Website\\": "src/",
+            "Noerd\\Website\\Tests\\": "tests/",
+            "Noerd\\Website\\Database\\Factories\\": "database/factories/",
+            "Noerd\\Website\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "minimum-stability": "stable",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Noerd\\Website\\Providers\\WebsiteServiceProvider"
+            ]
+        }
+    }
+}

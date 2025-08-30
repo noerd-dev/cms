@@ -1,0 +1,6 @@
+title: 'Two Column Text'
+description: 'Text content in two-column layout'
+group: 'Text'
+fields:
+  - { name: model.text1, label: Text links, type: translatableRichText, colspan: 6 }
+  - { name: model.text2, label: Text rechts, type: translatableRichText, colspan: 6 }
