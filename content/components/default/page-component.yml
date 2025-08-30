@@ -1,5 +1,6 @@
 title: 'Seite'
 description: ''
 fields:
-  - { name: model.name, label: Titel, type: translatableText, colspan: 6 }
-  - { name: model.slug, label: URL, type: translatableText, colspan: 6 }
+  - { name: model.name, label: Titel, type: translatableText, colspan: 4 }
+  - { name: model.slug, label: URL, type: translatableText, colspan: 4 }
+  - { name: model.layout, label: Layout, type: picklist, picklistField: layoutOptions, colspan: 4 }
