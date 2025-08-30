@@ -11,7 +11,7 @@ use RecursiveIteratorIterator;
 
 class InstallWebsiteBoilerplateCommand extends Command
 {
-    protected $signature = 'cms:install-website {--force : Overwrite existing files without asking}';
+    protected $signature = 'noerd:install-website {--force : Overwrite existing files without asking}';
 
     protected $description = 'Install website boilerplate from CMS module to app-modules/website';
 
@@ -122,6 +122,9 @@ class InstallWebsiteBoilerplateCommand extends Command
         $this->info('Registering website module...');
 
         try {
+            // Update composer repositories to include the new local module
+            $this->updateComposerRepositories();
+
             // Run composer dump-autoload to ensure the module is discoverable
             $this->line('<comment>Running composer dump-autoload...</comment>');
             exec('cd ' . base_path() . ' && composer dump-autoload', $output, $returnCode);
@@ -132,10 +135,39 @@ class InstallWebsiteBoilerplateCommand extends Command
                 $this->line('<info>Autoloader refreshed successfully.</info>');
             }
 
-            // The module should be auto-discovered by Laravel's service provider discovery
+            // Clear Laravel's cached services to ensure service provider discovery
+            $this->line('<comment>Clearing Laravel caches...</comment>');
+            Artisan::call('config:clear');
+            Artisan::call('cache:clear');
+            
+            // Clear the cached services to force re-discovery of service providers
+            $servicesPath = base_path('bootstrap/cache/services.php');
+            if (file_exists($servicesPath)) {
+                unlink($servicesPath);
+                $this->line('<info>Cleared cached services file.</info>');
+            }
+
             $this->line('<info>Module registered successfully.</info>');
         } catch (Exception $e) {
             $this->warn('Module registration may need manual intervention: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update composer to recognize the new website module
+     */
+    private function updateComposerRepositories(): void
+    {
+        $this->line('<comment>Refreshing composer package discovery...</comment>');
+        
+        // Since app-modules/* is already in repositories, we just need to refresh composer
+        // to recognize the new website module
+        exec('cd ' . base_path() . ' && composer install --no-scripts', $output, $returnCode);
+        
+        if ($returnCode !== 0) {
+            $this->warn('Failed to refresh composer packages. You may need to run "composer install" manually.');
+        } else {
+            $this->line('<info>Composer packages refreshed successfully.</info>');
         }
     }
 
