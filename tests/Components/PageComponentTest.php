@@ -1,7 +1,6 @@
 <?php
 
 use Livewire\Volt\Volt;
-use Noerd\Cms\Models\Element;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Models\User;
@@ -148,28 +147,13 @@ it('shows a preview error when element component is missing', function () use ($
         'tenant_id' => $user->selected_tenant_id,
     ]);
 
-    // Create element + element_page with a missing element_key
-    $element = new Element();
-    $element->tenant_id = $user->selected_tenant_id;
-    $element->name = 'Missing';
-    $element->element_key = '____missing____';
-    $element->description = 'Test';
-    $element->save();
-
+    // Create element_page with a missing element_key
     $elementPage = ElementPage::create([
         'page_id' => $page->id,
-        'element_id' => $element->id,
+        'element_key' => '____missing____',
         'data' => json_encode(['foo' => 'bar']),
         'sort' => 1,
     ]);
-    // Ensure element_key is set (column exists in some environments)
-    if (! \Illuminate\Support\Facades\Schema::hasColumn('element_page', 'element_key')) {
-        \Illuminate\Support\Facades\Schema::table('element_page', function (\Illuminate\Database\Schema\Blueprint $table): void {
-            $table->string('element_key')->nullable();
-        });
-    }
-    $elementPage->element_key = '____missing____';
-    $elementPage->save();
 
     Volt::test($testSettings['componentName'], ['modelId' => $page->id])
         ->set('viewMode', 'preview')

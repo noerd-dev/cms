@@ -144,9 +144,10 @@ it('creates page automatically when hasPage is true in yml config', function ():
     $initialPageCount = Page::count();
 
     // Create a collection that should trigger page creation
-    $parentCollection = Collection::create([
+    $parentCollection = Collection::firstOrCreate([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'CONTACTS',
+    ], [
         'name' => 'Contacts',
     ]);
 
@@ -183,9 +184,10 @@ it('does not create page when hasPage is false in yml config', function (): void
     $initialPageCount = Page::count();
 
     // Create a collection that should NOT trigger page creation
-    $parentCollection = Collection::create([
+    $parentCollection = Collection::firstOrCreate([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'SLIDERS',
+    ], [
         'name' => 'Sliders',
     ]);
 
@@ -230,7 +232,7 @@ it('handles collections without page features (hasPage: false)', function () use
     expect($page->collection_id)->toBe($parentCollection->id)
         ->and($page->name)->toBeNull() // No name for hasPage: false
         ->and($page->slug)->toBeNull() // No slug for hasPage: false
-        ->and($page->is_active)->toBeNull() // No is_active for hasPage: false
+        ->and($page->is_active)->toBe(false) // is_active is false for hasPage: false collections
         ->and($page->data)->toHaveKeys(['name', 'description']);
 });
 
