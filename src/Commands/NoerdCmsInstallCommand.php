@@ -50,9 +50,6 @@ class NoerdCmsInstallCommand extends Command
 
             $this->displaySummary($results);
 
-            // Register the CMS module
-            $this->registerModule();
-
             $this->info('Noerd CMS content successfully installed!');
 
             return 0;
@@ -141,54 +138,6 @@ class NoerdCmsInstallCommand extends Command
             $a[$key] = ($a[$key] ?? 0) + ($b[$key] ?? 0);
         }
         return $a;
-    }
-
-    /**
-     * Register the CMS module
-     */
-    private function registerModule(): void
-    {
-        $this->line('');
-        $this->info('Registering CMS module...');
-
-        try {
-            // Install the CMS package explicitly to trigger package discovery
-            $this->line('<comment>Installing CMS package via composer...</comment>');
-            exec('cd ' . base_path() . ' && composer require noerd/cms', $output, $returnCode);
-
-            if ($returnCode !== 0) {
-                $this->warn('Failed to install noerd/cms package. Output: ' . implode("\n", $output));
-                $this->warn('You may need to run "composer require noerd/cms" manually.');
-            } else {
-                $this->line('<info>CMS package installed successfully.</info>');
-            }
-
-            // Run composer dump-autoload to ensure the module is discoverable
-            $this->line('<comment>Running composer dump-autoload...</comment>');
-            exec('cd ' . base_path() . ' && composer dump-autoload', $output, $returnCode);
-
-            if ($returnCode !== 0) {
-                $this->warn('Failed to run composer dump-autoload automatically. Please run it manually.');
-            } else {
-                $this->line('<info>Autoloader refreshed successfully.</info>');
-            }
-
-            // Clear Laravel's cached services to ensure service provider discovery
-            $this->line('<comment>Clearing Laravel caches...</comment>');
-            Artisan::call('config:clear');
-            Artisan::call('cache:clear');
-
-            // Clear the cached services to force re-discovery of service providers
-            $servicesPath = base_path('bootstrap/cache/services.php');
-            if (file_exists($servicesPath)) {
-                unlink($servicesPath);
-                $this->line('<info>Cleared cached services file.</info>');
-            }
-
-            $this->line('<info>CMS module registered successfully.</info>');
-        } catch (Exception $e) {
-            $this->warn('Module registration may need manual intervention: ' . $e->getMessage());
-        }
     }
 
     /**
