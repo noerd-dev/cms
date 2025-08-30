@@ -4,13 +4,12 @@ use Illuminate\Support\Facades\File;
 use Livewire\Volt\Component;
 use Noerd\Noerd\Traits\Noerd;
 
-new class extends Component {
-
+new class () extends Component {
     use Noerd;
 
     public const COMPONENT = 'collections-table';
 
-    public function mount()
+    public function mount(): void
     {
         if (request()->create) {
             $this->tableAction();
@@ -49,7 +48,7 @@ new class extends Component {
             File::delete($filePath);
             $this->dispatch('noerd-notification', [
                 'type' => 'success',
-                'message' => 'Collection-Datei wurde erfolgreich gelöscht.'
+                'message' => 'Collection-Datei wurde erfolgreich gelöscht.',
             ]);
         }
     }
@@ -67,7 +66,7 @@ new class extends Component {
                     $fileName = $file->getFilename();
                     $lastModified = File::lastModified($file->getPathname());
 
-                    if (empty($this->search) || str_contains(strtolower($fileName), strtolower($this->search))) {
+                    if (empty($this->search) || str_contains(mb_strtolower($fileName), mb_strtolower($this->search))) {
                         $files[] = [
                             'id' => $fileName,
                             'name' => str_replace('.yml', '', $fileName),
@@ -81,12 +80,28 @@ new class extends Component {
         }
 
         // Sort by name
-        usort($files, function($a, $b) {
-            return strcmp($a['name'], $b['name']);
-        });
+        usort($files, fn($a, $b) => strcmp($a['name'], $b['name']));
+
+        // Convert to paginated collection
+        $collection = collect($files);
+        $perPage = self::PAGINATION;
+        $currentPage = request()->get('page', 1);
+        $offset = ($currentPage - 1) * $perPage;
+        $items = $collection->slice($offset, $perPage)->values();
+
+        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $collection->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => request()->url(),
+                'pageName' => 'page',
+            ],
+        );
 
         return [
-            'rows' => collect($files),
+            'rows' => $paginated,
             'tableConfig' => [
                 'title' => 'Collections',
                 'newLabel' => 'Neue Collection',
@@ -96,7 +111,7 @@ new class extends Component {
                     ['field' => 'file_name', 'label' => 'Dateiname', 'width' => 25],
                     ['field' => 'last_modified', 'label' => 'Zuletzt geändert', 'width' => 20],
                     ['field' => 'size', 'label' => 'Größe', 'width' => 15],
-                ]
+                ],
             ],
         ];
     }
