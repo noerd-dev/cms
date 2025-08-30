@@ -24,11 +24,7 @@ class FieldHelper
             return Yaml::parse($content ?: '');
         }
 
-        // Fallback to old location for backward compatibility (will be removed)
-        if (file_exists(storage_path('environment/elements/' . $element . '.yml'))) {
-            $content = file_get_contents(storage_path('environment/elements/' . $element . '.yml'));
-            return Yaml::parse($content ?: '');
-        }
+        // No longer support storage/environment fallback
 
         return null;
     }

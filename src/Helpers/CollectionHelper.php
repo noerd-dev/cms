@@ -11,9 +11,6 @@ class CollectionHelper
     {
         try {
             $path = base_path('content/collections/' . $collection . '.yml');
-            if (!file_exists($path)) {
-                $path = storage_path('environment/collections/' . $collection . '.yml');
-            }
             $content = file_get_contents($path);
         } catch (Exception $e) {
             return null;
