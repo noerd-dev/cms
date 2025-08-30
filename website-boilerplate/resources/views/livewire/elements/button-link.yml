@@ -1,0 +1,7 @@
+title: 'Button Link'
+description: 'Interactive button with customizable text and link'
+group: 'Interactive'
+fields:
+  - { name: model.text, label: Text Button, type: translatableText, colspan: 4 }
+  - { name: model.link, label: Link Button, type: translatableText, colspan: 4 }
+  - { name: model.external, label: Extern?, type: checkbox, colspan: 4 }
