@@ -158,16 +158,16 @@ class InstallWebsiteBoilerplateCommand extends Command
      */
     private function updateComposerRepositories(): void
     {
-        $this->line('<comment>Refreshing composer package discovery...</comment>');
+        $this->line('<comment>Installing website package via composer...</comment>');
         
-        // Since app-modules/* is already in repositories, we just need to refresh composer
-        // to recognize the new website module
-        exec('cd ' . base_path() . ' && composer install --no-scripts', $output, $returnCode);
+        // Install the website package explicitly to trigger package discovery
+        exec('cd ' . base_path() . ' && composer require noerd/website', $output, $returnCode);
         
         if ($returnCode !== 0) {
-            $this->warn('Failed to refresh composer packages. You may need to run "composer install" manually.');
+            $this->warn('Failed to install noerd/website package. Output: ' . implode("\n", $output));
+            $this->warn('You may need to run "composer require noerd/website" manually.');
         } else {
-            $this->line('<info>Composer packages refreshed successfully.</info>');
+            $this->line('<info>Website package installed successfully.</info>');
         }
     }
 
