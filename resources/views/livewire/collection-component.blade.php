@@ -34,9 +34,6 @@ new class extends Component {
     private function loadFile(): void
     {
         $filePath = base_path('content/collections/' . $this->fileName);
-        if (!File::exists($filePath)) {
-            $filePath = storage_path('environment/collections/' . $this->fileName);
-        }
 
         if (File::exists($filePath)) {
             $this->yamlContent = File::get($filePath);
@@ -88,12 +85,6 @@ fields:
                 $this->addError('fileName', 'Eine Datei mit diesem Namen existiert bereits.');
                 return;
             }
-            // fallback check
-            $filePath = storage_path('environment/collections/' . $fileName);
-            if (File::exists($filePath)) {
-                $this->addError('fileName', 'Eine Datei mit diesem Namen existiert bereits.');
-                return;
-            }
         }
 
         // Basic YAML syntax validation
@@ -104,18 +95,12 @@ fields:
 
         // Save file
         $filePath = base_path('content/collections/' . $fileName);
-        if (!File::exists(dirname($filePath))) {
-            // Ensure directory exists in content; if not, fall back to storage
-            $filePath = storage_path('environment/collections/' . $fileName);
-        }
+        File::ensureDirectoryExists(dirname($filePath));
         File::put($filePath, $this->yamlContent);
 
         // If filename changed, delete old file
         if (!$this->isNewFile && $fileName !== $this->originalFileName) {
             $oldFilePath = base_path('content/collections/' . $this->originalFileName);
-            if (!File::exists($oldFilePath)) {
-                $oldFilePath = storage_path('environment/collections/' . $this->originalFileName);
-            }
             if (File::exists($oldFilePath)) {
                 File::delete($oldFilePath);
             }
@@ -134,9 +119,6 @@ fields:
     {
         if (!$this->isNewFile && $this->originalFileName) {
             $filePath = base_path('content/collections/' . $this->originalFileName);
-            if (!File::exists($filePath)) {
-                $filePath = storage_path('environment/collections/' . $this->originalFileName);
-            }
 
             if (File::exists($filePath)) {
                 File::delete($filePath);
