@@ -10,7 +10,7 @@ use RecursiveIteratorIterator;
 
 class NoerdCmsInstallCommand extends Command
 {
-    protected $signature = 'noerd:install-cms {--force : Overwrite existing files without asking}';
+    protected $signature = 'noerd:install-cms {--force : Overwrite existing files without asking} {--without-website : Skip automatic website module installation}';
 
     protected $description = 'Install noerd cms content to the local content directory';
 
@@ -49,6 +49,12 @@ class NoerdCmsInstallCommand extends Command
             }
 
             $this->displaySummary($results);
+
+            // Register the CMS module
+            $this->registerModule();
+
+            // Install website module if it doesn't exist
+            $this->installWebsiteIfNeeded();
 
             $this->info('Noerd CMS content successfully installed!');
 
@@ -156,5 +162,77 @@ class NoerdCmsInstallCommand extends Command
                 ['Files skipped', $results['skipped_files']],
             ],
         );
+    }
+
+    /**
+     * Register the CMS module with Composer
+     */
+    private function registerModule(): void
+    {
+        $this->line('');
+        $this->info('Registering CMS module...');
+
+        try {
+            // Run composer require to register the module
+            $this->line('<comment>Running composer require noerd/cms...</comment>');
+            exec('composer require noerd/cms 2>&1', $output, $returnCode);
+
+            if ($returnCode !== 0) {
+                $this->warn('Composer require failed, trying composer dump-autoload...');
+            }
+
+            // Run composer dump-autoload
+            $this->line('<comment>Running composer dump-autoload...</comment>');
+            exec('composer dump-autoload 2>&1', $dumpOutput, $dumpReturnCode);
+
+            // Clear Laravel caches
+            Artisan::call('config:clear');
+            Artisan::call('cache:clear');
+
+            // Remove services cache to force re-discovery
+            $servicesCache = base_path('bootstrap/cache/services.php');
+            if (file_exists($servicesCache)) {
+                unlink($servicesCache);
+            }
+
+            $this->line('<info>CMS module registered successfully.</info>');
+        } catch (Exception $e) {
+            $this->warn('Module registration failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Install website module if it doesn't already exist
+     */
+    private function installWebsiteIfNeeded(): void
+    {
+        // Check if website installation should be skipped
+        if ($this->option('without-website')) {
+            $this->line('<comment>Skipping website module installation (--without-website flag provided).</comment>');
+            return;
+        }
+
+        $websiteDir = base_path('app-modules/website');
+
+        if (is_dir($websiteDir)) {
+            $this->line('<comment>Website module already exists, skipping installation.</comment>');
+            return;
+        }
+
+        $this->line('');
+        $this->info('Website module not found, installing automatically...');
+
+        try {
+            // Execute the noerd:install-website command
+            $exitCode = Artisan::call('noerd:install-website');
+
+            if ($exitCode === 0) {
+                $this->line('<info>Website module installed successfully.</info>');
+            } else {
+                $this->warn('Website module installation failed.');
+            }
+        } catch (Exception $e) {
+            $this->warn('Failed to install website module: ' . $e->getMessage());
+        }
     }
 }
