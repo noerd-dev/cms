@@ -1,25 +1,23 @@
 <?php
 
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
-use Livewire\Volt\Volt;
 use Livewire\WithFileUploads;
+use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Language;
 use Noerd\Cms\Models\Page;
-use Noerd\Website\Services\PageElementService;
-use Noerd\Noerd\Traits\Noerd;
-use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Services\MediaUploadService;
-use Illuminate\Support\Facades\Storage;
+use Noerd\Noerd\Traits\Noerd;
+use Noerd\Website\Services\PageElementService;
 
-new class extends Component {
-
+new class () extends Component {
     use Noerd;
     use WithFileUploads;
 
@@ -36,6 +34,10 @@ new class extends Component {
     public ?array $collectionLayout = null;
     public ?string $collectionKey = null;
     public array $images = [];
+
+
+    public array $liveElementData = [];
+    public int $previewTick = 0;
 
     #[Computed]
     public function hasPageFeatures(): bool
@@ -65,10 +67,6 @@ new class extends Component {
 
         return $pageElementService->processPageElements($this->page, $selectedLanguage);
     }
-
-
-    public array $liveElementData = [];
-    public int $previewTick = 0;
 
 
     #[Computed]
@@ -120,7 +118,7 @@ new class extends Component {
     }
 
     #[On('updateLiveElementData')]
-    public function updateLiveElementData($elementPageId, $data)
+    public function updateLiveElementData($elementPageId, $data): void
     {
         $this->liveElementData[$elementPageId] = $data;
         // Bump preview tick to force remount of preview child components only
@@ -190,7 +188,7 @@ new class extends Component {
 
         // Ensure sort field is available for collections
         if ($this->collectionKey) {
-            $this->model['sort'] = $this->model['sort'] ?? $model->sort ?? 0;
+            $this->model['sort'] ??= $model->sort ?? 0;
         }
 
         // Fix slug field if it's malformed or shows [object Object]
@@ -229,13 +227,13 @@ new class extends Component {
         return $defaultLanguage ? $defaultLanguage->code : 'de';
     }
 
-    public function generateSlug(string $name, string $languageCode = null): string
+    public function generateSlug(string $name, ?string $languageCode = null): string
     {
         // Replace umlauts and special characters BEFORE lowercasing
         $slug = str_replace(['ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'], ['ae', 'oe', 'ue', 'ss', 'ae', 'oe', 'ue'], $name);
 
         // Convert to lowercase
-        $slug = strtolower($slug);
+        $slug = mb_strtolower($slug);
 
         // Remove all non-alphanumeric characters and spaces, replace with hyphens
         $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug);
@@ -244,7 +242,7 @@ new class extends Component {
         $slug = preg_replace('/[\s-]+/', '-', $slug);
 
         // Trim hyphens from beginning and end
-        $slug = trim($slug, '-');
+        $slug = mb_trim($slug, '-');
 
         // Add language prefix if not default language
         if ($languageCode && $languageCode !== $this->getDefaultLanguageCode()) {
@@ -367,8 +365,10 @@ new class extends Component {
         $model['name'] = $this->model['name'];
 
 
-        $page = Page::updateOrCreate(['id' => $this->modelId],
-            $model);
+        $page = Page::updateOrCreate(
+            ['id' => $this->modelId],
+            $model,
+        );
 
 
         $this->dispatch('storeElements');
@@ -376,69 +376,6 @@ new class extends Component {
 
         if ($page->wasRecentlyCreated) {
             $this->modelId = $page['id'];
-            $this->page = $page;
-        }
-    }
-
-    private function storeCollectionPage(): void
-    {
-        // Find or create the parent Collection
-        $parentCollection = Collection::firstOrCreate([
-            'tenant_id' => auth()->user()->selected_tenant_id,
-            'collection_key' => strtoupper($this->collectionKey),
-        ], [
-            'name' => ucfirst($this->collectionKey), // Default name based on key
-        ]);
-
-        $hasPageFeatures = $this->collectionLayout['hasPage'] ?? true;
-
-        $pageData = [
-            'tenant_id' => auth()->user()->selected_tenant_id,
-            'collection_id' => $parentCollection->id,
-            'data' => $this->model,
-            'sort' => (int) ($this->model['sort'] ?? 0),
-        ];
-
-        // Persist selected layout for collections as well
-        $availableLayouts = $this->layoutOptions();
-        $pageData['layout'] = $this->model['layout'] ?? array_key_first($availableLayouts);
-
-        if ($hasPageFeatures) {
-            // For collections with hasPage: true, store name and slug as JSON (translatable)
-            $nameData = [];
-            $slugData = [];
-            
-            if (isset($this->model['name']) && is_array($this->model['name'])) {
-                foreach ($this->model['name'] as $lang => $nameValue) {
-                    if (!empty($nameValue)) {
-                        $nameData[$lang] = $nameValue;
-                        $slugData[$lang] = $this->generateSlug($nameValue, $lang);
-                    }
-                }
-            }
-            
-            // Fallback if no names provided
-            if (empty($nameData)) {
-                $nameData['de'] = 'Collection Page';
-                $slugData['de'] = '/collection-page';
-            }
-            
-            $pageData['name'] = $nameData;
-            $pageData['slug'] = $slugData;
-            $pageData['is_active'] = true;
-        } else {
-            // For collections with hasPage: false, use minimal page data
-            $pageData['name'] = null;
-            $pageData['slug'] = null;
-            $pageData['is_active'] = null;
-        }
-
-        $page = Page::updateOrCreate(['id' => $this->modelId], $pageData);
-
-        $this->showSuccessIndicator = true;
-
-        if ($page->wasRecentlyCreated) {
-            $this->modelId = $page->id;
             $this->page = $page;
         }
     }
@@ -482,13 +419,6 @@ new class extends Component {
         unset($this->model['__mediaToken']);
     }
 
-    private function urlWithoutDomain(Media $media): string
-    {
-        $url = Storage::disk($media->disk)->url($media->path);
-
-        return strstr($url, '/storage');
-    }
-
     public function delete(): void
     {
         $page = Page::find($this->modelId);
@@ -496,7 +426,7 @@ new class extends Component {
         $this->closeModalProcess(self::LIST_COMPONENT);
     }
 
-    public function addElement($elementKey)
+    public function addElement($elementKey): void
     {
         $sortElement = ElementPage::where('page_id', $this->modelId)
             ->orderBy('sort', 'desc')
@@ -566,7 +496,7 @@ new class extends Component {
     public function deleteElement(int $elementPageId): void
     {
         $element = ElementPage::find($elementPageId);
-        if ($element && (int)$element->page_id === (int)$this->modelId) {
+        if ($element && (int) $element->page_id === (int) $this->modelId) {
             $element->delete();
             $this->lastChangeTime = time();
             $this->dispatch('reloadPageComponent');
@@ -574,18 +504,18 @@ new class extends Component {
     }
 
     #[On('reloadPageComponent')]
-    public function reloadPage()
+    public function reloadPage(): void
     {
         $this->lastChangeTime = time();
     }
 
     #[On('languageChanged')]
-    public function refresh()
+    public function refresh(): void
     {
         $this->dispatch('$refresh');
     }
 
-    public function openElements()
+    public function openElements(): void
     {
         $this->dispatch(
             event: 'noerdModal',
@@ -607,7 +537,7 @@ new class extends Component {
                 return;
             }
 
-            $index = (int)str_replace('insert-', '', $token);
+            $index = (int) str_replace('insert-', '', $token);
             $this->insertElementAt($index, $elementKey);
         }
     }
@@ -615,6 +545,76 @@ new class extends Component {
     public function setViewMode(string $mode): void
     {
         $this->viewMode = $mode;
+    }
+
+    private function storeCollectionPage(): void
+    {
+        // Find or create the parent Collection
+        $parentCollection = Collection::firstOrCreate([
+            'tenant_id' => auth()->user()->selected_tenant_id,
+            'collection_key' => mb_strtoupper($this->collectionKey),
+        ], [
+            'name' => ucfirst($this->collectionKey), // Default name based on key
+        ]);
+
+        $hasPageFeatures = $this->collectionLayout['hasPage'] ?? true;
+
+        $pageData = [
+            'tenant_id' => auth()->user()->selected_tenant_id,
+            'collection_id' => $parentCollection->id,
+            'data' => $this->model,
+            'sort' => (int) ($this->model['sort'] ?? 0),
+        ];
+
+        // Persist selected layout for collections as well
+        $availableLayouts = $this->layoutOptions();
+        $pageData['layout'] = $this->model['layout'] ?? array_key_first($availableLayouts);
+
+        if ($hasPageFeatures) {
+            // For collections with hasPage: true, store name and slug as JSON (translatable)
+            $nameData = [];
+            $slugData = [];
+
+            if (isset($this->model['name']) && is_array($this->model['name'])) {
+                foreach ($this->model['name'] as $lang => $nameValue) {
+                    if (!empty($nameValue)) {
+                        $nameData[$lang] = $nameValue;
+                        $slugData[$lang] = $this->generateSlug($nameValue, $lang);
+                    }
+                }
+            }
+
+            // Fallback if no names provided
+            if (empty($nameData)) {
+                $nameData['de'] = 'Collection Page';
+                $slugData['de'] = '/collection-page';
+            }
+
+            $pageData['name'] = $nameData;
+            $pageData['slug'] = $slugData;
+            $pageData['is_active'] = true;
+        } else {
+            // For collections with hasPage: false, use minimal page data
+            $pageData['name'] = null;
+            $pageData['slug'] = null;
+            $pageData['is_active'] = false; // Use false instead of null for collections
+        }
+
+        $page = Page::updateOrCreate(['id' => $this->modelId], $pageData);
+
+        $this->showSuccessIndicator = true;
+
+        if ($page->wasRecentlyCreated) {
+            $this->modelId = $page->id;
+            $this->page = $page;
+        }
+    }
+
+    private function urlWithoutDomain(Media $media): string
+    {
+        $url = Storage::disk($media->disk)->url($media->path);
+
+        return mb_strstr($url, '/storage');
     }
 
 } ?>

@@ -11,7 +11,8 @@ Route::prefix('cms')
         Volt::route('/navigation', 'navigation-table')->name('navigation');
         Volt::route('global-parameters', 'global-parameters-table')->name('global-parameters');
 
-        Volt::route('/collections', 'collections-table')->name('collections');
+        Volt::route('/collections', 'collection-entries-table')->name('collections');
+        Volt::route('/collection-files', 'collections-table')->name('collection-files');
         Volt::route('/form-requests', 'form-requests-table')->name('form-requests');
 
         // CMS Settings page (homepage selection)
