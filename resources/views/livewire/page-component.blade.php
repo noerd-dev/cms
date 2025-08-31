@@ -370,7 +370,6 @@ new class () extends Component {
             $model,
         );
 
-
         $this->dispatch('storeElements');
         $this->showSuccessIndicator = true;
 
@@ -632,7 +631,7 @@ new class () extends Component {
                 @if($collectionKey)
                     <div class="flex items-center space-x-2">
                         <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
-                        <flux:input 
+                        <flux:input
                             wire:model="model.sort"
                             id="sort"
                             type="number"
@@ -642,7 +641,7 @@ new class () extends Component {
                         />
                     </div>
                 @endif
-                
+
                 <div class="flex space-x-1 bg-white p-1 rounded-lg w-fit shadow-xl border border-gray-200">
                     <button
                         wire:click="setViewMode('content')"
@@ -670,7 +669,7 @@ new class () extends Component {
                 @if($collectionKey)
                     <div class="flex items-center space-x-2">
                         <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
-                        <flux:input 
+                        <flux:input
                             wire:model="model.sort"
                             id="sort"
                             type="number"
@@ -680,7 +679,7 @@ new class () extends Component {
                         />
                     </div>
                 @endif
-                
+
                 <livewire:language-switcher/>
             </div>
         </div>
