@@ -369,8 +369,9 @@ new class () extends Component {
             ['id' => $this->modelId],
             $model,
         );
-
+        
         $this->dispatch('storeElements');
+
         $this->showSuccessIndicator = true;
 
         if ($page->wasRecentlyCreated) {
@@ -717,7 +718,7 @@ new class () extends Component {
 
                         <div x-sort:item="{{$elementPage->id}}">
                             <livewire:element-page-component
-                                wire:key="{{$elementPage->id . $lastChangeTime}}"
+                                wire:key="element-page-{{$elementPage->id}}"
                                 :modelId="$elementPage->id"
                             >
                             </livewire:element-page-component>
