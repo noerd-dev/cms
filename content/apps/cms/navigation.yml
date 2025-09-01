@@ -4,8 +4,16 @@
   route: cms
   block_menus:
     - title: CMS
-      navigations: [ { title: Seiten, route: cms.pages, icon: icons.document }, { title: 'Navigation', route: cms.navigation, icon: icons.list-bullet }, { title: 'Globale Parameter', route: cms.global-parameters, heroicon: globe-alt }, { title: 'Form Requests', route: cms.form-requests, icon: icons.list-bullet }, { title: 'Collection-Dateien', route: cms.collection-files, icon: icons.document-text } ]
+      navigations: [
+        { title: Seiten, route: cms.pages, icon: icons.document },
+        { title: 'Navigation', route: cms.navigation, icon: icons.list-bullet },
+        { title: 'Globale Parameter', route: cms.global-parameters, heroicon: globe-alt },
+        { title: 'Form Requests', route: cms.form-requests, icon: icons.list-bullet },
+        { title: 'Collections', route: cms.collection-files, icon: icons.list-bullet } ,
+      ]
     - title: Collections
-      navigations: [ { title: Projects, link: '/cms/collections?key=projects', icon: icons.list-bullet }, { title: Leistungen, link: '/cms/collections?key=services', icon: icons.list-bullet }, { title: Customers, link: '/cms/collections?key=customers', icon: icons.list-bullet }, { title: Kontaktseiten, link: '/cms/collections?key=contacts', icon: icons.list-bullet }, { title: Slider, link: '/cms/collections?key=sliders', icon: icons.list-bullet } ]
+      dynamic: collections
     - title: Settings
-      navigations: [ { title: Einstellungen, route: cms.settings, icon: icons.adjustments-horizontal } ]
+      navigations: [
+        { title: Einstellungen, route: cms.settings, icon: icons.adjustments-horizontal }
+      ]
