@@ -35,7 +35,6 @@ new class () extends Component {
     public ?string $collectionKey = null;
     public array $images = [];
 
-
     public array $liveElementData = [];
     public int $previewTick = 0;
 
@@ -369,7 +368,7 @@ new class () extends Component {
             ['id' => $this->modelId],
             $model,
         );
-        
+
         $this->dispatch('storeElements');
 
         $this->showSuccessIndicator = true;
@@ -442,36 +441,6 @@ new class () extends Component {
         $this->lastChangeTime = time();
     }
 
-    public function insertElementAt(int $position, string $elementKey): void
-    {
-        $elements = ElementPage::where('page_id', $this->modelId)
-            ->orderBy('sort')
-            ->get();
-
-        // Clamp position
-        $position = max(0, min($position, $elements->count()));
-
-        // Shift elements at and after position by +1
-        foreach ($elements as $index => $element) {
-            if ($index >= $position) {
-                $element->sort = $element->sort + 1;
-                $element->save();
-            }
-        }
-
-        // Insert new element at position with expected sort
-        $newSort = ($elements[$position - 1]->sort ?? -1) + 1;
-        ElementPage::create([
-            'page_id' => $this->modelId,
-            'element_key' => $elementKey,
-            'sort' => $newSort,
-            'data' => '{}',
-        ]);
-
-        $this->lastChangeTime = time();
-        $this->dispatch('reloadPageComponent');
-    }
-
     public function elementSort($elementId, $newPosition): void
     {
         $elements = ElementPage::where('page_id', $this->modelId)
@@ -523,23 +492,6 @@ new class () extends Component {
             source: self::COMPONENT,
             arguments: ['modelId' => $this->pageId],
         );
-    }
-
-    #[On('elementPicked')]
-    public function onElementPicked(string $elementKey, ?string $token = null): void
-    {
-        // Determine insertion position from token
-        if ($token && str_starts_with($token, 'insert-')) {
-            if ($token === 'insert-end') {
-                // Append to end
-                $count = ElementPage::where('page_id', $this->modelId)->count();
-                $this->insertElementAt($count, $elementKey);
-                return;
-            }
-
-            $index = (int) str_replace('insert-', '', $token);
-            $this->insertElementAt($index, $elementKey);
-        }
     }
 
     public function setViewMode(string $mode): void
@@ -705,18 +657,7 @@ new class () extends Component {
 
                 <div x-sort="$wire.elementSort($item, $position)">
                     @foreach($this->page->elements as $loopIndex => $elementPage)
-                        <div class="my-2">
-                            <div x-data="{hover:false}" @mouseenter="hover=true" @mouseleave="hover=false"
-                                 class="relative h-0.5 bg-transparent">
-                                <button x-show="hover"
-                                        class="absolute -top-3 left-0 right-0 mx-auto w-full max-w-sm flex items-center justify-center gap-2 text-white bg-blue-600/90 hover:bg-blue-700 rounded-full py-1 text-xs shadow"
-                                        wire:click="$dispatch('noerdModal', {component: 'element-picker-modal', arguments: { token: 'insert-{{$loopIndex}}' }})">
-                                    + {{ __('Add Element') }}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div x-sort:item="{{$elementPage->id}}">
+                        <div x-sort:item="{{$elementPage->id}}" wire:key="sort-item-{{$elementPage->id}}">
                             <livewire:element-page-component
                                 wire:key="element-page-{{$elementPage->id}}"
                                 :modelId="$elementPage->id"
