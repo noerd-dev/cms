@@ -1,30 +1,13 @@
-## Noerd CMS
+# Noerd CMS Framework
 
-Add
-
-    "repositories": [
-        {
-            "type": "path",
-            "url": "app-modules/*",
-            "options": {
-                "symlink": true
-            }
-        }
-    ]
-
-
-and 
-
-
-        "noerd/cms": "*",
-        "noerd/website": "*",
-        "noerd/noerd": "^1.0"
-
-
-to composer.json and run composer update
-
-change auth.php to noerd user
-
-php artisan noerd:install
+Install the package
+```
+mkdir app-modules/cms
+git clone git@github.com:noerd-dev/cms.git app-modules/cms
+mkdir app-modules/media
+git clone git@github.com:noerd-dev/media.git app-modules/media
+php artisan make:module cms
+php artisan make:module media
 php artisan noerd:install-cms
 php artisan migrate
+```
