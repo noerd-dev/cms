@@ -13,17 +13,29 @@ class WebsiteMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
+        $tenant = null;
+        $tenantId = null;
+
+        // 1. Try hash-based tenant resolution first
         $hash = $request->hash ?? session('hash');
-        if (empty($hash)) {
-            abort(400, 'Missing required hash parameter.');
+        if (!empty($hash)) {
+            $tenant = Tenant::where('hash', $hash)->first();
+            if ($tenant) {
+                $tenantId = $tenant->id;
+                session(['hash' => $hash]);
+            }
         }
 
-        $tenant = Tenant::where('hash', $hash)->first();
+        // 2. Fallback to first available tenant if no hash or tenant found
         if (!$tenant) {
-            abort(404, 'Tenant not found.');
+            $tenant = Tenant::first();
+            if (!$tenant) {
+                abort(404, 'No tenant available.');
+            }
+            $tenantId = $tenant->id;
         }
 
-        $globals = GlobalParameter::where('tenant_id', $tenant->id)->get()
+        $globals = GlobalParameter::where('tenant_id', $tenantId)->get()
             ->mapWithKeys(function ($item) {
                 $decoded = json_decode($item->value, true);
                 return [$item->key => $decoded];
@@ -31,11 +43,10 @@ class WebsiteMiddleware
 
         View::share('globals', $globals);
         View::share('tenant', $tenant);
-        session(['hash' => $hash]);
-        session(['selectedTenantId' => $tenant->id]);
+        session(['selectedTenantId' => $tenantId]);
 
-        // Optionally attach to request for downstream usage
-        $request->attributes->set('tenant_id', $tenant->id);
+        // Attach to request for downstream usage
+        $request->attributes->set('tenant_id', $tenantId);
         $request->attributes->set('tenant', $tenant);
 
         return $next($request);
