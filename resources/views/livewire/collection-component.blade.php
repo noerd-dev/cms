@@ -67,9 +67,9 @@ fields:
             'fileName' => ['required', 'string'],
             'yamlContent' => ['required', 'string'],
         ], [
-            'fileName.required' => 'Dateiname ist erforderlich.',
-            'fileName.regex' => 'Dateiname darf nur Buchstaben, Zahlen, Bindestriche und Unterstriche enthalten.',
-            'yamlContent.required' => 'YAML-Inhalt ist erforderlich.',
+            'fileName.required' => __('Filename is required.'),
+            'fileName.regex' => __('Filename may only contain letters, numbers, hyphens and underscores.'),
+            'yamlContent.required' => __('YAML content is required.'),
         ]);
 
         // Ensure filename has .yml extension
@@ -108,7 +108,7 @@ fields:
 
         $this->dispatch('noerd-notification', [
             'type' => 'success',
-            'message' => $this->isNewFile ? 'Collection-Datei wurde erfolgreich erstellt.' : 'Collection-Datei wurde erfolgreich gespeichert.'
+            'message' => $this->isNewFile ? __('Collection file was successfully created.') : __('Collection file was successfully saved.')
         ]);
 
         $this->showSuccessIndicator = true;
@@ -124,7 +124,7 @@ fields:
                 File::delete($filePath);
                 $this->dispatch('noerd-notification', [
                     'type' => 'success',
-                    'message' => 'Collection-Datei wurde erfolgreich gelöscht.'
+                    'message' => __('Collection file was successfully deleted.')
                 ]);
             }
         }

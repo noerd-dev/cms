@@ -48,7 +48,7 @@ new class () extends Component {
             File::delete($filePath);
             $this->dispatch('noerd-notification', [
                 'type' => 'success',
-                'message' => 'Collection-Datei wurde erfolgreich gelöscht.',
+                'message' => __('Collection file was successfully deleted.'),
             ]);
         }
     }
@@ -109,7 +109,7 @@ new class () extends Component {
                 'columns' => [
                     ['field' => 'name', 'label' => 'Name', 'width' => 30],
                     ['field' => 'file_name', 'label' => 'Dateiname', 'width' => 25],
-                    ['field' => 'last_modified', 'label' => 'Zuletzt geändert', 'width' => 20],
+                    ['field' => 'last_modified', 'label' => __('Last Modified'), 'width' => 20],
                     ['field' => 'size', 'label' => 'Größe', 'width' => 15],
                 ],
             ],

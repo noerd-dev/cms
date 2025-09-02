@@ -302,26 +302,26 @@ new class () extends Component {
                 }
 
                 if (empty($slug)) {
-                    $validationErrors["model.slug.{$lang}"] = "Der Slug für Sprache {$lang} ist erforderlich.";
+                    $validationErrors["model.slug.{$lang}"] = __('The slug for language :lang is required.', ['lang' => $lang]);
                     continue;
                 }
 
                 // Check if slug is string
                 if (!is_string($slug)) {
-                    $validationErrors["model.slug.{$lang}"] = "Der Slug für Sprache {$lang} muss ein Text sein.";
+                    $validationErrors["model.slug.{$lang}"] = __('The slug for language :lang must be text.', ['lang' => $lang]);
                     continue;
                 }
 
                 // Check if slug starts with forward slash
                 if (!str_starts_with($slug, '/')) {
-                    $validationErrors["model.slug.{$lang}"] = "Der Slug für Sprache {$lang} muss mit einem '/' beginnen.";
+                    $validationErrors["model.slug.{$lang}"] = __('The slug for language :lang must start with a \'/\'.', ['lang' => $lang]);
                     continue;
                 }
 
                 // Check slug format (only lowercase letters, numbers, hyphens, slashes, and forward slash at start)
                 // Allow format: /slug or /lang/slug (where lang is 2-3 characters)
                 if (!preg_match('/^\/([a-z]{2,3}\/)?[a-z0-9-]+$/', $slug)) {
-                    $validationErrors["model.slug.{$lang}"] = "Der Slug für Sprache {$lang} darf nur Kleinbuchstaben, Zahlen, Bindestriche und optional einen Sprachprefix enthalten und muss mit '/' beginnen.";
+                    $validationErrors["model.slug.{$lang}"] = __('The slug for language :lang may only contain lowercase letters, numbers, hyphens and optionally a language prefix and must start with \'/\'.', ['lang' => $lang]);
                     continue;
                 }
 
