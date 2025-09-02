@@ -13,7 +13,7 @@ $currentPath = parse_url($currentUrl, PHP_URL_PATH);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title }}</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['app-modules/cms/website-boilerplate/resources/css/website.css', 'app-modules/cms/website-boilerplate/resources/js/website.js'])
     @livewireStyles
 </head>
 <body class="min-h-screen flex flex-col bg-gray-50 text-gray-900">
@@ -45,11 +45,11 @@ $currentPath = parse_url($currentUrl, PHP_URL_PATH);
                                 @endphp
                                 <a href="{{ $link['href'] }}"
                                    @if(($link['new_tab'] ?? false)) target="_blank" rel="noopener" @endif
-                                   class="px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 {{ $activeClasses }}">
+                                   class="nav-link {{ $isActive ? 'nav-link--active' : 'nav-link--inactive' }}">
                                    {{ $link['label'] }}
                                 </a>
                             @empty
-                                <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">Home</a>
+                                <a href="#" class="nav-link nav-link--inactive">Home</a>
                             @endforelse
                         </div>
                     </div>
@@ -90,7 +90,7 @@ $currentPath = parse_url($currentUrl, PHP_URL_PATH);
                     @endphp
                     <a href="{{ $link['href'] }}"
                        @if(($link['new_tab'] ?? false)) target="_blank" rel="noopener" @endif
-                       class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 {{ $mobileActiveClasses }}">
+                       class="nav-link block text-base {{ $isActive ? 'nav-link--active' : 'nav-link--inactive' }}">
                        {{ $link['label'] }}
                     </a>
                 @endforeach
@@ -150,15 +150,6 @@ $currentPath = parse_url($currentUrl, PHP_URL_PATH);
     </footer>
 
     @livewireScripts
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const btn = document.getElementById('mobile-menu-button');
-            const menu = document.getElementById('mobile-menu');
-            if (btn && menu) {
-                btn.addEventListener('click', function () { menu.classList.toggle('hidden'); });
-            }
-        });
-    </script>
 </body>
 </html>
 

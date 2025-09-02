@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/* Website-specific Tailwind configuration - scans only website boilerplate templates */
+@source '../views/**/*.blade.php';
+
+/* Custom website styles */
+@layer base {
+    body {
+        @apply font-sans antialiased;
+    }
+    
+    /* Ensure proper styling for CMS elements */
+    .prose {
+        @apply max-w-none;
+    }
+    
+    .prose h1,
+    .prose h2,
+    .prose h3,
+    .prose h4,
+    .prose h5,
+    .prose h6 {
+        @apply font-semibold text-gray-900;
+    }
+    
+    .prose p {
+        @apply text-gray-700 leading-relaxed;
+    }
+    
+    .prose a {
+        @apply text-blue-600 hover:text-blue-800 transition-colors;
+    }
+}
+
+@layer components {
+    /* Website navigation styles */
+    .nav-link {
+        @apply px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200;
+    }
+    
+    .nav-link--active {
+        @apply bg-gray-900 text-white;
+    }
+    
+    .nav-link--inactive {
+        @apply text-gray-700 hover:bg-gray-100 hover:text-gray-900;
+    }
+    
+    /* Button styles for website */
+    .btn-primary {
+        @apply bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200;
+    }
+    
+    .btn-secondary {
+        @apply bg-gray-100 text-gray-900 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200;
+    }
+    
+    /* Form styles for contact forms */
+    .form-input {
+        @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500;
+    }
+    
+    .form-label {
+        @apply block text-sm font-medium text-gray-700;
+    }
+    
+    .form-error {
+        @apply mt-2 text-sm text-red-600;
+    }
+    
+    /* Content sections */
+    .content-section {
+        @apply py-16 px-4 sm:px-6 lg:px-8;
+    }
+    
+    .content-container {
+        @apply max-w-7xl mx-auto;
+    }
+}
+
+@layer utilities {
+    /* Website-specific utilities */
+    .text-balance {
+        text-wrap: balance;
+    }
+    
+    .text-pretty {
+        text-wrap: pretty;
+    }
+}
