@@ -167,7 +167,7 @@ new class () extends Component {
 
         // Add standard columns
         $columns[] = ['field' => 'sort', 'label' => 'Sortierung', 'width' => 10];
-        $columns[] = ['field' => 'updated_at', 'label' => 'Zuletzt geändert', 'width' => 15];
+        $columns[] = ['field' => 'updated_at', 'label' => __('Last Modified'), 'width' => 15];
 
         return [
             'rows' => $rows,
