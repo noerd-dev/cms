@@ -20,6 +20,7 @@ new class extends Component {
     {
         $rows = Page::where('tenant_id', auth()->user()->selected_tenant_id)
             ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')
+            ->whereNot('slug', null)
             ->when($this->search, function ($query): void {
                 $query->where(function ($query): void {
                     $query->where('name', 'like', '%' . $this->search . '%');
