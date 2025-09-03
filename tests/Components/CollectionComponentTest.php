@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Collection;
@@ -10,6 +11,85 @@ use Noerd\Media\Models\Media as MediaModel;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
+
+// Setup and teardown for YAML mocking
+beforeEach(function (): void {
+    // Create test YAML files with known content
+    $collectionsPath = base_path('content/collections');
+
+    // Backup existing files if they exist
+    $this->originalYmlFiles = [];
+    $testFiles = ['projects', 'contacts', 'sliders', 'customers'];
+
+    foreach ($testFiles as $file) {
+        if (File::exists($collectionsPath . '/' . $file . '.yml')) {
+            $this->originalYmlFiles[$file] = File::get($collectionsPath . '/' . $file . '.yml');
+        }
+    }
+
+    // Create test YAML files
+    File::ensureDirectoryExists($collectionsPath);
+
+    // Projects with hasPage: true
+    File::put(
+        $collectionsPath . '/projects.yml',
+        "title: 'Project'\n" .
+        "titleList: 'Projects'\n" .
+        "buttonList: 'New Project'\n" .
+        "hasPage: true\n" .
+        "fields:\n" .
+        "  - { name: model.name, label: Name, type: translatableText }\n" .
+        "  - { name: image, label: Image, type: image }\n",
+    );
+
+    // Contacts with hasPage: true
+    File::put(
+        $collectionsPath . '/contacts.yml',
+        "title: 'Contact'\n" .
+        "titleList: 'Contacts'\n" .
+        "buttonList: 'New Contact'\n" .
+        "hasPage: true\n" .
+        "fields:\n" .
+        "  - { name: model.name, label: Name, type: translatableText }\n",
+    );
+
+    // Sliders with hasPage: false
+    File::put(
+        $collectionsPath . '/sliders.yml',
+        "title: 'Slider'\n" .
+        "titleList: 'Sliders'\n" .
+        "buttonList: 'New Slider'\n" .
+        "hasPage: false\n" .
+        "fields:\n" .
+        "  - { name: model.name, label: Name, type: translatableText }\n",
+    );
+
+    // Customers with hasPage: false
+    File::put(
+        $collectionsPath . '/customers.yml',
+        "title: 'Customer'\n" .
+        "titleList: 'Customers'\n" .
+        "buttonList: 'New Customer'\n" .
+        "hasPage: false\n" .
+        "fields:\n" .
+        "  - { name: model.name, label: Name, type: translatableText }\n" .
+        "  - { name: model.description, label: Description, type: translatableText }\n",
+    );
+});
+
+afterEach(function (): void {
+    $collectionsPath = base_path('content/collections');
+    $testFiles = ['projects', 'contacts', 'sliders', 'customers'];
+
+    // Restore original files or delete test files
+    foreach ($testFiles as $file) {
+        if (isset($this->originalYmlFiles[$file])) {
+            File::put($collectionsPath . '/' . $file . '.yml', $this->originalYmlFiles[$file]);
+        } elseif (File::exists($collectionsPath . '/' . $file . '.yml')) {
+            File::delete($collectionsPath . '/' . $file . '.yml');
+        }
+    }
+});
 
 $testSettings = [
     'componentName' => 'page-component',
@@ -137,7 +217,7 @@ it('creates page automatically when hasPage is true in yml config', function ():
     // Simulate accessing the component via route with key parameter (like the real usage)
     $this->get(route('cms.collections') . '?key=contacts&create=1')
         ->assertStatus(200)
-        ->assertSee('Kontakt'); // Title from contacts.yml
+        ->assertSee('Contact'); // Title from contacts.yml
 
     // Verify that collections with hasPage: true create pages when stored
     // This tests the actual functionality by simulating a POST request
