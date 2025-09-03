@@ -139,7 +139,7 @@ class InstallWebsiteBoilerplateCommand extends Command
             $this->line('<comment>Clearing Laravel caches...</comment>');
             Artisan::call('config:clear');
             Artisan::call('cache:clear');
-            
+
             // Clear the cached services to force re-discovery of service providers
             $servicesPath = base_path('bootstrap/cache/services.php');
             if (file_exists($servicesPath)) {
@@ -159,10 +159,10 @@ class InstallWebsiteBoilerplateCommand extends Command
     private function updateComposerRepositories(): void
     {
         $this->line('<comment>Installing website package via composer...</comment>');
-        
+
         // Install the website package explicitly to trigger package discovery
         exec('cd ' . base_path() . ' && composer require noerd/website', $output, $returnCode);
-        
+
         if ($returnCode !== 0) {
             $this->warn('Failed to install noerd/website package. Output: ' . implode("\n", $output));
             $this->warn('You may need to run "composer require noerd/website" manually.');

@@ -14,7 +14,7 @@ return new class () extends Migration {
             if (Schema::hasColumn('pages', 'is_active')) {
                 // First, update any NULL values to the default value (true)
                 DB::table('pages')->whereNull('is_active')->update(['is_active' => true]);
-                
+
                 Schema::table('pages', function (Blueprint $table): void {
                     // Fix is_active column to have proper default value
                     $table->boolean('is_active')->default(true)->change();
