@@ -425,6 +425,7 @@ new class () extends Component {
         $this->closeModalProcess(self::LIST_COMPONENT);
     }
 
+    #[On('elementPicked')]
     public function addElement($elementKey): void
     {
         $sortElement = ElementPage::where('page_id', $this->modelId)
@@ -666,16 +667,6 @@ new class () extends Component {
                         </div>
                     @endforeach
 
-                    <div class="my-2">
-                        <div x-data="{hover:false}" @mouseenter="hover=true" @mouseleave="hover=false"
-                             class="relative h-0.5 bg-transparent">
-                            <button x-show="hover"
-                                    class="absolute -top-3 left-0 right-0 mx-auto w-full max-w-sm flex items-center justify-center gap-2 text-white bg-blue-600/90 hover:bg-blue-700 rounded-full py-1 text-xs shadow"
-                                    wire:click="$dispatch('noerdModal', {component: 'element-picker-modal', arguments: { token: 'insert-end' }})">
-                                + {{ __('Add Element') }}
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="mt-8 mb-8">
