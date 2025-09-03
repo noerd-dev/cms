@@ -1,4 +1,0 @@
-title: ''
-description: ''
-fields:
-  - { name: latLng, label: Koordinaten Punkt, type: text, colspan: 12 }
