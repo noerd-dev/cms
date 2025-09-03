@@ -1,6 +1,0 @@
-title: ''
-description: ''
-fields:
-  - { name: model.text, label: Text Button, type: translatableText, colspan: 4 }
-  - { name: model.link, label: Link Button, type: translatableText, colspan: 4 }
-  - { name: model.external, label: Extern?, type: checkbox, colspan: 4 }

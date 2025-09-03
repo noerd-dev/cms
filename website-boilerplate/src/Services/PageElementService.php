@@ -50,11 +50,31 @@ class PageElementService
     {
         $mapping = [];
 
-        // Discover all Livewire/Volt element components across app-modules
-        $bladeFiles = glob(base_path('app-modules/*/resources/views/livewire/elements/*.blade.php')) ?: [];
+        // Get custom elements path from environment variable
+        $customElementsPath = env('CMS_PAGE_ELEMENTS_PATH');
 
-        foreach ($bladeFiles as $filePath) {
-            $fileName = basename($filePath, '.blade.php'); // kebab-case
+        $bladeFiles = [];
+
+        // If custom path is provided, use it first
+        if (!empty($customElementsPath) && is_dir(base_path($customElementsPath))) {
+            $customFiles = glob(base_path($customElementsPath . '/*.blade.php')) ?: [];
+            $bladeFiles = array_merge($bladeFiles, $customFiles);
+        }
+
+        // Fallback: Discover all Livewire/Volt element components across app-modules
+        $fallbackFiles = glob(base_path('app-modules/*/resources/views/livewire/elements/*.blade.php')) ?: [];
+
+        // Merge custom and fallback files, custom files take precedence
+        $allFiles = array_merge($fallbackFiles, $bladeFiles);
+
+        // Remove duplicates based on filename (custom files will override fallback)
+        $uniqueFiles = [];
+        foreach ($allFiles as $filePath) {
+            $fileName = basename($filePath, '.blade.php');
+            $uniqueFiles[$fileName] = $filePath;
+        }
+
+        foreach ($uniqueFiles as $fileName => $filePath) {
             $elementKey = str_replace('-', '_', $fileName); // snake_case key stored in DB
             // Map to Volt component name
             $mapping[$elementKey] = 'elements.' . $fileName;
