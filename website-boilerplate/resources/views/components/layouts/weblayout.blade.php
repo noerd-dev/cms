@@ -57,7 +57,6 @@ $currentPath = parse_url($currentUrl, PHP_URL_PATH);
 
                 <div class="hidden md:flex items-center space-x-4">
                     <livewire:frontend-language-switcher/>
-
                 </div>
 
                 <div class="md:hidden">
