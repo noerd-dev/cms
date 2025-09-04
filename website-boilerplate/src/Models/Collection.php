@@ -18,4 +18,25 @@ class Collection extends Model
     {
         return $this->hasMany(Page::class);
     }
+
+    public function entries(): array
+    {
+        $pages = $this->hasMany(Page::class)->get();
+        $entries = [];
+        foreach ($pages as $page) {
+            $data = json_decode($page->data, true);
+            $transformedValue = [];
+            foreach ($data as $key => $value) {
+                if (is_array($value)) {
+                    $transformedValue[$key] = $value[session('selectedLanguage', 'de')] ?? null;
+                } else {
+                    $transformedValue[$key] = $value;
+                }
+            }
+            $entries[] = $transformedValue;
+
+        }
+
+        return $entries;
+    }
 }
