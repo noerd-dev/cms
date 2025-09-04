@@ -5,6 +5,7 @@ namespace Noerd\Cms\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Database\Factories\PageFactory;
+use Noerd\Cms\Services\FieldTypeConverter;
 
 class Page extends Model
 {
@@ -36,5 +37,25 @@ class Page extends Model
     protected static function newFactory()
     {
         return PageFactory::new();
+    }
+
+    /**
+     * Boot method to add model event listeners
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Apply field type conversion before saving collection pages
+        static::saving(function ($page) {
+            if ($page->collection_id && $page->collection) {
+                $collectionKey = strtolower($page->collection->collection_key);
+                
+                // Apply field type conversion to ensure data format consistency
+                if ($page->data && is_array($page->data)) {
+                    $page->data = FieldTypeConverter::convertCollectionData($page->data, $collectionKey);
+                }
+            }
+        });
     }
 }

@@ -9,6 +9,7 @@ use Livewire\WithFileUploads;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Language;
 use Noerd\Cms\Models\Page;
@@ -173,7 +174,11 @@ new class () extends Component {
         // Load data differently for collection pages vs regular pages
         if ($this->collectionKey && $model->data) {
             // For collection pages, load data from the JSON data field
-            $this->model = is_array($model->data) ? $model->data : [];
+            $rawData = is_array($model->data) ? $model->data : [];
+            
+            // Apply field type conversion when loading existing entries
+            // This ensures users see the correct field structure immediately
+            $this->model = FieldTypeConverter::convertCollectionData($rawData, $this->collectionKey);
         } else {
             // For regular pages, use the standard page fields
             $this->model = FieldHelper::parseComponentToData('page-component', $model->toArray());
@@ -512,10 +517,13 @@ new class () extends Component {
 
         $hasPageFeatures = $this->collectionLayout['hasPage'] ?? true;
 
+        // Apply field type conversion before saving
+        $convertedModel = FieldTypeConverter::convertCollectionData($this->model, $this->collectionKey);
+
         $pageData = [
             'tenant_id' => auth()->user()->selected_tenant_id,
             'collection_id' => $parentCollection->id,
-            'data' => $this->model,
+            'data' => $convertedModel,
             'sort' => (int) ($this->model['sort'] ?? 0),
         ];
 
@@ -528,8 +536,8 @@ new class () extends Component {
             $nameData = [];
             $slugData = [];
 
-            if (isset($this->model['name']) && is_array($this->model['name'])) {
-                foreach ($this->model['name'] as $lang => $nameValue) {
+            if (isset($convertedModel['name']) && is_array($convertedModel['name'])) {
+                foreach ($convertedModel['name'] as $lang => $nameValue) {
                     if (!empty($nameValue)) {
                         $nameData[$lang] = $nameValue;
                         $slugData[$lang] = $this->generateSlug($nameValue, $lang);
