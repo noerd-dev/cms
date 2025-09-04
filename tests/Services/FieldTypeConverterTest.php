@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\File;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\FieldTypeConverter;
+use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
@@ -12,9 +13,32 @@ describe('FieldTypeConverter', function () {
     
     beforeEach(function () {
         // Create a test user and set tenant
-        $this->actingAs(\App\Models\User::factory()->create([
+        $this->actingAs(User::factory()->create([
             'selected_tenant_id' => 1
         ]));
+        
+        // Mock the beratung collection configuration
+        $beratungCollectionConfig = "title: 'Beratung'
+titleList: 'Beratungseinträge'
+key: 'BERATUNG'
+buttonList: 'Neuer Eintrag'
+description: ''
+hasPage: false
+fields:
+  - { name: model.title, label: Titel, type: translatableText, colspan: 6 }
+  - { name: model.description, label: Beschreibung, type: translatableText, colspan: 6 }
+  - { name: model.content, label: Inhalt, type: translatableRichText, colspan: 12 }";
+
+        $beratungCollectionPath = base_path('content/collections/beratung.yml');
+        File::put($beratungCollectionPath, $beratungCollectionConfig);
+    });
+    
+    afterEach(function () {
+        // Clean up mocked beratung collection
+        $beratungCollectionPath = base_path('content/collections/beratung.yml');
+        if (File::exists($beratungCollectionPath)) {
+            File::delete($beratungCollectionPath);
+        }
     });
 
     it('converts text fields to translatableText format', function (): void {

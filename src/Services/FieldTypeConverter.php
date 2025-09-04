@@ -79,16 +79,16 @@ class FieldTypeConverter
      * Convert data from translatable field format to simple field
      * 
      * @param mixed $value
-     * @return string
+     * @return mixed
      */
-    private static function convertFromTranslatableField($value): string
+    private static function convertFromTranslatableField($value)
     {
         // If it's a translatable array, extract the German value as default
         if (is_array($value)) {
             return $value['de'] ?? $value['en'] ?? '';
         }
         
-        // If it's already a string, return as-is
-        return (string) $value;
+        // If it's not an array, return the original value with its original type
+        return $value;
     }
 }

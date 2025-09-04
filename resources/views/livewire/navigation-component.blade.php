@@ -90,6 +90,15 @@ new class extends Component {
         $decoded = is_string($page->name) ? json_decode($page->name, true) : ($page->name ?? []);
         $lang = session('selectedLanguage');
         $this->page = $decoded[$lang] ?? (is_array($decoded) ? (array_values($decoded)[0] ?? '') : $page->name);
+        
+        // Auto-fill name field only if it's empty
+        $currentName = $this->model['name'] ?? [];
+        $isNameEmpty = empty($currentName) || (is_array($currentName) && empty(array_filter($currentName)));
+        
+        if ($isNameEmpty) {
+            $this->model['name'] = $decoded;
+        }
+        
         $this->collection = null;
         $this->model['link'] = null;
     }
