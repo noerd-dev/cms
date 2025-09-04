@@ -9,4 +9,6 @@ php artisan make:module media
 composer update
 php artisan noerd:install-cms
 php artisan migrate
+npm install
+npm run build
 ```
