@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\View;
 use Noerd\Website\Models\GlobalParameter;
+use Noerd\Website\Models\Language;
 use Noerd\Website\Models\Tenant;
 
 class WebsiteMiddleware
@@ -40,6 +41,21 @@ class WebsiteMiddleware
                 $decoded = json_decode($item->value, true);
                 return [$item->key => $decoded];
             });
+
+        // Handle language parameter
+        if ($request->has('language')) {
+            $requestedLanguage = $request->get('language');
+
+            // Check if the requested language exists and is active for this tenant
+            $language = Language::where('tenant_id', $tenantId)
+                ->where('code', $requestedLanguage)
+                ->where('is_active', true)
+                ->first();
+
+            if ($language) {
+                session(['selectedLanguage' => $requestedLanguage]);
+            }
+        }
 
         View::share('globals', $globals);
         View::share('tenant', $tenant);
