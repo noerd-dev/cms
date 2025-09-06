@@ -1,44 +1,74 @@
 <?php
 
-use Illuminate\Support\Facades\File;
+use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
 
-// Setup and teardown for YAML mocking
+/**
+ * @group no-parallel
+ */
+
+// Mock CollectionHelper to avoid file system dependencies
 beforeEach(function (): void {
-    // Create test YAML files with known content
-    $collectionsPath = base_path('content/collections');
+    // Create an overload mock for better parallel test isolation
+    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
+    
+    // Mock getCollectionFields for various collections used in tests
+    $mock->shouldReceive('getCollectionFields')
+        ->with('projects')
+        ->andReturn([
+            'title' => 'Project',
+            'titleList' => 'Projects',
+            'buttonList' => 'New Project',
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+            ],
+        ]);
 
-    // Backup existing files if they exist
-    $this->originalProjectsYml = null;
+    $mock->shouldReceive('getCollectionFields')
+        ->with('services')
+        ->andReturn([
+            'title' => 'Test Collection',
+            'titleList' => 'Test Collections',
+            'buttonList' => 'New Entry',
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+            ],
+        ]);
 
-    if (File::exists($collectionsPath . '/projects.yml')) {
-        $this->originalProjectsYml = File::get($collectionsPath . '/projects.yml');
-    }
+    $mock->shouldReceive('getCollectionFields')
+        ->with('customers')
+        ->andReturn([
+            'title' => 'Test Collection',
+            'titleList' => 'Test Collections',
+            'buttonList' => 'New Entry',
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+            ],
+        ]);
 
-    // Create test YAML files
-    File::ensureDirectoryExists($collectionsPath);
+    $mock->shouldReceive('getCollectionFields')
+        ->with('contacts')
+        ->andReturn([
+            'title' => 'Test Collection',
+            'titleList' => 'Test Collections',
+            'buttonList' => 'New Entry',
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+            ],
+        ]);
 
-    File::put(
-        $collectionsPath . '/projects.yml',
-        "title: 'Project'\n" .
-        "titleList: 'Projects'\n" .
-        "buttonList: 'New Project'\n" .
-        "fields:\n" .
-        "  - { name: model.name, label: Name, type: translatableText }\n",
-    );
-});
-
-afterEach(function (): void {
-    $collectionsPath = base_path('content/collections');
-
-    // Restore original files or delete test files
-    if ($this->originalProjectsYml !== null) {
-        File::put($collectionsPath . '/projects.yml', $this->originalProjectsYml);
-    } else {
-        File::delete($collectionsPath . '/projects.yml');
-    }
+    $mock->shouldReceive('getCollectionFields')
+        ->with('sliders')
+        ->andReturn([
+            'title' => 'Test Collection',
+            'titleList' => 'Test Collections',
+            'buttonList' => 'New Entry',
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+            ],
+        ]);
 });
 
 it('can access collection entries route with key parameter', function (): void {
@@ -68,25 +98,10 @@ it('can access collection files route', function (): void {
 });
 
 it('collection entries route shows correct collection data', function (): void {
-    // Create additional test YAML files for this test
-    $collectionsPath = base_path('content/collections');
-    $testCollections = ['services', 'customers', 'contacts', 'sliders'];
-
-    foreach ($testCollections as $collection) {
-        File::put(
-            $collectionsPath . '/' . $collection . '.yml',
-            "title: 'Test Collection'\n" .
-            "titleList: 'Test Collections'\n" .
-            "buttonList: 'New Entry'\n" .
-            "fields:\n" .
-            "  - { name: model.name, label: Name, type: translatableText }\n",
-        );
-    }
-
     $user = User::factory()->withContentModule()->create();
     $this->actingAs($user);
 
-    // Test different collection keys
+    // Test different collection keys (using mocked collections)
     $collections = ['projects', 'services', 'customers', 'contacts', 'sliders'];
 
     foreach ($collections as $key) {
@@ -94,15 +109,6 @@ it('collection entries route shows correct collection data', function (): void {
         $response->assertStatus(200);
         // Should not show YAML file management interface
         $response->assertDontSee('Collection-Datei wurde erfolgreich gelöscht');
-    }
-
-    // Cleanup test files
-    $collectionsPath = base_path('content/collections');
-    $testCollections = ['services', 'customers', 'contacts', 'sliders'];
-    foreach ($testCollections as $collection) {
-        if (File::exists($collectionsPath . '/' . $collection . '.yml')) {
-            File::delete($collectionsPath . '/' . $collection . '.yml');
-        }
     }
 });
 

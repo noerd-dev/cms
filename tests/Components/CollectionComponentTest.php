@@ -2,9 +2,9 @@
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
+use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Media\Models\Media as MediaModel;
@@ -12,83 +12,67 @@ use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
-// Setup and teardown for YAML mocking
+/**
+ * @group no-parallel
+ */
+
+// Mock CollectionHelper to avoid file system dependencies
 beforeEach(function (): void {
-    // Create test YAML files with known content
-    $collectionsPath = base_path('content/collections');
+    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
+    
+    // Mock getCollectionFields for projects (hasPage: true)
+    $mock->shouldReceive('getCollectionFields')
+        ->with('projects')
+        ->andReturn([
+            'title' => 'Project',
+            'titleList' => 'Projects',
+            'buttonList' => 'New Project',
+            'hasPage' => true,
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'image', 'label' => 'Image', 'type' => 'image'],
+            ],
+        ]);
 
-    // Backup existing files if they exist
-    $this->originalYmlFiles = [];
-    $testFiles = ['projects', 'contacts', 'sliders', 'customers'];
+    // Mock getCollectionFields for contacts (hasPage: true)  
+    $mock->shouldReceive('getCollectionFields')
+        ->with('contacts')
+        ->andReturn([
+            'title' => 'Contact',
+            'titleList' => 'Contacts',
+            'buttonList' => 'New Contact',
+            'hasPage' => true,
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+            ],
+        ]);
 
-    foreach ($testFiles as $file) {
-        if (File::exists($collectionsPath . '/' . $file . '.yml')) {
-            $this->originalYmlFiles[$file] = File::get($collectionsPath . '/' . $file . '.yml');
-        }
-    }
+    // Mock getCollectionFields for sliders (hasPage: false)
+    $mock->shouldReceive('getCollectionFields')
+        ->with('sliders')
+        ->andReturn([
+            'title' => 'Slider',
+            'titleList' => 'Sliders',
+            'buttonList' => 'New Slider',
+            'hasPage' => false,
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+            ],
+        ]);
 
-    // Create test YAML files
-    File::ensureDirectoryExists($collectionsPath);
-
-    // Projects with hasPage: true
-    File::put(
-        $collectionsPath . '/projects.yml',
-        "title: 'Project'\n" .
-        "titleList: 'Projects'\n" .
-        "buttonList: 'New Project'\n" .
-        "hasPage: true\n" .
-        "fields:\n" .
-        "  - { name: model.name, label: Name, type: translatableText }\n" .
-        "  - { name: image, label: Image, type: image }\n",
-    );
-
-    // Contacts with hasPage: true
-    File::put(
-        $collectionsPath . '/contacts.yml',
-        "title: 'Contact'\n" .
-        "titleList: 'Contacts'\n" .
-        "buttonList: 'New Contact'\n" .
-        "hasPage: true\n" .
-        "fields:\n" .
-        "  - { name: model.name, label: Name, type: translatableText }\n",
-    );
-
-    // Sliders with hasPage: false
-    File::put(
-        $collectionsPath . '/sliders.yml',
-        "title: 'Slider'\n" .
-        "titleList: 'Sliders'\n" .
-        "buttonList: 'New Slider'\n" .
-        "hasPage: false\n" .
-        "fields:\n" .
-        "  - { name: model.name, label: Name, type: translatableText }\n",
-    );
-
-    // Customers with hasPage: false
-    File::put(
-        $collectionsPath . '/customers.yml',
-        "title: 'Customer'\n" .
-        "titleList: 'Customers'\n" .
-        "buttonList: 'New Customer'\n" .
-        "hasPage: false\n" .
-        "fields:\n" .
-        "  - { name: model.name, label: Name, type: translatableText }\n" .
-        "  - { name: model.description, label: Description, type: translatableText }\n",
-    );
-});
-
-afterEach(function (): void {
-    $collectionsPath = base_path('content/collections');
-    $testFiles = ['projects', 'contacts', 'sliders', 'customers'];
-
-    // Restore original files or delete test files
-    foreach ($testFiles as $file) {
-        if (isset($this->originalYmlFiles[$file])) {
-            File::put($collectionsPath . '/' . $file . '.yml', $this->originalYmlFiles[$file]);
-        } elseif (File::exists($collectionsPath . '/' . $file . '.yml')) {
-            File::delete($collectionsPath . '/' . $file . '.yml');
-        }
-    }
+    // Mock getCollectionFields for customers (hasPage: false)
+    $mock->shouldReceive('getCollectionFields')
+        ->with('customers')
+        ->andReturn([
+            'title' => 'Customer',
+            'titleList' => 'Customers',
+            'buttonList' => 'New Customer',
+            'hasPage' => false,
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'model.description', 'label' => 'Description', 'type' => 'translatableText'],
+            ],
+        ]);
 });
 
 $testSettings = [

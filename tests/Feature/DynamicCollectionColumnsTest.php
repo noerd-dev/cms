@@ -1,67 +1,62 @@
 <?php
 
-use Illuminate\Support\Facades\File;
+use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
 
-// Setup and teardown for YAML mocking
+/**
+ * @group no-parallel
+ */
+
+// Mock CollectionHelper to avoid file system dependencies
 beforeEach(function (): void {
-    // Create test YAML files with known content
-    $collectionsPath = base_path('content/collections');
+    // Create an overload mock for better parallel test isolation
+    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
+    
+    // Mock getCollectionFields for projects
+    $mock->shouldReceive('getCollectionFields')
+        ->with('projects')
+        ->andReturn([
+            'title' => 'Project',
+            'titleList' => 'Projects', 
+            'buttonList' => 'New Project',
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'image', 'label' => 'Image', 'type' => 'image'],
+            ],
+        ]);
 
-    // Backup existing files if they exist
-    $this->originalProjectsYml = null;
-    $this->originalCustomersYml = null;
+    // Mock getCollectionFields for customers  
+    $mock->shouldReceive('getCollectionFields')
+        ->with('customers')
+        ->andReturn([
+            'title' => 'Customer',
+            'titleList' => 'Customers',
+            'buttonList' => 'New Customer', 
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'model.description', 'label' => 'Description', 'type' => 'translatableText'],
+            ],
+        ]);
 
-    if (File::exists($collectionsPath . '/projects.yml')) {
-        $this->originalProjectsYml = File::get($collectionsPath . '/projects.yml');
-    }
-    if (File::exists($collectionsPath . '/customers.yml')) {
-        $this->originalCustomersYml = File::get($collectionsPath . '/customers.yml');
-    }
+    // Mock getCollectionTable for projects
+    $mock->shouldReceive('getCollectionTable')
+        ->with('projects')
+        ->andReturn([
+            ['field' => 'name', 'label' => 'Name', 'width' => 10],
+            ['field' => 'image', 'label' => 'Image', 'width' => 10],
+        ]);
 
-    // Create test YAML files
-    File::ensureDirectoryExists($collectionsPath);
-
-    File::put(
-        $collectionsPath . '/projects.yml',
-        "title: 'Project'\n" .
-        "titleList: 'Projects'\n" .
-        "buttonList: 'New Project'\n" .
-        "fields:\n" .
-        "  - { name: model.name, label: Name, type: translatableText }\n" .
-        "  - { name: image, label: Image, type: image }\n",
-    );
-
-    File::put(
-        $collectionsPath . '/customers.yml',
-        "title: 'Customer'\n" .
-        "titleList: 'Customers'\n" .
-        "buttonList: 'New Customer'\n" .
-        "fields:\n" .
-        "  - { name: model.name, label: Name, type: translatableText }\n" .
-        "  - { name: model.description, label: Description, type: translatableText }\n",
-    );
-});
-
-afterEach(function (): void {
-    $collectionsPath = base_path('content/collections');
-
-    // Restore original files or delete test files
-    if ($this->originalProjectsYml !== null) {
-        File::put($collectionsPath . '/projects.yml', $this->originalProjectsYml);
-    } else {
-        File::delete($collectionsPath . '/projects.yml');
-    }
-
-    if ($this->originalCustomersYml !== null) {
-        File::put($collectionsPath . '/customers.yml', $this->originalCustomersYml);
-    } else {
-        File::delete($collectionsPath . '/customers.yml');
-    }
+    // Mock getCollectionTable for customers
+    $mock->shouldReceive('getCollectionTable')
+        ->with('customers')
+        ->andReturn([
+            ['field' => 'name', 'label' => 'Name', 'width' => 10],
+            ['field' => 'description', 'label' => 'Description', 'width' => 10],
+        ]);
 });
 
 it('displays dynamic columns from YAML configuration for projects', function (): void {
