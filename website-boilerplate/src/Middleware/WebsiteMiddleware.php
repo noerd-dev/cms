@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\View;
-use Noerd\Website\Models\GlobalParameter;
 use Noerd\Website\Models\Language;
 use Noerd\Website\Models\Tenant;
 
@@ -36,12 +35,6 @@ class WebsiteMiddleware
             $tenantId = $tenant->id;
         }
 
-        $globals = GlobalParameter::where('tenant_id', $tenantId)->get()
-            ->mapWithKeys(function ($item) {
-                $decoded = json_decode($item->value, true);
-                return [$item->key => $decoded];
-            });
-
         // Handle language parameter
         if ($request->has('language')) {
             $requestedLanguage = $request->get('language');
@@ -57,7 +50,20 @@ class WebsiteMiddleware
             }
         }
 
-        View::share('globals', $globals);
+        // Set Laravel's locale based on selected language
+        $selectedLanguage = session('selectedLanguage');
+        if (!$selectedLanguage) {
+            $defaultLanguage = Language::where('tenant_id', $tenantId)
+                ->where('is_default', true)
+                ->where('is_active', true)
+                ->first();
+            $selectedLanguage = $defaultLanguage ? $defaultLanguage->code : 'en';
+            session(['selectedLanguage' => $selectedLanguage]);
+        }
+        
+        // Set Laravel's application locale for translations
+        app()->setLocale($selectedLanguage);
+
         View::share('tenant', $tenant);
         session(['selectedTenantId' => $tenantId]);
 
