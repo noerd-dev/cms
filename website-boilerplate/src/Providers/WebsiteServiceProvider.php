@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Livewire\Volt\Volt;
 use Noerd\Website\Controllers\WebsiteController;
 use Noerd\Website\Middleware\WebsiteMiddleware;
+use Noerd\Website\Models\Navigation;
 use Noerd\Website\Services\PageElementService;
 use Noerd\Website\Services\WebsiteService;
 
@@ -42,17 +43,25 @@ class WebsiteServiceProvider extends ServiceProvider
             if (!$tenantId) {
                 return;
             }
+
             $service = app(WebsiteService::class);
             $lang = session('selectedLanguage', 'de');
             $hash = request()->query('hash');
 
             $globals = $service->getGlobals($tenantId);
-            $navigation = [
-                'items' => $service->getNavigation($tenantId, 'main', $lang, $hash),
-                'footer' => $service->getNavigation($tenantId, 'footer', $lang, $hash),
-            ];
 
-            $view->with('globals', $globals)->with('navigation', $navigation);
+            $navigationKeys = Navigation::where('tenant_id', $tenantId)
+                ->distinct()
+                ->pluck('navigation_key')
+                ->toArray();
+
+            $navigation = [];
+            foreach ($navigationKeys as $key) {
+                $navigation[strtolower($key)] = $service->getNavigation($tenantId, $key, $lang, $hash);
+            }
+
+            $view->with('globals', $globals)
+                ->with('navigation', $navigation);
         });
     }
 

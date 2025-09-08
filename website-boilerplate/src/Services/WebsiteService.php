@@ -3,6 +3,7 @@
 namespace Noerd\Website\Services;
 
 use Noerd\Website\Models\GlobalParameter;
+use Noerd\Website\Models\Language;
 use Noerd\Website\Models\Navigation;
 use Noerd\Website\Models\Page;
 
@@ -10,10 +11,40 @@ class WebsiteService
 {
     public function getGlobals(int $tenantId): array
     {
+        // Get the current language (from session or default)
+        $selectedLanguage = session('selectedLanguage');
+        if (!$selectedLanguage) {
+            $defaultLanguage = Language::where('tenant_id', $tenantId)
+                ->where('is_default', true)
+                ->where('is_active', true)
+                ->first();
+            $selectedLanguage = $defaultLanguage ? $defaultLanguage->code : 'en';
+        }
+
         return GlobalParameter::where('tenant_id', $tenantId)->get()
-            ->mapWithKeys(function ($item) {
+            ->mapWithKeys(function ($item) use ($selectedLanguage) {
                 $decoded = json_decode($item->value, true);
-                return [$item->key => ($decoded ?? $item->value)];
+
+                // Handle different data types properly
+                if (is_array($decoded)) {
+                    // Check if this is a multilingual parameter (array with language keys)
+                    if (isset($decoded[$selectedLanguage])) {
+                        // Return the value for the selected language
+                        return [$item->key => $decoded[$selectedLanguage]];
+                    }
+
+                    // If selected language doesn't exist, try to find any language value
+                    if (!empty($decoded)) {
+                        // Return the first available language value
+                        return [$item->key => reset($decoded)];
+                    }
+
+                    // If array is empty, return empty string
+                    return [$item->key => ''];
+                }
+
+                // If not an array, return the decoded value (could be string, number, etc.)
+                return [$item->key => $decoded ?? $item->value ?? ''];
             })->toArray();
     }
 
@@ -65,7 +96,7 @@ class WebsiteService
             }
 
             return [
-                'label' => is_array($label) ? ($label[$language] ?? reset($label)) : ($label ?? ''),
+                'name' => is_array($label) ? ($label[$language] ?? reset($label)) : ($label ?? ''),
                 'href' => $href,
                 'new_tab' => (bool) $item->new_tab,
             ];
