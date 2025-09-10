@@ -16,6 +16,5 @@ class Language extends Model
 
     protected $table = 'cms_languages';
 
-
     protected $guarded = [];
 }

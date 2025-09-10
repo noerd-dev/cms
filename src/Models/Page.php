@@ -50,7 +50,7 @@ class Page extends Model
         static::saving(function ($page) {
             if ($page->collection_id && $page->collection) {
                 $collectionKey = strtolower($page->collection->collection_key);
-                
+
                 // Apply field type conversion to ensure data format consistency
                 if ($page->data && is_array($page->data)) {
                     $page->data = FieldTypeConverter::convertCollectionData($page->data, $collectionKey);

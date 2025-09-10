@@ -23,7 +23,7 @@ class RecaptchaService
      */
     public function verify(string $token, ?string $remoteIp = null): bool
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return true; // Allow submission if reCAPTCHA is not configured
         }
 
@@ -40,11 +40,12 @@ class RecaptchaService
 
             $data = $response->json();
 
-            if (!$data['success']) {
+            if (! $data['success']) {
                 Log::warning('reCAPTCHA verification failed', [
                     'error_codes' => $data['error-codes'] ?? [],
-                    'token' => mb_substr($token, 0, 20) . '...',
+                    'token' => mb_substr($token, 0, 20).'...',
                 ]);
+
                 return false;
             }
 
@@ -54,6 +55,7 @@ class RecaptchaService
                     'expected' => 'contact_form',
                     'received' => $data['action'],
                 ]);
+
                 return false;
             }
 
@@ -64,6 +66,7 @@ class RecaptchaService
                     'score' => $score,
                     'minimum' => $this->minimumScore,
                 ]);
+
                 return false;
             }
 
@@ -72,7 +75,7 @@ class RecaptchaService
         } catch (Exception $e) {
             Log::error('reCAPTCHA verification error', [
                 'message' => $e->getMessage(),
-                'token' => mb_substr($token, 0, 20) . '...',
+                'token' => mb_substr($token, 0, 20).'...',
             ]);
 
             // Fail open in case of service issues

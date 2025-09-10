@@ -10,13 +10,13 @@ use Noerd\Noerd\Models\User;
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
 describe('FieldTypeConverter', function () {
-    
+
     beforeEach(function () {
         // Create a test user and set tenant
         $this->actingAs(User::factory()->create([
-            'selected_tenant_id' => 1
+            'selected_tenant_id' => 1,
         ]));
-        
+
         // Mock the beratung collection configuration
         $beratungCollectionConfig = "title: 'Beratung'
 titleList: 'Beratungseinträge'
@@ -32,7 +32,7 @@ fields:
         $beratungCollectionPath = base_path('content/collections/beratung.yml');
         File::put($beratungCollectionPath, $beratungCollectionConfig);
     });
-    
+
     afterEach(function () {
         // Clean up mocked beratung collection
         $beratungCollectionPath = base_path('content/collections/beratung.yml');
@@ -45,7 +45,7 @@ fields:
         $originalData = [
             'title' => 'German Title',
             'description' => 'German Description',
-            'other_field' => 'Some value'
+            'other_field' => 'Some value',
         ];
 
         $convertedData = FieldTypeConverter::convertCollectionData($originalData, 'beratung');
@@ -62,7 +62,7 @@ fields:
     it('preserves already correct translatableText format', function (): void {
         $correctData = [
             'title' => ['de' => 'Deutscher Titel', 'en' => 'English Title'],
-            'description' => ['de' => 'Deutsche Beschreibung', 'en' => 'English Description']
+            'description' => ['de' => 'Deutsche Beschreibung', 'en' => 'English Description'],
         ];
 
         $convertedData = FieldTypeConverter::convertCollectionData($correctData, 'beratung');
@@ -74,7 +74,7 @@ fields:
     it('handles empty and null values gracefully', function (): void {
         $dataWithEmpties = [
             'title' => '',
-            'description' => null
+            'description' => null,
         ];
 
         $convertedData = FieldTypeConverter::convertCollectionData($dataWithEmpties, 'beratung');
@@ -90,7 +90,7 @@ fields:
     it('returns original data when collection config is missing', function (): void {
         $originalData = [
             'title' => 'Some Title',
-            'description' => 'Some Description'
+            'description' => 'Some Description',
         ];
 
         $convertedData = FieldTypeConverter::convertCollectionData($originalData, 'non_existent_collection');
@@ -115,7 +115,7 @@ fields:
 
         $translatableData = [
             'title' => ['de' => 'Deutscher Titel', 'en' => 'English Title'],
-            'description' => ['de' => 'Deutsche Beschreibung', 'en' => 'English Description']
+            'description' => ['de' => 'Deutsche Beschreibung', 'en' => 'English Description'],
         ];
 
         $convertedData = FieldTypeConverter::convertCollectionData($translatableData, 'test_text_conversion');
@@ -146,7 +146,7 @@ fields:
         $originalData = [
             'translatable_field' => 'Should become translatable',
             'text_field' => 'Should stay text',
-            'number_field' => 123
+            'number_field' => 123,
         ];
 
         $convertedData = FieldTypeConverter::convertCollectionData($originalData, 'test_mixed');
@@ -166,7 +166,7 @@ fields:
         $collection = Collection::create([
             'tenant_id' => 1,
             'collection_key' => 'BERATUNG',
-            'name' => 'Test Collection'
+            'name' => 'Test Collection',
         ]);
 
         // Create a page with old text format data
@@ -174,14 +174,14 @@ fields:
             'title' => 'Old Format Title',
             'description' => 'Old Format Description',
             'name' => ['de' => '', 'en' => ''],
-            'slug' => ['de' => '', 'en' => '']
+            'slug' => ['de' => '', 'en' => ''],
         ];
 
         $page = Page::create([
             'tenant_id' => 1,
             'collection_id' => $collection->id,
             'data' => $oldFormatData,
-            'is_active' => true
+            'is_active' => true,
         ]);
 
         // Reload the page to trigger the model boot conversion
@@ -212,7 +212,7 @@ fields:
 
         $originalData = [
             'rich_content' => '<p>Rich text content</p>',
-            'textarea_content' => 'Long textarea content'
+            'textarea_content' => 'Long textarea content',
         ];
 
         $convertedData = FieldTypeConverter::convertCollectionData($originalData, 'test_richtext');
@@ -236,7 +236,7 @@ fields:
             'slug' => ['de' => 'page-slug', 'en' => 'page-slug-en'],
             'layout' => 'default',
             'sort' => 10,
-            'custom_field' => 'Should remain unchanged'
+            'custom_field' => 'Should remain unchanged',
         ];
 
         $convertedData = FieldTypeConverter::convertCollectionData($originalData, 'beratung');

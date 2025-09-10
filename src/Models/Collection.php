@@ -19,7 +19,6 @@ class Collection extends Model
         return $this->hasMany(Page::class, 'collection_id')->orderBy('sort');
     }
 
-
     protected static function newFactory()
     {
         return CollectionFactory::new();

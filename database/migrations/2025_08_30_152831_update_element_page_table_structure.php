@@ -5,7 +5,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class () extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('element_page', function (Blueprint $table): void {
@@ -25,7 +26,7 @@ return new class () extends Migration {
             }
 
             // Only add element_key column if it doesn't exist
-            if (!Schema::hasColumn('element_page', 'element_key')) {
+            if (! Schema::hasColumn('element_page', 'element_key')) {
                 $table->string('element_key')->after('page_id');
                 $table->index('element_key');
             }
@@ -46,7 +47,7 @@ return new class () extends Migration {
             }
 
             // Only add back element_id column if it doesn't exist
-            if (!Schema::hasColumn('element_page', 'element_id')) {
+            if (! Schema::hasColumn('element_page', 'element_id')) {
                 $table->unsignedBigInteger('element_id')->after('page_id');
                 $table->index('element_id');
                 $table->foreign('element_id')->references('id')->on('elements');
@@ -61,13 +62,13 @@ return new class () extends Migration {
     {
         $databaseName = config('database.connections.mysql.database');
 
-        $result = DB::select("
+        $result = DB::select('
             SELECT COUNT(*) as count 
             FROM information_schema.KEY_COLUMN_USAGE 
             WHERE TABLE_SCHEMA = ? 
             AND TABLE_NAME = ? 
             AND CONSTRAINT_NAME = ?
-        ", [$databaseName, $table, $foreignKey]);
+        ', [$databaseName, $table, $foreignKey]);
 
         return $result[0]->count > 0;
     }
@@ -79,13 +80,13 @@ return new class () extends Migration {
     {
         $databaseName = config('database.connections.mysql.database');
 
-        $result = DB::select("
+        $result = DB::select('
             SELECT COUNT(*) as count 
             FROM information_schema.STATISTICS 
             WHERE TABLE_SCHEMA = ? 
             AND TABLE_NAME = ? 
             AND INDEX_NAME = ?
-        ", [$databaseName, $table, $index]);
+        ', [$databaseName, $table, $index]);
 
         return $result[0]->count > 0;
     }

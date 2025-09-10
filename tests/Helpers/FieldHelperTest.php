@@ -15,8 +15,8 @@ it('parses element data with defaults and translations', function (): void {
     $element = 'text_block_1_column';
 
     $elementFileName = str_replace('_', '-', $element);
-    if (! file_exists(base_path('app-modules/website/resources/views/livewire/elements/' . $elementFileName . '.yml')) &&
-        ! file_exists(base_path('content/elements/' . $element . '.yml'))
+    if (! file_exists(base_path('app-modules/website/resources/views/livewire/elements/'.$elementFileName.'.yml')) &&
+        ! file_exists(base_path('content/elements/'.$element.'.yml'))
     ) {
         $this->markTestSkipped('No element yml found for parsing test');
     }
@@ -28,7 +28,7 @@ it('parses element data with defaults and translations', function (): void {
     expect($parsed)->toBeArray();
     // Should set translatable defaults for de/en when applicable
     foreach ($fields['fields'] as $field) {
-        if (($field['type'] ?? null) && in_array($field['type'], ['translatableText','translatableRichText'])) {
+        if (($field['type'] ?? null) && in_array($field['type'], ['translatableText', 'translatableRichText'])) {
             $key = str_replace('model.', '', $field['name']);
             expect($parsed[$key]['de'])->toBeString();
             expect($parsed[$key]['en'])->toBeString();

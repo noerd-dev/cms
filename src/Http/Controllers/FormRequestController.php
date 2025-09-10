@@ -25,7 +25,7 @@ class FormRequestController extends Controller
         }
 
         $tenantId = (int) ($request->attributes->get('tenant_id'));
-        if (!$tenantId) {
+        if (! $tenantId) {
             return response()->json(['message' => 'Unauthorized tenant'], 401);
         }
 

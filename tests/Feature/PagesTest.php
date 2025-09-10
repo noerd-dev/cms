@@ -38,7 +38,7 @@ it('create a page', function (): void {
         ->where('name', '{"de":"Test Page","en":""}')
         ->first();
 
-    Volt::test('page-component', ['modelId' =>  $page->id])
+    Volt::test('page-component', ['modelId' => $page->id])
         ->set('model.name.en', 'Test Page English')
         ->call('store')
         ->assertOk();

@@ -11,7 +11,7 @@ class WebsiteController extends Controller
 {
     public function __construct()
     {
-        if (!session()->has('selectedLanguage')) {
+        if (! session()->has('selectedLanguage')) {
             session(['selectedLanguage' => 'de']);
         }
     }
@@ -66,18 +66,18 @@ class WebsiteController extends Controller
         ?string $slug4 = null,
         ?string $slug5 = null,
     ) {
-        $slug = '/' . $slug1;
+        $slug = '/'.$slug1;
         if ($slug2) {
-            $slug .= '/' . $slug2;
+            $slug .= '/'.$slug2;
         }
         if ($slug3) {
-            $slug .= '/' . $slug3;
+            $slug .= '/'.$slug3;
         }
         if ($slug4) {
-            $slug .= '/' . $slug4;
+            $slug .= '/'.$slug4;
         }
         if ($slug5) {
-            $slug .= '/' . $slug5;
+            $slug .= '/'.$slug5;
         }
 
         $tenantId = request()->attributes->get('tenant_id');
@@ -89,7 +89,7 @@ class WebsiteController extends Controller
             ->first();
         session(['selectedLanguage' => 'de']);
 
-        if (!$page) {
+        if (! $page) {
             $page = Page::with(['elements'])
                 ->whereJsonContains('slug->en', $slug)
                 ->where('is_active', 1)
@@ -98,7 +98,7 @@ class WebsiteController extends Controller
             session(['selectedLanguage' => 'en']);
         }
 
-        if (!$page) {
+        if (! $page) {
             // Home Page
             abort(404, 'Page not found');
         }
@@ -118,7 +118,7 @@ class WebsiteController extends Controller
      */
     private function localizeElementData(?array $data, string $selectedLanguage = 'de'): array
     {
-        if (!$data) {
+        if (! $data) {
             return [];
         }
 
