@@ -13,14 +13,16 @@ class FieldHelper
         $elementFileName = str_replace('_', '-', $element);
 
         // Check in livewire elements directory (co-located with components)
-        if (file_exists(base_path('app-modules/website/resources/views/livewire/elements/' . $elementFileName . '.yml'))) {
-            $content = file_get_contents(base_path('app-modules/website/resources/views/livewire/elements/' . $elementFileName . '.yml'));
+        if (file_exists(base_path('app-modules/website/resources/views/livewire/elements/'.$elementFileName.'.yml'))) {
+            $content = file_get_contents(base_path('app-modules/website/resources/views/livewire/elements/'.$elementFileName.'.yml'));
+
             return Yaml::parse($content ?: '');
         }
 
         // New primary location under content
-        if (file_exists(base_path('content/elements/' . $element . '.yml'))) {
-            $content = file_get_contents(base_path('content/elements/' . $element . '.yml'));
+        if (file_exists(base_path('content/elements/'.$element.'.yml'))) {
+            $content = file_get_contents(base_path('content/elements/'.$element.'.yml'));
+
             return Yaml::parse($content ?: '');
         }
 
@@ -34,7 +36,7 @@ class FieldHelper
         $model = [];
         $elementFields = self::getElementFields($element);
 
-        if (!$elementFields) {
+        if (! $elementFields) {
             return null;
         }
 
@@ -101,7 +103,7 @@ class FieldHelper
             $elementKey = str_replace('-', '_', $fileName);
 
             // Try to find corresponding yml definition (co-located with livewire component, same naming as blade file)
-            $ymlFile = base_path('app-modules/website/resources/views/livewire/elements/' . $fileName . '.yml');
+            $ymlFile = base_path('app-modules/website/resources/views/livewire/elements/'.$fileName.'.yml');
 
             if (file_exists($ymlFile)) {
                 $content = file_get_contents($ymlFile);
@@ -134,7 +136,7 @@ class FieldHelper
 
         foreach ($elements as $element) {
             $group = $element->group ?? 'General';
-            if (!isset($groupedElements[$group])) {
+            if (! isset($groupedElements[$group])) {
                 $groupedElements[$group] = [];
             }
             $groupedElements[$group][] = $element;
@@ -148,6 +150,7 @@ class FieldHelper
             if ($b === 'General') {
                 return 1;
             }
+
             return strcmp($a, $b);
         });
 
@@ -157,7 +160,7 @@ class FieldHelper
     private static function isJsonAndDecode($value): mixed
     {
         // First check if it's a string (JSON must be a string)
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return false;
         }
 

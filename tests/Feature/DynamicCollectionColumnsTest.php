@@ -14,14 +14,14 @@ uses(Tests\TestCase::class);
 // Mock CollectionHelper to avoid file system dependencies
 beforeEach(function (): void {
     // Create an overload mock for better parallel test isolation
-    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
-    
+    $mock = \Mockery::mock('overload:'.CollectionHelper::class);
+
     // Mock getCollectionFields for projects
     $mock->shouldReceive('getCollectionFields')
         ->with('projects')
         ->andReturn([
             'title' => 'Project',
-            'titleList' => 'Projects', 
+            'titleList' => 'Projects',
             'buttonList' => 'New Project',
             'fields' => [
                 ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
@@ -29,13 +29,13 @@ beforeEach(function (): void {
             ],
         ]);
 
-    // Mock getCollectionFields for customers  
+    // Mock getCollectionFields for customers
     $mock->shouldReceive('getCollectionFields')
         ->with('customers')
         ->andReturn([
             'title' => 'Customer',
             'titleList' => 'Customers',
-            'buttonList' => 'New Customer', 
+            'buttonList' => 'New Customer',
             'fields' => [
                 ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ['name' => 'model.description', 'label' => 'Description', 'type' => 'translatableText'],

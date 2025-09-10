@@ -65,7 +65,7 @@ it('successfully deletes a page', function () use ($testSettings): void {
 
     Volt::test($testSettings['componentName'], ['modelId' => $model->id])
         ->call('delete')
-        ->assertDispatched('reloadTable-' . $testSettings['listName']);
+        ->assertDispatched('reloadTable-'.$testSettings['listName']);
 
     $this->assertDatabaseMissing('pages', [
         'id' => $model->id,

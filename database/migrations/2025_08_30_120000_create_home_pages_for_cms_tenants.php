@@ -3,12 +3,13 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class () extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         $cmsAppId = DB::table('tenant_apps')->where('name', 'CMS')->value('id');
 
-        if (!$cmsAppId) {
+        if (! $cmsAppId) {
             return; // CMS app not present; nothing to do
         }
 
@@ -63,7 +64,7 @@ return new class () extends Migration {
     {
         $cmsAppId = DB::table('tenant_apps')->where('name', 'CMS')->value('id');
 
-        if (!$cmsAppId) {
+        if (! $cmsAppId) {
             return;
         }
 
@@ -78,7 +79,7 @@ return new class () extends Migration {
 
         foreach ($tenantIds as $tenantId) {
             $setting = DB::table('cms_settings')->where('tenant_id', $tenantId)->first();
-            if (!$setting || !$setting->homepage_page_id) {
+            if (! $setting || ! $setting->homepage_page_id) {
                 continue;
             }
 

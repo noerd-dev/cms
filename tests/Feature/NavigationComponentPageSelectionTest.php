@@ -16,8 +16,8 @@ test('page selection auto-fills empty name field', function () {
         'tenant_id' => $user->selected_tenant_id,
         'name' => json_encode([
             'de' => 'Test Seite',
-            'en' => 'Test Page'
-        ])
+            'en' => 'Test Page',
+        ]),
     ]);
 
     session(['selectedLanguage' => 'de']);
@@ -32,7 +32,7 @@ test('page selection auto-fills empty name field', function () {
         ->assertSet('model.page_id', $page->id)
         ->assertSet('model.name', [
             'de' => 'Test Seite',
-            'en' => 'Test Page'
+            'en' => 'Test Page',
         ]);
 });
 
@@ -44,13 +44,13 @@ test('page selection does not overwrite existing name field', function () {
         'tenant_id' => $user->selected_tenant_id,
         'name' => json_encode([
             'de' => 'Test Seite',
-            'en' => 'Test Page'
-        ])
+            'en' => 'Test Page',
+        ]),
     ]);
 
     $existingName = [
         'de' => 'Bereits vorhandener Name',
-        'en' => 'Existing Name'
+        'en' => 'Existing Name',
     ];
 
     session(['selectedLanguage' => 'de']);
@@ -74,8 +74,8 @@ test('page selection auto-fills when name field has only empty values', function
         'tenant_id' => $user->selected_tenant_id,
         'name' => json_encode([
             'de' => 'Test Seite',
-            'en' => 'Test Page'
-        ])
+            'en' => 'Test Page',
+        ]),
     ]);
 
     session(['selectedLanguage' => 'de']);
@@ -90,6 +90,6 @@ test('page selection auto-fills when name field has only empty values', function
         ->assertSet('model.page_id', $page->id)
         ->assertSet('model.name', [
             'de' => 'Test Seite',
-            'en' => 'Test Page'
+            'en' => 'Test Page',
         ]);
 });

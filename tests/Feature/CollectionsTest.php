@@ -10,7 +10,7 @@ it('test collections route', function (): void {
     $user = User::factory()->withContentModule()->create();
     $this->actingAs($user);
 
-    $this->get(route('cms.collections') . '?key=projects')
+    $this->get(route('cms.collections').'?key=projects')
         ->assertStatus(200);
 });
 
@@ -38,7 +38,7 @@ it('create a page', function (): void {
         ->where('name', '{"de":"Test Page","en":""}')
         ->first();
 
-    Volt::test('page-component', ['modelId' =>  $page->id])
+    Volt::test('page-component', ['modelId' => $page->id])
         ->set('model.name.en', 'Test Page English')
         ->call('store')
         ->assertOk();
