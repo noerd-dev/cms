@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Noerd\Noerd\Models\Tenant;
 
-return new class () extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -13,7 +14,7 @@ return new class () extends Migration {
         // Find the CMS/Content app
         $cmsApp = DB::table('tenant_apps')->where('name', 'CMS')->first();
 
-        if (!$cmsApp) {
+        if (! $cmsApp) {
             // Create the CMS app if it doesn't exist
             $cmsAppId = DB::table('tenant_apps')->insertGetId([
                 'title' => 'CMS',
@@ -40,7 +41,7 @@ return new class () extends Migration {
                 ->where('tenant_app_id', $cmsAppId)
                 ->exists();
 
-            if (!$existingAccess) {
+            if (! $existingAccess) {
                 // Assign CMS app to tenant
                 DB::table('tenant_app')->insert([
                     'tenant_app_id' => $cmsAppId,

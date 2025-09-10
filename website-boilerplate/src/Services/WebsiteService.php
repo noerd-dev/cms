@@ -13,7 +13,7 @@ class WebsiteService
     {
         // Get the current language (from session or default)
         $selectedLanguage = session('selectedLanguage');
-        if (!$selectedLanguage) {
+        if (! $selectedLanguage) {
             $defaultLanguage = Language::where('tenant_id', $tenantId)
                 ->where('is_default', true)
                 ->where('is_active', true)
@@ -34,7 +34,7 @@ class WebsiteService
                     }
 
                     // If selected language doesn't exist, try to find any language value
-                    if (!empty($decoded)) {
+                    if (! empty($decoded)) {
                         // Return the first available language value
                         return [$item->key => reset($decoded)];
                     }
@@ -68,9 +68,9 @@ class WebsiteService
             }
 
             $href = '#';
-            if (!empty($item->link)) {
+            if (! empty($item->link)) {
                 $href = $item->link;
-            } elseif (!empty($item->page_id)) {
+            } elseif (! empty($item->page_id)) {
                 $page = Page::find($item->page_id);
                 if ($page && $page->slug) {
                     // Extract slug for current language - handle both array and JSON string

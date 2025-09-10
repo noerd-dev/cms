@@ -22,14 +22,14 @@ class GlobalParameterFactory extends Factory
 
     public function withTenantId($tenantId): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'tenant_id' => $tenantId,
         ]);
     }
 
     public function withKeyValue($key, $value): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'key' => $key,
             'value' => json_encode($value),
         ]);

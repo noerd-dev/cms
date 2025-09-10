@@ -17,7 +17,7 @@ it('loads collections table component successfully', function () use ($testSetti
 
     // Simply test that the component loads without errors
     $component = Volt::test($testSettings['componentName']);
-    
+
     expect($component)->not->toBeNull();
     expect($component->instance())->not->toBeNull();
 });

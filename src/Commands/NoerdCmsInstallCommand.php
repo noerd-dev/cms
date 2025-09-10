@@ -21,16 +21,18 @@ class NoerdCmsInstallCommand extends Command
         $sourceDir = base_path('vendor/noerd/cms/content');
         $targetDir = base_path('content');
 
-        if (!is_dir($sourceDir)) {
+        if (! is_dir($sourceDir)) {
             $this->error("Source directory not found: {$sourceDir}");
+
             return 1;
         }
 
         // Create target directory if it doesn't exist
-        if (!is_dir($targetDir)) {
+        if (! is_dir($targetDir)) {
 
-            if (!mkdir($targetDir, 0755, true)) {
+            if (! mkdir($targetDir, 0755, true)) {
                 $this->error("Failed to create target directory: {$targetDir}");
+
                 return 1;
             }
 
@@ -41,8 +43,8 @@ class NoerdCmsInstallCommand extends Command
             $results = $this->copyDirectoryContents($sourceDir, $targetDir);
 
             // Ensure lists are copied explicitly to content/lists
-            $listsSource = $sourceDir . DIRECTORY_SEPARATOR . 'lists';
-            $listsTarget = $targetDir . DIRECTORY_SEPARATOR . 'lists';
+            $listsSource = $sourceDir.DIRECTORY_SEPARATOR.'lists';
+            $listsTarget = $targetDir.DIRECTORY_SEPARATOR.'lists';
             if (is_dir($listsSource)) {
                 $listResults = $this->copyDirectoryContents($listsSource, $listsTarget);
                 $results = $this->mergeResults($results, $listResults);
@@ -60,7 +62,8 @@ class NoerdCmsInstallCommand extends Command
 
             return 0;
         } catch (Exception $e) {
-            $this->error('Error installing noerd content: ' . $e->getMessage());
+            $this->error('Error installing noerd content: '.$e->getMessage());
+
             return 1;
         }
     }
@@ -85,13 +88,13 @@ class NoerdCmsInstallCommand extends Command
         foreach ($iterator as $item) {
             $sourcePath = $item->getPathname();
             $relativePath = mb_substr($sourcePath, mb_strlen($sourceDir) + 1);
-            $targetPath = $targetDir . DIRECTORY_SEPARATOR . $relativePath;
+            $targetPath = $targetDir.DIRECTORY_SEPARATOR.$relativePath;
 
             if ($item->isDir()) {
                 // Create directory if it doesn't exist
-                if (!is_dir($targetPath)) {
+                if (! is_dir($targetPath)) {
 
-                    if (!mkdir($targetPath, 0755, true)) {
+                    if (! mkdir($targetPath, 0755, true)) {
                         throw new Exception("Failed to create directory: {$targetPath}");
                     }
 
@@ -101,8 +104,7 @@ class NoerdCmsInstallCommand extends Command
             } else {
                 // Check if file already exists
                 if (file_exists($targetPath)) {
-                    if (!$this->option('force')) {
-
+                    if (! $this->option('force')) {
 
                         $choice = $this->choice(
                             "File already exists: {$relativePath}. What do you want to do?",
@@ -113,6 +115,7 @@ class NoerdCmsInstallCommand extends Command
                         if ($choice === 'skip') {
                             $this->line("<comment>Skipped:</comment> {$relativePath}");
                             $results['skipped_files']++;
+
                             continue;
                         }
                         if ($choice === 'overwrite-all') {
@@ -128,7 +131,7 @@ class NoerdCmsInstallCommand extends Command
                     $results['copied_files']++;
                 }
 
-                if (!copy($sourcePath, $targetPath)) {
+                if (! copy($sourcePath, $targetPath)) {
                     throw new Exception("Failed to copy file: {$sourcePath} to {$targetPath}");
                 }
 
@@ -143,6 +146,7 @@ class NoerdCmsInstallCommand extends Command
         foreach (['created_dirs', 'copied_files', 'skipped_files', 'overwritten_files'] as $key) {
             $a[$key] = ($a[$key] ?? 0) + ($b[$key] ?? 0);
         }
+
         return $a;
     }
 
@@ -197,7 +201,7 @@ class NoerdCmsInstallCommand extends Command
 
             $this->line('<info>CMS module registered successfully.</info>');
         } catch (Exception $e) {
-            $this->warn('Module registration failed: ' . $e->getMessage());
+            $this->warn('Module registration failed: '.$e->getMessage());
         }
     }
 
@@ -209,6 +213,7 @@ class NoerdCmsInstallCommand extends Command
         // Check if website installation should be skipped
         if ($this->option('without-website')) {
             $this->line('<comment>Skipping website module installation (--without-website flag provided).</comment>');
+
             return;
         }
 
@@ -216,6 +221,7 @@ class NoerdCmsInstallCommand extends Command
 
         if (is_dir($websiteDir)) {
             $this->line('<comment>Website module already exists, skipping installation.</comment>');
+
             return;
         }
 
@@ -232,7 +238,7 @@ class NoerdCmsInstallCommand extends Command
                 $this->warn('Website module installation failed.');
             }
         } catch (Exception $e) {
-            $this->warn('Failed to install website module: ' . $e->getMessage());
+            $this->warn('Failed to install website module: '.$e->getMessage());
         }
     }
 }

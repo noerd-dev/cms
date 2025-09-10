@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-return new class () extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -21,7 +22,7 @@ return new class () extends Migration {
             ");
         } catch (\Exception $e) {
             // Log the error but don't fail the migration if the entry already exists
-            Log::info('CMS tenant app entry might already exist: ' . $e->getMessage());
+            Log::info('CMS tenant app entry might already exist: '.$e->getMessage());
         }
     }
 
@@ -34,7 +35,7 @@ return new class () extends Migration {
             // Remove the CMS tenant app entry by name
             DB::table('tenant_apps')->where('name', 'CMS')->delete();
         } catch (\Exception $e) {
-            Log::info('Could not remove CMS tenant app entry: ' . $e->getMessage());
+            Log::info('Could not remove CMS tenant app entry: '.$e->getMessage());
         }
     }
 };

@@ -5,6 +5,7 @@ namespace Noerd\Website\Traits;
 trait NoerdElement
 {
     public array $collections = [];
+
     public $element;
 
     public function mount($data = [], array $collections = []): void
@@ -20,6 +21,7 @@ trait NoerdElement
                 return $collection['rows'] ?? [];
             }
         }
+
         return [];
     }
 
@@ -30,12 +32,13 @@ trait NoerdElement
 
     public function hasCollection(string $key): bool
     {
-        return !empty($this->collection($key));
+        return ! empty($this->collection($key));
     }
 
     public function getCollectionData(string $key, mixed $default = []): array
     {
         $collection = $this->collection($key);
-        return !empty($collection) ? $collection : $default;
+
+        return ! empty($collection) ? $collection : $default;
     }
 }
