@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
+use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\FieldTypeConverter;
@@ -12,33 +12,69 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 describe('FieldTypeConverter', function () {
 
     beforeEach(function () {
-        // Create a test user and set tenant
+        // Create a unique tenant for each test run to avoid collisions
+        $tenant = \Noerd\Noerd\Models\Tenant::factory()->create();
+        $this->tenantId = $tenant->id;
+        
         $this->actingAs(User::factory()->create([
-            'selected_tenant_id' => 1,
+            'selected_tenant_id' => $this->tenantId,
         ]));
 
-        // Mock the beratung collection configuration
-        $beratungCollectionConfig = "title: 'Beratung'
-titleList: 'Beratungseinträge'
-key: 'BERATUNG'
-buttonList: 'Neuer Eintrag'
-description: ''
-hasPage: false
-fields:
-  - { name: model.title, label: Titel, type: translatableText, colspan: 6 }
-  - { name: model.description, label: Beschreibung, type: translatableText, colspan: 6 }
-  - { name: model.content, label: Inhalt, type: translatableRichText, colspan: 12 }";
-
-        $beratungCollectionPath = base_path('content/collections/beratung.yml');
-        File::put($beratungCollectionPath, $beratungCollectionConfig);
-    });
-
-    afterEach(function () {
-        // Clean up mocked beratung collection
-        $beratungCollectionPath = base_path('content/collections/beratung.yml');
-        if (File::exists($beratungCollectionPath)) {
-            File::delete($beratungCollectionPath);
-        }
+        // Mock CollectionHelper using Mockery for static calls
+        $mock = \Mockery::mock('alias:' . CollectionHelper::class);
+        
+        // Default beratung collection
+        $mock->shouldReceive('getCollectionFields')
+            ->with('beratung')
+            ->andReturn([
+                'title' => 'Beratung',
+                'titleList' => 'Beratungseinträge', 
+                'key' => 'BERATUNG',
+                'buttonList' => 'Neuer Eintrag',
+                'description' => '',
+                'hasPage' => false,
+                'fields' => [
+                    ['name' => 'model.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
+                    ['name' => 'model.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
+                    ['name' => 'model.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
+                ]
+            ]);
+        
+        // Non-existent collection
+        $mock->shouldReceive('getCollectionFields')
+            ->with('non_existent_collection')
+            ->andReturn(null);
+            
+        // Text conversion collection
+        $mock->shouldReceive('getCollectionFields')
+            ->with('test_text_conversion')
+            ->andReturn([
+                'fields' => [
+                    ['name' => 'model.title', 'label' => 'Title', 'type' => 'text', 'colspan' => 6],
+                    ['name' => 'model.description', 'label' => 'Description', 'type' => 'text', 'colspan' => 6],
+                ]
+            ]);
+            
+        // Mixed field types collection
+        $mock->shouldReceive('getCollectionFields')
+            ->with('test_mixed')
+            ->andReturn([
+                'fields' => [
+                    ['name' => 'model.translatable_field', 'label' => 'Translatable', 'type' => 'translatableText', 'colspan' => 6],
+                    ['name' => 'model.text_field', 'label' => 'Text', 'type' => 'text', 'colspan' => 6],
+                    ['name' => 'model.number_field', 'label' => 'Number', 'type' => 'number', 'colspan' => 6],
+                ]
+            ]);
+            
+        // Rich text collection
+        $mock->shouldReceive('getCollectionFields')
+            ->with('test_richtext')
+            ->andReturn([
+                'fields' => [
+                    ['name' => 'model.rich_content', 'label' => 'Rich Content', 'type' => 'translatableRichText', 'colspan' => 12],
+                    ['name' => 'model.textarea_content', 'label' => 'Textarea Content', 'type' => 'translatableTextarea', 'colspan' => 12],
+                ]
+            ]);
     });
 
     it('converts text fields to translatableText format', function (): void {
@@ -99,20 +135,6 @@ fields:
     });
 
     it('converts translatableText back to text format', function (): void {
-        // Create a temporary test collection config with text fields
-        $testCollectionConfig = "title: 'Test Collection'
-titleList: 'Test Entries'
-key: 'TEST'
-buttonList: 'New Entry'
-description: ''
-hasPage: false
-fields:
-  - { name: model.title, label: Title, type: text, colspan: 6 }
-  - { name: model.description, label: Description, type: text, colspan: 6 }";
-
-        $testCollectionPath = base_path('content/collections/test_text_conversion.yml');
-        File::put($testCollectionPath, $testCollectionConfig);
-
         $translatableData = [
             'title' => ['de' => 'Deutscher Titel', 'en' => 'English Title'],
             'description' => ['de' => 'Deutsche Beschreibung', 'en' => 'English Description'],
@@ -122,27 +144,9 @@ fields:
 
         expect($convertedData['title'])->toBe('Deutscher Titel') // Should use German as primary
             ->and($convertedData['description'])->toBe('Deutsche Beschreibung');
-
-        // Clean up
-        File::delete($testCollectionPath);
     });
 
     it('handles mixed field types correctly', function (): void {
-        // Create a test collection with mixed field types
-        $mixedCollectionConfig = "title: 'Mixed Collection'
-titleList: 'Mixed Entries'
-key: 'MIXED'
-buttonList: 'New Entry'
-description: ''
-hasPage: false
-fields:
-  - { name: model.translatable_field, label: Translatable, type: translatableText, colspan: 6 }
-  - { name: model.text_field, label: Text, type: text, colspan: 6 }
-  - { name: model.number_field, label: Number, type: number, colspan: 6 }";
-
-        $testCollectionPath = base_path('content/collections/test_mixed.yml');
-        File::put($testCollectionPath, $mixedCollectionConfig);
-
         $originalData = [
             'translatable_field' => 'Should become translatable',
             'text_field' => 'Should stay text',
@@ -156,15 +160,12 @@ fields:
             ->and($convertedData['translatable_field']['en'])->toBe('Should become translatable')
             ->and($convertedData['text_field'])->toBe('Should stay text')
             ->and($convertedData['number_field'])->toBe(123);
-
-        // Clean up
-        File::delete($testCollectionPath);
     });
 
     it('automatically converts data when saving Page model', function (): void {
-        // Create a collection
+        // Create a collection with unique tenant ID
         $collection = Collection::create([
-            'tenant_id' => 1,
+            'tenant_id' => $this->tenantId,
             'collection_key' => 'BERATUNG',
             'name' => 'Test Collection',
         ]);
@@ -178,7 +179,7 @@ fields:
         ];
 
         $page = Page::create([
-            'tenant_id' => 1,
+            'tenant_id' => $this->tenantId,
             'collection_id' => $collection->id,
             'data' => $oldFormatData,
             'is_active' => true,
@@ -196,20 +197,6 @@ fields:
     });
 
     it('handles translatableRichText and translatableTextarea types', function (): void {
-        // Create test collection with different translatable types
-        $richTextCollectionConfig = "title: 'Rich Text Collection'
-titleList: 'Rich Text Entries'
-key: 'RICHTEXT'
-buttonList: 'New Entry'
-description: ''
-hasPage: false
-fields:
-  - { name: model.rich_content, label: Rich Content, type: translatableRichText, colspan: 12 }
-  - { name: model.textarea_content, label: Textarea Content, type: translatableTextarea, colspan: 12 }";
-
-        $testCollectionPath = base_path('content/collections/test_richtext.yml');
-        File::put($testCollectionPath, $richTextCollectionConfig);
-
         $originalData = [
             'rich_content' => '<p>Rich text content</p>',
             'textarea_content' => 'Long textarea content',
@@ -223,9 +210,6 @@ fields:
             ->and($convertedData['textarea_content'])->toBeArray()
             ->and($convertedData['textarea_content']['de'])->toBe('Long textarea content')
             ->and($convertedData['textarea_content']['en'])->toBe('Long textarea content');
-
-        // Clean up
-        File::delete($testCollectionPath);
     });
 
     it('preserves non-model fields unchanged', function (): void {
