@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class CmsSetting extends Model
 {
     use HasFactory;
+
     protected $table = 'cms_settings';
 
     protected $fillable = [

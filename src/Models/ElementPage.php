@@ -10,6 +10,7 @@ class ElementPage extends Model
     use HasFactory;
 
     protected $guarded = [];
+
     protected $table = 'element_page';
 
     public function page()

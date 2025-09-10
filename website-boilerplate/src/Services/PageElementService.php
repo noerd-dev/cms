@@ -9,14 +9,15 @@ class PageElementService
 {
     /**
      * Process page elements for frontend rendering
-     * @param Page|CmsPage $page
+     *
+     * @param  Page|CmsPage  $page
      */
     public function processPageElements($page, string $selectedLanguage = 'de'): array
     {
         $elements = [];
 
         // Handle case where page might not have elements relationship loaded
-        if (!$page || !method_exists($page, 'elements')) {
+        if (! $page || ! method_exists($page, 'elements')) {
             return $elements;
         }
 
@@ -56,8 +57,8 @@ class PageElementService
         $bladeFiles = [];
 
         // If custom path is provided, use it first
-        if (!empty($customElementsPath) && is_dir(base_path($customElementsPath))) {
-            $customFiles = glob(base_path($customElementsPath . '/*.blade.php')) ?: [];
+        if (! empty($customElementsPath) && is_dir(base_path($customElementsPath))) {
+            $customFiles = glob(base_path($customElementsPath.'/*.blade.php')) ?: [];
             $bladeFiles = array_merge($bladeFiles, $customFiles);
         }
 
@@ -77,7 +78,7 @@ class PageElementService
         foreach ($uniqueFiles as $fileName => $filePath) {
             $elementKey = str_replace('-', '_', $fileName); // snake_case key stored in DB
             // Map to Volt component name
-            $mapping[$elementKey] = 'elements.' . $fileName;
+            $mapping[$elementKey] = 'elements.'.$fileName;
         }
 
         return $mapping;
@@ -95,12 +96,12 @@ class PageElementService
         $fileBase = end($parts) ?: $componentName;
 
         // Look for Blade component in any app-module under livewire/elements
-        $bladeMatches = glob(base_path('app-modules/*/resources/views/livewire/elements/' . $fileBase . '.blade.php')) ?: [];
+        $bladeMatches = glob(base_path('app-modules/*/resources/views/livewire/elements/'.$fileBase.'.blade.php')) ?: [];
 
         // Look for YAML definition alongside elements (search all modules for flexibility)
-        $ymlMatches = glob(base_path('app-modules/*/resources/views/livewire/elements/' . $fileBase . '.yml')) ?: [];
+        $ymlMatches = glob(base_path('app-modules/*/resources/views/livewire/elements/'.$fileBase.'.yml')) ?: [];
 
-        return !empty($bladeMatches) && !empty($ymlMatches);
+        return ! empty($bladeMatches) && ! empty($ymlMatches);
     }
 
     /**
@@ -148,6 +149,6 @@ class PageElementService
         $keys = array_keys($array);
 
         // If all keys are language codes, it's a translatable array
-        return !empty($keys) && count(array_intersect($keys, $languageCodes)) === count($keys);
+        return ! empty($keys) && count(array_intersect($keys, $languageCodes)) === count($keys);
     }
 }

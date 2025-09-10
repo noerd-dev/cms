@@ -5,16 +5,17 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class () extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         // 1) Rename existing collections table to collection_rows
-        if (Schema::hasTable('collections') && !Schema::hasTable('collection_rows')) {
+        if (Schema::hasTable('collections') && ! Schema::hasTable('collection_rows')) {
             Schema::rename('collections', 'collection_rows');
         }
 
         // 2) Create new parent collections table
-        if (!Schema::hasTable('collections')) {
+        if (! Schema::hasTable('collections')) {
             Schema::create('collections', function (Blueprint $table): void {
                 $table->id();
                 $table->unsignedBigInteger('tenant_id');
@@ -28,7 +29,7 @@ return new class () extends Migration {
         }
 
         // 3) Add collection_id to collection_rows and migrate data
-        if (!Schema::hasColumn('collection_rows', 'collection_id')) {
+        if (! Schema::hasColumn('collection_rows', 'collection_id')) {
             Schema::table('collection_rows', function (Blueprint $table): void {
                 $table->unsignedBigInteger('collection_id')->nullable()->after('tenant_id');
                 $table->foreign('collection_id')->references('id')->on('collections')->onDelete('cascade');
@@ -43,7 +44,7 @@ return new class () extends Migration {
                 ->where('collection_key', $row->collection_key)
                 ->first();
 
-            if (!$existing) {
+            if (! $existing) {
                 $collectionId = DB::table('collections')->insertGetId([
                     'tenant_id' => $row->tenant_id,
                     'collection_key' => $row->collection_key,
@@ -72,7 +73,7 @@ return new class () extends Migration {
     public function down(): void
     {
         // Re-add collection_key to rows
-        if (!Schema::hasColumn('collection_rows', 'collection_key')) {
+        if (! Schema::hasColumn('collection_rows', 'collection_key')) {
             Schema::table('collection_rows', function (Blueprint $table): void {
                 $table->string('collection_key')->nullable()->after('tenant_id');
                 $table->index('collection_key');
@@ -100,7 +101,7 @@ return new class () extends Migration {
 
         // Drop new collections table and rename back
         Schema::dropIfExists('collections');
-        if (Schema::hasTable('collection_rows') && !Schema::hasTable('collections')) {
+        if (Schema::hasTable('collection_rows') && ! Schema::hasTable('collections')) {
             Schema::rename('collection_rows', 'collections');
         }
     }

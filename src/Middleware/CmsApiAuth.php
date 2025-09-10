@@ -25,19 +25,19 @@ class CmsApiAuth
         if (is_string($authHeader) && preg_match('/^Bearer\s+(.+)$/i', $authHeader, $m)) {
             $token = mb_trim($m[1]);
         }
-        if (!$token) {
+        if (! $token) {
             $token = (string) $request->header('X-API-Key', '');
         }
-        if (!$token) {
+        if (! $token) {
             $token = (string) $request->query('api_token', '');
         }
 
-        if (!$token) {
+        if (! $token) {
             return response()->json(['message' => 'Unauthorized: missing API token'], 401);
         }
 
         $tenant = Tenant::where('api_token', $token)->first();
-        if (!$tenant) {
+        if (! $tenant) {
             return response()->json(['message' => 'Unauthorized: invalid API token'], 401);
         }
 

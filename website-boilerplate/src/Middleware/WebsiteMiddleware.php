@@ -18,7 +18,7 @@ class WebsiteMiddleware
 
         // 1. Try hash-based tenant resolution first
         $hash = $request->hash ?? session('hash');
-        if (!empty($hash)) {
+        if (! empty($hash)) {
             $tenant = Tenant::where('hash', $hash)->first();
             if ($tenant) {
                 $tenantId = $tenant->id;
@@ -27,9 +27,9 @@ class WebsiteMiddleware
         }
 
         // 2. Fallback to first available tenant if no hash or tenant found
-        if (!$tenant) {
+        if (! $tenant) {
             $tenant = Tenant::first();
-            if (!$tenant) {
+            if (! $tenant) {
                 abort(404, 'No tenant available.');
             }
             $tenantId = $tenant->id;
@@ -52,7 +52,7 @@ class WebsiteMiddleware
 
         // Set Laravel's locale based on selected language
         $selectedLanguage = session('selectedLanguage');
-        if (!$selectedLanguage) {
+        if (! $selectedLanguage) {
             $defaultLanguage = Language::where('tenant_id', $tenantId)
                 ->where('is_default', true)
                 ->where('is_active', true)
@@ -60,7 +60,7 @@ class WebsiteMiddleware
             $selectedLanguage = $defaultLanguage ? $defaultLanguage->code : 'en';
             session(['selectedLanguage' => $selectedLanguage]);
         }
-        
+
         // Set Laravel's application locale for translations
         app()->setLocale($selectedLanguage);
 

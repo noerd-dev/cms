@@ -22,15 +22,17 @@ class InstallWebsiteBoilerplateCommand extends Command
         $sourceDir = base_path('app-modules/cms/website-boilerplate');
         $targetDir = base_path('app-modules/website');
 
-        if (!is_dir($sourceDir)) {
+        if (! is_dir($sourceDir)) {
             $this->error("Website boilerplate not found: {$sourceDir}");
+
             return 1;
         }
 
         // Check if target already exists and not forcing
-        if (is_dir($targetDir) && !$this->option('force')) {
-            if (!$this->confirm("Directory {$targetDir} already exists. Do you want to overwrite it?")) {
+        if (is_dir($targetDir) && ! $this->option('force')) {
+            if (! $this->confirm("Directory {$targetDir} already exists. Do you want to overwrite it?")) {
                 $this->info('Installation cancelled.');
+
                 return 0;
             }
         }
@@ -59,7 +61,8 @@ class InstallWebsiteBoilerplateCommand extends Command
 
             return 0;
         } catch (Exception $e) {
-            $this->error('Error installing website boilerplate: ' . $e->getMessage());
+            $this->error('Error installing website boilerplate: '.$e->getMessage());
+
             return 1;
         }
     }
@@ -82,12 +85,12 @@ class InstallWebsiteBoilerplateCommand extends Command
         foreach ($iterator as $item) {
             $sourcePath = $item->getPathname();
             $relativePath = mb_substr($sourcePath, mb_strlen($sourceDir) + 1);
-            $targetPath = $targetDir . DIRECTORY_SEPARATOR . $relativePath;
+            $targetPath = $targetDir.DIRECTORY_SEPARATOR.$relativePath;
 
             if ($item->isDir()) {
                 // Create directory if it doesn't exist
-                if (!is_dir($targetPath)) {
-                    if (!mkdir($targetPath, 0755, true)) {
+                if (! is_dir($targetPath)) {
+                    if (! mkdir($targetPath, 0755, true)) {
                         throw new Exception("Failed to create directory: {$targetPath}");
                     }
                     $this->line("<info>Created directory:</info> {$relativePath}");
@@ -96,12 +99,12 @@ class InstallWebsiteBoilerplateCommand extends Command
             } else {
                 // Create parent directory if needed
                 $parentDir = dirname($targetPath);
-                if (!is_dir($parentDir)) {
+                if (! is_dir($parentDir)) {
                     mkdir($parentDir, 0755, true);
                 }
 
                 // Copy file
-                if (!copy($sourcePath, $targetPath)) {
+                if (! copy($sourcePath, $targetPath)) {
                     throw new Exception("Failed to copy file: {$sourcePath} to {$targetPath}");
                 }
 
@@ -127,7 +130,7 @@ class InstallWebsiteBoilerplateCommand extends Command
 
             // Run composer dump-autoload to ensure the module is discoverable
             $this->line('<comment>Running composer dump-autoload...</comment>');
-            exec('cd ' . base_path() . ' && composer dump-autoload', $output, $returnCode);
+            exec('cd '.base_path().' && composer dump-autoload', $output, $returnCode);
 
             if ($returnCode !== 0) {
                 $this->warn('Failed to run composer dump-autoload automatically. Please run it manually.');
@@ -149,7 +152,7 @@ class InstallWebsiteBoilerplateCommand extends Command
 
             $this->line('<info>Module registered successfully.</info>');
         } catch (Exception $e) {
-            $this->warn('Module registration may need manual intervention: ' . $e->getMessage());
+            $this->warn('Module registration may need manual intervention: '.$e->getMessage());
         }
     }
 
@@ -161,10 +164,10 @@ class InstallWebsiteBoilerplateCommand extends Command
         $this->line('<comment>Installing website package via composer...</comment>');
 
         // Install the website package explicitly to trigger package discovery
-        exec('cd ' . base_path() . ' && composer require noerd/website', $output, $returnCode);
+        exec('cd '.base_path().' && composer require noerd/website', $output, $returnCode);
 
         if ($returnCode !== 0) {
-            $this->warn('Failed to install noerd/website package. Output: ' . implode("\n", $output));
+            $this->warn('Failed to install noerd/website package. Output: '.implode("\n", $output));
             $this->warn('You may need to run "composer require noerd/website" manually.');
         } else {
             $this->line('<info>Website package installed successfully.</info>');
