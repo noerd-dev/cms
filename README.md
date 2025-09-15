@@ -1,6 +1,6 @@
 # Noerd CMS Framework
 
-Install the package. Make sure you already initiated a git project.
+Install the package. Make sure you already initiated a git project and noerd is already installed.
 ```
 git submodule add git@github.com:noerd-dev/cms.git app-modules/cms
 git submodule add git@github.com:noerd-dev/media.git app-modules/media
