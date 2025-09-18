@@ -28,7 +28,7 @@
                 </a>
                 <div class="hidden md:block ml-8">
                     <div class="flex space-x-4">
-                        @forelse(($navigation['items'] ?? []) as $link)
+                        @forelse(($navigation['main'] ?? []) as $link)
                             @php
                                 $linkPath = parse_url($link['href'], PHP_URL_PATH);
 
@@ -46,7 +46,7 @@
                             <a href="{{ $link['href'] }}"
                                @if(($link['new_tab'] ?? false)) target="_blank" rel="noopener" @endif
                                class="nav-link {{ $isActive ? 'nav-link--active' : 'nav-link--inactive' }}">
-                                {{ $link['label'] }}
+                                {{ $link['name'] }}
                             </a>
                         @empty
                             <a href="#" class="nav-link nav-link--inactive">Home</a>
@@ -72,7 +72,7 @@
 
     <div class="md:hidden hidden" id="mobile-menu">
         <div class="space-y-1 px-2 pt-2 pb-3">
-            @foreach(($navigation['items'] ?? []) as $link)
+            @foreach(($navigation['main'] ?? []) as $link)
                 @php
                     $linkPath = parse_url($link['href'], PHP_URL_PATH);
 
@@ -90,7 +90,7 @@
                 <a href="{{ $link['href'] }}"
                    @if(($link['new_tab'] ?? false)) target="_blank" rel="noopener" @endif
                    class="nav-link block text-base {{ $isActive ? 'nav-link--active' : 'nav-link--inactive' }}">
-                    {{ $link['label'] }}
+                    {{ $link['name'] }}
                 </a>
             @endforeach
             <div class="border-t border-gray-200 my-2"></div>
@@ -129,7 +129,7 @@
                         @endphp
                         <a href="{{ $link['href'] }}"
                            class="transition-colors duration-200 {{ $footerActiveClasses }}">
-                            {{ $link['label'] }}
+                            {{ $link['name'] }}
                         </a>
                     @endforeach
                 </div>
