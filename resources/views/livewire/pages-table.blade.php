@@ -16,8 +16,6 @@ new class extends Component {
 
     public function tableAction(mixed $modelId = null, mixed $relationId = null): void
     {
-
-
         $this->dispatch(
             event: 'noerdModal',
             component: 'page-component',
@@ -73,8 +71,8 @@ new class extends Component {
 
     public function rendering()
     {
-        if ((int)request()->orderConfrimationId) {
-            $this->tableAction(request()->orderConfrimationId);
+        if ((int)request()->pageId) {
+            $this->tableAction(request()->pageId);
         }
 
         if (request()->create) {
