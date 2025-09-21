@@ -3,6 +3,9 @@
   hidden: true
   route: cms
   block_menus:
+    - title: Dashboard
+      route: cms.dashboard
+      icon: icons.home
     - title: CMS
       navigations: [
         { title: Seiten, route: cms.pages, icon: icons.document },
