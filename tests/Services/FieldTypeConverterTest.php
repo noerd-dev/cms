@@ -9,26 +9,34 @@ use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
-describe('FieldTypeConverter', function () {
+describe('FieldTypeConverter', function (): void {
 
-    beforeEach(function () {
+    beforeEach(function (): void {
         // Create a unique tenant for each test run to avoid collisions
         $tenant = \Noerd\Noerd\Models\Tenant::factory()->create();
         $this->tenantId = $tenant->id;
-        
+
         $this->actingAs(User::factory()->create([
             'selected_tenant_id' => $this->tenantId,
         ]));
+    });
 
-        // Mock CollectionHelper using Mockery for static calls
+    afterEach(function (): void {
+        // Ensure all Mockery mocks are properly reset after each test
+        \Mockery::close();
+    });
+
+    // Helper function to create isolated mocks for each test
+    function createCollectionHelperMock(): void
+    {
         $mock = \Mockery::mock('alias:' . CollectionHelper::class);
-        
+
         // Default beratung collection
         $mock->shouldReceive('getCollectionFields')
             ->with('beratung')
             ->andReturn([
                 'title' => 'Beratung',
-                'titleList' => 'Beratungseinträge', 
+                'titleList' => 'Beratungseinträge',
                 'key' => 'BERATUNG',
                 'buttonList' => 'Neuer Eintrag',
                 'description' => '',
@@ -37,14 +45,14 @@ describe('FieldTypeConverter', function () {
                     ['name' => 'model.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
                     ['name' => 'model.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
                     ['name' => 'model.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
-                ]
+                ],
             ]);
-        
+
         // Non-existent collection
         $mock->shouldReceive('getCollectionFields')
             ->with('non_existent_collection')
             ->andReturn(null);
-            
+
         // Text conversion collection
         $mock->shouldReceive('getCollectionFields')
             ->with('test_text_conversion')
@@ -52,9 +60,9 @@ describe('FieldTypeConverter', function () {
                 'fields' => [
                     ['name' => 'model.title', 'label' => 'Title', 'type' => 'text', 'colspan' => 6],
                     ['name' => 'model.description', 'label' => 'Description', 'type' => 'text', 'colspan' => 6],
-                ]
+                ],
             ]);
-            
+
         // Mixed field types collection
         $mock->shouldReceive('getCollectionFields')
             ->with('test_mixed')
@@ -63,9 +71,9 @@ describe('FieldTypeConverter', function () {
                     ['name' => 'model.translatable_field', 'label' => 'Translatable', 'type' => 'translatableText', 'colspan' => 6],
                     ['name' => 'model.text_field', 'label' => 'Text', 'type' => 'text', 'colspan' => 6],
                     ['name' => 'model.number_field', 'label' => 'Number', 'type' => 'number', 'colspan' => 6],
-                ]
+                ],
             ]);
-            
+
         // Rich text collection
         $mock->shouldReceive('getCollectionFields')
             ->with('test_richtext')
@@ -73,11 +81,13 @@ describe('FieldTypeConverter', function () {
                 'fields' => [
                     ['name' => 'model.rich_content', 'label' => 'Rich Content', 'type' => 'translatableRichText', 'colspan' => 12],
                     ['name' => 'model.textarea_content', 'label' => 'Textarea Content', 'type' => 'translatableTextarea', 'colspan' => 12],
-                ]
+                ],
             ]);
-    });
+    }
 
     it('converts text fields to translatableText format', function (): void {
+        createCollectionHelperMock();
+
         $originalData = [
             'title' => 'German Title',
             'description' => 'German Description',
@@ -96,6 +106,8 @@ describe('FieldTypeConverter', function () {
     });
 
     it('preserves already correct translatableText format', function (): void {
+        createCollectionHelperMock();
+
         $correctData = [
             'title' => ['de' => 'Deutscher Titel', 'en' => 'English Title'],
             'description' => ['de' => 'Deutsche Beschreibung', 'en' => 'English Description'],
@@ -108,6 +120,8 @@ describe('FieldTypeConverter', function () {
     });
 
     it('handles empty and null values gracefully', function (): void {
+        createCollectionHelperMock();
+
         $dataWithEmpties = [
             'title' => '',
             'description' => null,
@@ -124,6 +138,8 @@ describe('FieldTypeConverter', function () {
     });
 
     it('returns original data when collection config is missing', function (): void {
+        createCollectionHelperMock();
+
         $originalData = [
             'title' => 'Some Title',
             'description' => 'Some Description',
@@ -135,6 +151,8 @@ describe('FieldTypeConverter', function () {
     });
 
     it('converts translatableText back to text format', function (): void {
+        createCollectionHelperMock();
+
         $translatableData = [
             'title' => ['de' => 'Deutscher Titel', 'en' => 'English Title'],
             'description' => ['de' => 'Deutsche Beschreibung', 'en' => 'English Description'],
@@ -147,6 +165,8 @@ describe('FieldTypeConverter', function () {
     });
 
     it('handles mixed field types correctly', function (): void {
+        createCollectionHelperMock();
+
         $originalData = [
             'translatable_field' => 'Should become translatable',
             'text_field' => 'Should stay text',
@@ -163,11 +183,33 @@ describe('FieldTypeConverter', function () {
     });
 
     it('automatically converts data when saving Page model', function (): void {
-        // Create a collection with unique tenant ID
+        // Create a collection with unique tenant ID and timestamp to avoid conflicts
+        $uniqueSuffix = time() . '_' . getmypid();
+        $uniqueCollectionKey = 'BERATUNG_' . $uniqueSuffix;
+        
+        // Create mock that responds to the lowercase collection key (as per Page model behavior)
+        $lowercaseCollectionKey = strtolower($uniqueCollectionKey);
+        $mock = \Mockery::mock('alias:' . CollectionHelper::class);
+        $mock->shouldReceive('getCollectionFields')
+            ->with($lowercaseCollectionKey)
+            ->andReturn([
+                'title' => 'Beratung',
+                'titleList' => 'Beratungseinträge',
+                'key' => $uniqueCollectionKey,
+                'buttonList' => 'Neuer Eintrag',
+                'description' => '',
+                'hasPage' => false,
+                'fields' => [
+                    ['name' => 'model.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
+                    ['name' => 'model.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
+                    ['name' => 'model.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
+                ]
+            ]);
+        
         $collection = Collection::create([
             'tenant_id' => $this->tenantId,
-            'collection_key' => 'BERATUNG',
-            'name' => 'Test Collection',
+            'collection_key' => $uniqueCollectionKey,
+            'name' => 'Test Collection ' . $uniqueSuffix,
         ]);
 
         // Create a page with old text format data
@@ -197,6 +239,8 @@ describe('FieldTypeConverter', function () {
     });
 
     it('handles translatableRichText and translatableTextarea types', function (): void {
+        createCollectionHelperMock();
+
         $originalData = [
             'rich_content' => '<p>Rich text content</p>',
             'textarea_content' => 'Long textarea content',
@@ -213,6 +257,8 @@ describe('FieldTypeConverter', function () {
     });
 
     it('preserves non-model fields unchanged', function (): void {
+        createCollectionHelperMock();
+
         $originalData = [
             'title' => 'Will be converted',
             'description' => 'Will be converted',
