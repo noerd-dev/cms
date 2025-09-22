@@ -9,13 +9,13 @@ new class extends Component {
 
     use Noerd;
 
-    public const COMPONENT = 'form-requests-table';
+    public const COMPONENT = 'form-requests-list';
 
     public function tableAction(mixed $modelId = null, mixed $relationId = null): void
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'form-request-component',
+            component: 'form-request-detail',
             source: self::COMPONENT,
             arguments: ['modelId' => $modelId, 'relationId' => $relationId],
         );
@@ -32,7 +32,7 @@ new class extends Component {
             })
             ->paginate(self::PAGINATION);
 
-        $tableConfig = StaticConfigHelper::getTableConfig('form-requests-table');
+        $tableConfig = StaticConfigHelper::getTableConfig('form-requests-list');
 
         return [
             'rows' => $rows,

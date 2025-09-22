@@ -53,9 +53,9 @@ new class () extends Component {
         </div>
         <div class="flex">
             <x-noerd::dashboard-card icon="document" title="Seiten" :value="$pagesCount"
-                                     component="pages-table"/>
+                                     component="pages-list"/>
             <x-noerd::dashboard-card heroicon="list-bullet" title="Navigation" :value="$navigationCount"
-                                     component="navigation-table"/>
+                                     component="navigation-list"/>
         </div>
     </div>
 

@@ -19,11 +19,11 @@ it('create a page', function (): void {
     $this->actingAs($user);
 
     // Create empty page is possible
-    Volt::test('page-component')
+    Volt::test('page-detail')
         ->call('store')
         ->assertOk();
 
-    Volt::test('page-component')
+    Volt::test('page-detail')
         ->set('model.name.de', 'Test Page')
         ->call('store')
         ->assertOk();
@@ -38,7 +38,7 @@ it('create a page', function (): void {
         ->where('name', '{"de":"Test Page","en":""}')
         ->first();
 
-    Volt::test('page-component', ['modelId' => $page->id])
+    Volt::test('page-detail', ['modelId' => $page->id])
         ->set('model.name.en', 'Test Page English')
         ->call('store')
         ->assertOk();

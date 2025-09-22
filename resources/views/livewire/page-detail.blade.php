@@ -22,8 +22,8 @@ new class () extends Component {
     use Noerd;
     use WithFileUploads;
 
-    public const COMPONENT = 'page-component';
-    public const LIST_COMPONENT = 'pages-table';
+    public const COMPONENT = 'page-detail';
+    public const LIST_COMPONENT = 'pages-list';
     public const ID = 'pageId';
     #[Url(keep: false, except: '')]
     public $pageId = null;
@@ -181,7 +181,7 @@ new class () extends Component {
             $this->model = FieldTypeConverter::convertCollectionData($rawData, $this->collectionKey);
         } else {
             // For regular pages, use the standard page fields
-            $this->model = FieldHelper::parseComponentToData('page-component', $model->toArray());
+            $this->model = FieldHelper::parseComponentToData('page-detail', $model->toArray());
         }
 
         // Ensure a layout is always preselected
@@ -494,7 +494,7 @@ new class () extends Component {
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'element-page-component',
+            component: 'element-page-detail',
             source: self::COMPONENT,
             arguments: ['modelId' => $this->pageId],
         );
@@ -667,11 +667,11 @@ new class () extends Component {
                 <div x-sort="$wire.elementSort($item, $position)">
                     @foreach($this->page->elements as $loopIndex => $elementPage)
                         <div x-sort:item="{{$elementPage->id}}" wire:key="sort-item-{{$elementPage->id}}">
-                            <livewire:element-page-component
+                            <livewire:element-page-detail
                                 wire:key="element-page-{{$elementPage->id}}"
                                 :modelId="$elementPage->id"
                             >
-                            </livewire:element-page-component>
+                            </livewire:element-page-detail>
                         </div>
                     @endforeach
 

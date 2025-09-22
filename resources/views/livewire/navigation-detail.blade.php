@@ -12,8 +12,8 @@ new class extends Component {
 
     use Noerd;
 
-    public const COMPONENT = 'navigation-component';
-    public const LIST_COMPONENT = 'navigation-table';
+    public const COMPONENT = 'navigation-detail';
+    public const LIST_COMPONENT = 'navigation-list';
     public const ID = 'navigationId';
 
     #[Url(keep: false, except: '')]

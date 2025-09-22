@@ -1,7 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Volt\Component;
-use Noerd\Cms\Models\GlobalParameter;
+use Noerd\Cms\Models\Navigation;
 use Noerd\Noerd\Traits\Noerd;
 use Noerd\Noerd\Helpers\StaticConfigHelper;
 
@@ -9,44 +10,37 @@ new class extends Component {
 
     use Noerd;
 
-    public const COMPONENT = 'global-parameters-table';
+    public const COMPONENT = 'navigation-list';
 
     public function tableAction(mixed $modelId = null, mixed $relationId = null): void
     {
-
-
         $this->dispatch(
             event: 'noerdModal',
-            component: 'global-parameter-component',
+            component: 'navigation-detail',
             source: self::COMPONENT,
             arguments: ['modelId' => $modelId, 'relationId' => $relationId],
         );
     }
 
-    public function with()
+    public function with(): array
     {
-        $rows = GlobalParameter::where('tenant_id', Auth::user()->selected_tenant_id)
+        $rows = Navigation::where('tenant_id', Auth::user()->selected_tenant_id)
             ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')
             ->when($this->search, function ($query): void {
                 $query->where(function ($query): void {
-                    $query->where('value', 'like', '%' . $this->search . '%')
-                        ->orWhere('key', 'like', '%' . $this->search . '%');
+                    $query->where('navigation_key', 'like', '%' . $this->search . '%');
                 });
             })
             ->paginate(self::PAGINATION);
 
+        // decode name json for table output per selected language
         foreach ($rows as $row) {
-
-            $oldName = $row->value;
-            $row->value = json_decode($row->value, true);
-            $row->value = $row->value[session('selectedLanguage')] ?? array_values($row->value)[0] ?? $row->value;
-
-            if (strlen($row->value) == 0) {
-                $row->value = $oldName;
-            }
+            $oldName = $row->name;
+            $decoded = is_string($row->name) ? json_decode($row->name, true) : ($row->name ?? []);
+            $row->name = $decoded[session('selectedLanguage')] ?? array_values($decoded)[0] ?? $oldName;
         }
 
-        $tableConfig = StaticConfigHelper::getTableConfig('global-parameters-table');
+        $tableConfig = StaticConfigHelper::getTableConfig('navigation-list');
 
         return [
             'rows' => $rows,
@@ -56,18 +50,18 @@ new class extends Component {
 
     public function rendering()
     {
-        if ((int)request()->globalParameterId) {
-            $this->tableAction(request()->globalParameterId);
+        if ((int)request()->navigationId) {
+            $this->tableAction(request()->navigationId);
         }
 
         if (request()->create) {
             $this->tableAction();
         }
     }
-} ?>
+}; ?>
 
 <x-noerd::page :disableModal="$disableModal">
-    <div>
-        @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
-    </div>
+    @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
 </x-noerd::page>
+
+

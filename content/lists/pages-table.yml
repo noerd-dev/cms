@@ -1,6 +1,6 @@
 title: 'Seiten'
 newLabel: 'Neue Seite'
-component: 'page-component'
+component: page-detail
 disableSearch: false
 redirectAction: ''
 columns:

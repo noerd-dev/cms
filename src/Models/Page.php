@@ -42,14 +42,14 @@ class Page extends Model
     /**
      * Boot method to add model event listeners
      */
-    protected static function boot()
+    protected static function boot(): void
     {
         parent::boot();
 
         // Apply field type conversion before saving collection pages
-        static::saving(function ($page) {
+        static::saving(function ($page): void {
             if ($page->collection_id && $page->collection) {
-                $collectionKey = strtolower($page->collection->collection_key);
+                $collectionKey = mb_strtolower($page->collection->collection_key);
 
                 // Apply field type conversion to ensure data format consistency
                 if ($page->data && is_array($page->data)) {

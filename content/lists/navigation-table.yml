@@ -1,6 +1,6 @@
 title: 'Navigation'
 newLabel: 'Neuer Navigationspunkt'
-component: 'navigation-component'
+component: navigation-detail
 disableSearch: false
 redirectAction: ''
 columns:

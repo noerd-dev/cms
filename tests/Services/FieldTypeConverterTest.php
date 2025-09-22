@@ -186,9 +186,9 @@ describe('FieldTypeConverter', function (): void {
         // Create a collection with unique tenant ID and timestamp to avoid conflicts
         $uniqueSuffix = time() . '_' . getmypid();
         $uniqueCollectionKey = 'BERATUNG_' . $uniqueSuffix;
-        
+
         // Create mock that responds to the lowercase collection key (as per Page model behavior)
-        $lowercaseCollectionKey = strtolower($uniqueCollectionKey);
+        $lowercaseCollectionKey = mb_strtolower($uniqueCollectionKey);
         $mock = \Mockery::mock('alias:' . CollectionHelper::class);
         $mock->shouldReceive('getCollectionFields')
             ->with($lowercaseCollectionKey)
@@ -203,9 +203,9 @@ describe('FieldTypeConverter', function (): void {
                     ['name' => 'model.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
                     ['name' => 'model.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
                     ['name' => 'model.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
-                ]
+                ],
             ]);
-        
+
         $collection = Collection::create([
             'tenant_id' => $this->tenantId,
             'collection_key' => $uniqueCollectionKey,

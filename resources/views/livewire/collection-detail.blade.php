@@ -9,8 +9,8 @@ new class extends Component {
 
     use Noerd;
 
-    public const COMPONENT = 'collection-component';
-    public const LIST_COMPONENT = 'collections-table';
+    public const COMPONENT = 'collection-detail';
+    public const LIST_COMPONENT = 'collections-list';
 
     public ?string $fileName = null;
     public string $yamlContent = '';

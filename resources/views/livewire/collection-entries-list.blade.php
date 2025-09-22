@@ -9,7 +9,7 @@ use Noerd\Noerd\Traits\Noerd;
 new class () extends Component {
     use Noerd;
 
-    public const COMPONENT = 'collection-entries-table';
+    public const COMPONENT = 'collection-entries-list';
 
     public ?string $collectionKey = null;
     public ?array $collectionLayout = null;
@@ -36,7 +36,7 @@ new class () extends Component {
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'page-component',
+            component: 'page-detail',
             source: self::COMPONENT,
             arguments: ['modelId' => $modelId, 'collectionKey' => $this->collectionKey, 'relationId' => $relationId],
         );

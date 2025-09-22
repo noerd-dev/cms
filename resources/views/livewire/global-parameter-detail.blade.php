@@ -12,8 +12,8 @@ new class extends Component {
 
     use Noerd;
 
-    public const COMPONENT = 'global-parameter-component';
-    public const LIST_COMPONENT = 'global-parameters-table';
+    public const COMPONENT = 'global-parameter-detail';
+    public const LIST_COMPONENT = 'global-parameters-list';
     public const ID = 'globalParameterId';
     #[Url(keep: false, except: '')]
     public ?string $globalParameterId = null;

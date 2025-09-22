@@ -14,11 +14,11 @@ class WebsiteServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(WebsiteService::class, fn () => new WebsiteService);
-        $this->app->singleton(PageElementService::class, fn () => new PageElementService);
+        $this->app->singleton(WebsiteService::class, fn() => new WebsiteService());
+        $this->app->singleton(PageElementService::class, fn() => new PageElementService());
 
         // Register reCAPTCHA configuration
-        $this->mergeConfigFrom(__DIR__.'/../../config/recaptcha.php', 'recaptcha');
+        $this->mergeConfigFrom(__DIR__ . '/../../config/recaptcha.php', 'recaptcha');
     }
 
     public function boot(): void
@@ -27,15 +27,15 @@ class WebsiteServiceProvider extends ServiceProvider
         $router = $this->app['router'];
         $router->aliasMiddleware('website', WebsiteMiddleware::class);
 
-        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'website');
-        $this->loadTranslationsFrom(__DIR__.'/../../resources/lang', 'website');
+        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'website');
+        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'website');
 
         // Register route loading after all providers have been registered
         $this->app->booted(function (): void {
             $this->registerCatchAllRoutes();
         });
 
-        Volt::mount(__DIR__.'/../../resources/views/livewire');
+        Volt::mount(__DIR__ . '/../../resources/views/livewire');
 
         // Share website data to views
         view()->composer('*', function ($view): void {
@@ -57,7 +57,7 @@ class WebsiteServiceProvider extends ServiceProvider
 
             $navigation = [];
             foreach ($navigationKeys as $key) {
-                $navigation[strtolower($key)] = $service->getNavigation($tenantId, $key, $lang, $hash);
+                $navigation[mb_strtolower($key)] = $service->getNavigation($tenantId, $key, $lang, $hash);
             }
 
             $view->with('globals', $globals)
