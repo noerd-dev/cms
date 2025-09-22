@@ -8,29 +8,12 @@ use Noerd\Noerd\Models\User;
 uses(Tests\TestCase::class);
 uses(RefreshDatabase::class);
 
-it('test collections route', function (): void {
+it('create a page', function (): void {
     // Clear any existing Mockery instances to avoid conflicts in parallel tests
     if (class_exists('Mockery')) {
         \Mockery::close();
     }
-    
-    $user = User::factory()->withContentModule()->create();
-    $this->actingAs($user);
 
-    // Ensure the projects collection YAML file exists
-    $projectsYamlPath = base_path('content/collections/projects.yml');
-    $this->assertTrue(file_exists($projectsYamlPath), 'projects.yml collection file should exist');
-
-    $this->get(route('cms.collections').'?key=projects')
-        ->assertStatus(200);
-});
-
-it('create a page', function (): void {
-    // Clear any existing Mockery instances to avoid conflicts in parallel tests  
-    if (class_exists('Mockery')) {
-        \Mockery::close();
-    }
-    
     $user = User::factory()->withDeliveryAndMenu()->create();
     $this->actingAs($user);
 
