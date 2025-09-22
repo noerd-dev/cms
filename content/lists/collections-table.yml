@@ -1,6 +1,6 @@
 title: 'Collections'
 newLabel: 'Neuer Datensatz'
-component: 'collection-component'
+component: collection-detail
 disableSearch: false
 redirectAction: ''
 columns:

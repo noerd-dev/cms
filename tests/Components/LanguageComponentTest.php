@@ -7,8 +7,8 @@ use Noerd\Noerd\Models\User;
 uses(Tests\TestCase::class);
 
 $testSettings = [
-    'componentName' => 'setup.language-component',
-    'listName' => 'languages-table',
+    'componentName' => 'setup.language-detail',
+    'listName' => 'languages-list',
     'id' => 'languageId',
 ];
 
@@ -121,7 +121,7 @@ it('deletes a language', function () use ($testSettings): void {
 
     Volt::test($testSettings['componentName'], ['modelId' => $language->id])
         ->call('delete')
-        ->assertDispatched('reloadTable-'.$testSettings['listName']);
+        ->assertDispatched('reloadTable-' . $testSettings['listName']);
 
     $this->assertDatabaseMissing('cms_languages', ['id' => $language->id]);
 });

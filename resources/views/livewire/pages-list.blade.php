@@ -12,13 +12,13 @@ new class extends Component {
 
     use Noerd;
 
-    public const COMPONENT = 'pages-table';
+    public const COMPONENT = 'pages-list';
 
     public function tableAction(mixed $modelId = null, mixed $relationId = null): void
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'page-component',
+            component: 'page-detail',
             source: self::COMPONENT,
             arguments: ['modelId' => $modelId, 'relationId' => $relationId],
         );
@@ -61,7 +61,7 @@ new class extends Component {
             }
         }
 
-        $tableConfig = StaticConfigHelper::getTableConfig('pages-table');
+        $tableConfig = StaticConfigHelper::getTableConfig('pages-list');
 
         return [
             'rows' => $rows,

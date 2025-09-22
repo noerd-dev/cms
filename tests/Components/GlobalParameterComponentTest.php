@@ -7,8 +7,8 @@ use Noerd\Noerd\Models\User;
 uses(Tests\TestCase::class);
 
 $testSettings = [
-    'componentName' => 'global-parameter-component',
-    'listName' => 'global-parameters-table',
+    'componentName' => 'global-parameter-detail',
+    'listName' => 'global-parameters-list',
     'id' => 'globalParameterId',
 ];
 
@@ -150,7 +150,7 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
         ->assertSet('model.id', $model->id)
         ->assertSet($testSettings['id'], $model->id) // URL Parameter
         ->call('delete')
-        ->assertDispatched('reloadTable-'.$testSettings['listName'])
+        ->assertDispatched('reloadTable-' . $testSettings['listName'])
         ->assertSet($testSettings['id'], '') // URL Parameter should be removed
         ->assertHasNoErrors();
 });
@@ -182,5 +182,5 @@ it('loads existing array value into component model for editing', function () us
 
     Volt::test($testSettings['componentName'], [$existingParameter->id])
         ->assertSet('model.key', 'test_key_array')
-        ->assertSet('model.value', fn ($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+        ->assertSet('model.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
 });

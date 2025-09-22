@@ -6,7 +6,7 @@ use Noerd\Noerd\Models\User;
 uses(Tests\TestCase::class);
 
 $testSettings = [
-    'componentName' => 'collections-table',
+    'componentName' => 'collections-list',
     'id' => 'fileName',
 ];
 

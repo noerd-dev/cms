@@ -8,8 +8,8 @@ use Noerd\Noerd\Models\User;
 uses(Tests\TestCase::class);
 
 $testSettings = [
-    'componentName' => 'element-page-component',
-    'listName' => 'element-pages-table',
+    'componentName' => 'element-page-detail',
+    'listName' => 'element-pages-list',
     'id' => 'modelId',
 ];
 

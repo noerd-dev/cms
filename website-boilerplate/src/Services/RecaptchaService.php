@@ -43,7 +43,7 @@ class RecaptchaService
             if (! $data['success']) {
                 Log::warning('reCAPTCHA verification failed', [
                     'error_codes' => $data['error-codes'] ?? [],
-                    'token' => mb_substr($token, 0, 20).'...',
+                    'token' => mb_substr($token, 0, 20) . '...',
                 ]);
 
                 return false;
@@ -75,7 +75,7 @@ class RecaptchaService
         } catch (Exception $e) {
             Log::error('reCAPTCHA verification error', [
                 'message' => $e->getMessage(),
-                'token' => mb_substr($token, 0, 20).'...',
+                'token' => mb_substr($token, 0, 20) . '...',
             ]);
 
             // Fail open in case of service issues

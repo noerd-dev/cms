@@ -17,8 +17,8 @@ new class extends Component {
     use WithFileUploads;
     use Noerd;
 
-    public const COMPONENT = 'element-page-component';
-    public const LIST_COMPONENT = 'element-pages-table';
+    public const COMPONENT = 'element-page-detail';
+    public const LIST_COMPONENT = 'element-pages-list';
     public const ID = 'elementPageId';
 
     public ?string $modelId = null;

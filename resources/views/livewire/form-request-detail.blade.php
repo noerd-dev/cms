@@ -10,8 +10,8 @@ new class extends Component {
 
     use Noerd;
 
-    public const COMPONENT = 'form-request-component';
-    public const LIST_COMPONENT = 'form-requests-table';
+    public const COMPONENT = 'form-request-detail';
+    public const LIST_COMPONENT = 'form-requests-list';
     public const ID = 'formRequestId';
 
     #[Url(keep: false, except: '')]

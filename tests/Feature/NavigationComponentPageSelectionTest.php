@@ -8,7 +8,7 @@ use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
 
-test('page selection auto-fills empty name field', function () {
+test('page selection auto-fills empty name field', function (): void {
     $user = User::factory()->withContentModule()->create();
     $this->actingAs($user);
 
@@ -22,7 +22,7 @@ test('page selection auto-fills empty name field', function () {
 
     session(['selectedLanguage' => 'de']);
 
-    Volt::test('navigation-component')
+    Volt::test('navigation-detail')
         ->set('model', [
             'navigation_key' => 'test-nav',
             'name' => [], // Empty name field
@@ -36,7 +36,7 @@ test('page selection auto-fills empty name field', function () {
         ]);
 });
 
-test('page selection does not overwrite existing name field', function () {
+test('page selection does not overwrite existing name field', function (): void {
     $user = User::factory()->withContentModule()->create();
     $this->actingAs($user);
 
@@ -55,7 +55,7 @@ test('page selection does not overwrite existing name field', function () {
 
     session(['selectedLanguage' => 'de']);
 
-    Volt::test('navigation-component')
+    Volt::test('navigation-detail')
         ->set('model', [
             'navigation_key' => 'test-nav',
             'name' => $existingName, // Pre-filled name field
@@ -66,7 +66,7 @@ test('page selection does not overwrite existing name field', function () {
         ->assertSet('model.name', $existingName); // Should remain unchanged
 });
 
-test('page selection auto-fills when name field has only empty values', function () {
+test('page selection auto-fills when name field has only empty values', function (): void {
     $user = User::factory()->withContentModule()->create();
     $this->actingAs($user);
 
@@ -80,7 +80,7 @@ test('page selection auto-fills when name field has only empty values', function
 
     session(['selectedLanguage' => 'de']);
 
-    Volt::test('navigation-component')
+    Volt::test('navigation-detail')
         ->set('model', [
             'navigation_key' => 'test-nav',
             'name' => ['de' => '', 'en' => ''], // Empty string values

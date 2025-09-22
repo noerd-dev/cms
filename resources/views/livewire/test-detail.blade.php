@@ -6,7 +6,7 @@ use Livewire\Volt\Component;
 new class () extends Component {
     use Noerd;
 
-    public const COMPONENT = 'test-component';
+    public const COMPONENT = 'test-detail';
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">
