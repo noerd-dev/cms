@@ -1,17 +1,21 @@
 <?php
 
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Language;
+use Noerd\Noerd\Models\Tenant;
+use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
+uses(CreatesCmsUser::class);
 
 it('renders languages from database and sets default session', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Language::create(['tenant_id' => $user->selected_tenant_id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => true, 'sort_order' => 1]);
-    Language::create(['tenant_id' => $user->selected_tenant_id, 'code' => 'en', 'name' => 'English', 'is_active' => true, 'is_default' => false, 'sort_order' => 2]);
+    Language::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => true, 'sort_order' => 1]);
+    Language::create(['tenant_id' => $tenant->id, 'code' => 'en', 'name' => 'English', 'is_active' => true, 'is_default' => false, 'sort_order' => 2]);
 
     $component = Volt::test('language-switcher');
 
@@ -20,11 +24,11 @@ it('renders languages from database and sets default session', function (): void
 });
 
 it('changes session language on click', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Language::create(['tenant_id' => $user->selected_tenant_id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => true, 'sort_order' => 1]);
-    Language::create(['tenant_id' => $user->selected_tenant_id, 'code' => 'en', 'name' => 'English', 'is_active' => true, 'is_default' => false, 'sort_order' => 2]);
+    Language::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => true, 'sort_order' => 1]);
+    Language::create(['tenant_id' => $tenant->id, 'code' => 'en', 'name' => 'English', 'is_active' => true, 'is_default' => false, 'sort_order' => 2]);
 
     $component = Volt::test('language-switcher');
     $component->call('setLanguage', 'en');
@@ -32,10 +36,10 @@ it('changes session language on click', function (): void {
 });
 
 it('does not render switcher if only one language exists', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Language::create(['tenant_id' => $user->selected_tenant_id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => true, 'sort_order' => 1]);
+    Language::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => true, 'sort_order' => 1]);
 
     $html = Volt::test('language-switcher')->html();
     expect($html)->toBeString();

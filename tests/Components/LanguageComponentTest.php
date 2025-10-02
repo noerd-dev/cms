@@ -1,10 +1,11 @@
 <?php
 
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Language;
-use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
+uses(CreatesCmsUser::class);
 
 $testSettings = [
     'componentName' => 'setup.language-detail',
@@ -13,7 +14,7 @@ $testSettings = [
 ];
 
 it('validates the language data', function () use ($testSettings): void {
-    $admin = User::factory()->adminUser()->create();
+    ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($admin);
 
@@ -23,7 +24,7 @@ it('validates the language data', function () use ($testSettings): void {
 });
 
 it('creates a new language and stores tenant_id', function () use ($testSettings): void {
-    $admin = User::factory()->adminUser()->create();
+    ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($admin);
 
@@ -37,7 +38,7 @@ it('creates a new language and stores tenant_id', function () use ($testSettings
         ->assertOk();
 
     $this->assertDatabaseHas('cms_languages', [
-        'tenant_id' => $admin->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'code' => 'de',
         'name' => 'Deutsch',
         'is_active' => true,
@@ -47,7 +48,7 @@ it('creates a new language and stores tenant_id', function () use ($testSettings
 });
 
 it('ensures only one default language per tenant', function () use ($testSettings): void {
-    $admin = User::factory()->adminUser()->create();
+    ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($admin);
 
@@ -69,23 +70,23 @@ it('ensures only one default language per tenant', function () use ($testSetting
 
     $this->assertDatabaseHas('cms_languages', [
         'code' => 'en',
-        'tenant_id' => $admin->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'is_default' => true,
     ]);
 
     $this->assertDatabaseHas('cms_languages', [
         'code' => 'de',
-        'tenant_id' => $admin->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'is_default' => false,
     ]);
 });
 
 it('updates an existing language', function () use ($testSettings): void {
-    $admin = User::factory()->adminUser()->create();
+    ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($admin);
 
     $language = Language::create([
-        'tenant_id' => $admin->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'code' => 'fr',
         'name' => 'Français',
         'is_active' => true,
@@ -107,11 +108,11 @@ it('updates an existing language', function () use ($testSettings): void {
 });
 
 it('deletes a language', function () use ($testSettings): void {
-    $admin = User::factory()->adminUser()->create();
+    ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($admin);
 
     $language = Language::create([
-        'tenant_id' => $admin->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'code' => 'it',
         'name' => 'Italiano',
         'is_active' => true,

@@ -1,9 +1,13 @@
 <?php
 
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Helpers\CollectionHelper;
+use Noerd\Noerd\Models\Tenant;
+use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
+uses(CreatesCmsUser::class);
 
 /**
  * @group no-parallel
@@ -72,7 +76,7 @@ beforeEach(function (): void {
 });
 
 it('can access collection entries route with key parameter', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $response = $this->get('/cms/collections?key=projects');
@@ -81,7 +85,7 @@ it('can access collection entries route with key parameter', function (): void {
 });
 
 it('redirects to collection-files when no key is provided', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $response = $this->get('/cms/collections');
@@ -89,7 +93,7 @@ it('redirects to collection-files when no key is provided', function (): void {
 });
 
 it('can access collection files route', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $response = $this->get('/cms/collection-files');
@@ -98,7 +102,7 @@ it('can access collection files route', function (): void {
 });
 
 it('collection entries route shows correct collection data', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     // Test different collection keys (using mocked collections)
@@ -113,7 +117,7 @@ it('collection entries route shows correct collection data', function (): void {
 });
 
 it('collection files route shows YAML management interface', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $response = $this->get('/cms/collection-files');

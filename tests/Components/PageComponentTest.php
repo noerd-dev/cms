@@ -1,11 +1,15 @@
 <?php
 
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
+use Noerd\Noerd\Models\Tenant;
+use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
+uses(CreatesCmsUser::class);
 
 $testSettings = [
     'componentName' => 'page-detail',
@@ -14,7 +18,7 @@ $testSettings = [
 ];
 
 it('test the route', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
 
@@ -23,7 +27,7 @@ it('test the route', function (): void {
 });
 
 it('validates the data', function () use ($testSettings): void {
-    $user = User::factory()->withDeliveryAndMenu()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
 
@@ -35,7 +39,7 @@ it('validates the data', function () use ($testSettings): void {
 });
 
 it('successfully stores the data', function () use ($testSettings): void {
-    $user = User::factory()->withDeliveryAndMenu()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
 
@@ -54,7 +58,7 @@ it('successfully stores the data', function () use ($testSettings): void {
 });
 
 it('successfully deletes a page', function () use ($testSettings): void {
-    $user = User::factory()->withDeliveryAndMenu()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
     $model = Page::factory()->create([
@@ -73,7 +77,7 @@ it('successfully deletes a page', function () use ($testSettings): void {
 });
 
 it('opens page with modelId', function () use ($testSettings): void {
-    $user = User::factory()->withDeliveryAndMenu()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
     $model = Page::factory()->create([
@@ -89,7 +93,7 @@ it('opens page with modelId', function () use ($testSettings): void {
 });
 
 it('opens and stores existing page', function () use ($testSettings): void {
-    $user = User::factory()->withDeliveryAndMenu()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
     $model = Page::factory()->create([
@@ -111,7 +115,7 @@ it('opens and stores existing page', function () use ($testSettings): void {
 });
 
 it('dispatches table action from pages table', function () use ($testSettings): void {
-    $user = User::factory()->withDeliveryAndMenu()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
 
@@ -128,7 +132,7 @@ it('dispatches table action from pages table', function () use ($testSettings): 
 });
 
 it('sets a table key for the list', function () use ($testSettings): void {
-    $user = User::factory()->withDeliveryAndMenu()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
 
@@ -137,7 +141,7 @@ it('sets a table key for the list', function () use ($testSettings): void {
 });
 
 it('shows a preview error when element component is missing', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     // Create a page

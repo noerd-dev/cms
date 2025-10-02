@@ -1,9 +1,13 @@
 <?php
 
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Livewire\Volt\Volt;
+use Noerd\Noerd\Models\Tenant;
+use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
+uses(CreatesCmsUser::class);
 
 $testSettings = [
     'componentName' => 'collections-list',
@@ -12,7 +16,7 @@ $testSettings = [
 
 // Simplified tests without file system dependencies
 it('loads collections table component successfully', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     // Simply test that the component loads without errors
@@ -23,7 +27,7 @@ it('loads collections table component successfully', function () use ($testSetti
 });
 
 it('has correct component configuration', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $component = Volt::test($testSettings['componentName']);
@@ -35,7 +39,7 @@ it('has correct component configuration', function () use ($testSettings): void 
 });
 
 it('returns paginated results', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $component = Volt::test($testSettings['componentName']);
@@ -47,7 +51,7 @@ it('returns paginated results', function () use ($testSettings): void {
 });
 
 it('supports search functionality', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $component = Volt::test($testSettings['componentName'])

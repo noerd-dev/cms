@@ -1,5 +1,6 @@
 <?php
 
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -8,9 +9,12 @@ use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Media\Models\Media as MediaModel;
+use Noerd\Noerd\Models\Tenant;
+use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
+uses(CreatesCmsUser::class);
 
 /**
  * @group no-parallel
@@ -82,7 +86,7 @@ $testSettings = [
 ];
 
 it('opens the collections page', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $response = $this->get('/cms/collections?key=projects');
@@ -90,19 +94,19 @@ it('opens the collections page', function (): void {
 });
 
 it('uploads an image via images.field binding and stores path into model', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Storage::fake('media');
 
     // Create a collection so the component has a model to load
     $parentCollection = Collection::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_key' => 'PROJECTS',
     ]);
 
     $collection = Page::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
         'data' => [],
         'sort' => 0,
@@ -120,7 +124,7 @@ it('uploads an image via images.field binding and stores path into model', funct
     expect(MediaModel::count())->toBe($before + 1);
 
     $media = MediaModel::latest('id')->first();
-    expect($media->tenant_id)->toBe($user->selected_tenant_id)
+    expect($media->tenant_id)->toBe($tenant->id)
         ->and($media->disk)->toBe('media')
         ->and($media->name)->toBe('photo.jpg')
         ->and($media->extension)->toBe('jpg')
@@ -129,16 +133,16 @@ it('uploads an image via images.field binding and stores path into model', funct
 });
 
 it('deletes an image value from model', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $parentCollection = Collection::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_key' => 'PROJECTS',
     ]);
 
     $collection = Page::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
         'data' => ['image' => '/storage/uploads/any.jpg'],
         'sort' => 0,
@@ -150,15 +154,15 @@ it('deletes an image value from model', function () use ($testSettings): void {
 });
 
 it('tests collection factory without page', function (): void {
-    $user = User::factory()->withDeliveryAndMenu()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $parentCollection = Collection::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_key' => 'PROJECTS',
     ]);
 
     $collection = Page::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
     ]);
 
@@ -166,26 +170,26 @@ it('tests collection factory without page', function (): void {
 });
 
 it('tests collection with sort functionality', function (): void {
-    $user = User::factory()->withDeliveryAndMenu()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $parentCollection = Collection::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_key' => 'PROJECTS',
     ]);
 
     $collection1 = Page::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
         'sort' => 1,
     ]);
 
     $collection2 = Page::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
         'sort' => 2,
     ]);
 
-    $collections = Page::where('tenant_id', $user->selected_tenant_id)
+    $collections = Page::where('tenant_id', $tenant->id)
         ->where('collection_id', $parentCollection->id)
         ->orderBy('sort')
         ->get();
@@ -195,7 +199,7 @@ it('tests collection with sort functionality', function (): void {
 });
 
 it('creates page automatically when hasPage is true in yml config', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     // Simulate accessing the component via route with key parameter (like the real usage)
@@ -209,14 +213,14 @@ it('creates page automatically when hasPage is true in yml config', function ():
 
     // Create a collection that should trigger page creation
     $parentCollection = Collection::firstOrCreate([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_key' => 'CONTACTS',
     ], [
         'name' => 'Contacts',
     ]);
 
     $collection = Page::create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
         'name' => 'Test Kontakt',
         'slug' => 'test-kontakt',
@@ -237,7 +241,7 @@ it('creates page automatically when hasPage is true in yml config', function ():
 });
 
 it('does not create page when hasPage is false in yml config', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     // Test with sliders collection which has hasPage: false
@@ -249,14 +253,14 @@ it('does not create page when hasPage is false in yml config', function (): void
 
     // Create a collection that should NOT trigger page creation
     $parentCollection = Collection::firstOrCreate([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_key' => 'SLIDERS',
     ], [
         'name' => 'Sliders',
     ]);
 
     $collection = Page::create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
         'name' => 'Test Slider',
         'slug' => 'test-slider',
@@ -272,12 +276,12 @@ it('does not create page when hasPage is false in yml config', function (): void
 });
 
 it('handles collections without page features (hasPage: false)', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     // Create a collection for customers (hasPage: false)
     $parentCollection = Collection::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_key' => 'CUSTOMERS',
     ]);
 
@@ -301,27 +305,27 @@ it('handles collections without page features (hasPage: false)', function () use
 });
 
 it('does not update image on mediaSelected when token mismatches; updates when token matches', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Storage::fake('media');
 
     $parentCollection = Collection::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_key' => 'PROJECTS',
     ]);
 
     $collection = Page::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
         'data' => [],
         'sort' => 0,
     ]);
 
-    $path = $user->selected_tenant_id . '/test-select.jpg';
+    $path = $tenant->id . '/test-select.jpg';
     Storage::disk('media')->put($path, 'x');
     $media = MediaModel::create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'type' => 'image',
         'name' => 'test-select.jpg',
         'extension' => 'jpg',
