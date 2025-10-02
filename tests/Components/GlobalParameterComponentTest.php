@@ -1,10 +1,11 @@
 <?php
 
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\GlobalParameter;
-use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
+uses(CreatesCmsUser::class);
 
 $testSettings = [
     'componentName' => 'global-parameter-detail',
@@ -13,8 +14,7 @@ $testSettings = [
 ];
 
 it('test the route', function (): void {
-    $user = User::factory()->withContentModule()->create();
-
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $response = $this->get('/cms/global-parameters');
@@ -22,8 +22,7 @@ it('test the route', function (): void {
 });
 
 it('validates the data', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
-
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Volt::test($testSettings['componentName'])
@@ -34,8 +33,7 @@ it('validates the data', function () use ($testSettings): void {
 });
 
 it('successfully stores the data', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
-
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
     $parameterKey = fake()->word;
     $parameterValue = fake()->sentence;
@@ -53,8 +51,7 @@ it('successfully stores the data', function () use ($testSettings): void {
 });
 
 it('sets a table key for the list', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
-
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Volt::test($testSettings['listName'])
@@ -62,8 +59,7 @@ it('sets a table key for the list', function () use ($testSettings): void {
 });
 
 it('validates that key is required', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
-
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Volt::test($testSettings['componentName'])
@@ -73,8 +69,7 @@ it('validates that key is required', function () use ($testSettings): void {
 });
 
 it('validates that value is required', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
-
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Volt::test($testSettings['componentName'])
@@ -85,14 +80,13 @@ it('validates that value is required', function () use ($testSettings): void {
 });
 
 it('can retrieve existing global parameter data', function (): void {
-    $user = User::factory()->withContentModule()->create();
-
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $existingParameter = GlobalParameter::create([
         'key' => 'test_key',
         'value' => json_encode('test_value'),
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
     ]);
 
     $this->assertDatabaseHas('global_parameters', [
@@ -103,8 +97,7 @@ it('can retrieve existing global parameter data', function (): void {
 });
 
 it('validates key is string and has max length', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
-
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     // Test max length validation
@@ -118,8 +111,7 @@ it('validates key is string and has max length', function () use ($testSettings)
 });
 
 it('stores data with tenant_id', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
-
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
     $parameterKey = fake()->word;
     $parameterValue = fake()->sentence;
@@ -133,15 +125,14 @@ it('stores data with tenant_id', function () use ($testSettings): void {
     $this->assertDatabaseHas('global_parameters', [
         'key' => $parameterKey,
         'value' => json_encode($parameterValue),
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
     ]);
 });
 
 it('it sets and removes the model id in url', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
-
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
-    $model = GlobalParameter::factory()->withTenantId($user->selected_tenant_id)->create();
+    $model = GlobalParameter::factory()->withTenantId($tenant->id)->create();
 
     Volt::test($testSettings['listName'])->call('tableAction', $model->id)
         ->assertDispatched('noerdModal', component: $testSettings['componentName']);
@@ -156,13 +147,13 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
 });
 
 it('loads existing string value into component model for editing', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $existingParameter = GlobalParameter::create([
         'key' => 'test_key_string',
         'value' => json_encode('test_value_string'),
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
     ]);
 
     Volt::test($testSettings['componentName'], [$existingParameter->id])
@@ -171,13 +162,13 @@ it('loads existing string value into component model for editing', function () u
 });
 
 it('loads existing array value into component model for editing', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $existingParameter = GlobalParameter::create([
         'key' => 'test_key_array',
         'value' => json_encode(['de' => 'Hallo', 'en' => 'Hello']),
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
     ]);
 
     Volt::test($testSettings['componentName'], [$existingParameter->id])

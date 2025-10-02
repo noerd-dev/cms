@@ -2,18 +2,22 @@
 
 declare(strict_types=1);
 
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Page;
+use Noerd\Noerd\Models\Tenant;
+use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
+uses(CreatesCmsUser::class);
 
 test('page selection auto-fills empty name field', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $page = Page::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'name' => json_encode([
             'de' => 'Test Seite',
             'en' => 'Test Page',
@@ -37,11 +41,11 @@ test('page selection auto-fills empty name field', function (): void {
 });
 
 test('page selection does not overwrite existing name field', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $page = Page::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'name' => json_encode([
             'de' => 'Test Seite',
             'en' => 'Test Page',
@@ -67,11 +71,11 @@ test('page selection does not overwrite existing name field', function (): void 
 });
 
 test('page selection auto-fills when name field has only empty values', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $page = Page::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'name' => json_encode([
             'de' => 'Test Seite',
             'en' => 'Test Page',

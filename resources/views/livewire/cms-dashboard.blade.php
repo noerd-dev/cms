@@ -60,3 +60,4 @@ new class () extends Component {
     </div>
 
 </x-noerd::page>
+

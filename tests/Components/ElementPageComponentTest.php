@@ -1,11 +1,12 @@
 <?php
 
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
+uses(CreatesCmsUser::class);
 
 $testSettings = [
     'componentName' => 'element-page-detail',
@@ -14,7 +15,7 @@ $testSettings = [
 ];
 
 it('successfully mounts with element page', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
 
@@ -22,7 +23,7 @@ it('successfully mounts with element page', function () use ($testSettings): voi
     $page = Page::create([
         'name' => json_encode(['en' => 'Test Page']),
         'slug' => json_encode(['en' => 'test-page']),
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
     ]);
 
     // Create ElementPage using element_key directly (no element_id needed)
@@ -40,7 +41,7 @@ it('successfully mounts with element page', function () use ($testSettings): voi
 });
 
 it('can update element page data', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
 
@@ -48,7 +49,7 @@ it('can update element page data', function () use ($testSettings): void {
     $page = Page::create([
         'name' => json_encode(['en' => 'Test Page']),
         'slug' => json_encode(['en' => 'test-page']),
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
     ]);
 
     $elementPage = ElementPage::create([
@@ -69,7 +70,7 @@ it('can update element page data', function () use ($testSettings): void {
 });
 
 it('validates element page data', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
 
@@ -77,7 +78,7 @@ it('validates element page data', function () use ($testSettings): void {
     $page = Page::create([
         'name' => json_encode(['en' => 'Test Page']),
         'slug' => json_encode(['en' => 'test-page']),
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
     ]);
 
     $elementPage = ElementPage::create([
@@ -94,7 +95,7 @@ it('validates element page data', function () use ($testSettings): void {
 });
 
 it('can delete element page', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
 
@@ -102,7 +103,7 @@ it('can delete element page', function () use ($testSettings): void {
     $page = Page::create([
         'name' => json_encode(['en' => 'Test Page']),
         'slug' => json_encode(['en' => 'test-page']),
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
     ]);
 
     $elementPage = ElementPage::create([
@@ -122,7 +123,7 @@ it('can delete element page', function () use ($testSettings): void {
 });
 
 it('sets correct element layout', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
 
@@ -130,7 +131,7 @@ it('sets correct element layout', function () use ($testSettings): void {
     $page = Page::create([
         'name' => json_encode(['en' => 'Test Page']),
         'slug' => json_encode(['en' => 'test-page']),
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
     ]);
 
     $elementPage = ElementPage::create([
@@ -146,14 +147,14 @@ it('sets correct element layout', function () use ($testSettings): void {
 });
 
 it('shows a content error when element layout is missing', function () use ($testSettings): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     // Create a Page first
     $page = Page::create([
         'name' => json_encode(['en' => 'Test Page']),
         'slug' => json_encode(['en' => 'test-page']),
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
     ]);
 
     $elementPage = ElementPage::create([

@@ -1,14 +1,18 @@
 <?php
 
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
+use Noerd\Noerd\Models\Tenant;
+use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
+uses(CreatesCmsUser::class);
 
 it('renders the navigation component', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Volt::test('navigation-detail')
@@ -16,7 +20,7 @@ it('renders the navigation component', function (): void {
 });
 
 it('validates that either page or link must be present', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Volt::test('navigation-detail')
@@ -27,10 +31,10 @@ it('validates that either page or link must be present', function (): void {
 });
 
 it('stores a navigation with page and clears link', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    $page = Page::factory()->create(['tenant_id' => $user->selected_tenant_id, 'name' => json_encode(['de' => 'Seite', 'en' => 'Page'])]);
+    $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => json_encode(['de' => 'Seite', 'en' => 'Page'])]);
 
     Volt::test('navigation-detail')
         ->set('model.navigation_key', 'MAIN')
@@ -41,7 +45,7 @@ it('stores a navigation with page and clears link', function (): void {
         ->assertHasNoErrors();
 
     $this->assertDatabaseHas('cms_navigations', [
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'navigation_key' => 'MAIN',
         'page_id' => $page->id,
         'link' => null,
@@ -49,7 +53,7 @@ it('stores a navigation with page and clears link', function (): void {
 });
 
 it('stores a navigation with link and clears page', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Volt::test('navigation-detail')
@@ -60,7 +64,7 @@ it('stores a navigation with link and clears page', function (): void {
         ->assertHasNoErrors();
 
     $this->assertDatabaseHas('cms_navigations', [
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'navigation_key' => 'MAIN',
         'link' => 'https://example.com/contact',
         'page_id' => null,
@@ -68,7 +72,7 @@ it('stores a navigation with link and clears page', function (): void {
 });
 
 it('normalizes new_tab default and stores 0 when not set', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Volt::test('navigation-detail')
@@ -78,7 +82,7 @@ it('normalizes new_tab default and stores 0 when not set', function (): void {
         ->call('store')
         ->assertHasNoErrors();
 
-    $navigation = Navigation::where('tenant_id', $user->selected_tenant_id)
+    $navigation = Navigation::where('tenant_id', $tenant->id)
         ->where('navigation_key', 'MAIN')
         ->first();
 
@@ -87,11 +91,11 @@ it('normalizes new_tab default and stores 0 when not set', function (): void {
 });
 
 it('respects language switching behavior for page selection display', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $page = Page::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'name' => json_encode(['de' => 'Über uns', 'en' => 'About us']),
     ]);
 

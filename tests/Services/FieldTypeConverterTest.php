@@ -5,6 +5,8 @@ use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\FieldTypeConverter;
+use Noerd\Noerd\Models\Tenant;
+use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
@@ -13,12 +15,23 @@ describe('FieldTypeConverter', function (): void {
 
     beforeEach(function (): void {
         // Create a unique tenant for each test run to avoid collisions
-        $tenant = \Noerd\Noerd\Models\Tenant::factory()->create();
+        $tenant = Tenant::factory()->create();
         $this->tenantId = $tenant->id;
 
-        $this->actingAs(User::factory()->create([
-            'selected_tenant_id' => $this->tenantId,
-        ]));
+        $cmsApp = TenantApp::create([
+            'name' => 'CMS_' . uniqid() . '_' . getmypid(),
+            'title' => 'CMS',
+            'icon' => 'cms',
+            'route' => 'cms.index',
+            'is_active' => true,
+        ]);
+
+        $tenant->tenantApps()->attach($cmsApp->id);
+
+        $user = User::factory()->create(['selected_tenant_id' => $tenant->id]);
+        $user->tenants()->attach($tenant->id);
+
+        $this->actingAs($user);
     });
 
     afterEach(function (): void {

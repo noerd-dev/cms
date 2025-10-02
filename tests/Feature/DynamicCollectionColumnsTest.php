@@ -1,11 +1,15 @@
 <?php
 
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
+use Noerd\Noerd\Models\Tenant;
+use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class);
+uses(CreatesCmsUser::class);
 
 /**
  * @group no-parallel
@@ -60,19 +64,19 @@ beforeEach(function (): void {
 });
 
 it('displays dynamic columns from YAML configuration for projects', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     // Create parent collection
     $parentCollection = Collection::create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_key' => 'PROJECTS',
         'name' => 'Projects',
     ]);
 
     // Create a project entry with data matching the YAML fields
     $projectPage = Page::create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
         'data' => [
             'name' => [
@@ -98,19 +102,19 @@ it('displays dynamic columns from YAML configuration for projects', function ():
 });
 
 it('displays dynamic columns from YAML configuration for customers', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     // Create parent collection
     $parentCollection = Collection::create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_key' => 'CUSTOMERS',
         'name' => 'Customers',
     ]);
 
     // Create a customer entry with data matching the YAML fields
     $customerPage = Page::create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
         'data' => [
             'name' => [
@@ -138,7 +142,7 @@ it('displays dynamic columns from YAML configuration for customers', function ()
 });
 
 it('handles empty collection entries gracefully', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     $response = $this->get('/cms/collections?key=projects');
@@ -151,19 +155,19 @@ it('handles empty collection entries gracefully', function (): void {
 });
 
 it('searches in dynamic fields correctly', function (): void {
-    $user = User::factory()->withContentModule()->create();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     // Create parent collection
     $parentCollection = Collection::create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_key' => 'PROJECTS',
         'name' => 'Projects',
     ]);
 
     // Create multiple project entries
     Page::create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
         'data' => [
             'name' => [
@@ -175,7 +179,7 @@ it('searches in dynamic fields correctly', function (): void {
     ]);
 
     Page::create([
-        'tenant_id' => $user->selected_tenant_id,
+        'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
         'data' => [
             'name' => [
