@@ -2,6 +2,7 @@
 
 namespace Noerd\Cms\Providers;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
@@ -26,6 +27,19 @@ class CmsServiceProvider extends ServiceProvider
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
 
         Volt::mount(__DIR__ . '/../../resources/views/livewire');
+
+        // Register gate for CMS access
+        Gate::define('canCms', function ($user) {
+            $tenant = $user->selectedTenant();
+
+            if (! $tenant) {
+                return false;
+            }
+
+            $activeApps = $tenant->tenantApps->pluck('name')->toArray();
+
+            return (bool) (array_intersect($activeApps, ['CMS']));
+        });
 
         // Register commands
         if ($this->app->runningInConsole()) {
