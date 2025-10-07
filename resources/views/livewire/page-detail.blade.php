@@ -36,6 +36,8 @@ new class () extends Component {
     public ?string $collectionKey = null;
     public array $images = [];
 
+    public string $hrefPage = '';
+
     public array $liveElementData = [];
     public int $previewTick = 0;
 
@@ -175,7 +177,7 @@ new class () extends Component {
         if ($this->collectionKey && $model->data) {
             // For collection pages, load data from the JSON data field
             $rawData = is_array($model->data) ? $model->data : [];
-            
+
             // Apply field type conversion when loading existing entries
             // This ensures users see the correct field structure immediately
             $this->model = FieldTypeConverter::convertCollectionData($rawData, $this->collectionKey);
@@ -447,6 +449,14 @@ new class () extends Component {
         $this->lastChangeTime = time();
     }
 
+    #[On('pageSelected')]
+    public function pageSelected($value, $context): void
+    {
+        $page = Page::find($value);
+        $this->hrefPage = $page['name'][session('selectedLanguage')];
+        $this->model[str_replace('model.', '', $context)] = $page->id;
+    }
+
     public function elementSort($elementId, $newPosition): void
     {
         $elements = ElementPage::where('page_id', $this->modelId)
@@ -471,7 +481,7 @@ new class () extends Component {
     public function deleteElement(int $elementPageId): void
     {
         $element = ElementPage::find($elementPageId);
-        if ($element && (int) $element->page_id === (int) $this->modelId) {
+        if ($element && (int)$element->page_id === (int)$this->modelId) {
             $element->delete();
             $this->lastChangeTime = time();
             $this->dispatch('reloadPageComponent');
@@ -524,7 +534,7 @@ new class () extends Component {
             'tenant_id' => auth()->user()->selected_tenant_id,
             'collection_id' => $parentCollection->id,
             'data' => $convertedModel,
-            'sort' => (int) ($this->model['sort'] ?? 0),
+            'sort' => (int)($this->model['sort'] ?? 0),
         ];
 
         // Persist selected layout for collections as well
@@ -659,10 +669,6 @@ new class () extends Component {
     @if($this->page->id && $this->hasPageFeatures)
         <div x-data="{ viewMode: @entangle('viewMode').live }">
             <div x-show="viewMode === 'content'">
-                <!-- Content View (Original Backend Editing) -->
-                <button wire:click="openElements">
-                    {{ __('Edit Page Elements') }}
-                </button>
 
                 <div x-sort="$wire.elementSort($item, $position)">
                     @foreach($this->page->elements as $loopIndex => $elementPage)
