@@ -26,6 +26,7 @@ class Collection extends Model
         foreach ($pages as $page) {
             $data = json_decode($page->data, true);
             $transformedValue = [];
+            $transformedValue['id'] = $page->id;
             foreach ($data as $key => $value) {
                 if (is_array($value)) {
                     $transformedValue[$key] = $value[session('selectedLanguage', 'de')] ?? null;

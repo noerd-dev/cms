@@ -299,6 +299,7 @@ new class () extends Component {
         ]);
 
         // Custom validation for slug format and uniqueness
+        /*
         $validationErrors = [];
         if (isset($this->model['slug']) && is_array($this->model['slug'])) {
             foreach ($this->model['slug'] as $lang => $slug) {
@@ -342,6 +343,7 @@ new class () extends Component {
                 }
             }
         }
+        */
 
         if (!empty($validationErrors)) {
             $this->addError('model.slug', reset($validationErrors));
