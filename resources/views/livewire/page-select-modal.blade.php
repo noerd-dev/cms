@@ -10,9 +10,11 @@ new class extends Component {
 
     public const COMPONENT = 'page-select-modal';
 
+    public $context = null;
+
     public function tableAction(mixed $modelId): void
     {
-        $this->dispatch('pageSelected', $modelId);
+        $this->dispatch('pageSelected', $modelId, $this->context);
         $this->dispatch('close-modal-' . self::COMPONENT);
     }
 

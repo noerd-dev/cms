@@ -35,25 +35,13 @@ class WebsiteController extends Controller
 
     public function page(int $pageId)
     {
-        $page = Page::with(['elements', 'collections.rows'])->find($pageId);
+        $page = Page::with(['elements'])->find($pageId);
 
-        $elements = [];
-        $pageElements = $page->elements;
-        foreach ($pageElements as $pageElement) {
-            $elementKey = $pageElement->element_key ?? $pageElement->element?->element_key ?? null;
-
-            if (empty($elementKey)) {
-                continue;
-            }
-
-            $element['key'] = $elementKey;
-            $element['data'] = (object) $this->localizeElementData(json_decode($pageElement->data, true));
-            $elements[] = $element;
-        }
-
+        $pageElementService = app(PageElementService::class);
         $selectedLanguage = session('selectedLanguage', 'de');
+        $elements = $pageElementService->processPageElements($page, $selectedLanguage);
 
-        return view('page', [
+        return view('website::page', [
             'page' => $page,
             'elements' => $elements,
         ]);
