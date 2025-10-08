@@ -82,7 +82,5 @@ new class extends Component {
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">
-
-        @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
-
+    @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
 </x-noerd::page>
