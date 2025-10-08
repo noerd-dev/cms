@@ -16,11 +16,14 @@ class CmsMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         session(['currentApp' => 'CMS']);
+
         if (! session('selectedLanguage')) {
             session(['selectedLanguage' => 'de']);
         }
+        // TODO!
+        session(['selectedLanguage' => 'de']);
 
-        $activeApp = auth()->user()->selectedTenant()->tenantApps()->where('name', 'CMS')->count();
+        $activeApp = auth()->user()->selectedTenant()?->tenantApps()->where('name', 'CMS')->count();
         if ($activeApp === 0) {
             return redirect('/');
         }
