@@ -596,52 +596,54 @@ new class () extends Component {
     <x-slot:header>
         <x-noerd::modal-title>{{ __('Page') }}</x-noerd::modal-title>
     </x-slot:header>
+    <div class="flex">
 
-    <!-- View Mode Switch - Fixed Position -->
-    @if($this->hasPageFeatures)
-        <div class="ml-auto flex mb-6">
-            <div class="flex items-center space-x-4">
-                <!-- Sort Field for Collections -->
-                @if($collectionKey)
-                    <div class="flex items-center space-x-2">
-                        <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
-                        <flux:input
-                            wire:model="model.sort"
-                            id="sort"
-                            type="number"
-                            class="w-16 text-sm"
-                            min="0"
-                            step="1"
-                        />
-                    </div>
-                @endif
 
-                <div class="flex space-x-1 bg-white p-1 rounded-lg w-fit shadow-xl border border-gray-200">
-                    <button
-                        wire:click="setViewMode('content')"
-                        class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'content' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
-                    >
-                        Content
-                    </button>
-                    <button
-                        wire:click="setViewMode('preview')"
-                        class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'preview' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
-                    >
-                        {{ __('Preview') }}
-                    </button>
-                    <div class="ml-auto mr-6 my-auto border-l border-gray-200 pl-4">
-                        <livewire:language-switcher/>
+        <!-- View Mode Switch - Fixed Position -->
+        @if($this->hasPageFeatures)
+            <div class="ml-auto flex mb-6 mt-6">
+                <div class="flex items-center space-x-4">
+                    <!-- Sort Field for Collections -->
+                    @if($collectionKey)
+                        <div class="flex items-center space-x-2">
+                            <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
+                            <flux:input
+                                wire:model="model.sort"
+                                id="sort"
+                                type="number"
+                                class="w-16 text-sm"
+                                min="0"
+                                step="1"
+                            />
+                        </div>
+                    @endif
+
+                    <div class="flex space-x-1 bg-white p-1 rounded-lg w-fit shadow-xl border border-gray-200">
+                        <button
+                            wire:click="setViewMode('content')"
+                            class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'content' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
+                        >
+                            Content
+                        </button>
+                        <button
+                            wire:click="setViewMode('preview')"
+                            class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'preview' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
+                        >
+                            {{ __('Preview') }}
+                        </button>
+                        <div class="ml-auto mr-6 my-auto border-l border-gray-200 pl-4">
+                            <livewire:language-switcher/>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    @else
-        <!-- Language switcher and Sort field for collections without page features -->
-        <div class="ml-auto flex mb-6">
-            <div class="flex items-center space-x-4">
+        @else
+            <!-- Language switcher and Sort field for collections without page features -->
+
+            <div class="flex ml-auto items-center my-6 space-x-4">
                 <!-- Sort Field for Collections -->
                 @if($collectionKey)
-                    <div class="flex items-center space-x-2">
+                    <div class="flex ml-auto items-center space-x-2">
                         <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
                         <flux:input
                             wire:model="model.sort"
@@ -656,8 +658,8 @@ new class () extends Component {
 
                 <livewire:language-switcher/>
             </div>
-        </div>
-    @endif
+        @endif
+    </div>
 
     @if($this->hasPageFeatures)
         @include('noerd::components.detail.block', $pageLayout)

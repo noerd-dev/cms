@@ -33,7 +33,7 @@ new class extends Component {
         $this->dispatch('languageChanged');
     }
 } ?>
-<div class="w-full flex">
+<div class="flex">
     @if(count($languages) > 1)
         <div class="ml-auto flex">
             @foreach($languages as $language)
