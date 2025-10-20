@@ -1,0 +1,8 @@
+title: 'Collections'
+newLabel: null
+component: null
+disableSearch: false
+redirectAction: ''
+columns:
+  - { field: name, label: 'Name', width: 40 }
+  - { field: rows_count, label: 'Einträge', width: 20 }
