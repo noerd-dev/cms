@@ -376,7 +376,6 @@ new class () extends Component {
         $model['slug'] = $cleanSlugData;
         $model['name'] = $this->model['name'];
 
-
         $page = Page::updateOrCreate(
             ['id' => $this->modelId],
             $model,
@@ -455,23 +454,23 @@ new class () extends Component {
         $this->lastChangeTime = time();
     }
 
-    // #[On('pageSelected')]
-    // TODO with NF-1
-    // public function pageSelected($value, $context): void
-    // {
-    //     $page = Page::find($value);
-    //     $this->hrefPage = $page['name'][session('selectedLanguage')];
-    //     $this->relationTitles[$value] = $page['name'][session('selectedLanguage')];
-    //     $this->model[str_replace('model.', '', $context)] = $page->id;
-    // }
-
-    #[On('collectionSelected')]
-    public function collectionSelected($value, $context): void
+    #[On('pageSelected')]
+    public function pageSelected($value, $context): void
     {
-        $collection = Collection::find($value);
-        $this->model[str_replace('model.', '', $context)] = $collection->id;
-        $this->relationTitles[str_replace('model.', '', $context)] = $collection->name;
+        $page = Page::find($value);
+        $this->hrefPage = $page['name'][session('selectedLanguage')];
+        $this->relationTitles[$value] = $page['name'][session('selectedLanguage')];
+        $this->model[str_replace('model.', '', $context)] = $page->id;
     }
+
+    // TODO with NF-1
+    //#[On('collectionSelected')]
+    //public function collectionSelected($value, $context): void
+    // {
+    //    $collection = Collection::find($value);
+    //   $this->model[str_replace('model.', '', $context)] = $collection->id;
+    //  $this->relationTitles[str_replace('model.', '', $context)] = $collection->name;
+    // }
 
     public function elementSort($elementId, $newPosition): void
     {
