@@ -1,43 +1,38 @@
 <?php
 
 use Livewire\Volt\Component;
+use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Traits\Noerd;
 use Noerd\Noerd\Helpers\StaticConfigHelper;
 
+// Dieses Element wird aktuell nicht verwendet. [NF-1]
 new class extends Component {
     use Noerd;
 
-    public const COMPONENT = 'page-select-modal';
+    public const COMPONENT = 'collection-select-modal';
 
     public $context = null;
 
     public function tableAction(mixed $modelId): void
     {
-        $this->dispatch('pageSelected', $modelId, $this->context);
+        $this->dispatch('collectionSelected', $modelId, $this->context);
         $this->dispatch('close-modal-' . self::COMPONENT);
     }
 
     public function with(): array
     {
-        $rows = Page::where('tenant_id', auth()->user()->selected_tenant_id)
+        $rows = Collection::where('tenant_id', auth()->user()->selected_tenant_id)
             ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')
-            ->where('slug', '!=', null)
             ->when($this->search, function ($query): void {
                 $query->where(function ($query): void {
                     $query->where('name', 'like', '%' . $this->search . '%');
                 });
             })
+            ->withCount('rows')
             ->paginate(self::PAGINATION);
 
-        // decode name json for display
-        foreach ($rows as $row) {
-            $oldName = $row->name;
-            $decoded = is_string($row->name) ? json_decode($row->name, true) : ($row->name ?? []);
-            $row->name = $decoded[session('selectedLanguage')] ?? array_values($decoded)[0] ?? $oldName;
-        }
-
-        $tableConfig = StaticConfigHelper::getTableConfig('page-select-modal');
+        $tableConfig = StaticConfigHelper::getTableConfig('collection-select-modal');
 
         return [
             'rows' => $rows,

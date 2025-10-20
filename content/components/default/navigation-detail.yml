@@ -3,7 +3,7 @@ description: ''
 fields:
   - { name: model.navigation_key, label: Key, type: text, colspan: 6 }
   - { name: model.name, label: Name, type: translatableText, colspan: 6 }
-  - { name: model.page_id, label: Page, type: relation, relationField: page, modalComponent: page-select-modal, colspan: 6 }
+  - { name: model.page_id, label: Page, type: relation, relationField: relationTitle.page, modalComponent: page-select-modal, colspan: 6 }
   - { name: model.link, label: Link (URL), type: text, colspan: 6 }
   - { name: model.new_tab, label: New Tab, type: checkbox, colspan: 6 }
 

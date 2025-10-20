@@ -6,6 +6,7 @@ use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 use Noerd\Cms\Helpers\FieldHelper;
+use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Traits\Noerd;
@@ -41,9 +42,12 @@ new class extends Component {
 
         $this->model = FieldHelper::parseElementToData($elementPage->element_key,
             json_decode($elementPage->data, true));
-
         $this->modelId = $elementPage->id;
         $this->elementPage = $elementPage;
+
+        if ($this->model['collection_id'] ?? false) {
+            $this->dispatch('collectionSelected', $this->model['collection_id'], 'collection_id');
+        }
 
         // Send initial data to a parent component for live preview
         $this->dispatch('updateLiveElementData',
@@ -67,6 +71,18 @@ new class extends Component {
         $elementPage->save();
         $this->dispatch('reloadPageComponent');
     }
+
+    // Aktuell kein Modal möglich, wird per select gelöst
+    // #[On('collectionSelected')]
+    // public function collectionSelected($value, $modelFieldName): void
+    // {
+    //     // EIn Element kann mehrfacht auf einer Seite verwendet werden.
+    //     // Es soll nur fpr den aktuellen context verwendet werden.
+    //
+    //     $collection = Collection::find($value);
+    //     $this->model[str_replace('model.', '', $modelFieldName)] = $collection->id;
+    //     $this->relationTitles[str_replace('model.', '', $modelFieldName)] = $collection->name;
+    //}
 
     public function updated($propertyName, $value): void
     {
@@ -172,14 +188,16 @@ new class extends Component {
             @include('noerd::components.detail.block', $elementLayout)
         </div>
     @else
-        <div class="p-4 border border-red-300 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-red-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-red-500/10">
+        <div
+            class="p-4 border border-red-300 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-red-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-red-500/10">
             <div class="flex items-start justify-between gap-4">
                 <div class="flex-1">
                     <p class="text-sm font-semibold text-red-800">{{ __('Element component not found:') }} {{ $this->elementPage->element_key }}</p>
                     <p class="text-xs text-red-700 mt-2">{{ __('Please create both the .yml and .blade.php files in the elements folder.') }}</p>
                 </div>
                 <div>
-                    <x-noerd::buttons.delete wire:confirm="{{ __('Really delete element?') }}" wire:click="delete"></x-noerd::buttons.delete>
+                    <x-noerd::buttons.delete wire:confirm="{{ __('Really delete element?') }}"
+                                             wire:click="delete"></x-noerd::buttons.delete>
                 </div>
             </div>
             <details class="mt-2">
