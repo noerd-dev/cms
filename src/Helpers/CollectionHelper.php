@@ -7,10 +7,14 @@ use Symfony\Component\Yaml\Yaml;
 
 class CollectionHelper
 {
-    public static function getCollectionFields(string $collection): ?array
+    public static function getCollectionFields(?string $collection): ?array
     {
+        if ($collection === null) {
+            return null;
+        }
+
         try {
-            $path = base_path('content/collections/' . $collection . '.yml');
+            $path = base_path('content/collections/'.$collection.'.yml');
             $content = file_get_contents($path);
         } catch (Exception $e) {
             return null;

@@ -6,19 +6,46 @@ use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Traits\Noerd;
 
-new class () extends Component {
+new class extends Component
+{
     use Noerd;
 
     public const COMPONENT = 'collection-entries-list';
 
-    public ?string $collectionKey = null;
+    public string|int|null $collectionKey = null;
+
     public ?array $collectionLayout = null;
+
+    /**
+     * Resolve collection key from ID or string
+     */
+    protected function resolveCollectionKey(string|int|null $input): ?string
+    {
+        if ($input === null) {
+            return null;
+        }
+
+        // If it's a numeric string or integer, treat as ID
+        if (is_numeric($input)) {
+            $collection = Collection::where('tenant_id', auth()->user()->selected_tenant_id)
+                ->where('id', (int) $input)
+                ->first();
+
+            return $collection?->collection_key ? strtolower($collection->collection_key) : null;
+        }
+
+        // If it's a string, return as-is
+        return (string) $input;
+    }
 
     public function mount(): void
     {
-        if (!$this->collectionKey) {
+        if (! $this->collectionKey) {
             $this->collectionKey = request()->get('key');
         }
+
+        // Resolve collection key (supports both string and ID)
+        $this->collectionKey = $this->resolveCollectionKey($this->collectionKey);
 
         // Load collection layout
         $this->collectionLayout = CollectionHelper::getCollectionFields($this->collectionKey);
@@ -40,7 +67,7 @@ new class () extends Component {
 
     public function with(): array
     {
-        if (!$this->collectionKey) {
+        if (! $this->collectionKey) {
             return [
                 'rows' => collect([]),
                 'tableConfig' => [
@@ -67,11 +94,11 @@ new class () extends Component {
             ->orderBy('created_at', 'desc');
 
         // Apply search if provided
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $query->where(function ($q): void {
                 // Search in standard fields
-                $q->whereRaw('JSON_EXTRACT(name, "$.de") LIKE ?', ['%' . $this->search . '%'])
-                    ->orWhereRaw('JSON_EXTRACT(name, "$.en") LIKE ?', ['%' . $this->search . '%']);
+                $q->whereRaw('JSON_EXTRACT(name, "$.de") LIKE ?', ['%'.$this->search.'%'])
+                    ->orWhereRaw('JSON_EXTRACT(name, "$.en") LIKE ?', ['%'.$this->search.'%']);
 
                 // Search in dynamic fields from YAML configuration
                 if ($this->collectionLayout && isset($this->collectionLayout['fields'])) {
@@ -85,9 +112,9 @@ new class () extends Component {
                         }
 
                         // Search in translatable fields
-                        $q->orWhereRaw("JSON_EXTRACT(data, \"$.{$fieldKey}.de\") LIKE ?", ['%' . $this->search . '%'])
-                            ->orWhereRaw("JSON_EXTRACT(data, \"$.{$fieldKey}.en\") LIKE ?", ['%' . $this->search . '%'])
-                            ->orWhereRaw("JSON_EXTRACT(data, \"$.{$fieldKey}\") LIKE ?", ['%' . $this->search . '%']);
+                        $q->orWhereRaw("JSON_EXTRACT(data, \"$.{$fieldKey}.de\") LIKE ?", ['%'.$this->search.'%'])
+                            ->orWhereRaw("JSON_EXTRACT(data, \"$.{$fieldKey}.en\") LIKE ?", ['%'.$this->search.'%'])
+                            ->orWhereRaw("JSON_EXTRACT(data, \"$.{$fieldKey}\") LIKE ?", ['%'.$this->search.'%']);
                     }
                 }
             });
