@@ -1,0 +1,127 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Volt\Volt;
+use Noerd\Cms\Helpers\CollectionHelper;
+use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+
+uses(Tests\TestCase::class, RefreshDatabase::class);
+uses(CreatesCmsUser::class);
+
+/**
+ * @group no-parallel
+ */
+beforeEach(function (): void {
+    ['user' => $this->user] = $this->createUserWithCmsAccess();
+    $this->actingAs($this->user);
+
+    // Mock CollectionHelper for standort and mitarbeiter
+    $mock = \Mockery::mock('overload:'.CollectionHelper::class);
+
+    $mock->shouldReceive('getCollectionFields')
+        ->with('standort')
+        ->andReturn([
+            'title' => 'Standort',
+            'titleList' => 'Standorte',
+            'buttonList' => 'Neuer Standort',
+            'hasPage' => true,
+            'fields' => [
+                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+            ],
+        ]);
+
+    $mock->shouldReceive('getCollectionFields')
+        ->with('mitarbeiter')
+        ->andReturn([
+            'title' => 'Mitarbeiter',
+            'titleList' => 'Mitarbeiter',
+            'buttonList' => 'Neuer Mitarbeiter',
+            'hasPage' => true,
+            'fields' => [
+                ['name' => 'model.title', 'label' => 'Name', 'type' => 'text'],
+            ],
+        ]);
+
+    $mock->shouldReceive('getCollectionFields')
+        ->with(null)
+        ->andReturn(null);
+});
+
+it('accepts collection key as string (existing behavior)', function (): void {
+    // Create a collection with STANDORT key
+    $collection = Collection::factory()->create([
+        'tenant_id' => $this->user->selected_tenant_id,
+        'collection_key' => 'STANDORT',
+    ]);
+
+    // Test with string key
+    $response = $this->get(route('cms.collections').'?key=standort');
+
+    $response->assertStatus(200);
+    $response->assertSee('Standort');
+});
+
+it('accepts collection ID as integer parameter (new behavior)', function (): void {
+    // Create a collection with STANDORT key
+    $collection = Collection::factory()->create([
+        'tenant_id' => $this->user->selected_tenant_id,
+        'collection_key' => 'STANDORT',
+    ]);
+
+    // Test with numeric ID
+    $response = $this->get(route('cms.collections').'?key='.$collection->id);
+
+    $response->assertStatus(200);
+    $response->assertSee('Standort');
+});
+
+it('accepts collection ID as string parameter (new behavior)', function (): void {
+    // Create a collection with STANDORT key
+    $collection = Collection::factory()->create([
+        'tenant_id' => $this->user->selected_tenant_id,
+        'collection_key' => 'STANDORT',
+    ]);
+
+    // Test with numeric string ID
+    $response = $this->get(route('cms.collections').'?key='.(string) $collection->id);
+
+    $response->assertStatus(200);
+    $response->assertSee('Standort');
+});
+
+it('resolves collection key correctly in livewire component', function (): void {
+    // Create a collection with STANDORT key
+    $collection = Collection::factory()->create([
+        'tenant_id' => $this->user->selected_tenant_id,
+        'collection_key' => 'STANDORT',
+    ]);
+
+    // Test component with integer ID
+    Volt::test('collection-entries-list', ['collectionKey' => $collection->id])
+        ->assertSet('collectionKey', 'standort') // Should be resolved to lowercase string
+        ->assertStatus(200);
+});
+
+it('resolves collection key correctly when passed as string', function (): void {
+    // Test component with string key
+    Volt::test('collection-entries-list', ['collectionKey' => 'mitarbeiter'])
+        ->assertSet('collectionKey', 'mitarbeiter')
+        ->assertStatus(200);
+});
+
+it('handles null collection key gracefully', function (): void {
+    Volt::test('collection-entries-list', ['collectionKey' => null])
+        ->assertSet('collectionKey', null)
+        ->assertSee('Bitte wählen Sie eine Collection aus der Navigation.')
+        ->assertStatus(200);
+});
+
+it('handles non-existent collection ID gracefully', function (): void {
+    Volt::test('collection-entries-list', ['collectionKey' => 999999])
+        ->assertSet('collectionKey', null)
+        ->assertSee('Bitte wählen Sie eine Collection aus der Navigation.')
+        ->assertStatus(200);
+});
