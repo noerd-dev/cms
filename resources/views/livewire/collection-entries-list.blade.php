@@ -16,12 +16,8 @@ new class () extends Component {
 
     public function mount(): void
     {
-        $this->collectionKey = request()->get('key');
-
         if (!$this->collectionKey) {
-            // Redirect to collection-files if no key is provided
-            $this->redirect(route('cms.collection-files'));
-            return;
+            $this->collectionKey = request()->get('key');
         }
 
         // Load collection layout
