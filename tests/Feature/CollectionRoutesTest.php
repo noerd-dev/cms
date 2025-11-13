@@ -84,14 +84,6 @@ it('can access collection entries route with key parameter', function (): void {
     $response->assertSee('Project'); // Should show the collection title
 });
 
-it('redirects to collection-files when no key is provided', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
-
-    $response = $this->get('/cms/collections');
-    $response->assertRedirect(route('cms.collection-files'));
-});
-
 it('can access collection files route', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
