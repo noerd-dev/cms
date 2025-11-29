@@ -18,6 +18,8 @@ class Page extends Model
         'data' => 'array',
         'name' => 'array',
         'slug' => 'array',
+        'meta_title' => 'array',
+        'meta_description' => 'array',
     ];
 
     protected $attributes = [
