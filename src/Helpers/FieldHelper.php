@@ -40,7 +40,9 @@ class FieldHelper
             return null;
         }
 
-        foreach ($elementFields['fields'] as $elementField) {
+        $flattenedFields = self::flattenFields($elementFields['fields'] ?? []);
+
+        foreach ($flattenedFields as $elementField) {
             if (in_array($elementField['type'], ['translatableText', 'translatableRichText'])) {
                 $baseKey = str_replace('model.', '', $elementField['name']);
 
@@ -69,7 +71,9 @@ class FieldHelper
         $model = [];
         $componentFields = StaticConfigHelper::getComponentFields($component);
 
-        foreach ($componentFields['fields'] as $elementField) {
+        $flattenedFields = self::flattenFields($componentFields['fields'] ?? []);
+
+        foreach ($flattenedFields as $elementField) {
             if (in_array($elementField['type'], ['translatableText', 'translatableRichText'])) {
                 $baseKey = str_replace('model.', '', $elementField['name']);
 
@@ -155,6 +159,28 @@ class FieldHelper
         });
 
         return $groupedElements;
+    }
+
+    /**
+     * Flatten nested block fields into a single array of fields.
+     * Recursively extracts fields from blocks.
+     */
+    private static function flattenFields(array $fields): array
+    {
+        $flattened = [];
+
+        foreach ($fields as $field) {
+            if (($field['type'] ?? '') === 'block') {
+                // Recursively flatten nested fields within the block
+                $nestedFields = self::flattenFields($field['fields'] ?? []);
+                $flattened = array_merge($flattened, $nestedFields);
+            } elseif (isset($field['name'])) {
+                // Only add fields that have a name
+                $flattened[] = $field;
+            }
+        }
+
+        return $flattened;
     }
 
     private static function isJsonAndDecode($value): mixed

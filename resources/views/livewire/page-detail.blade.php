@@ -565,7 +565,7 @@ new class () extends Component {
     </x-slot:header>
     <div x-data="{ viewMode: @entangle('viewMode').live }">
         <div x-show="viewMode === 'content'">
-            <x-cms::page-action-bar></x-cms::page-action-bar>
+            <x-noerd::tabs :layout="$pageLayout" />
         </div>
 
         <!-- Sort Field for Collections -->
@@ -587,16 +587,45 @@ new class () extends Component {
             </div>
         @endif
 
-        <div x-show="currentTab === 1">
-            <div x-show="viewMode === 'content'">
-                @if($this->hasPageFeatures)
-                    @include('noerd::components.detail.block', $pageLayout)
-                @endif
+        @if(isset($pageLayout['tabs']) && count($pageLayout['tabs']) > 0)
+            @foreach($pageLayout['tabs'] as $tab)
+                <div x-show="currentTab === {{ $tab['number'] }}">
+                    <div x-show="viewMode === 'content'">
+                        @if($this->hasPageFeatures)
+                            @php
+                                $tabFields = array_filter($pageLayout['fields'] ?? [], fn($field) => ($field['tab'] ?? 1) === $tab['number']);
+                                $tabLayout = array_merge($pageLayout, ['fields' => array_values($tabFields)]);
+                                // Nur Titel/Description beim ersten Tab anzeigen
+                                if ($tab['number'] !== 1) {
+                                    unset($tabLayout['title'], $tabLayout['description']);
+                                }
+                            @endphp
+                            @include('noerd::components.detail.block', $tabLayout)
+                        @endif
 
-                @if($collectionLayout)
-                    @include('noerd::components.detail.block', $collectionLayout)
-                @endif
+                        @if($collectionLayout && $tab['number'] === 1)
+                            @include('noerd::components.detail.block', $collectionLayout)
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        @else
+            {{-- Fallback für alte Konfigurationen ohne Tabs --}}
+            <div x-show="currentTab === 1">
+                <div x-show="viewMode === 'content'">
+                    @if($this->hasPageFeatures)
+                        @include('noerd::components.detail.block', $pageLayout)
+                    @endif
+
+                    @if($collectionLayout)
+                        @include('noerd::components.detail.block', $collectionLayout)
+                    @endif
+                </div>
             </div>
+        @endif
+        
+        {{-- Preview und Elements nur für Tab 1 --}}
+        <div x-show="currentTab === 1">
 
             @if($this->page->id && $this->hasPageFeatures)
 
