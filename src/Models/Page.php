@@ -15,6 +15,7 @@ class Page extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'meta_noindex' => 'boolean',
         'data' => 'array',
         'name' => 'array',
         'slug' => 'array',
