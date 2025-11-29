@@ -1,12 +1,9 @@
 <?php
 
-use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Models\Tenant;
-use Noerd\Noerd\Models\TenantApp;
-use Noerd\Noerd\Models\User;
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);

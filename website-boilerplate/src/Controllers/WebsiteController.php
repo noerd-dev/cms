@@ -54,18 +54,18 @@ class WebsiteController extends Controller
         ?string $slug4 = null,
         ?string $slug5 = null,
     ) {
-        $slug = '/' . $slug1;
+        $slug = '/'.$slug1;
         if ($slug2) {
-            $slug .= '/' . $slug2;
+            $slug .= '/'.$slug2;
         }
         if ($slug3) {
-            $slug .= '/' . $slug3;
+            $slug .= '/'.$slug3;
         }
         if ($slug4) {
-            $slug .= '/' . $slug4;
+            $slug .= '/'.$slug4;
         }
         if ($slug5) {
-            $slug .= '/' . $slug5;
+            $slug .= '/'.$slug5;
         }
 
         $tenantId = request()->attributes->get('tenant_id');

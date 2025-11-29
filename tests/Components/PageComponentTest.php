@@ -1,12 +1,9 @@
 <?php
 
-use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Models\Tenant;
-use Noerd\Noerd\Models\TenantApp;
-use Noerd\Noerd\Models\User;
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
@@ -69,7 +66,7 @@ it('successfully deletes a page', function () use ($testSettings): void {
 
     Volt::test($testSettings['componentName'], ['modelId' => $model->id])
         ->call('delete')
-        ->assertDispatched('reloadTable-' . $testSettings['listName']);
+        ->assertDispatched('reloadTable-'.$testSettings['listName']);
 
     $this->assertDatabaseMissing('pages', [
         'id' => $model->id,
