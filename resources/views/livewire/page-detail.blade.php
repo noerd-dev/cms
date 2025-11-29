@@ -607,46 +607,48 @@ new class () extends Component {
 
 <x-noerd::page :disableModal="$disableModal">
     <x-slot:header>
-        <x-noerd::modal-title>{{ __('Page') }}</x-noerd::modal-title>
-    </x-slot:header>
-    <div class="flex">
-
-
-        <!-- View Mode Switch - Fixed Position -->
-        @if($this->hasPageFeatures)
-            <div class="ml-auto flex mb-6 mt-6">
-                <div class="flex items-center space-x-4">
-                    <!-- Sort Field for Collections -->
-                    @if($collectionKey)
-                        <div class="flex items-center space-x-2">
-                            <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
-                            <flux:input
-                                wire:model="model.sort"
-                                id="sort"
-                                type="number"
-                                class="w-16 text-sm"
-                                min="0"
-                                step="1"
-                            />
-                        </div>
-                    @endif
-
-                    <div class="flex space-x-1 bg-white p-1 rounded-lg w-fit shadow-xl border border-gray-200">
+        <x-noerd::modal-title class="flex items-center">
+            {{ __('Page') }}
+            @if($this->hasPageFeatures)
+                <div class="ml-auto" :class="isModal ? 'mr-10' : ''">
+                    <div class="flex  bg-white p-1 rounded-lg w-fit border border-gray-200">
                         <button
                             wire:click="setViewMode('content')"
-                            class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'content' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
+                            class="px-4 mx-0.5 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'content' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
                         >
                             Content
                         </button>
                         <button
                             wire:click="setViewMode('preview')"
-                            class="px-4 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'preview' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
+                            class="px-4 mx-0.5 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'preview' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
                         >
                             {{ __('Preview') }}
                         </button>
-                        <div class="ml-auto mr-6 my-auto border-l border-gray-200 pl-4">
-                            <livewire:language-switcher/>
-                        </div>
+
+                        <livewire:language-switcher/>
+                    </div>
+                </div>
+            @endif
+        </x-noerd::modal-title>
+
+    </x-slot:header>
+    <div class="flex">
+
+        <!-- View Mode Switch - Fixed Position -->
+        @if($this->hasPageFeatures && $collectionKey)
+            <div class="ml-auto flex mb-6 mt-6">
+                <div class="flex items-center space-x-4">
+                    <!-- Sort Field for Collections -->
+                    <div class="flex items-center space-x-2">
+                        <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
+                        <flux:input
+                            wire:model="model.sort"
+                            id="sort"
+                            type="number"
+                            class="w-16 text-sm"
+                            min="0"
+                            step="1"
+                        />
                     </div>
                 </div>
             </div>
@@ -674,17 +676,19 @@ new class () extends Component {
         @endif
     </div>
 
-    @if($this->hasPageFeatures)
+    <div x-data="{ viewMode: @entangle('viewMode').live }">
+        <div x-show="viewMode === 'content'">
+            @if($this->hasPageFeatures)
+                @include('noerd::components.detail.block', $pageLayout)
+            @endif
 
-        @include('noerd::components.detail.block', $pageLayout)
-    @endif
+            @if($collectionLayout)
+                @include('noerd::components.detail.block', $collectionLayout)
+            @endif
+        </div>
 
-    @if($collectionLayout)
-        @include('noerd::components.detail.block', $collectionLayout)
-    @endif
+        @if($this->page->id && $this->hasPageFeatures)
 
-    @if($this->page->id && $this->hasPageFeatures)
-        <div x-data="{ viewMode: @entangle('viewMode').live }">
             <div x-show="viewMode === 'content'">
 
                 <div x-sort="$wire.elementSort($item, $position)">
@@ -697,12 +701,10 @@ new class () extends Component {
                             </livewire:element-page-detail>
                         </div>
                     @endforeach
-
                 </div>
 
-                <div class="mt-8 mb-8">
-                    <x-noerd::title>{{__('Add Element')}}</x-noerd::title>
-                    <div class="mt-4">
+                <div class="mt-8 mb-8 flex">
+                    <div class="mt-4 mx-auto">
                         <x-noerd::primary-button
                             wire:click="$dispatch('noerdModal', {component: 'element-picker-modal', arguments: { token: 'insert-end' }})">
                             {{ __('Add Element') }}
@@ -710,62 +712,54 @@ new class () extends Component {
                     </div>
                 </div>
             </div>
+
             <div x-show="viewMode === 'preview'">
                 <!-- Preview View (Frontend Rendering) -->
-                <div class="border border-gray-200 rounded-lg bg-white">
-                    <div class="p-4 border-b border-gray-200 bg-gray-50">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900">{{ __('Frontend Preview') }}</h3>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="p-6">
-                        @if(count($this->livePreviewElements) > 0)
-                            @foreach($this->livePreviewElements as $element)
-                                @php
-                                    $componentName = $this->componentMapping[$element['key']] ?? null;
-                                    $componentExists = $componentName ? app(\Noerd\Website\Services\PageElementService::class)->elementDefinitionExists($componentName) : false;
-                                @endphp
+                @if(count($this->livePreviewElements) > 0)
+                    @foreach($this->livePreviewElements as $element)
+                        @php
+                            $componentName = $this->componentMapping[$element['key']] ?? null;
+                            $componentExists = $componentName ? app(\Noerd\Website\Services\PageElementService::class)->elementDefinitionExists($componentName) : false;
+                        @endphp
 
-                                @if($componentExists)
-                                    @livewire($componentName, ['data' => $element['data']], key('preview-element-' . $loop->index . '-' . $previewTick))
-                                @else
-                                    <!-- Fallback for missing or invalid element template -->
-                                    <div
-                                        class="p-4 border border-red-300 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-red-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-red-500/10">
-                                        <div class="flex items-start justify-between gap-4">
-                                            <div class="flex-1">
-                                                <p class="text-sm font-semibold text-red-800">{{ __('Element component not found:') }} {{ $element['key'] ?? 'unknown' }}</p>
-                                                <p class="text-xs text-red-700 mt-2">{{ __('Please create both the .yml and .blade.php files in the elements folder.') }}</p>
-                                            </div>
-                                            <div>
-                                                <x-noerd::buttons.delete
-                                                    wire:confirm="{{ __('Really delete element?') }}"
-                                                    wire:click="deleteElement({{ (int) ($this->page->elements[$loop->index]->id ?? 0) }})"></x-noerd::buttons.delete>
-                                            </div>
-                                        </div>
-                                        <details class="mt-2">
-                                            <summary
-                                                class="text-xs text-red-600 cursor-pointer">{{ __('Show data') }}</summary>
-                                            <pre
-                                                class="text-xs mt-2 text-red-700">{{ json_encode($element['data'] ?? [], JSON_PRETTY_PRINT) }}</pre>
-                                        </details>
-                                    </div>
-                                @endif
-                            @endforeach
+                        @if($componentExists)
+                            @livewire($componentName, ['data' => $element['data']], key('preview-element-' . $loop->index . '-' . $previewTick))
                         @else
-                            <div class="text-center py-8 text-gray-500">
-                                <p>{{ __('No elements available') }}</p>
-                                <p class="text-sm mt-1">{{ __('Switch to content mode to add elements') }}</p>
+                            <!-- Fallback for missing or invalid element template -->
+                            <div
+                                class="p-4 border border-red-300 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-red-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-red-500/10">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-semibold text-red-800">{{ __('Element component not found:') }} {{ $element['key'] ?? 'unknown' }}</p>
+                                        <p class="text-xs text-red-700 mt-2">{{ __('Please create both the .yml and .blade.php files in the elements folder.') }}</p>
+                                    </div>
+                                    <div>
+                                        <x-noerd::buttons.delete
+                                            wire:confirm="{{ __('Really delete element?') }}"
+                                            wire:click="deleteElement({{ (int) ($this->page->elements[$loop->index]->id ?? 0) }})"></x-noerd::buttons.delete>
+                                    </div>
+                                </div>
+                                <details class="mt-2">
+                                    <summary
+                                        class="text-xs text-red-600 cursor-pointer">{{ __('Show data') }}</summary>
+                                    <pre
+                                        class="text-xs mt-2 text-red-700">{{ json_encode($element['data'] ?? [], JSON_PRETTY_PRINT) }}</pre>
+                                </details>
                             </div>
                         @endif
+                    @endforeach
+                @else
+                    <div class="text-center py-8 text-gray-500">
+                        <p>{{ __('No elements available') }}</p>
+                        <p class="text-sm mt-1">{{ __('Switch to content mode to add elements') }}</p>
                     </div>
-                </div>
+                @endif
+
             </div>
-        </div>
-    @endif
+
+        @endif
+    </div>
 
     <x-slot:footer>
         <x-noerd::delete-save-bar :showDelete="isset($page->id)"/>

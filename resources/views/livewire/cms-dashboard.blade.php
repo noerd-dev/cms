@@ -52,7 +52,7 @@ new class () extends Component {
             {{__('Übersicht')}}
         </div>
         <div class="flex">
-            <x-noerd::dashboard-card icon="document" title="Seiten" :value="$pagesCount"
+            <x-noerd::dashboard-card heroicon="document" title="Seiten" :value="$pagesCount"
                                      component="pages-list"/>
             <x-noerd::dashboard-card heroicon="list-bullet" title="Navigation" :value="$navigationCount"
                                      component="navigation-list"/>

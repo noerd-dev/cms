@@ -1,8 +1,8 @@
 <?php
 
-use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Models\Language;
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
@@ -122,7 +122,7 @@ it('deletes a language', function () use ($testSettings): void {
 
     Volt::test($testSettings['componentName'], ['modelId' => $language->id])
         ->call('delete')
-        ->assertDispatched('reloadTable-' . $testSettings['listName']);
+        ->assertDispatched('reloadTable-'.$testSettings['listName']);
 
     $this->assertDatabaseMissing('cms_languages', ['id' => $language->id]);
 });

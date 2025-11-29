@@ -1,10 +1,7 @@
 <?php
 
-use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Helpers\CollectionHelper;
-use Noerd\Noerd\Models\Tenant;
-use Noerd\Noerd\Models\TenantApp;
-use Noerd\Noerd\Models\User;
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
@@ -16,7 +13,7 @@ uses(CreatesCmsUser::class);
 // Mock CollectionHelper to avoid file system dependencies
 beforeEach(function (): void {
     // Create an overload mock for better parallel test isolation
-    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
+    $mock = \Mockery::mock('overload:'.CollectionHelper::class);
 
     // Mock getCollectionFields for various collections used in tests
     $mock->shouldReceive('getCollectionFields')

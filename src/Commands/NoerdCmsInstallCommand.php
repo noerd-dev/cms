@@ -43,8 +43,8 @@ class NoerdCmsInstallCommand extends Command
             $results = $this->copyDirectoryContents($sourceDir, $targetDir);
 
             // Ensure lists are copied explicitly to content/lists
-            $listsSource = $sourceDir . DIRECTORY_SEPARATOR . 'lists';
-            $listsTarget = $targetDir . DIRECTORY_SEPARATOR . 'lists';
+            $listsSource = $sourceDir.DIRECTORY_SEPARATOR.'lists';
+            $listsTarget = $targetDir.DIRECTORY_SEPARATOR.'lists';
             if (is_dir($listsSource)) {
                 $listResults = $this->copyDirectoryContents($listsSource, $listsTarget);
                 $results = $this->mergeResults($results, $listResults);
@@ -62,7 +62,7 @@ class NoerdCmsInstallCommand extends Command
 
             return 0;
         } catch (Exception $e) {
-            $this->error('Error installing noerd content: ' . $e->getMessage());
+            $this->error('Error installing noerd content: '.$e->getMessage());
 
             return 1;
         }
@@ -88,7 +88,7 @@ class NoerdCmsInstallCommand extends Command
         foreach ($iterator as $item) {
             $sourcePath = $item->getPathname();
             $relativePath = mb_substr($sourcePath, mb_strlen($sourceDir) + 1);
-            $targetPath = $targetDir . DIRECTORY_SEPARATOR . $relativePath;
+            $targetPath = $targetDir.DIRECTORY_SEPARATOR.$relativePath;
 
             if ($item->isDir()) {
                 // Create directory if it doesn't exist
@@ -201,7 +201,7 @@ class NoerdCmsInstallCommand extends Command
 
             $this->line('<info>CMS module registered successfully.</info>');
         } catch (Exception $e) {
-            $this->warn('Module registration failed: ' . $e->getMessage());
+            $this->warn('Module registration failed: '.$e->getMessage());
         }
     }
 
@@ -238,7 +238,7 @@ class NoerdCmsInstallCommand extends Command
                 $this->warn('Website module installation failed.');
             }
         } catch (Exception $e) {
-            $this->warn('Failed to install website module: ' . $e->getMessage());
+            $this->warn('Failed to install website module: '.$e->getMessage());
         }
     }
 }

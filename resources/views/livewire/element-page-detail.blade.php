@@ -45,10 +45,6 @@ new class extends Component {
         $this->modelId = $elementPage->id;
         $this->elementPage = $elementPage;
 
-        if ($this->model['collection_id'] ?? false) {
-            $this->dispatch('collectionSelected', $this->model['collection_id'], 'collection_id');
-        }
-
         // Send initial data to a parent component for live preview
         $this->dispatch('updateLiveElementData',
             elementPageId: $this->modelId,
@@ -71,18 +67,6 @@ new class extends Component {
         $elementPage->save();
         $this->dispatch('reloadPageComponent');
     }
-
-    // Aktuell kein Modal möglich, wird per select gelöst
-    // #[On('collectionSelected')]
-    // public function collectionSelected($value, $modelFieldName): void
-    // {
-    //     // EIn Element kann mehrfacht auf einer Seite verwendet werden.
-    //     // Es soll nur fpr den aktuellen context verwendet werden.
-    //
-    //     $collection = Collection::find($value);
-    //     $this->model[str_replace('model.', '', $modelFieldName)] = $collection->id;
-    //     $this->relationTitles[str_replace('model.', '', $modelFieldName)] = $collection->name;
-    //}
 
     public function updated($propertyName, $value): void
     {
@@ -174,12 +158,10 @@ new class extends Component {
 
 <div>
     @if($elementLayout)
-        <div class="p-4 border border-b-gray-200 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-gray-950/[2.5%] after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-gray-950/5 dark:after:inset-ring-white/10 bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-gray-950)]/5 dark:[--pattern-fg:var(--color-white)]/10
+        <div class="p-4 pt-0 border border-b-gray-200 mb-4 relative overflow-hidden rounded-lg bg-gray-950/[2.5%] after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-gray-950/5 dark:after:inset-ring-white/10 bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-gray-950)]/5 dark:[--pattern-fg:var(--color-white)]/10
     ">
-            <div class="text-sm">{{$this->elementName()}}  </div>
-
             <x-noerd::buttons.delete
-                class="!absolute !right-4"
+                class="!absolute !right-4 mt-4"
                 wire:click="delete"
                 wire:confirm="{{ __('Really delete element?') }}"
             >

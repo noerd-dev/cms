@@ -35,16 +35,18 @@ new class extends Component {
 } ?>
 <div class="flex">
     @if(count($languages) > 1)
-        <div class="ml-auto flex">
-            @foreach($languages as $language)
-                <a @class([
+        <div class="ml-auto mr-6 my-auto border-l border-gray-200 pl-4">
+            <div class="ml-auto flex">
+                @foreach($languages as $language)
+                    <a @class([
                     'cursor-pointer ml-2',
                     'text-black underline' => session('selectedLanguage') === $language['code'],
                     'text-gray-500' => session('selectedLanguage') !== $language['code'],
                 ]) wire:click="setLanguage('{{$language['code']}}')">
-                    {{ strtoupper($language['code']) }}
-                </a>
-            @endforeach
+                        {{ strtoupper($language['code']) }}
+                    </a>
+                @endforeach
+            </div>
         </div>
     @endif
 </div>

@@ -18,4 +18,3 @@ class Language extends Model
 
     protected $guarded = [];
 }
-
