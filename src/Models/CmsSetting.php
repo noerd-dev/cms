@@ -14,7 +14,19 @@ class CmsSetting extends Model
     protected $fillable = [
         'tenant_id',
         'homepage_page_id',
+        'google_analytics_id',
+        'show_cookie_banner',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'show_cookie_banner' => 'boolean',
+        ];
+    }
 
     protected static function newFactory()
     {
