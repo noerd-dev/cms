@@ -104,27 +104,29 @@ new class extends Component {
             <label class="flex items-center gap-2 cursor-pointer">
                 <input
                     type="checkbox"
-                    wire:model="model.show_cookie_banner"
+                    wire:model.live="model.show_cookie_banner"
                     class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span>{{ __('Cookie-Banner anzeigen') }}</span>
             </label>
-            <p class="text-sm text-gray-500 mt-1">{{ __('Wenn aktiviert, wird ein Cookie-Consent-Banner auf der Website angezeigt.') }}</p>
+            <p class="text-sm text-gray-500 mt-1">{{ __('Notwendig, um Analytics zu verwenden') }}</p>
         </div>
     </div>
 
-    <div class="pt-4">
-        <x-noerd::title>{{ __('Google Analytics') }}</x-noerd::title>
-        <div class="mt-2">
-            <input
-                type="text"
-                wire:model="model.google_analytics_id"
-                class="border rounded px-3 py-2 w-full"
-                placeholder="z.B. G-XXXXXXXXXX"
-            />
-            <p class="text-sm text-gray-500 mt-1">{{ __('Google Analytics Mess-ID (z.B. G-XXXXXXXXXX)') }}</p>
+    @if($model['show_cookie_banner'] ?? false)
+        <div class="pt-4">
+            <x-noerd::title>{{ __('Google Analytics') }}</x-noerd::title>
+            <div class="mt-2">
+                <input
+                    type="text"
+                    wire:model="model.google_analytics_id"
+                    class="border rounded px-3 py-2 w-full"
+                    placeholder="z.B. G-XXXXXXXXXX"
+                />
+                <p class="text-sm text-gray-500 mt-1">{{ __('Google Analytics Mess-ID (z.B. G-XXXXXXXXXX.)') }}</p>
+            </div>
         </div>
-    </div>
+    @endif
 
     <x-slot:footer>
         <x-noerd::delete-save-bar showDelete="false"/>
