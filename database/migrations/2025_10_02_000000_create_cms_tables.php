@@ -59,25 +59,15 @@ return new class extends Migration
             });
         }
 
-        // Collections table
-        if (! Schema::hasTable('collections')) {
-            Schema::create('collections', function (Blueprint $table): void {
-                $table->id();
-                $table->unsignedBigInteger('tenant_id');
-                $table->unsignedBigInteger('page_id')->nullable();
-                $table->string('collection_key');
-                $table->integer('sort')->default(0);
-                $table->json('data')->nullable();
-                $table->timestamps();
-
-                $table->index('tenant_id');
-                $table->index('page_id');
-                $table->index('collection_key');
-                $table->index('sort');
-
-                $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
-                $table->foreign('page_id')->references('id')->on('pages')->onDelete('cascade');
-            });
+        // Add page_id foreign key to collections (created in earlier migration)
+        if (Schema::hasTable('collections') && Schema::hasTable('pages')) {
+            try {
+                Schema::table('collections', function (Blueprint $table): void {
+                    $table->foreign('page_id')->references('id')->on('pages')->onDelete('cascade');
+                });
+            } catch (\Exception $e) {
+                // Foreign key already exists, skip
+            }
         }
 
         // Element page pivot table
@@ -177,9 +167,9 @@ return new class extends Migration
         Schema::dropIfExists('cms_languages');
         Schema::dropIfExists('form_requests');
         Schema::dropIfExists('element_page');
-        Schema::dropIfExists('collections');
         Schema::dropIfExists('global_parameters');
         Schema::dropIfExists('pages');
         Schema::dropIfExists('elements');
+        // Note: collections table is dropped in its own migration (2025_10_01_000000_create_collections_table)
     }
 };
