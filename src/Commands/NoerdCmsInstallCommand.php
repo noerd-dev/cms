@@ -16,7 +16,12 @@ class NoerdCmsInstallCommand extends Command
 
     public function handle()
     {
-        $this->info('Installing noerd content...');
+        // Ensure noerd:install has been run first
+        if (! $this->ensureNoerdInstalled()) {
+            return 1;
+        }
+
+        $this->info('Installing noerd CMS content...');
 
         $sourceDir = base_path('vendor/noerd/cms/content');
         $targetDir = base_path('content');
@@ -202,6 +207,51 @@ class NoerdCmsInstallCommand extends Command
             $this->line('<info>CMS module registered successfully.</info>');
         } catch (Exception $e) {
             $this->warn('Module registration failed: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Check if noerd:install has been run, and run it if not
+     */
+    private function ensureNoerdInstalled(): bool
+    {
+        $configPath = base_path('config/app-modules.php');
+
+        // Check if app-modules.php exists and has Noerd namespace configured
+        $isInstalled = file_exists($configPath)
+            && str_contains(file_get_contents($configPath), "'modules_namespace' => 'Noerd'");
+
+        if ($isInstalled) {
+            $this->line('<comment>Noerd base package already installed.</comment>');
+
+            return true;
+        }
+
+        $this->line('');
+        $this->warn('Noerd base package has not been installed yet.');
+        $this->info('Running noerd:install first...');
+        $this->line('');
+
+        try {
+            // Pass the force option if it was provided
+            $options = $this->option('force') ? ['--force' => true] : [];
+            $exitCode = Artisan::call('noerd:install', $options, $this->output);
+
+            if ($exitCode === 0) {
+                $this->line('');
+                $this->info('Noerd base package installed successfully.');
+                $this->line('');
+
+                return true;
+            }
+
+            $this->error('Failed to install noerd base package.');
+
+            return false;
+        } catch (Exception $e) {
+            $this->error('Failed to run noerd:install: '.$e->getMessage());
+
+            return false;
         }
     }
 
