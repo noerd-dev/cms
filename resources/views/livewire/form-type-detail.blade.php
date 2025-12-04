@@ -84,10 +84,12 @@ new class extends Component {
     <div>
         <div x-show="currentTab === 1">
             {{-- Warning Banner --}}
-            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="mb-6 mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div class="flex items-start gap-3">
                     <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        <path fill-rule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                              clip-rule="evenodd"/>
                     </svg>
                     <div>
                         <p class="text-sm font-semibold text-blue-900">
@@ -101,10 +103,11 @@ new class extends Component {
             </div>
 
             {{-- Basic Information (Read-Only) --}}
-            <div class="space-y-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div
+                class="space-y-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">{{ __('Grundinformationen (aus YML)') }}</h3>
 
-                <div class="grid grid-cols-2 gap-4 text-sm">
+                <div class="grid grid-cols-3 gap-4 text-sm">
                     <div>
                         <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Key') }}</label>
                         <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formType['key'] ?? '-' }}</p>
@@ -113,33 +116,12 @@ new class extends Component {
                         <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Titel') }}</label>
                         <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formType['title'] ?? '-' }}</p>
                     </div>
+                    <div>
+                        <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Beschreibung') }}</label>
+                        <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formType['description'] ?? '-' }}</p>
+                    </div>
                 </div>
 
-                <div class="text-sm">
-                    <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Beschreibung') }}</label>
-                    <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formType['description'] ?? '-' }}</p>
-                </div>
-
-                <div class="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                        <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Aktiv') }}</label>
-                        <p class="mt-1">
-                            @if($formType['is_active'] ?? false)
-                                <span class="text-green-600">✓ {{ __('Ja') }}</span>
-                            @else
-                                <span class="text-red-600">✗ {{ __('Nein') }}</span>
-                            @endif
-                        </p>
-                    </div>
-                    <div>
-                        <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Sortierung') }}</label>
-                        <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formType['sort_order'] ?? 0 }}</p>
-                    </div>
-                    <div>
-                        <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('YML-Pfad') }}</label>
-                        <p class="mt-1 text-xs font-mono text-gray-600 dark:text-gray-400">{{ basename($formType['yml_path'] ?? '') }}</p>
-                    </div>
-                </div>
             </div>
 
             {{-- Email Configuration (Editable) --}}
@@ -170,24 +152,6 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- YML Configuration Preview (Collapsible) --}}
-            @if($ymlConfig)
-                <div class="mt-6">
-                    <details class="group">
-                        <summary class="cursor-pointer list-none">
-                            <div class="flex items-center gap-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                                <svg class="w-5 h-5 transition-transform group-open:rotate-90" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                                </svg>
-                                <span class="font-semibold">{{ __('YML-Konfiguration anzeigen') }}</span>
-                            </div>
-                        </summary>
-                        <div class="mt-2">
-                            <pre class="p-4 bg-gray-900 text-gray-100 rounded-lg overflow-x-auto text-xs"><code>{{ \Symfony\Component\Yaml\Yaml::dump($ymlConfig, 4, 2) }}</code></pre>
-                        </div>
-                    </details>
-                </div>
-            @endif
         </div>
     </div>
 

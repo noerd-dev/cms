@@ -19,8 +19,6 @@ class FormType extends Model
         'key',
         'title',
         'description',
-        'is_active',
-        'sort_order',
         'send_email',
         'email_subject',
         'email_body',
@@ -32,9 +30,7 @@ class FormType extends Model
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean',
             'send_email' => 'boolean',
-            'sort_order' => 'integer',
             'yml_synced_at' => 'datetime',
         ];
     }

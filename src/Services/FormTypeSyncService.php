@@ -99,8 +99,6 @@ class FormTypeSyncService
                 'key' => $key,
                 'title' => $config['title'] ?? $key,
                 'description' => $config['description'] ?? null,
-                'is_active' => $config['is_active'] ?? true,
-                'sort_order' => $config['sort_order'] ?? 0,
                 'send_email' => $config['send_email'] ?? false,
                 'email_subject' => $config['email_subject'] ?? null,
                 'email_body' => $config['email_body'] ?? null,
