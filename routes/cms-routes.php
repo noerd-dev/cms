@@ -15,6 +15,7 @@ Route::prefix('cms')
         Volt::route('/collections', 'collection-entries-list')->name('collections');
         Volt::route('/collection-files', 'collections-list')->name('collection-files');
         Volt::route('/form-requests', 'form-requests-list')->name('form-requests');
+        Volt::route('/form-types', 'form-types-list')->name('form-types');
 
         Volt::route('/settings', 'cms-settings-detail')->name('settings');
     });

@@ -1,0 +1,44 @@
+<?php
+
+namespace Noerd\Cms\Mail;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+use Noerd\Website\Models\FormRequest;
+
+class FormConfirmation extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public function __construct(
+        public FormRequest $formRequest,
+        public string $subject,
+        public string $emailBody
+    ) {}
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: $this->subject,
+        );
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            view: 'cms::emails.form-confirmation',
+            with: [
+                'formRequest' => $this->formRequest,
+                'emailBody' => $this->emailBody,
+            ],
+        );
+    }
+
+    public function attachments(): array
+    {
+        return [];
+    }
+}
