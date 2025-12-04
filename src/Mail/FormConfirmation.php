@@ -15,14 +15,14 @@ class FormConfirmation extends Mailable
 
     public function __construct(
         public FormRequest $formRequest,
-        public string $subject,
+        public string $emailSubject,
         public string $emailBody
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->subject,
+            subject: $this->emailSubject,
         );
     }
 
