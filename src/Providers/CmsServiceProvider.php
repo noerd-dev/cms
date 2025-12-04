@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use Livewire\Volt\Volt;
 use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
 use Noerd\Cms\Commands\NoerdCmsInstallCommand;
+use Noerd\Cms\Console\Commands\SyncFormTypesCommand;
 use Noerd\Cms\Middleware\CmsApiAuth;
 use Noerd\Cms\Middleware\CmsMiddleware;
 
@@ -46,6 +47,7 @@ class CmsServiceProvider extends ServiceProvider
             $this->commands([
                 NoerdCmsInstallCommand::class,
                 InstallWebsiteBoilerplateCommand::class,
+                SyncFormTypesCommand::class,
             ]);
         }
     }
