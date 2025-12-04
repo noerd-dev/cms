@@ -1,0 +1,45 @@
+key: contact
+title: 'Kontaktformular'
+description: 'Allgemeines Kontaktformular für Kundenanfragen'
+
+send_email: true
+
+fields:
+  - name: name
+    label: 'Name'
+    type: text
+    required: true
+    validation: [required, string, max:255]
+    error_messages:
+      required: 'Der Name ist erforderlich.'
+    placeholder: 'Ihr vollständiger Name'
+
+  - name: email
+    label: 'E-Mail'
+    type: email
+    required: true
+    validation: [required, email, max:255]
+    error_messages:
+      required: 'Die E-Mail-Adresse ist erforderlich.'
+      email: 'Bitte geben Sie eine gültige E-Mail-Adresse ein.'
+    placeholder: 'ihre@email.de'
+
+  - name: phone
+    label: 'Telefon'
+    type: tel
+    required: false
+    validation: [nullable, string, max:255]
+    placeholder: '+49 ...'
+
+  - name: message
+    label: 'Nachricht'
+    type: textarea
+    required: true
+    rows: 4
+    validation: [required, string, max:2000]
+    error_messages:
+      required: 'Bitte geben Sie eine Nachricht ein.'
+    placeholder: 'Ihre Nachricht an uns...'
+
+success_message: 'Vielen Dank! Ihre Nachricht wurde erfolgreich gesendet. Wir werden uns bald bei Ihnen melden.'
+submit_button_text: 'Nachricht senden'

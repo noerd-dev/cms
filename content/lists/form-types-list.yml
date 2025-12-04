@@ -1,0 +1,17 @@
+title: 'Formulartypen'
+component: 'form-type-detail'
+columns:
+  - field: key
+    label: Key
+    width: 20
+  - field: title
+    label: Titel
+    width: 30
+  - field: send_email
+    label: E-Mail
+    width: 10
+    type: bool
+  - field: yml_synced_at
+    label: Synchronisiert
+    width: 20
+    type: datetime
