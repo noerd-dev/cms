@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
         // Elements table
@@ -101,28 +100,8 @@ return new class extends Migration
             });
         }
 
-        // CMS languages table
-        if (! Schema::hasTable('cms_languages')) {
-            Schema::create('cms_languages', function (Blueprint $table): void {
-                $table->id();
-                $table->unsignedBigInteger('tenant_id');
-                $table->string('code', 10);
-                $table->string('name', 100);
-                $table->boolean('is_active')->default(true);
-                $table->boolean('is_default')->default(false);
-                $table->integer('sort_order')->default(0);
-                $table->timestamps();
-
-                $table->index('tenant_id');
-                $table->index('code');
-                $table->index('is_active');
-                $table->index('is_default');
-                $table->index('sort_order');
-                $table->unique(['tenant_id', 'code']);
-
-                $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
-            });
-        }
+        // Note: languages table is now created in the noerd module
+        // See: app-modules/noerd/database/migrations/2025_01_01_000003_create_languages_table.php
 
         // CMS navigations table
         if (! Schema::hasTable('cms_navigations')) {
@@ -164,7 +143,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('cms_settings');
         Schema::dropIfExists('cms_navigations');
-        Schema::dropIfExists('cms_languages');
+        // Note: languages table is now managed by the noerd module
         Schema::dropIfExists('form_requests');
         Schema::dropIfExists('element_page');
         Schema::dropIfExists('global_parameters');
