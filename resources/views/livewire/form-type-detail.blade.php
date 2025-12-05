@@ -1,14 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use Noerd\Cms\Models\FormType;
+use Noerd\Noerd\Traits\HasEmailPreview;
 use Noerd\Noerd\Traits\Noerd;
 
 new class () extends Component {
+    use HasEmailPreview;
     use Noerd;
 
     public const COMPONENT = 'form-type-detail';
@@ -20,82 +20,20 @@ new class () extends Component {
 
     public array $formType;
     public ?array $ymlConfig = null;
-    public bool $showPreview = false;
-    public bool $testEmailSending = false;
 
-    #[Computed]
-    public function canShowPreview(): bool
+    protected function getEmailData(): array
     {
-        return ($this->formType['send_email'] ?? false)
-            && ! empty($this->formType['email_body']);
+        return $this->formType;
     }
 
-    #[Computed]
-    public function testEmailRateLimitKey(): string
+    protected function getEmailRateLimitPrefix(): string
     {
-        return 'test-email:form-type:' . auth()->id();
+        return 'form-type';
     }
 
-    #[Computed]
-    public function canSendTestEmail(): bool
+    protected function getEmailViewName(): string
     {
-        return $this->canShowPreview && ! RateLimiter::tooManyAttempts($this->testEmailRateLimitKey, 1);
-    }
-
-    #[Computed]
-    public function testEmailCooldownSeconds(): int
-    {
-        return RateLimiter::availableIn($this->testEmailRateLimitKey);
-    }
-
-    public function sendTestEmail(): void
-    {
-        if (! $this->canShowPreview) {
-            return;
-        }
-
-        $key = $this->testEmailRateLimitKey;
-
-        if (RateLimiter::tooManyAttempts($key, 1)) {
-            $seconds = RateLimiter::availableIn($key);
-            $this->js("alert('" . __('Bitte warten Sie :seconds Sekunden, bevor Sie eine weitere Test-E-Mail senden.', ['seconds' => $seconds]) . "')");
-
-            return;
-        }
-
-        $this->testEmailSending = true;
-
-        RateLimiter::hit($key, 30);
-
-        $user = auth()->user();
-        $sampleData = $this->getSampleEmailData();
-
-        $subject = str_replace(
-            array_keys($sampleData),
-            array_values($sampleData),
-            $this->formType['email_subject'] ?? __('Test-E-Mail')
-        );
-
-        $subject = '[TEST] ' . $subject;
-
-        $emailBody = str_replace(
-            array_keys($sampleData),
-            array_values($sampleData),
-            $this->formType['email_body'] ?? ''
-        );
-
-        $htmlContent = view('cms::emails.form-confirmation', [
-            'emailBody' => $emailBody,
-        ])->render();
-
-        Mail::html($htmlContent, function ($message) use ($user, $subject) {
-            $message->to($user->email)
-                ->subject($subject);
-        });
-
-        $this->testEmailSending = false;
-
-        $this->js("alert('" . __('Test-E-Mail wurde an :email gesendet.', ['email' => $user->email]) . "')");
+        return 'cms::emails.form-confirmation';
     }
 
     public function getSampleEmailData(): array
@@ -116,39 +54,6 @@ new class () extends Component {
         }
 
         return $sampleData;
-    }
-
-    #[Computed]
-    public function previewEmailHtml(): string
-    {
-        if (! $this->canShowPreview) {
-            return '';
-        }
-
-        $emailBody = $this->formType['email_body'] ?? '';
-        $sampleData = $this->getSampleEmailData();
-
-        $processedBody = str_replace(
-            array_keys($sampleData),
-            array_values($sampleData),
-            $emailBody,
-        );
-
-        return view('cms::emails.form-confirmation', [
-            'emailBody' => $processedBody,
-        ])->render();
-    }
-
-    public function openPreview(): void
-    {
-        if ($this->canShowPreview) {
-            $this->showPreview = true;
-        }
-    }
-
-    public function closePreview(): void
-    {
-        $this->showPreview = false;
     }
 
     #[Computed]
@@ -313,83 +218,9 @@ new class () extends Component {
         </x-slot:footer>
     </x-noerd::page>
 
-    <!-- Email Preview Modal -->
-    <div x-data="{ show: $wire.entangle('showPreview') }"
-         x-show="show"
-         x-effect="document.body.style.overflow = show ? 'hidden' : ''"
-         x-transition.opacity
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
-         aria-modal="true"
-         role="dialog"
-         @keydown.escape.window="$wire.closePreview()"
-         style="display: none;">
-
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black/60" @click="$wire.closePreview()"></div>
-
-        <!-- Modal Content -->
-        <div x-show="show"
-             x-transition.scale.opacity
-             class="relative w-full max-w-4xl max-h-[90vh] bg-white text-gray-800 border-[3px] border-gray-800 overflow-y-auto my-auto">
-
-            <!-- Modal Header -->
-            <div class="flex items-start justify-between p-4 sm:p-5 border-b border-gray-800/20">
-                <div>
-                    <h3 class="text-2xl font-semibold">{{ __('E-Mail-Vorschau') }}</h3>
-                    <p class="text-sm text-gray-600 mt-1">
-                        {{ __('So wird die E-Mail mit Beispieldaten angezeigt') }}
-                    </p>
-                </div>
-                <button
-                    class="ml-4 inline-flex items-center justify-center border-[3px] border-gray-800 p-2 text-sm bg-white hover:bg-gray-800 hover:text-white transition-colors"
-                    @click="$wire.closePreview()"
-                    aria-label="Close">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Email Subject Preview -->
-            @if(!empty($formType['email_subject']))
-                <div class="px-4 sm:px-6 py-3 bg-gray-50 border-b border-gray-800/20">
-                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                        {{ __('Betreff') }}
-                    </div>
-                    <div class="text-base font-medium text-gray-900">
-                        {{ str_replace(
-                            array_keys($this->getSampleEmailData()),
-                            array_values($this->getSampleEmailData()),
-                            $formType['email_subject']
-                        ) }}
-                    </div>
-                </div>
-            @endif
-
-            <!-- Email Body Preview -->
-            <div class="p-4 sm:p-6">
-                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                    {{ __('Inhalt') }}
-                </div>
-                <div class="border border-gray-300 rounded-lg overflow-hidden">
-                    <!-- Render the actual email HTML -->
-                    <iframe
-                        srcdoc="{!! str_replace('"', '&quot;', $this->previewEmailHtml) !!}"
-                        class="w-full h-[500px] bg-white"
-                        sandbox="allow-same-origin"
-                        title="Email Preview">
-                    </iframe>
-                </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="flex justify-end gap-3 p-4 sm:p-5 border-t border-gray-800/20">
-                <x-noerd::buttons.secondary @click="$wire.closePreview()">
-                    {{ __('Schließen') }}
-                </x-noerd::buttons.secondary>
-            </div>
-        </div>
-    </div>
+    <x-noerd::email-preview-modal
+        :emailSubject="$formType['email_subject'] ?? ''"
+        :sampleData="$this->getSampleEmailData()"
+        :previewHtml="$this->previewEmailHtml"
+    />
 </div>
