@@ -5,7 +5,7 @@ use Livewire\Volt\Volt;
 
 Route::prefix('cms')
     ->as('cms.')
-    ->middleware(['web', 'auth', 'verified', 'cms'])
+    ->middleware(['web', 'auth', 'verified'])
     ->group(function (): void {
         Volt::route('/', 'cms-dashboard')->name('dashboard');
         Volt::route('/pages', 'pages-list')->name('pages');
