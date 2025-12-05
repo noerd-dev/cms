@@ -9,7 +9,6 @@ use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
 use Noerd\Cms\Commands\NoerdCmsInstallCommand;
 use Noerd\Cms\Console\Commands\SyncFormTypesCommand;
 use Noerd\Cms\Middleware\CmsApiAuth;
-use Noerd\Cms\Middleware\CmsMiddleware;
 
 class CmsServiceProvider extends ServiceProvider
 {
@@ -24,7 +23,6 @@ class CmsServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../../routes/cms-api.php');
 
         $router = $this->app['router'];
-        $router->aliasMiddleware('cms', CmsMiddleware::class);
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
 
         Volt::mount(__DIR__.'/../../resources/views/livewire');
