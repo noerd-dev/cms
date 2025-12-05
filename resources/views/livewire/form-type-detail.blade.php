@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
@@ -19,12 +21,81 @@ new class () extends Component {
     public array $formType;
     public ?array $ymlConfig = null;
     public bool $showPreview = false;
+    public bool $testEmailSending = false;
 
     #[Computed]
     public function canShowPreview(): bool
     {
         return ($this->formType['send_email'] ?? false)
             && ! empty($this->formType['email_body']);
+    }
+
+    #[Computed]
+    public function testEmailRateLimitKey(): string
+    {
+        return 'test-email:form-type:' . auth()->id();
+    }
+
+    #[Computed]
+    public function canSendTestEmail(): bool
+    {
+        return $this->canShowPreview && ! RateLimiter::tooManyAttempts($this->testEmailRateLimitKey, 1);
+    }
+
+    #[Computed]
+    public function testEmailCooldownSeconds(): int
+    {
+        return RateLimiter::availableIn($this->testEmailRateLimitKey);
+    }
+
+    public function sendTestEmail(): void
+    {
+        if (! $this->canShowPreview) {
+            return;
+        }
+
+        $key = $this->testEmailRateLimitKey;
+
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $seconds = RateLimiter::availableIn($key);
+            $this->js("alert('" . __('Bitte warten Sie :seconds Sekunden, bevor Sie eine weitere Test-E-Mail senden.', ['seconds' => $seconds]) . "')");
+
+            return;
+        }
+
+        $this->testEmailSending = true;
+
+        RateLimiter::hit($key, 30);
+
+        $user = auth()->user();
+        $sampleData = $this->getSampleEmailData();
+
+        $subject = str_replace(
+            array_keys($sampleData),
+            array_values($sampleData),
+            $this->formType['email_subject'] ?? __('Test-E-Mail')
+        );
+
+        $subject = '[TEST] ' . $subject;
+
+        $emailBody = str_replace(
+            array_keys($sampleData),
+            array_values($sampleData),
+            $this->formType['email_body'] ?? ''
+        );
+
+        $htmlContent = view('cms::emails.form-confirmation', [
+            'emailBody' => $emailBody,
+        ])->render();
+
+        Mail::html($htmlContent, function ($message) use ($user, $subject) {
+            $message->to($user->email)
+                ->subject($subject);
+        });
+
+        $this->testEmailSending = false;
+
+        $this->js("alert('" . __('Test-E-Mail wurde an :email gesendet.', ['email' => $user->email]) . "')");
     }
 
     public function getSampleEmailData(): array
@@ -217,11 +288,24 @@ new class () extends Component {
         <x-slot:footer>
             <div class="flex items-center w-full gap-2">
                 @if($this->canShowPreview)
-                    <x-noerd::buttons.secondary
-                        wire:click="openPreview"
-                        class="mr-auto">
-                        {{ __('E-Mail-Vorschau') }}
-                    </x-noerd::buttons.secondary>
+                    <div class="flex gap-2 mr-auto">
+                        <x-noerd::buttons.secondary wire:click="openPreview">
+                            {{ __('E-Mail-Vorschau') }}
+                        </x-noerd::buttons.secondary>
+
+                        <x-noerd::buttons.secondary
+                            wire:click="sendTestEmail"
+                            wire:loading.attr="disabled"
+                            wire:target="sendTestEmail"
+                            :disabled="!$this->canSendTestEmail">
+                            <span wire:loading.remove wire:target="sendTestEmail">
+                                {{ __('Testemail senden') }}
+                            </span>
+                            <span wire:loading wire:target="sendTestEmail">
+                                {{ __('Wird gesendet...') }}
+                            </span>
+                        </x-noerd::buttons.secondary>
+                    </div>
                 @endif
 
                 <x-noerd::delete-save-bar :showDelete="false" class="ml-auto"/>
