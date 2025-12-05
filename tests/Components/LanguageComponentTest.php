@@ -1,8 +1,8 @@
 <?php
 
 use Livewire\Volt\Volt;
-use Noerd\Cms\Models\Language;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Noerd\Models\Language;
 
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
@@ -37,7 +37,7 @@ it('creates a new language and stores tenant_id', function () use ($testSettings
         ->call('store')
         ->assertOk();
 
-    $this->assertDatabaseHas('cms_languages', [
+    $this->assertDatabaseHas('languages', [
         'tenant_id' => $tenant->id,
         'code' => 'de',
         'name' => 'Deutsch',
@@ -68,13 +68,13 @@ it('ensures only one default language per tenant', function () use ($testSetting
         ->set('model.is_default', true)
         ->call('store');
 
-    $this->assertDatabaseHas('cms_languages', [
+    $this->assertDatabaseHas('languages', [
         'code' => 'en',
         'tenant_id' => $tenant->id,
         'is_default' => true,
     ]);
 
-    $this->assertDatabaseHas('cms_languages', [
+    $this->assertDatabaseHas('languages', [
         'code' => 'de',
         'tenant_id' => $tenant->id,
         'is_default' => false,
@@ -100,7 +100,7 @@ it('updates an existing language', function () use ($testSettings): void {
         ->call('store')
         ->assertOk();
 
-    $this->assertDatabaseHas('cms_languages', [
+    $this->assertDatabaseHas('languages', [
         'id' => $language->id,
         'name' => 'Französisch',
         'is_active' => false,
@@ -124,5 +124,5 @@ it('deletes a language', function () use ($testSettings): void {
         ->call('delete')
         ->assertDispatched('reloadTable-'.$testSettings['listName']);
 
-    $this->assertDatabaseMissing('cms_languages', ['id' => $language->id]);
+    $this->assertDatabaseMissing('languages', ['id' => $language->id]);
 });

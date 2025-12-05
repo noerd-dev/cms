@@ -9,12 +9,12 @@ use Livewire\WithFileUploads;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Collection;
-use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Cms\Models\ElementPage;
-use Noerd\Cms\Models\Language;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Services\MediaUploadService;
+use Noerd\Noerd\Models\Language;
 use Noerd\Noerd\Traits\Noerd;
 use Noerd\Website\Services\PageElementService;
 
@@ -565,7 +565,7 @@ new class () extends Component {
     </x-slot:header>
     <div x-data="{ viewMode: @entangle('viewMode').live }">
         <div x-show="viewMode === 'content'">
-            <x-noerd::tabs :layout="$pageLayout" />
+            <x-noerd::tabs :layout="$pageLayout"/>
         </div>
 
         <!-- Sort Field for Collections -->
@@ -623,7 +623,7 @@ new class () extends Component {
                 </div>
             </div>
         @endif
-        
+
         {{-- Preview und Elements nur für Tab 1 --}}
         <div x-show="currentTab === 1">
 
