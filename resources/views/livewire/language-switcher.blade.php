@@ -10,16 +10,12 @@ new class extends Component {
     public function mount(): void
     {
         $this->languages = Language::where('tenant_id', auth()->user()->selected_tenant_id)
-            ->where('is_active', true)
-            ->orderBy('sort_order')
             ->get(['code', 'name'])
             ->toArray();
 
         if (!session('selectedLanguage')) {
             $default = Language::where('tenant_id', auth()->user()->selected_tenant_id)
-                ->where('is_active', true)
                 ->where('is_default', true)
-                ->orderBy('sort_order')
                 ->first();
             if ($default) {
                 session(['selectedLanguage' => $default->code]);
