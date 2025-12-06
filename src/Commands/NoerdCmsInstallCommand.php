@@ -5,11 +5,13 @@ namespace Noerd\Cms\Commands;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Noerd\Noerd\Traits\RequiresNoerdInstallation;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
 class NoerdCmsInstallCommand extends Command
 {
+    use RequiresNoerdInstallation;
     protected $signature = 'noerd:install-cms {--force : Overwrite existing files without asking} {--without-website : Skip automatic website module installation}';
 
     protected $description = 'Install noerd cms content to the local content directory';
@@ -48,8 +50,8 @@ class NoerdCmsInstallCommand extends Command
             $results = $this->copyDirectoryContents($sourceDir, $targetDir);
 
             // Ensure lists are copied explicitly to content/lists
-            $listsSource = $sourceDir.DIRECTORY_SEPARATOR.'lists';
-            $listsTarget = $targetDir.DIRECTORY_SEPARATOR.'lists';
+            $listsSource = $sourceDir . DIRECTORY_SEPARATOR . 'lists';
+            $listsTarget = $targetDir . DIRECTORY_SEPARATOR . 'lists';
             if (is_dir($listsSource)) {
                 $listResults = $this->copyDirectoryContents($listsSource, $listsTarget);
                 $results = $this->mergeResults($results, $listResults);
@@ -67,7 +69,7 @@ class NoerdCmsInstallCommand extends Command
 
             return 0;
         } catch (Exception $e) {
-            $this->error('Error installing noerd content: '.$e->getMessage());
+            $this->error('Error installing noerd content: ' . $e->getMessage());
 
             return 1;
         }
@@ -93,7 +95,7 @@ class NoerdCmsInstallCommand extends Command
         foreach ($iterator as $item) {
             $sourcePath = $item->getPathname();
             $relativePath = mb_substr($sourcePath, mb_strlen($sourceDir) + 1);
-            $targetPath = $targetDir.DIRECTORY_SEPARATOR.$relativePath;
+            $targetPath = $targetDir . DIRECTORY_SEPARATOR . $relativePath;
 
             if ($item->isDir()) {
                 // Create directory if it doesn't exist
@@ -206,52 +208,7 @@ class NoerdCmsInstallCommand extends Command
 
             $this->line('<info>CMS module registered successfully.</info>');
         } catch (Exception $e) {
-            $this->warn('Module registration failed: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Check if noerd:install has been run, and run it if not
-     */
-    private function ensureNoerdInstalled(): bool
-    {
-        $configPath = base_path('config/app-modules.php');
-
-        // Check if app-modules.php exists and has Noerd namespace configured
-        $isInstalled = file_exists($configPath)
-            && str_contains(file_get_contents($configPath), "'modules_namespace' => 'Noerd'");
-
-        if ($isInstalled) {
-            $this->line('<comment>Noerd base package already installed.</comment>');
-
-            return true;
-        }
-
-        $this->line('');
-        $this->warn('Noerd base package has not been installed yet.');
-        $this->info('Running noerd:install first...');
-        $this->line('');
-
-        try {
-            // Pass the force option if it was provided
-            $options = $this->option('force') ? ['--force' => true] : [];
-            $exitCode = Artisan::call('noerd:install', $options, $this->output);
-
-            if ($exitCode === 0) {
-                $this->line('');
-                $this->info('Noerd base package installed successfully.');
-                $this->line('');
-
-                return true;
-            }
-
-            $this->error('Failed to install noerd base package.');
-
-            return false;
-        } catch (Exception $e) {
-            $this->error('Failed to run noerd:install: '.$e->getMessage());
-
-            return false;
+            $this->warn('Module registration failed: ' . $e->getMessage());
         }
     }
 
@@ -288,7 +245,7 @@ class NoerdCmsInstallCommand extends Command
                 $this->warn('Website module installation failed.');
             }
         } catch (Exception $e) {
-            $this->warn('Failed to install website module: '.$e->getMessage());
+            $this->warn('Failed to install website module: ' . $e->getMessage());
         }
     }
 }
