@@ -1,24 +1,22 @@
-# Noerd CMS Module
+# noerd/cms
 
-Install the package. Make sure you already initiated a git project and noerd is already installed.
+noerd Package is required
+```
+composer require noerd/noerd
+php artisan noerd:install
+```
+noerd/media is required
+```
+git submodule add git@github.com:noerd-dev/business-hours.git app-modules/media
+php artisan noerd:module media
+composer update noerd/media
+php artisan noerd:install-media
+```
+
+Install the package. Make sure you already initiated a git project.
 ```
 git submodule add git@github.com:noerd-dev/cms.git app-modules/cms
 php artisan noerd:module cms
 composer update noerd/cms
-```
-
-Install Command to copy files and configs
-```
 php artisan noerd:install-cms
-```
-
-Run database migrations
-```
-php artisan migrate
-```
-
-Compile the assets
-```
-npm install
-npm run build
 ```
