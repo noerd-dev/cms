@@ -1,0 +1,6 @@
+- title: CMS
+  navigations: [
+    { title: Seiten, route: cms.pages, icon: icons.document },
+    { title: 'Navigation', route: cms.navigation, icon: icons.list-bullet },
+    { title: 'Globale Parameter', route: cms.global-parameters, heroicon: globe-alt },
+  ]
