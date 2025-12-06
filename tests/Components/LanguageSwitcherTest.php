@@ -11,8 +11,8 @@ it('renders languages from database and sets default session', function (): void
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Language::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => true, 'sort_order' => 1]);
-    Language::create(['tenant_id' => $tenant->id, 'code' => 'en', 'name' => 'English', 'is_active' => true, 'is_default' => false, 'sort_order' => 2]);
+    Language::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_default' => true]);
+    Language::create(['tenant_id' => $tenant->id, 'code' => 'en', 'name' => 'English', 'is_default' => false]);
 
     $component = Volt::test('language-switcher');
 
@@ -24,8 +24,8 @@ it('changes session language on click', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Language::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => true, 'sort_order' => 1]);
-    Language::create(['tenant_id' => $tenant->id, 'code' => 'en', 'name' => 'English', 'is_active' => true, 'is_default' => false, 'sort_order' => 2]);
+    Language::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_default' => true]);
+    Language::create(['tenant_id' => $tenant->id, 'code' => 'en', 'name' => 'English', 'is_default' => false]);
 
     $component = Volt::test('language-switcher');
     $component->call('setLanguage', 'en');
@@ -36,7 +36,7 @@ it('does not render switcher if only one language exists', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Language::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => true, 'sort_order' => 1]);
+    Language::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_default' => true]);
 
     $html = Volt::test('language-switcher')->html();
     expect($html)->toBeString();
