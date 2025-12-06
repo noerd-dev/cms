@@ -15,7 +15,7 @@ return new class extends Migration
             // Insert CMS tenant app entry if it doesn't exist (auto-increment ID)
             DB::statement("
                 INSERT INTO `tenant_apps` (`title`, `name`, `icon`, `route`, `is_active`, `created_at`, `updated_at`) 
-                SELECT 'CMS', 'CMS', 'icons.planning', 'cms.pages', 1, NOW(), NOW()
+                SELECT 'CMS', 'CMS', 'cms::icons.app', 'cms.pages', 1, NOW(), NOW()
                 WHERE NOT EXISTS (
                     SELECT 1 FROM `tenant_apps` WHERE `name` = 'CMS'
                 )
