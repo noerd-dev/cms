@@ -31,9 +31,7 @@ it('creates a new language and stores tenant_id', function () use ($testSettings
     Volt::test($testSettings['componentName'])
         ->set('model.code', 'de')
         ->set('model.name', 'Deutsch')
-        ->set('model.is_active', true)
         ->set('model.is_default', true)
-        ->set('model.sort_order', 1)
         ->call('store')
         ->assertOk();
 
@@ -41,9 +39,7 @@ it('creates a new language and stores tenant_id', function () use ($testSettings
         'tenant_id' => $tenant->id,
         'code' => 'de',
         'name' => 'Deutsch',
-        'is_active' => true,
         'is_default' => true,
-        'sort_order' => 1,
     ]);
 });
 
@@ -56,7 +52,6 @@ it('ensures only one default language per tenant', function () use ($testSetting
     Volt::test($testSettings['componentName'])
         ->set('model.code', 'de')
         ->set('model.name', 'Deutsch')
-        ->set('model.is_active', true)
         ->set('model.is_default', true)
         ->call('store');
 
@@ -64,7 +59,6 @@ it('ensures only one default language per tenant', function () use ($testSetting
     Volt::test($testSettings['componentName'])
         ->set('model.code', 'en')
         ->set('model.name', 'English')
-        ->set('model.is_active', true)
         ->set('model.is_default', true)
         ->call('store');
 
@@ -89,21 +83,17 @@ it('updates an existing language', function () use ($testSettings): void {
         'tenant_id' => $tenant->id,
         'code' => 'fr',
         'name' => 'Français',
-        'is_active' => true,
         'is_default' => false,
-        'sort_order' => 3,
     ]);
 
     Volt::test($testSettings['componentName'], ['modelId' => $language->id])
         ->set('model.name', 'Französisch')
-        ->set('model.is_active', false)
         ->call('store')
         ->assertOk();
 
     $this->assertDatabaseHas('languages', [
         'id' => $language->id,
         'name' => 'Französisch',
-        'is_active' => false,
     ]);
 });
 
@@ -115,9 +105,7 @@ it('deletes a language', function () use ($testSettings): void {
         'tenant_id' => $tenant->id,
         'code' => 'it',
         'name' => 'Italiano',
-        'is_active' => true,
         'is_default' => false,
-        'sort_order' => 4,
     ]);
 
     Volt::test($testSettings['componentName'], ['modelId' => $language->id])
