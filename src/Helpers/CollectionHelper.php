@@ -14,7 +14,7 @@ class CollectionHelper
         }
 
         try {
-            $path = base_path('content/collections/'.$collection.'.yml');
+            $path = base_path('app-configs/cms/collections/'.$collection.'.yml');
             $content = file_get_contents($path);
         } catch (Exception $e) {
             return null;

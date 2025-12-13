@@ -42,7 +42,7 @@ new class () extends Component {
 
     public function deleteFile($fileName): void
     {
-        $filePath = base_path('content/collections/' . $fileName);
+        $filePath = base_path('app-configs/cms/collections/' . $fileName);
 
         if (File::exists($filePath)) {
             File::delete($filePath);
@@ -55,7 +55,7 @@ new class () extends Component {
 
     public function with(): array
     {
-        $collectionsPath = base_path('content/collections');
+        $collectionsPath = base_path('app-configs/cms/collections');
         $files = [];
 
         if (File::exists($collectionsPath)) {

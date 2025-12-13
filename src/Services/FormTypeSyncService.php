@@ -25,7 +25,7 @@ class FormTypeSyncService
         $this->errors = 0;
         $this->messages = [];
 
-        $formFilesPath = base_path('content/forms');
+        $formFilesPath = base_path('app-configs/cms/forms');
 
         if (! File::exists($formFilesPath)) {
             $this->messages[] = "Forms directory not found: {$formFilesPath}";
@@ -36,7 +36,7 @@ class FormTypeSyncService
         $ymlFiles = File::glob($formFilesPath . '/*.yml');
 
         if (empty($ymlFiles)) {
-            $this->messages[] = 'No YML files found in content/forms/';
+            $this->messages[] = 'No YML files found in app-configs/cms/forms/';
 
             return $this->getResults();
         }
