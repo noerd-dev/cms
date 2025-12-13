@@ -1,6 +1,6 @@
 # noerd/cms
 
-noerd Package is required
+The noerd package is required. Make sure the project is already initialized as a Git repository.
 ```
 composer require noerd/noerd
 php artisan noerd:install

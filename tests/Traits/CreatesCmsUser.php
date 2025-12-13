@@ -12,6 +12,8 @@ trait CreatesCmsUser
 {
     protected function createUserWithCmsAccess(): array
     {
+        session(['currentApp' => 'cms']);
+
         $tenant = Tenant::factory()->create();
 
         $cmsApp = TenantApp::firstOrCreate(
