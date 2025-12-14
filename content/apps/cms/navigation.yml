@@ -3,21 +3,11 @@
   hidden: true
   route: cms
   block_menus:
-    - title: Dashboard
-      route: cms.dashboard
-      icon: icons.home
-    - title: CMS
-      navigations: [
-        { title: Seiten, route: cms.pages, icon: icons.document },
-        { title: 'Navigation', route: cms.navigation, icon: icons.list-bullet },
-        { title: 'Globale Parameter', route: cms.global-parameters, heroicon: globe-alt },
-        { title: 'Formulartypen', route: cms.form-types, icon: icons.list-bullet },
-        { title: 'Form Requests', route: cms.form-requests, icon: icons.list-bullet },
-        { title: 'Collections', route: cms.collection-files, icon: icons.list-bullet } ,
-      ]
-    - title: Collections
+    - title: cms_nav_cms
+      navigations: [ { title: cms_nav_pages, route: cms.pages, icon: icons.document }, { title: cms_nav_navigation, route: cms.navigation, icon: icons.list-bullet }, { title: cms_nav_global_parameters, route: cms.global-parameters, heroicon: globe-alt }, { title: cms_nav_form_requests, route: cms.form-requests, icon: icons.list-bullet } ]
+    - title: cms_nav_collections
       dynamic: collections
-    - title: Settings
-      navigations: [
-        { title: Einstellungen, route: cms.settings, icon: icons.adjustments-horizontal }
-      ]
+    - title: cms_nav_settings
+      navigations:
+        - { title: noerd_nav_settings, route: cms.settings, icon: icons.adjustments-horizontal }
+        - { title: cms_nav_collections, route: cms.collections, icon: icons.adjustments-horizontal }

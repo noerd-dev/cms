@@ -19,6 +19,7 @@ class CmsServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'cms');
         $this->loadTranslationsFrom(__DIR__.'/../../resources/lang', 'cms');
+        $this->loadJsonTranslationsFrom(__DIR__.'/../../resources/lang');
         $this->loadRoutesFrom(__DIR__.'/../../routes/cms-routes.php');
         $this->loadRoutesFrom(__DIR__.'/../../routes/cms-api.php');
 
