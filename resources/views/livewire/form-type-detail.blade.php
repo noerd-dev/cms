@@ -134,7 +134,7 @@ new class () extends Component {
                                 {{ __('Hybrid-Konfiguration') }}
                             </p>
                             <p class="text-sm text-blue-700 mt-1">
-                                {{ __('Formularfelder werden über YML-Dateien verwaltet. E-Mail-Texte können hier direkt bearbeitet werden.') }}
+                                {{ __('cms_form_fields_managed_via_yml') }}
                             </p>
                         </div>
                     </div>
@@ -175,7 +175,7 @@ new class () extends Component {
                 {{-- Email Placeholders --}}
                 <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <h4 class="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                        {{ __('Verfügbare Platzhalter für E-Mail-Inhalt') }}
+                        {{ __('cms_available_placeholders') }}
                     </h4>
                     <div class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                         @foreach($this->emailPlaceholders as $placeholder => $description)
