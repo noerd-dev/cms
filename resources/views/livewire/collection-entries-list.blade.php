@@ -213,7 +213,7 @@ new class extends Component
         ])
     @else
         <div class="text-center py-8">
-            <p class="text-gray-500">Bitte wählen Sie eine Collection aus der Navigation.</p>
+            <p class="text-gray-500">{{ __('cms_please_select_collection') }}</p>
         </div>
     @endif
 </x-noerd::page>
