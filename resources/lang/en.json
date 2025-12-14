@@ -18,7 +18,25 @@
     "Linked Collections": "Linked Collections",
     "No collections linked to this page": "No collections linked to this page",
     "Remove collection from page?": "Remove collection from page?",
-    "Update Collections": "Update Collections"
+    "Update Collections": "Update Collections",
+
+    "cms_form_fields_managed_via_yml": "Form fields are managed via YML files. Email texts can be edited directly here.",
+    "cms_available_placeholders": "Available placeholders for email content",
+    "cms_form_confirmation": "Form Confirmation",
+    "cms_overview": "Overview",
+    "cms_please_select_collection": "Please select a collection from the navigation.",
+    "cms_size": "Size",
+    "cms_invalid_yaml_syntax": "Invalid YAML syntax. Please check the indentation and structure.",
+    "cms_filename_cannot_be_changed": "Filename cannot be changed for existing files.",
+    "cms_ensure_correct_yaml_syntax": "Ensure correct indentation and YAML syntax.",
+
+    "cms_nav_cms": "CMS",
+    "cms_nav_pages": "Pages",
+    "cms_nav_navigation": "Navigation",
+    "cms_nav_global_parameters": "Global Parameters",
+    "cms_nav_form_requests": "Form Requests",
+    "cms_nav_collections": "Collections",
+    "cms_nav_settings": "Settings"
 }
 
 
