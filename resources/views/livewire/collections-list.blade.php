@@ -104,13 +104,13 @@ new class () extends Component {
             'rows' => $paginated,
             'tableConfig' => [
                 'title' => 'Collections',
-                'newLabel' => 'Neue Collection',
+                'newLabel' => 'cms_new_collection',
                 'disableSearch' => false,
                 'columns' => [
                     ['field' => 'name', 'label' => 'Name', 'width' => 30],
-                    ['field' => 'file_name', 'label' => 'Dateiname', 'width' => 25],
+                    ['field' => 'file_name', 'label' => 'cms_filename', 'width' => 25],
                     ['field' => 'last_modified', 'label' => __('Last Modified'), 'width' => 20],
-                    ['field' => 'size', 'label' => 'Größe', 'width' => 15],
+                    ['field' => 'size', 'label' => 'cms_size', 'width' => 15],
                 ],
             ],
         ];
