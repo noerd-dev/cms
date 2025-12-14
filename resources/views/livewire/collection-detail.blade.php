@@ -40,7 +40,7 @@ new class extends Component {
         } else {
             $this->dispatch('noerd-notification', [
                 'type' => 'error',
-                'message' => 'Datei nicht gefunden.'
+                'message' => __('cms_file_not_found')
             ]);
             $this->closeModalProcess(self::LIST_COMPONENT);
         }
@@ -82,14 +82,14 @@ fields:
         if ($this->isNewFile || $fileName !== $this->originalFileName) {
             $filePath = base_path('app-configs/cms/collections/' . $fileName);
             if (File::exists($filePath)) {
-                $this->addError('fileName', 'Eine Datei mit diesem Namen existiert bereits.');
+                $this->addError('fileName', __('cms_file_already_exists'));
                 return;
             }
         }
 
         // Basic YAML syntax validation
         if (!$this->validateYamlSyntax($this->yamlContent)) {
-            $this->addError('yamlContent', 'Ungültige YAML-Syntax. Bitte überprüfen Sie die Einrückung und Struktur.');
+            $this->addError('yamlContent', __('cms_invalid_yaml_syntax'));
             return;
         }
 
@@ -177,7 +177,7 @@ fields:
 <x-noerd::page :disableModal="$disableModal">
     <x-slot:header>
         <x-noerd::modal-title>
-            {{ $isNewFile ? 'Neue Collection erstellen' : 'Collection bearbeiten: ' . $originalFileName }}
+            {{ $isNewFile ? __('cms_create_new_collection') : __('cms_edit_collection') . ': ' . $originalFileName }}
         </x-noerd::modal-title>
     </x-slot:header>
 
@@ -185,7 +185,7 @@ fields:
         <!-- Filename Input -->
         <div>
             <flux:field>
-                <flux:label>Dateiname</flux:label>
+                <flux:label>{{ __('cms_filename') }}</flux:label>
                 <flux:input
                     wire:model="fileName"
                     placeholder="collection-name"
@@ -193,7 +193,7 @@ fields:
                 />
                 <flux:error name="fileName" />
                 @if(!$isNewFile)
-                    <flux:description>Dateiname kann bei bestehenden Dateien nicht geändert werden.</flux:description>
+                    <flux:description>{{ __('cms_filename_cannot_be_changed') }}</flux:description>
                 @endif
             </flux:field>
         </div>
@@ -201,7 +201,7 @@ fields:
         <!-- YAML Editor -->
         <div>
             <flux:field>
-                <flux:label>YAML-Inhalt</flux:label>
+                <flux:label>{{ __('cms_yaml_content') }}</flux:label>
                 <flux:textarea
                     wire:model="yamlContent"
                     rows="20"
@@ -210,8 +210,8 @@ fields:
                 />
                 <flux:error name="yamlContent" />
                 <flux:description>
-                    Bearbeiten Sie hier den YAML-Inhalt der Collection.
-                    Achten Sie auf korrekte Einrückung und YAML-Syntax.
+                    {{ __('cms_edit_yaml_content') }}
+                    {{ __('cms_ensure_correct_yaml_syntax') }}
                 </flux:description>
             </flux:field>
         </div>
