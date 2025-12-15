@@ -9,6 +9,8 @@ use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
 use Noerd\Cms\Commands\NoerdCmsInstallCommand;
 use Noerd\Cms\Console\Commands\SyncFormTypesCommand;
 use Noerd\Cms\Middleware\CmsApiAuth;
+use Noerd\Cms\Models\CmsLanguage;
+use Noerd\Noerd\Models\Tenant;
 
 class CmsServiceProvider extends ServiceProvider
 {
@@ -49,5 +51,10 @@ class CmsServiceProvider extends ServiceProvider
                 SyncFormTypesCommand::class,
             ]);
         }
+
+        // Create default English language when a new tenant is created
+        Tenant::created(function (Tenant $tenant): void {
+            CmsLanguage::ensureDefaultLanguageForTenant($tenant->id);
+        });
     }
 }

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Auth;
 use Livewire\Volt\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
+use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Noerd\Helpers\StaticConfigHelper;
@@ -78,6 +79,11 @@ new class extends Component {
         if (request()->create) {
             $this->tableAction();
         }
+
+        $defaultLanguage = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
+            ->where('is_default', true)
+            ->first();
+        session(['selectedLanguage' => session('selectedLanguage') ?? $defaultLanguage->code]);
     }
 } ?>
 

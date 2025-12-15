@@ -85,7 +85,19 @@
     "cms_nav_global_parameters": "Globale Parameter",
     "cms_nav_form_requests": "Formularanfragen",
     "cms_nav_collections": "Collections",
-    "cms_nav_settings": "Einstellungen"
+    "cms_nav_settings": "Einstellungen",
+    "cms_nav_languages": "Sprachen",
+
+    "cms_label_languages": "Sprachen",
+    "cms_label_language": "Sprache",
+    "cms_label_new_language": "Neue Sprache",
+    "cms_label_code": "Code",
+    "cms_label_code_example": "Code (z. B. de, en)",
+    "cms_label_name": "Name",
+    "cms_label_is_active": "Aktiv",
+    "cms_label_is_default": "Standard",
+    "cms_label_sort_order": "Sortierung",
+    "cms_language_description": "Definiert eine verfügbare Sprache im System."
 }
 
 

@@ -1,16 +1,16 @@
 <?php
 
 use Livewire\Volt\Volt;
+use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
-use Noerd\Noerd\Models\Language;
 
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
 $testSettings = [
-    'componentName' => 'setup.language-detail',
-    'listName' => 'languages-list',
-    'id' => 'languageId',
+    'componentName' => 'cms-language-detail',
+    'listName' => 'cms-languages-list',
+    'id' => 'cmsLanguageId',
 ];
 
 it('validates the language data', function () use ($testSettings): void {
@@ -35,7 +35,7 @@ it('creates a new language and stores tenant_id', function () use ($testSettings
         ->call('store')
         ->assertOk();
 
-    $this->assertDatabaseHas('languages', [
+    $this->assertDatabaseHas('cms_languages', [
         'tenant_id' => $tenant->id,
         'code' => 'de',
         'name' => 'Deutsch',
@@ -48,28 +48,22 @@ it('ensures only one default language per tenant', function () use ($testSetting
 
     $this->actingAs($admin);
 
-    // First default language
+    // English is auto-created as default, create German as new default
     Volt::test($testSettings['componentName'])
         ->set('model.code', 'de')
         ->set('model.name', 'Deutsch')
         ->set('model.is_default', true)
         ->call('store');
 
-    // Second default language should unset default on first
-    Volt::test($testSettings['componentName'])
-        ->set('model.code', 'en')
-        ->set('model.name', 'English')
-        ->set('model.is_default', true)
-        ->call('store');
-
-    $this->assertDatabaseHas('languages', [
-        'code' => 'en',
+    // German should now be default, English should not
+    $this->assertDatabaseHas('cms_languages', [
+        'code' => 'de',
         'tenant_id' => $tenant->id,
         'is_default' => true,
     ]);
 
-    $this->assertDatabaseHas('languages', [
-        'code' => 'de',
+    $this->assertDatabaseHas('cms_languages', [
+        'code' => 'en',
         'tenant_id' => $tenant->id,
         'is_default' => false,
     ]);
@@ -79,7 +73,7 @@ it('updates an existing language', function () use ($testSettings): void {
     ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($admin);
 
-    $language = Language::create([
+    $language = CmsLanguage::create([
         'tenant_id' => $tenant->id,
         'code' => 'fr',
         'name' => 'Français',
@@ -91,7 +85,7 @@ it('updates an existing language', function () use ($testSettings): void {
         ->call('store')
         ->assertOk();
 
-    $this->assertDatabaseHas('languages', [
+    $this->assertDatabaseHas('cms_languages', [
         'id' => $language->id,
         'name' => 'Französisch',
     ]);
@@ -101,7 +95,7 @@ it('deletes a language', function () use ($testSettings): void {
     ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($admin);
 
-    $language = Language::create([
+    $language = CmsLanguage::create([
         'tenant_id' => $tenant->id,
         'code' => 'it',
         'name' => 'Italiano',
@@ -112,5 +106,5 @@ it('deletes a language', function () use ($testSettings): void {
         ->call('delete')
         ->assertDispatched('reloadTable-'.$testSettings['listName']);
 
-    $this->assertDatabaseMissing('languages', ['id' => $language->id]);
+    $this->assertDatabaseMissing('cms_languages', ['id' => $language->id]);
 });

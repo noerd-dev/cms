@@ -18,4 +18,5 @@ Route::prefix('cms')
         Volt::route('/form-types', 'form-types-list')->name('form-types');
 
         Volt::route('/settings', 'cms-settings-detail')->name('settings');
+        Volt::route('/languages', 'cms-languages-list')->name('languages');
     });

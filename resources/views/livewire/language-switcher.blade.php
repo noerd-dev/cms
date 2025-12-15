@@ -1,7 +1,7 @@
 <?php
 
 use Livewire\Volt\Component;
-use Noerd\Noerd\Models\Language;
+use Noerd\Cms\Models\CmsLanguage;
 
 new class extends Component {
 
@@ -9,12 +9,13 @@ new class extends Component {
 
     public function mount(): void
     {
-        $this->languages = Language::where('tenant_id', auth()->user()->selected_tenant_id)
+        $this->languages = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
+            ->where('is_active', true)
             ->get(['code', 'name'])
             ->toArray();
 
         if (!session('selectedLanguage')) {
-            $default = Language::where('tenant_id', auth()->user()->selected_tenant_id)
+            $default = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
                 ->where('is_default', true)
                 ->first();
             if ($default) {
@@ -31,7 +32,7 @@ new class extends Component {
 } ?>
 <div class="flex">
     @if(count($languages) > 1)
-        <div class="ml-auto mr-6 my-auto border-l border-gray-200 pl-4">
+        <div class="ml-auto mr-6 my-auto pl-4">
             <div class="ml-auto flex">
                 @foreach($languages as $language)
                     <a @class([
