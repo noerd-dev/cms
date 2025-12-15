@@ -11,3 +11,4 @@
       navigations:
         - { title: noerd_nav_settings, route: cms.settings, icon: icons.adjustments-horizontal }
         - { title: cms_nav_collections, route: cms.collections, icon: icons.adjustments-horizontal }
+        - { title: cms_nav_languages, route: cms.languages, heroicon: language }

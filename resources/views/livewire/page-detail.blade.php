@@ -14,7 +14,7 @@ use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Services\MediaUploadService;
-use Noerd\Noerd\Models\Language;
+use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Noerd\Traits\Noerd;
 use Noerd\Website\Services\PageElementService;
 
@@ -65,7 +65,7 @@ new class () extends Component {
         }
 
         $pageElementService = app(PageElementService::class);
-        $selectedLanguage = session('selectedLanguage', 'de');
+        $selectedLanguage = session('selectedLanguage') ?? $this->getDefaultLanguageCode();
 
         return $pageElementService->processPageElements($this->page, $selectedLanguage);
     }
@@ -80,7 +80,7 @@ new class () extends Component {
         try {
             // Get the base elements from database
             $pageElementService = app(PageElementService::class);
-            $selectedLanguage = session('selectedLanguage', 'de');
+            $selectedLanguage = session('selectedLanguage') ?? $this->getDefaultLanguageCode();
             $elements = $pageElementService->processPageElements($this->page, $selectedLanguage);
 
             // Merge with live element data from form inputs
@@ -194,13 +194,18 @@ new class () extends Component {
         }
 
         // Fix slug field if it's malformed or shows [object Object]
+        $activeLangCodes = $this->getActiveTenantLanguageCodes();
+        if (empty($activeLangCodes)) {
+            $activeLangCodes = [$this->getDefaultLanguageCode()];
+        }
+
         if (isset($this->model['slug'])) {
             // If slug is not an array or is malformed, reset it
             if (!is_array($this->model['slug']) || empty($this->model['slug'])) {
-                $this->model['slug'] = ['de' => '', 'en' => ''];
+                $this->model['slug'] = $this->initializeEmptySlugArray();
             } else {
-                // Ensure each language has a string value
-                foreach (['de', 'en'] as $lang) {
+                // Ensure each active language has a string value
+                foreach ($activeLangCodes as $lang) {
                     if (!isset($this->model['slug'][$lang]) || !is_string($this->model['slug'][$lang])) {
                         $this->model['slug'][$lang] = '';
                     }
@@ -208,7 +213,7 @@ new class () extends Component {
             }
         } else {
             // Initialize empty slug array if not exists
-            $this->model['slug'] = ['de' => '', 'en' => ''];
+            $this->model['slug'] = $this->initializeEmptySlugArray();
         }
 
         $this->lastChangeTime = time();
@@ -218,11 +223,29 @@ new class () extends Component {
 
     public function getDefaultLanguageCode(): string
     {
-        $defaultLanguage = Language::where('tenant_id', auth()->user()->selected_tenant_id)
+        $defaultLanguage = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
             ->where('is_default', true)
             ->first();
 
-        return $defaultLanguage ? $defaultLanguage->code : 'de';
+        return $defaultLanguage?->code ?? 'en';
+    }
+
+    public function getActiveTenantLanguageCodes(): array
+    {
+        return CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
+            ->where('is_active', true)
+            ->orderBy('is_default', 'desc')
+            ->pluck('code')
+            ->toArray();
+    }
+
+    private function initializeEmptySlugArray(): array
+    {
+        $languages = $this->getActiveTenantLanguageCodes();
+        if (empty($languages)) {
+            $languages = [$this->getDefaultLanguageCode()];
+        }
+        return array_fill_keys($languages, '');
     }
 
     public function generateSlug(string $name, ?string $languageCode = null): string
@@ -265,7 +288,7 @@ new class () extends Component {
         if (!empty($value)) {
             // Ensure slug array exists
             if (!isset($this->model['slug']) || !is_array($this->model['slug'])) {
-                $this->model['slug'] = ['de' => '', 'en' => ''];
+                $this->model['slug'] = $this->initializeEmptySlugArray();
             }
 
             // Only generate slug if this specific language doesn't have a slug yet
@@ -501,10 +524,11 @@ new class () extends Component {
                 }
             }
 
-            // Fallback if no names provided
+            // Fallback if no names provided - use tenant's default language
             if (empty($nameData)) {
-                $nameData['de'] = 'Collection Page';
-                $slugData['de'] = '/collection-page';
+                $defaultLang = $this->getDefaultLanguageCode();
+                $nameData[$defaultLang] = 'Collection Page';
+                $slugData[$defaultLang] = '/collection-page';
             }
 
             $pageData['name'] = $nameData;
@@ -541,9 +565,13 @@ new class () extends Component {
     <x-slot:header>
         <x-noerd::modal-title class="flex items-center">
             {{ __('Page') }}
-            @if($this->hasPageFeatures)
-                <div class="ml-auto" :class="isModal ? 'mr-10' : ''">
-                    <div class="flex  bg-white p-1 rounded-lg w-fit border border-gray-200">
+
+            <div class="ml-auto" :class="isModal ? 'mr-10' : ''">
+                <div class="flex  bg-white p-1 rounded-lg w-fit border border-gray-200">
+                    @if($this->hasPageFeatures)
+                    <div class="flex border-r pr-1 border-gray-200 ">
+
+
                         <button
                             wire:click="setViewMode('content')"
                             class="px-4 mx-0.5 py-2 rounded-md text-sm font-medium transition-colors {{ $viewMode === 'content' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}"
@@ -556,11 +584,12 @@ new class () extends Component {
                         >
                             {{ __('Preview') }}
                         </button>
-
-                        <livewire:language-switcher/>
                     </div>
+                    @endif
+                    <livewire:language-switcher/>
                 </div>
-            @endif
+            </div>
+
         </x-noerd::modal-title>
     </x-slot:header>
     <div x-data="{ viewMode: @entangle('viewMode').live }">

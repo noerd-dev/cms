@@ -1,0 +1,10 @@
+title: cms_label_languages
+newLabel: cms_label_new_language
+component: cms-language-detail
+disableSearch: false
+columns:
+  - { field: code, label: cms_label_code, width: 10 }
+  - { field: name, label: cms_label_name, width: 25 }
+  - { field: is_active, label: cms_label_is_active, width: 10, type: boolean }
+  - { field: is_default, label: cms_label_is_default, width: 10, type: boolean }
+  - { field: sort_order, label: cms_label_sort_order, width: 10 }
