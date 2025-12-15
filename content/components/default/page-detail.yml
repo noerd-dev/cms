@@ -9,8 +9,9 @@ fields:
     title: 'Seiteninfos'
     tab: 1
     fields:
-      - { name: model.name, label: Titel, type: translatableText, colspan: 6 }
-      - { name: model.slug, label: URL, type: translatableText, colspan: 6 }
+      - { name: model.name, label: Title, type: translatableText, colspan: 5 }
+      - { name: model.slug, label: URL, type: translatableText, colspan: 5 }
+      - { name: model.is_active, label: cms_label_is_active, type: checkbox, colspan: 2 }
   - type: block
     title: 'Layout Einstellungen'
     tab: 1
