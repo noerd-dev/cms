@@ -1,19 +1,40 @@
 <?php
 
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Noerd\Helpers\StaticConfigHelper;
 use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component {
 
     use Noerd;
+    use LanguageFilterTrait;
 
     public const COMPONENT = 'pages-list';
+
+    protected const ALLOWED_TABLE_FILTERS = ['language'];
+
+    #[Computed]
+    public function tableFilters(): array
+    {
+        return [$this->getLanguageFilter()];
+    }
+
+    public function storeActiveTableFilters(): void
+    {
+        session(['activeTableFilters' => $this->activeTableFilters]);
+
+        // Sync with selectedLanguage for page-detail consistency
+        if (!empty($this->activeTableFilters['language'])) {
+            session(['selectedLanguage' => $this->activeTableFilters['language']]);
+        }
+    }
 
     public function tableAction(mixed $modelId = null, mixed $relationId = null): void
     {
@@ -53,12 +74,16 @@ new class extends Component {
             ->paginate(self::PAGINATION);
 
         // Parse JSON attributes to show only current language values
+        $selectedLanguage = $this->activeTableFilters['language']
+            ?? session('selectedLanguage')
+            ?? $this->getDefaultLanguageCode();
+
         foreach ($rows->items() as $row) {
             if (is_array($row->name)) {
-                $row->name = $row->name[session('selectedLanguage')] ?? array_values($row->name)[0] ?? '';
+                $row->name = $row->name[$selectedLanguage] ?? array_values($row->name)[0] ?? '';
             }
             if (is_array($row->slug)) {
-                $row->slug = $row->slug[session('selectedLanguage')] ?? array_values($row->slug)[0] ?? '';
+                $row->slug = $row->slug[$selectedLanguage] ?? array_values($row->slug)[0] ?? '';
             }
         }
 
@@ -72,6 +97,21 @@ new class extends Component {
 
     public function rendering()
     {
+        $this->loadActiveTableFilters();
+
+        // Sync selectedLanguage with activeTableFilters
+        $selectedLanguage = session('selectedLanguage');
+        if ($selectedLanguage && empty($this->activeTableFilters['language'])) {
+            $this->activeTableFilters['language'] = $selectedLanguage;
+        }
+
+        // Set default language if nothing is set
+        if (empty($this->activeTableFilters['language']) && empty(session('selectedLanguage'))) {
+            $defaultCode = $this->getDefaultLanguageCode();
+            $this->activeTableFilters['language'] = $defaultCode;
+            session(['selectedLanguage' => $defaultCode]);
+        }
+
         if ((int)request()->pageId) {
             $this->tableAction(request()->pageId);
         }
@@ -79,11 +119,15 @@ new class extends Component {
         if (request()->create) {
             $this->tableAction();
         }
+    }
 
+    private function getDefaultLanguageCode(): string
+    {
         $defaultLanguage = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
             ->where('is_default', true)
             ->first();
-        session(['selectedLanguage' => session('selectedLanguage') ?? $defaultLanguage->code]);
+
+        return $defaultLanguage?->code ?? 'en';
     }
 } ?>
 
