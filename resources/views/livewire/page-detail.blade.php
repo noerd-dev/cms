@@ -538,7 +538,7 @@ new class () extends Component {
             // For collections with hasPage: false, use minimal page data
             $pageData['name'] = null;
             $pageData['slug'] = null;
-            $pageData['is_active'] = false; // Use false instead of null for collections
+            $pageData['is_active'] = true; // Collection pages without page features are always active
         }
 
         $page = Page::updateOrCreate(['id' => $this->modelId], $pageData);
