@@ -12,7 +12,11 @@ new class extends Component {
         $hash = $tenant?->hash ?? null;
 
         if ($user && $user->can('canCms') && ! empty($hash)) {
-            $this->websiteUrl = url('/index?hash=' . $hash);
+            $configuredUrl = config('noerd_cms.website_url');
+
+            $this->websiteUrl = ! empty($configuredUrl)
+                ? $configuredUrl
+                : url('/index?hash=' . $hash);
         }
     }
 } ?>
