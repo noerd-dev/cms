@@ -1,5 +1,5 @@
-title: 'Seiten'
-newLabel: 'Neue Seite'
+title: cms_pages
+newLabel: cms_new_page
 component: page-detail
 disableSearch: false
 redirectAction: ''

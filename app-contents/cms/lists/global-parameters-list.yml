@@ -1,0 +1,8 @@
+title: noerd_global_parameters
+newLabel: noerd_new_parameter
+component: global-parameter-component
+disableSearch: false
+redirectAction: ''
+columns:
+  - { field: 'key', label: noerd_key, width: 30 }
+  - { field: 'value', label: Value, width: 50 }

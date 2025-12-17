@@ -1,0 +1,5 @@
+title: noerd_global_parameter
+description: noerd_global_parameter_description
+fields:
+  - { name: model.key, label: noerd_key, type: text, colspan: 6 }
+  - { name: model.value, label: Value, type: translatableText, colspan: 6 }

@@ -1,0 +1,38 @@
+key: newsletter
+title: 'Newsletter-Anmeldung'
+description: 'Formular für Newsletter-Abonnements'
+is_active: true
+sort_order: 20
+
+# Email configuration
+send_email: true
+email_subject: 'Newsletter-Anmeldung: {{field:email}}'
+email_body: |
+  <h2>Neue Newsletter-Anmeldung</h2>
+  <p><strong>E-Mail:</strong> {{field:email}}</p>
+  <p><strong>Name:</strong> {{field:name}}</p>
+  <hr>
+  <p><small>Angemeldet am {{submission_date}}</small></p>
+notification_email: 'newsletter@example.com'
+
+# Form fields configuration
+fields:
+  - name: email
+    label: 'E-Mail-Adresse'
+    type: email
+    required: true
+    validation: [required, email, max:255]
+    error_messages:
+      required: 'Bitte geben Sie Ihre E-Mail-Adresse ein.'
+      email: 'Bitte geben Sie eine gültige E-Mail-Adresse ein.'
+    placeholder: 'ihre@email.de'
+
+  - name: name
+    label: 'Name (optional)'
+    type: text
+    required: false
+    validation: [nullable, string, max:255]
+    placeholder: 'Ihr Name'
+
+success_message: 'Vielen Dank! Sie haben sich erfolgreich für unseren Newsletter angemeldet.'
+submit_button_text: 'Jetzt anmelden'

@@ -1,26 +1,26 @@
 title: ''
 description: ''
 tabs:
-  - { number: 1, label: 'Allgemein' }
-  - { number: 2, label: 'Metadaten' }
+  - { number: 1, label: noerd_general }
+  - { number: 2, label: cms_metadata }
 fields:
-  # Tab 1: Allgemein
+  # Tab 1: General
   - type: block
-    title: 'Seiteninfos'
+    title: cms_page_info
     tab: 1
     fields:
       - { name: model.name, label: Title, type: translatableText, colspan: 5 }
       - { name: model.slug, label: URL, type: translatableText, colspan: 5 }
       - { name: model.is_active, label: cms_label_is_active, type: checkbox, colspan: 2 }
   - type: block
-    title: 'Layout Einstellungen'
+    title: noerd_layout_settings
     tab: 1
     fields:
       - { name: model.layout, label: Layout, type: picklist, picklistField: layoutOptions, colspan: 12 }
-  # Tab 2: Metadaten
+  # Tab 2: Metadata
   - type: block
-    title: 'SEO Metadaten'
+    title: cms_seo_metadata
     tab: 2
     fields:
-      - { name: model.meta_title, label: 'Meta Titel', type: translatableText, colspan: 6 }
-      - { name: model.meta_description, label: 'Meta Beschreibung', type: translatableText, colspan: 6 }
+      - { name: model.meta_title, label: cms_meta_title, type: translatableText, colspan: 6 }
+      - { name: model.meta_description, label: cms_meta_description, type: translatableText, colspan: 6 }

@@ -62,17 +62,20 @@ class NoerdCmsInstallCommand extends Command
 
     protected function getSourceDir(): string
     {
-        return base_path('vendor/noerd/cms/content');
-    }
-
-    protected function getNavigationSourceFolder(): string
-    {
-        return 'cms';
+        return base_path('app-modules/cms/app-contents/cms');
     }
 
     protected function getSnippetTitle(): string
     {
         return 'CMS';
+    }
+
+    /**
+     * @return array<string>
+     */
+    protected function getAdditionalSubdirectories(): array
+    {
+        return ['collections', 'forms'];
     }
 
     /**
