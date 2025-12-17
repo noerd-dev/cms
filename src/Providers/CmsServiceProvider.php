@@ -18,17 +18,20 @@ class CmsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
-        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'cms');
-        $this->loadTranslationsFrom(__DIR__.'/../../resources/lang', 'cms');
-        $this->loadJsonTranslationsFrom(__DIR__.'/../../resources/lang');
-        $this->loadRoutesFrom(__DIR__.'/../../routes/cms-routes.php');
-        $this->loadRoutesFrom(__DIR__.'/../../routes/cms-api.php');
+        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cms');
+        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'cms');
+        $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
+        $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-routes.php');
+        $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-api.php');
+
+        // Merge configuration
+        $this->mergeConfigFrom(__DIR__ . '/../../config/noerd_cms.php', 'noerd_cms');
 
         $router = $this->app['router'];
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
 
-        Volt::mount(__DIR__.'/../../resources/views/livewire');
+        Volt::mount(__DIR__ . '/../../resources/views/livewire');
 
         // Register gate for CMS access
         Gate::define('canCms', function ($user) {

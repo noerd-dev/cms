@@ -22,6 +22,9 @@ class NoerdCmsInstallCommand extends Command
         $result = $this->runModuleInstallation();
 
         if ($result === 0) {
+            // Publish config file
+            $this->publishConfig();
+
             // Register the CMS module
             $this->registerModule();
 
@@ -70,6 +73,26 @@ class NoerdCmsInstallCommand extends Command
     protected function getSnippetTitle(): string
     {
         return 'CMS';
+    }
+
+    /**
+     * Publish the CMS config file to the project's config directory.
+     */
+    private function publishConfig(): void
+    {
+        $source = __DIR__ . '/../../config/noerd_cms.php';
+        $destination = config_path('noerd_cms.php');
+
+        if (file_exists($destination) && ! $this->option('force')) {
+            if (! $this->confirm('Config file config/noerd_cms.php already exists. Overwrite?', false)) {
+                $this->line('<comment>Skipped publishing config file.</comment>');
+
+                return;
+            }
+        }
+
+        copy($source, $destination);
+        $this->line('<info>Published config file:</info> config/noerd_cms.php');
     }
 
     /**
