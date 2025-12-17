@@ -1,19 +1,19 @@
-title: 'Formulartyp'
-description: 'E-Mail-Konfiguration für Formulartypen'
+title: cms_form_type
+description: cms_form_type_description
 cols: 6
 fields:
   -
     name: formType.send_email
-    label: E-Mail-Benachrichtigung senden
+    label: cms_send_email_notification
     type: checkbox
     colspan: 6
   -
     name: formType.email_subject
-    label: E-Mail-Betreff
+    label: cms_email_subject
     type: text
     colspan: 6
   -
     name: formType.notification_email
-    label: Benachrichtigungs-E-Mail (optional)
+    label: cms_notification_email
     type: text
     colspan: 6

@@ -1,0 +1,9 @@
+title: media_title
+newLabel: media_new_file
+component: media-detail
+disableSearch: false
+redirectAction: ''
+columns:
+  - { field: 'filename', label: Filename, width: 30 }
+  - { field: 'type', label: Type, width: 15 }
+  - { field: 'size', label: Size, width: 10 }
