@@ -6,6 +6,13 @@ use Noerd\Cms\Models\CmsLanguage;
 
 trait LanguageFilterTrait
 {
+    protected function hasMultipleLanguages(): bool
+    {
+        return CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
+            ->where('is_active', true)
+            ->count() > 1;
+    }
+
     protected function getLanguageFilter(): array
     {
         $filter['label'] = __('cms_label_language');

@@ -1,20 +1,45 @@
 <?php
 
+use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
+use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component
 {
+    use LanguageFilterTrait;
     use Noerd;
 
     public const COMPONENT = 'collection-entries-list';
 
+    protected const ALLOWED_TABLE_FILTERS = ['language'];
+
     public string|int|null $collectionKey = null;
 
     public ?array $collectionLayout = null;
+
+    #[Computed]
+    public function tableFilters(): array
+    {
+        if (! $this->hasMultipleLanguages()) {
+            return [];
+        }
+
+        return [$this->getLanguageFilter()];
+    }
+
+    public function storeActiveTableFilters(): void
+    {
+        session(['activeTableFilters' => $this->activeTableFilters]);
+
+        if (! empty($this->activeTableFilters['language'])) {
+            session(['selectedLanguage' => $this->activeTableFilters['language']]);
+        }
+    }
 
     /**
      * Resolve collection key from ID or string
@@ -122,8 +147,12 @@ new class extends Component
 
         $rows = $query->paginate(self::PAGINATION);
 
+        $selectedLanguage = $this->activeTableFilters['language']
+            ?? session('selectedLanguage')
+            ?? $this->getDefaultLanguageCode();
+
         // Transform data for display
-        $rows->getCollection()->transform(function ($page) {
+        $rows->getCollection()->transform(function ($page) use ($selectedLanguage) {
             $data = is_array($page->data) ? $page->data : [];
             $transformedData = [
                 'id' => $page->id,
@@ -143,7 +172,7 @@ new class extends Component
 
                         // Handle translatable fields
                         if (is_array($fieldData)) {
-                            $value = $fieldData['de'] ?? $fieldData['en'] ?? '';
+                            $value = $fieldData[$selectedLanguage] ?? array_values($fieldData)[0] ?? '';
                         } else {
                             $value = $fieldData;
                         }
@@ -201,6 +230,31 @@ new class extends Component
                 'columns' => $columns,
             ],
         ];
+    }
+
+    public function rendering(): void
+    {
+        $this->loadActiveTableFilters();
+
+        $selectedLanguage = session('selectedLanguage');
+        if ($selectedLanguage && empty($this->activeTableFilters['language'])) {
+            $this->activeTableFilters['language'] = $selectedLanguage;
+        }
+
+        if (empty($this->activeTableFilters['language']) && empty(session('selectedLanguage'))) {
+            $defaultCode = $this->getDefaultLanguageCode();
+            $this->activeTableFilters['language'] = $defaultCode;
+            session(['selectedLanguage' => $defaultCode]);
+        }
+    }
+
+    private function getDefaultLanguageCode(): string
+    {
+        $defaultLanguage = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
+            ->where('is_default', true)
+            ->first();
+
+        return $defaultLanguage?->code ?? 'de';
     }
 } ?>
 
