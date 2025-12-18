@@ -19,7 +19,7 @@ class InstallWebsiteBoilerplateCommand extends Command
     {
         $this->info('Installing website boilerplate...');
 
-        $sourceDir = base_path('app-modules/cms/website-boilerplate');
+        $sourceDir = dirname(__DIR__, 2) . '/website-boilerplate';
         $targetDir = base_path('app-modules/website');
 
         if (! is_dir($sourceDir)) {

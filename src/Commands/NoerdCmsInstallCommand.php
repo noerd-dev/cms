@@ -62,7 +62,7 @@ class NoerdCmsInstallCommand extends Command
 
     protected function getSourceDir(): string
     {
-        return base_path('app-modules/cms/app-contents/cms');
+        return dirname(__DIR__, 2) . '/app-contents/cms';
     }
 
     protected function getSnippetTitle(): string
