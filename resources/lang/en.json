@@ -65,7 +65,17 @@
     "cms_synced": "Synced",
     "cms_new_navigation_point": "New Navigation Point",
     "cms_navigation_point": "Navigation Point",
-    "cms_label_active": "Active?"
+    "cms_label_active": "Active?",
+    "cms_to_website": "To Website",
+    "cms_global_parameter": "Global Parameter",
+    "cms_cookie_banner": "Cookie Banner",
+    "cms_show_cookie_banner": "Show Cookie Banner",
+    "cms_cookie_banner_required": "Required to use Analytics",
+    "cms_google_analytics": "Google Analytics",
+    "cms_google_analytics_placeholder": "e.g. G-XXXXXXXXXX",
+    "cms_google_analytics_hint": "Google Analytics Measurement ID (e.g. G-XXXXXXXXXX)",
+    "cms_saved": "Saved",
+    "cms_settings_saved": "The settings have been saved."
 }
 
 

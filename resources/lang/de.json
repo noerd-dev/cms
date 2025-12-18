@@ -103,7 +103,17 @@
     "cms_synced": "Synchronisiert",
     "cms_new_navigation_point": "Neuer Navigationspunkt",
     "cms_navigation_point": "Navigationspunkt",
-    "cms_label_active": "Aktiv?"
+    "cms_label_active": "Aktiv?",
+    "cms_to_website": "Zur Webseite",
+    "cms_global_parameter": "Globaler Parameter",
+    "cms_cookie_banner": "Cookie Banner",
+    "cms_show_cookie_banner": "Cookie-Banner anzeigen",
+    "cms_cookie_banner_required": "Notwendig, um Analytics zu verwenden",
+    "cms_google_analytics": "Google Analytics",
+    "cms_google_analytics_placeholder": "z.B. G-XXXXXXXXXX",
+    "cms_google_analytics_hint": "Google Analytics Mess-ID (z.B. G-XXXXXXXXXX)",
+    "cms_saved": "Gespeichert",
+    "cms_settings_saved": "Die Einstellungen wurden gespeichert."
 }
 
 
