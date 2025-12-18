@@ -59,7 +59,13 @@
     "cms_label_is_active": "Active",
     "cms_label_is_default": "Default",
     "cms_label_sort_order": "Sort Order",
-    "cms_language_description": "Defines an available language in the system."
+    "cms_language_description": "Defines an available language in the system.",
+
+    "cms_form_types": "Form Types",
+    "cms_synced": "Synced",
+    "cms_new_navigation_point": "New Navigation Point",
+    "cms_navigation_point": "Navigation Point",
+    "cms_label_active": "Active?"
 }
 
 
