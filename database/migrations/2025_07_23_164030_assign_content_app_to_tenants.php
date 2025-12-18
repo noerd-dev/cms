@@ -19,7 +19,7 @@ return new class extends Migration
             $cmsAppId = DB::table('tenant_apps')->insertGetId([
                 'title' => 'CMS',
                 'name' => 'CMS',
-                'icon' => 'icons.planning',
+                'icon' => 'cms::icons.app',
                 'route' => 'cms.pages',
                 'is_active' => true,
                 'created_at' => now(),

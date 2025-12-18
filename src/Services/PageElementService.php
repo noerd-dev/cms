@@ -1,6 +1,6 @@
 <?php
 
-namespace Noerd\Website\Services;
+namespace Noerd\Cms\Services;
 
 use Noerd\Cms\Traits\HandlesPageElements;
 

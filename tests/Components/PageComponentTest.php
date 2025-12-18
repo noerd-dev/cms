@@ -158,7 +158,7 @@ it('shows a preview error when element component is missing', function () use ($
 
     Volt::test($testSettings['componentName'], ['modelId' => $page->id])
         ->set('viewMode', 'preview')
-        ->assertSee('Element-Komponente nicht gefunden:')
+        ->assertSee(__('Element component not found:'))
         ->assertSee('Please create both the .yml and .blade.php files in the elements folder.')
         ->assertSee('____missing____');
 });

@@ -20,7 +20,7 @@ it('loads and displays page options with localized names and saves selection', f
         'name' => 'CMS',
         'title' => 'CMS',
         'is_active' => true,
-        'icon' => 'cms',
+        'icon' => 'cms::icons.app',
         'route' => 'cms.index',
     ]);
     $tenant->tenantApps()->attach($cmsApp->id);

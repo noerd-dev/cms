@@ -115,13 +115,13 @@ it('resolves collection key correctly when passed as string', function (): void 
 it('handles null collection key gracefully', function (): void {
     Volt::test('collection-entries-list', ['collectionKey' => null])
         ->assertSet('collectionKey', null)
-        ->assertSee('Bitte wählen Sie eine Collection aus der Navigation.')
+        ->assertSee(__('cms_please_select_collection'))
         ->assertStatus(200);
 });
 
 it('handles non-existent collection ID gracefully', function (): void {
     Volt::test('collection-entries-list', ['collectionKey' => 999999])
         ->assertSet('collectionKey', null)
-        ->assertSee('Bitte wählen Sie eine Collection aus der Navigation.')
+        ->assertSee(__('cms_please_select_collection'))
         ->assertStatus(200);
 });

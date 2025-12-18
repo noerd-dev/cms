@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Noerd\Cms\Tests\Traits;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Noerd\Models\Tenant;
 use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
 
 trait CreatesCmsUser
 {
+    use RefreshDatabase;
     protected function createUserWithCmsAccess(): array
     {
         $tenant = Tenant::factory()->create();
@@ -18,7 +20,7 @@ trait CreatesCmsUser
             ['name' => 'CMS'],
             [
                 'title' => 'CMS',
-                'icon' => 'cms',
+                'icon' => 'cms::icons.app',
                 'route' => 'cms.index',
                 'is_active' => true,
             ],

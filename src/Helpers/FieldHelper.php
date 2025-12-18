@@ -19,15 +19,6 @@ class FieldHelper
             return Yaml::parse($content ?: '');
         }
 
-        // New primary location under content
-        if (file_exists(base_path('content/elements/'.$element.'.yml'))) {
-            $content = file_get_contents(base_path('content/elements/'.$element.'.yml'));
-
-            return Yaml::parse($content ?: '');
-        }
-
-        // No longer support storage/environment fallback
-
         return null;
     }
 
