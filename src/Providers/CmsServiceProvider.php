@@ -14,7 +14,16 @@ use Noerd\Noerd\Models\Tenant;
 
 class CmsServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        // Register CMS PageElementService as fallback for Website namespace
+        if (! $this->app->bound(\Noerd\Website\Services\PageElementService::class)) {
+            $this->app->singleton(
+                \Noerd\Website\Services\PageElementService::class,
+                fn () => new \Noerd\Cms\Services\PageElementService
+            );
+        }
+    }
 
     public function boot(): void
     {

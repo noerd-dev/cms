@@ -21,7 +21,7 @@ describe('FieldTypeConverter', function (): void {
         $cmsApp = TenantApp::create([
             'name' => 'CMS_'.uniqid().'_'.getmypid(),
             'title' => 'CMS',
-            'icon' => 'cms',
+            'icon' => 'cms::icons.app',
             'route' => 'cms.index',
             'is_active' => true,
         ]);

@@ -26,7 +26,7 @@ uses(TestCase::class, RefreshDatabase::class)
             ['name' => 'CMS'],
             [
                 'title' => 'CMS',
-                'icon' => 'cms',
+                'icon' => 'cms::icons.app',
                 'route' => 'cms.index',
                 'is_active' => true,
             ]
