@@ -9,14 +9,14 @@ new class extends Component {
     {
         $user = auth()->user();
         $tenant = $user?->selectedTenant();
-        $hash = $tenant?->hash ?? null;
+        $uuid = $tenant?->uuid ?? null;
 
-        if ($user && $user->can('canCms') && ! empty($hash)) {
+        if ($user && $user->can('canCms') && ! empty($uuid)) {
             $configuredUrl = config('noerd_cms.website_url');
 
             $this->websiteUrl = ! empty($configuredUrl)
                 ? $configuredUrl
-                : url('/index?hash=' . $hash);
+                : url('/index?uuid=' . $uuid);
         }
     }
 } ?>
