@@ -2,13 +2,16 @@
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Noerd\Models\Tenant;
+use Noerd\Noerd\Models\User;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
-it('stores a form request via API using tenant api token', function (): void {
-    // Arrange: create a tenant with api token
-    $tenant = Tenant::factory()->create([
+it('stores a form request via API using user api token', function (): void {
+    // Arrange: create a tenant and a user with api token
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
         'api_token' => 'test_token_123',
+        'selected_tenant_id' => $tenant->id,
     ]);
 
     $payload = [

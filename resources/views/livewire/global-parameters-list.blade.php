@@ -66,9 +66,9 @@ new class extends Component
         foreach ($rows as $row) {
             $oldName = $row->value;
             $row->value = json_decode($row->value, true);
-            $row->value = $row->value[$selectedLanguage] ?? array_values($row->value)[0] ?? $row->value;
-
-            if (strlen($row->value) == 0) {
+            if (is_array($row->value)) {
+                $row->value = $row->value[$selectedLanguage] ?? array_values($row->value)[0] ?? $oldName;
+            } else {
                 $row->value = $oldName;
             }
         }
