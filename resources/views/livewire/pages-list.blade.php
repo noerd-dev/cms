@@ -11,10 +11,10 @@ use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Noerd\Helpers\StaticConfigHelper;
 use Noerd\Noerd\Traits\Noerd;
 
-new class extends Component {
-
-    use Noerd;
+new class extends Component
+{
     use LanguageFilterTrait;
+    use Noerd;
 
     public const COMPONENT = 'pages-list';
 
@@ -23,6 +23,10 @@ new class extends Component {
     #[Computed]
     public function tableFilters(): array
     {
+        if (! $this->hasMultipleLanguages()) {
+            return [];
+        }
+
         return [$this->getLanguageFilter()];
     }
 
@@ -31,7 +35,7 @@ new class extends Component {
         session(['activeTableFilters' => $this->activeTableFilters]);
 
         // Sync with selectedLanguage for page-detail consistency
-        if (!empty($this->activeTableFilters['language'])) {
+        if (! empty($this->activeTableFilters['language'])) {
             session(['selectedLanguage' => $this->activeTableFilters['language']]);
         }
     }
@@ -53,7 +57,8 @@ new class extends Component {
             ->get()
             ->filter(function ($collection) {
                 $collectionFields = CollectionHelper::getCollectionFields(strtolower($collection->collection_key));
-                return !($collectionFields['hasPage'] ?? true);
+
+                return ! ($collectionFields['hasPage'] ?? true);
             })
             ->pluck('id')
             ->toArray();
@@ -68,7 +73,7 @@ new class extends Component {
             ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')
             ->when($this->search, function ($query): void {
                 $query->where(function ($query): void {
-                    $query->where('name', 'like', '%' . $this->search . '%');
+                    $query->where('name', 'like', '%'.$this->search.'%');
                 });
             })
             ->paginate(self::PAGINATION);
@@ -112,7 +117,7 @@ new class extends Component {
             session(['selectedLanguage' => $defaultCode]);
         }
 
-        if ((int)request()->pageId) {
+        if ((int) request()->pageId) {
             $this->tableAction(request()->pageId);
         }
 

@@ -50,8 +50,8 @@ new class extends Component {
 
         $this->storeProcess($model);
         $this->dispatch('toast', [
-            'title' => 'Gespeichert',
-            'description' => 'Die Einstellungen wurden gespeichert.',
+            'title' => __('cms_saved'),
+            'description' => __('cms_settings_saved'),
         ]);
     }
 
@@ -99,7 +99,7 @@ new class extends Component {
     </div>
 
     <div class="pt-4">
-        <x-noerd::title>{{ __('Cookie Banner') }}</x-noerd::title>
+        <x-noerd::title>{{ __('cms_cookie_banner') }}</x-noerd::title>
         <div class="mt-2">
             <label class="flex items-center gap-2 cursor-pointer">
                 <input
@@ -107,23 +107,23 @@ new class extends Component {
                     wire:model.live="model.show_cookie_banner"
                     class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span>{{ __('Cookie-Banner anzeigen') }}</span>
+                <span>{{ __('cms_show_cookie_banner') }}</span>
             </label>
-            <p class="text-sm text-gray-500 mt-1">{{ __('Notwendig, um Analytics zu verwenden') }}</p>
+            <p class="text-sm text-gray-500 mt-1">{{ __('cms_cookie_banner_required') }}</p>
         </div>
     </div>
 
     @if($model['show_cookie_banner'] ?? false)
         <div class="pt-4">
-            <x-noerd::title>{{ __('Google Analytics') }}</x-noerd::title>
+            <x-noerd::title>{{ __('cms_google_analytics') }}</x-noerd::title>
             <div class="mt-2">
                 <input
                     type="text"
                     wire:model="model.google_analytics_id"
                     class="border rounded px-3 py-2 w-full"
-                    placeholder="z.B. G-XXXXXXXXXX"
+                    placeholder="{{ __('cms_google_analytics_placeholder') }}"
                 />
-                <p class="text-sm text-gray-500 mt-1">{{ __('Google Analytics Mess-ID (z.B. G-XXXXXXXXXX.)') }}</p>
+                <p class="text-sm text-gray-500 mt-1">{{ __('cms_google_analytics_hint') }}</p>
             </div>
         </div>
     @endif

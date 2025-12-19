@@ -25,7 +25,7 @@ new class extends Component {
     @if($websiteUrl)
         <a class="flex" target="_blank" href="{{ $websiteUrl }}">
             <button class="bg-gray-100 rounded-lg my-auto text-sm px-3 py-1">
-                Zur Webseite
+                {{ __('cms_to_website') }}
             </button>
         </a>
     @endif
