@@ -83,10 +83,16 @@ new class extends Component {
 
 <x-noerd::page :disableModal="$disableModal">
     <x-slot:header>
-        <x-noerd::modal-title>Globaler Parameter</x-noerd::modal-title>
-    </x-slot:header>
+        <x-noerd::modal-title class="flex items-center">
+            {{ __('cms_global_parameter') }}
 
-    <livewire:language-switcher/>
+            <div class="ml-auto" :class="isModal ? 'mr-10' : ''">
+                <div class="flex bg-white p-1 rounded-lg w-fit border border-gray-200">
+                    <livewire:language-switcher/>
+                </div>
+            </div>
+        </x-noerd::modal-title>
+    </x-slot:header>
 
     @include('noerd::components.detail.block', $pageLayout)
 
