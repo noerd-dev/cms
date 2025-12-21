@@ -19,6 +19,8 @@ class NoerdCmsInstallCommand extends Command
 
     public function handle(): int
     {
+        $this->installMediaIfNeeded();
+
         $result = $this->runModuleInstallation();
 
         if ($result === 0) {
@@ -169,6 +171,36 @@ class NoerdCmsInstallCommand extends Command
             }
         } catch (Exception $e) {
             $this->warn('Failed to install website module: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Install media module if filesystem is not configured.
+     */
+    private function installMediaIfNeeded(): void
+    {
+        $filesystemsPath = base_path('config/filesystems.php');
+
+        if (file_exists($filesystemsPath)) {
+            $content = file_get_contents($filesystemsPath);
+            if (str_contains($content, "'media' =>")) {
+                $this->line('<comment>Media filesystem already configured.</comment>');
+
+                return;
+            }
+        }
+
+        $this->line('');
+        $this->info('Media filesystem not configured, running noerd:install-media...');
+
+        try {
+            $exitCode = Artisan::call('noerd:install-media', [], $this->output);
+
+            if ($exitCode === 0) {
+                $this->line('<info>Media module configured successfully.</info>');
+            }
+        } catch (Exception $e) {
+            $this->warn('Failed to configure media: ' . $e->getMessage());
         }
     }
 }
