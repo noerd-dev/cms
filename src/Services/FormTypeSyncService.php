@@ -3,6 +3,7 @@
 namespace Noerd\Cms\Services;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\File;
 use Noerd\Cms\Models\FormType;
 use Noerd\Noerd\Models\Tenant;
@@ -85,8 +86,8 @@ class FormTypeSyncService
 
             if ($existingFormType && ! $force) {
                 // Skip if file hasn't been modified since last sync
-                if ($existingFormType->yml_synced_at &&
-                    $existingFormType->yml_synced_at->greaterThanOrEqualTo($fileModifiedTime)) {
+                if ($existingFormType->yml_synced_at
+                    && $existingFormType->yml_synced_at->greaterThanOrEqualTo($fileModifiedTime)) {
                     $this->skipped++;
 
                     return;
@@ -112,12 +113,12 @@ class FormTypeSyncService
                     'tenant_id' => $tenant->id,
                     'key' => $key,
                 ],
-                $formTypeData
+                $formTypeData,
             );
 
             $this->synced++;
             $this->messages[] = "Synced form type '{$key}' for tenant {$tenant->id}";
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->errors++;
             $this->messages[] = "Error syncing {$ymlFile} for tenant {$tenant->id}: {$e->getMessage()}";
 

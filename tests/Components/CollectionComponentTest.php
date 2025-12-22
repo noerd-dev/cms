@@ -19,7 +19,7 @@ uses(CreatesCmsUser::class);
 
 // Mock CollectionHelper to avoid file system dependencies
 beforeEach(function (): void {
-    $mock = \Mockery::mock('overload:'.CollectionHelper::class);
+    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
 
     // Mock getCollectionFields for projects (hasPage: true)
     $mock->shouldReceive('getCollectionFields')
@@ -116,7 +116,7 @@ it('uploads an image via images.field binding and stores path into model', funct
     // Set the Livewire-bound temporary file; component must process it
     Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'collectionKey' => 'projects'])
         ->set('images.image', $fakeImage)
-        ->assertSet('model.image', fn ($value) => is_string($value) && $value !== '');
+        ->assertSet('model.image', fn($value) => is_string($value) && $value !== '');
 
     expect(MediaModel::count())->toBe($before + 1);
 
@@ -200,7 +200,7 @@ it('creates page automatically when hasPage is true in yml config', function ():
     $this->actingAs($user);
 
     // Simulate accessing the component via route with key parameter (like the real usage)
-    $this->get(route('cms.collections').'?key=contacts&create=1')
+    $this->get(route('cms.collections') . '?key=contacts&create=1')
         ->assertStatus(200)
         ->assertSee('Contact'); // Title from contacts.yml
 
@@ -242,7 +242,7 @@ it('does not create page when hasPage is false in yml config', function (): void
     $this->actingAs($user);
 
     // Test with sliders collection which has hasPage: false
-    $this->get(route('cms.collections').'?key=sliders&create=1')
+    $this->get(route('cms.collections') . '?key=sliders&create=1')
         ->assertStatus(200)
         ->assertSee('Slider'); // Title from sliders.yml
 
@@ -319,7 +319,7 @@ it('does not update image on mediaSelected when token mismatches; updates when t
         'sort' => 0,
     ]);
 
-    $path = $tenant->id.'/test-select.jpg';
+    $path = $tenant->id . '/test-select.jpg';
     Storage::disk('media')->put($path, 'x');
     $media = MediaModel::create([
         'tenant_id' => $tenant->id,
@@ -341,5 +341,5 @@ it('does not update image on mediaSelected when token mismatches; updates when t
 
     // Correct token -> should change
     $component->call('mediaSelected', $media->id, 'image', 'token-abc')
-        ->assertSet('model.image', fn ($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED');
+        ->assertSet('model.image', fn($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED');
 });

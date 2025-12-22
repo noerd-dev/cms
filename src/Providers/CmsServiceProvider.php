@@ -20,7 +20,7 @@ class CmsServiceProvider extends ServiceProvider
         if (! $this->app->bound(\Noerd\Website\Services\PageElementService::class)) {
             $this->app->singleton(
                 \Noerd\Website\Services\PageElementService::class,
-                fn () => new \Noerd\Cms\Services\PageElementService
+                fn() => new \Noerd\Cms\Services\PageElementService(),
             );
         }
     }

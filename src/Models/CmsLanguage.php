@@ -15,6 +15,27 @@ class CmsLanguage extends Model
         'is_default' => 'boolean',
     ];
 
+    /**
+     * Create default English language for a tenant if none exists
+     */
+    public static function ensureDefaultLanguageForTenant(int $tenantId): self
+    {
+        $existing = static::where('tenant_id', $tenantId)->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        return static::create([
+            'tenant_id' => $tenantId,
+            'code' => 'en',
+            'name' => 'English',
+            'is_active' => true,
+            'is_default' => true,
+            'sort_order' => 0,
+        ]);
+    }
+
     protected static function boot(): void
     {
         parent::boot();
@@ -68,26 +89,5 @@ class CmsLanguage extends Model
                 }
             }
         });
-    }
-
-    /**
-     * Create default English language for a tenant if none exists
-     */
-    public static function ensureDefaultLanguageForTenant(int $tenantId): self
-    {
-        $existing = static::where('tenant_id', $tenantId)->first();
-
-        if ($existing) {
-            return $existing;
-        }
-
-        return static::create([
-            'tenant_id' => $tenantId,
-            'code' => 'en',
-            'name' => 'English',
-            'is_active' => true,
-            'is_default' => true,
-            'sort_order' => 0,
-        ]);
     }
 }

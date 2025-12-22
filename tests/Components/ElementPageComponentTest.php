@@ -40,7 +40,7 @@ it('successfully mounts with element page', function () use ($testSettings): voi
         ->assertHasNoErrors();
 });
 
-it('can update element page data', function () use ($testSettings): void {
+it('can update element page data', function (): void {
     // Skip: This test requires YML element definitions from website module
     $this->markTestSkipped('Requires element YML definitions from website module');
 })->skip('Requires element YML definitions from website module');
@@ -98,7 +98,7 @@ it('can delete element page', function () use ($testSettings): void {
     ]);
 });
 
-it('sets correct element layout', function () use ($testSettings): void {
+it('sets correct element layout', function (): void {
     // Skip: This test requires YML element definitions from website module
     $this->markTestSkipped('Requires element YML definitions from website module');
 })->skip('Requires element YML definitions from website module');

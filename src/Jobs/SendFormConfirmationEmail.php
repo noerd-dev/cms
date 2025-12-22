@@ -57,7 +57,7 @@ class SendFormConfirmationEmail implements ShouldQueue
                 ->send(new FormConfirmation(
                     $this->formRequest,
                     $emailSubject,
-                    $emailBody
+                    $emailBody,
                 ));
 
             logger()->info('Form confirmation email sent to customer', [
@@ -74,7 +74,7 @@ class SendFormConfirmationEmail implements ShouldQueue
                 ->send(new FormConfirmation(
                     $this->formRequest,
                     $emailSubject,
-                    $emailBody
+                    $emailBody,
                 ));
 
             logger()->info('Form confirmation email sent to admin', [

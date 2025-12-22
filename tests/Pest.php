@@ -29,7 +29,7 @@ uses(TestCase::class, RefreshDatabase::class)
                 'icon' => 'cms::icons.app',
                 'route' => 'cms.index',
                 'is_active' => true,
-            ]
+            ],
         );
 
         $tenant->tenantApps()->attach($cmsApp->id);

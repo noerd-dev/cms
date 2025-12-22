@@ -2,6 +2,7 @@
 
 namespace Noerd\Cms\Models;
 
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -27,11 +28,15 @@ class FormType extends Model
         'yml_synced_at',
     ];
 
-    protected function casts(): array
+    /**
+     * Get available email placeholders with descriptions
+     */
+    public static function getEmailPlaceholders(): array
     {
         return [
-            'send_email' => 'boolean',
-            'yml_synced_at' => 'datetime',
+            '{{form_title}}' => 'Formular-Titel',
+            '{{submission_date}}' => 'Datum der Einreichung',
+            '{{field:*}}' => 'Formularfelder (z.B. {{field:name}}, {{field:email}})',
         ];
     }
 
@@ -56,7 +61,7 @@ class FormType extends Model
 
         try {
             return Yaml::parseFile($this->yml_path);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             logger()->error('Failed to load YML config for FormType', [
                 'form_type_id' => $this->id,
                 'yml_path' => $this->yml_path,
@@ -65,18 +70,6 @@ class FormType extends Model
 
             return null;
         }
-    }
-
-    /**
-     * Get available email placeholders with descriptions
-     */
-    public static function getEmailPlaceholders(): array
-    {
-        return [
-            '{{form_title}}' => 'Formular-Titel',
-            '{{submission_date}}' => 'Datum der Einreichung',
-            '{{field:*}}' => 'Formularfelder (z.B. {{field:name}}, {{field:email}})',
-        ];
     }
 
     /**
@@ -123,5 +116,13 @@ class FormType extends Model
         }
 
         return $placeholders;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'send_email' => 'boolean',
+            'yml_synced_at' => 'datetime',
+        ];
     }
 }

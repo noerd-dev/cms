@@ -13,8 +13,8 @@ class FieldHelper
         $elementFileName = str_replace('_', '-', $element);
 
         // Check in livewire elements directory (co-located with components)
-        if (file_exists(base_path('app-modules/website/resources/views/livewire/elements/'.$elementFileName.'.yml'))) {
-            $content = file_get_contents(base_path('app-modules/website/resources/views/livewire/elements/'.$elementFileName.'.yml'));
+        if (file_exists(base_path('app-modules/website/resources/views/livewire/elements/' . $elementFileName . '.yml'))) {
+            $content = file_get_contents(base_path('app-modules/website/resources/views/livewire/elements/' . $elementFileName . '.yml'));
 
             return Yaml::parse($content ?: '');
         }
@@ -98,7 +98,7 @@ class FieldHelper
             $elementKey = str_replace('-', '_', $fileName);
 
             // Try to find corresponding yml definition (co-located with livewire component, same naming as blade file)
-            $ymlFile = base_path('app-modules/website/resources/views/livewire/elements/'.$fileName.'.yml');
+            $ymlFile = base_path('app-modules/website/resources/views/livewire/elements/' . $fileName . '.yml');
 
             if (file_exists($ymlFile)) {
                 $content = file_get_contents($ymlFile);
