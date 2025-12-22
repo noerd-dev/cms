@@ -13,7 +13,7 @@ class NoerdCmsInstallCommand extends Command
     use HasModuleInstallation;
     use RequiresNoerdInstallation;
 
-    protected $signature = 'noerd:install-cms {--force : Overwrite existing files without asking} {--without-website : Skip automatic website module installation}';
+    protected $signature = 'noerd:install-cms {--force : Overwrite existing files without asking}';
 
     protected $description = 'Install noerd CMS content and navigation';
 
@@ -138,31 +138,27 @@ class NoerdCmsInstallCommand extends Command
     }
 
     /**
-     * Install website module if it doesn't already exist.
+     * Install website module if user confirms.
      */
     private function installWebsiteIfNeeded(): void
     {
-        // Check if website installation should be skipped
-        if ($this->option('without-website')) {
-            $this->line('<comment>Skipping website module installation (--without-website flag provided).</comment>');
-
-            return;
-        }
-
         $websiteDir = base_path('app-modules/website');
 
         if (is_dir($websiteDir)) {
-            $this->line('<comment>Website module already exists, skipping installation.</comment>');
+            $this->line('<comment>Website module already exists.</comment>');
 
             return;
         }
 
         $this->line('');
-        $this->info('Website module not found, installing automatically...');
+        if (! $this->confirm('Would you like to install the website module?', false)) {
+            $this->line('<comment>Skipping website module installation.</comment>');
+
+            return;
+        }
 
         try {
-            // Execute the noerd:install-website command
-            $exitCode = Artisan::call('noerd:install-website');
+            $exitCode = Artisan::call('noerd:install-website', [], $this->output);
 
             if ($exitCode === 0) {
                 $this->line('<info>Website module installed successfully.</info>');
