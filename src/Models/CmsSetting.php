@@ -18,6 +18,11 @@ class CmsSetting extends Model
         'show_cookie_banner',
     ];
 
+    protected static function newFactory()
+    {
+        return \Noerd\Cms\Database\Factories\CmsSettingFactory::new();
+    }
+
     /**
      * @return array<string, string>
      */
@@ -26,10 +31,5 @@ class CmsSetting extends Model
         return [
             'show_cookie_banner' => 'boolean',
         ];
-    }
-
-    protected static function newFactory()
-    {
-        return \Noerd\Cms\Database\Factories\CmsSettingFactory::new();
     }
 }

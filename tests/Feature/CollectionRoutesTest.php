@@ -13,7 +13,7 @@ uses(CreatesCmsUser::class);
 // Mock CollectionHelper to avoid file system dependencies
 beforeEach(function (): void {
     // Create an overload mock for better parallel test isolation
-    $mock = \Mockery::mock('overload:'.CollectionHelper::class);
+    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
 
     // Mock getCollectionFields for various collections used in tests
     $mock->shouldReceive('getCollectionFields')

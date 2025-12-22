@@ -11,12 +11,13 @@ use Noerd\Website\Models\FormRequest;
 
 class FormConfirmation extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     public function __construct(
         public FormRequest $formRequest,
         public string $emailSubject,
-        public string $emailBody
+        public string $emailBody,
     ) {}
 
     public function envelope(): Envelope

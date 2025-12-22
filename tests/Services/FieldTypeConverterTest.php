@@ -19,7 +19,7 @@ describe('FieldTypeConverter', function (): void {
         $this->tenantId = $tenant->id;
 
         $cmsApp = TenantApp::create([
-            'name' => 'CMS_'.uniqid().'_'.getmypid(),
+            'name' => 'CMS_' . uniqid() . '_' . getmypid(),
             'title' => 'CMS',
             'icon' => 'cms::icons.app',
             'route' => 'cms.index',
@@ -42,7 +42,7 @@ describe('FieldTypeConverter', function (): void {
     // Helper function to create isolated mocks for each test
     function createCollectionHelperMock(): void
     {
-        $mock = \Mockery::mock('alias:'.CollectionHelper::class);
+        $mock = \Mockery::mock('alias:' . CollectionHelper::class);
 
         // Default beratung collection
         $mock->shouldReceive('getCollectionFields')
@@ -197,12 +197,12 @@ describe('FieldTypeConverter', function (): void {
 
     it('automatically converts data when saving Page model', function (): void {
         // Create a collection with unique tenant ID and timestamp to avoid conflicts
-        $uniqueSuffix = time().'_'.getmypid();
-        $uniqueCollectionKey = 'BERATUNG_'.$uniqueSuffix;
+        $uniqueSuffix = time() . '_' . getmypid();
+        $uniqueCollectionKey = 'BERATUNG_' . $uniqueSuffix;
 
         // Create mock that responds to the lowercase collection key (as per Page model behavior)
         $lowercaseCollectionKey = mb_strtolower($uniqueCollectionKey);
-        $mock = \Mockery::mock('alias:'.CollectionHelper::class);
+        $mock = \Mockery::mock('alias:' . CollectionHelper::class);
         $mock->shouldReceive('getCollectionFields')
             ->with($lowercaseCollectionKey)
             ->andReturn([
@@ -222,7 +222,7 @@ describe('FieldTypeConverter', function (): void {
         $collection = Collection::create([
             'tenant_id' => $this->tenantId,
             'collection_key' => $uniqueCollectionKey,
-            'name' => 'Test Collection '.$uniqueSuffix,
+            'name' => 'Test Collection ' . $uniqueSuffix,
         ]);
 
         // Create a page with old text format data

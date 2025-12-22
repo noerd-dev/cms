@@ -19,7 +19,7 @@ beforeEach(function (): void {
     $this->actingAs($this->user);
 
     // Mock CollectionHelper for standort and mitarbeiter
-    $mock = \Mockery::mock('overload:'.CollectionHelper::class);
+    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
 
     $mock->shouldReceive('getCollectionFields')
         ->with('standort')
@@ -58,7 +58,7 @@ it('accepts collection key as string (existing behavior)', function (): void {
     ]);
 
     // Test with string key
-    $response = $this->get(route('cms.collections').'?key=standort');
+    $response = $this->get(route('cms.collections') . '?key=standort');
 
     $response->assertStatus(200);
     $response->assertSee('Standort');
@@ -72,7 +72,7 @@ it('accepts collection ID as integer parameter (new behavior)', function (): voi
     ]);
 
     // Test with numeric ID
-    $response = $this->get(route('cms.collections').'?key='.$collection->id);
+    $response = $this->get(route('cms.collections') . '?key=' . $collection->id);
 
     $response->assertStatus(200);
     $response->assertSee('Standort');
@@ -86,7 +86,7 @@ it('accepts collection ID as string parameter (new behavior)', function (): void
     ]);
 
     // Test with numeric string ID
-    $response = $this->get(route('cms.collections').'?key='.(string) $collection->id);
+    $response = $this->get(route('cms.collections') . '?key=' . (string) $collection->id);
 
     $response->assertStatus(200);
     $response->assertSee('Standort');
