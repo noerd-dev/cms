@@ -674,10 +674,10 @@ new class () extends Component {
 
                     <div class="mt-8 mb-8 flex">
                         <div class="mt-4 mx-auto">
-                            <x-noerd::primary-button
+                            <x-noerd::buttons.primary
                                 wire:click="$dispatch('noerdModal', {component: 'element-picker-modal', arguments: { token: 'insert-end' }})">
                                 {{ __('Add Element') }}
-                            </x-noerd::primary-button>
+                            </x-noerd::buttons.primary>
                         </div>
                     </div>
                 </div>
