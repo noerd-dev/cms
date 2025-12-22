@@ -87,44 +87,32 @@ new class extends Component {
     </x-slot:header>
 
     <div class="pt-4">
-        <x-noerd::title>{{ __('Homepage') }}</x-noerd::title>
-        <div class="mt-2">
-            <select wire:model="model.homepage_page_id" class="border rounded px-3 py-2 w-full">
-                <option value="">- {{ __('None selected') }} -</option>
-                @foreach(Page::where('collection_id', null)->orderBy('name')->get() as $p)
-                    <option value="{{$p->id}}">{{$this->formatName($p->name)}}</option>
-                @endforeach
-            </select>
-        </div>
+        <x-noerd::forms.input-select
+            name="model.homepage_page_id"
+            label="{{ __('Homepage') }}"
+            :options="array_merge(
+                [['value' => '', 'label' => '- ' . __('None selected') . ' -']],
+                Page::where('collection_id', null)->orderBy('name')->get()->map(fn($p) => ['value' => $p->id, 'label' => $this->formatName($p->name)])->toArray()
+            )"
+        />
     </div>
 
     <div class="pt-4">
-        <x-noerd::title>{{ __('cms_cookie_banner') }}</x-noerd::title>
-        <div class="mt-2">
-            <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                    type="checkbox"
-                    wire:model.live="model.show_cookie_banner"
-                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span>{{ __('cms_show_cookie_banner') }}</span>
-            </label>
-            <p class="text-sm text-gray-500 mt-1">{{ __('cms_cookie_banner_required') }}</p>
-        </div>
+        <x-noerd::forms.checkbox
+            name="model.show_cookie_banner"
+            label="{{ __('cms_show_cookie_banner') }}"
+            live
+        />
+        <p class="text-sm text-gray-500 mt-1">{{ __('cms_cookie_banner_required') }}</p>
     </div>
 
     @if($model['show_cookie_banner'] ?? false)
         <div class="pt-4">
-            <x-noerd::title>{{ __('cms_google_analytics') }}</x-noerd::title>
-            <div class="mt-2">
-                <input
-                    type="text"
-                    wire:model="model.google_analytics_id"
-                    class="border rounded px-3 py-2 w-full"
-                    placeholder="{{ __('cms_google_analytics_placeholder') }}"
-                />
-                <p class="text-sm text-gray-500 mt-1">{{ __('cms_google_analytics_hint') }}</p>
-            </div>
+            <x-noerd::forms.input
+                name="model.google_analytics_id"
+                label="{{ __('cms_google_analytics') }}"
+            />
+            <p class="text-sm text-gray-500 mt-1">{{ __('cms_google_analytics_hint') }}</p>
         </div>
     @endif
 
