@@ -4,11 +4,11 @@
   route: cms
   block_menus:
     - title: cms_nav_cms
-      navigations: [ { title: cms_nav_pages, route: cms.pages, icon: icons.document }, { title: cms_nav_navigation, route: cms.navigation, icon: icons.list-bullet }, { title: cms_nav_global_parameters, route: cms.global-parameters, heroicon: globe-alt }, { title: cms_nav_form_requests, route: cms.form-requests, icon: icons.list-bullet } ]
+      navigations: [ { title: cms_nav_pages, route: cms.pages, heroicon: document }, { title: cms_nav_navigation, route: cms.navigation, heroicon: list-bullet }, { title: cms_nav_global_parameters, route: cms.global-parameters, heroicon: globe-alt }, { title: cms_nav_form_requests, route: cms.form-requests, heroicon: list-bullet } ]
     - title: cms_nav_collections
       dynamic: collections
     - title: cms_nav_settings
       navigations:
-        - { title: noerd_nav_settings, route: cms.settings, icon: icons.adjustments-horizontal }
-        - { title: cms_nav_collections, route: cms.collections, icon: icons.adjustments-horizontal }
+        - { title: noerd_nav_settings, route: cms.settings, heroicon: adjustments-horizontal }
+        - { title: cms_nav_collections, route: cms.collections, heroicon: adjustments-horizontal }
         - { title: cms_nav_languages, route: cms.languages, heroicon: language }
