@@ -183,37 +183,39 @@ fields:
 
     <div class="space-y-6">
         <!-- Filename Input -->
-        <div>
-            <flux:field>
-                <flux:label>{{ __('cms_filename') }}</flux:label>
-                <flux:input
-                    wire:model="fileName"
-                    placeholder="collection-name"
-                    :readonly="!$isNewFile"
-                />
-                <flux:error name="fileName" />
-                @if(!$isNewFile)
-                    <flux:description>{{ __('cms_filename_cannot_be_changed') }}</flux:description>
-                @endif
-            </flux:field>
+        <div class="grid gap-2">
+            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('cms_filename') }}</label>
+            <input
+                wire:model="fileName"
+                type="text"
+                placeholder="collection-name"
+                @if(!$isNewFile) readonly @endif
+                class="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent dark:bg-zinc-800 dark:border-zinc-600 dark:text-white {{ !$isNewFile ? 'bg-zinc-100 dark:bg-zinc-700 cursor-not-allowed' : '' }}"
+            />
+            @error('fileName')
+                <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+            @if(!$isNewFile)
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('cms_filename_cannot_be_changed') }}</p>
+            @endif
         </div>
 
         <!-- YAML Editor -->
-        <div>
-            <flux:field>
-                <flux:label>{{ __('cms_yaml_content') }}</flux:label>
-                <flux:textarea
-                    wire:model="yamlContent"
-                    rows="20"
-                    class="font-mono text-sm"
-                    style="white-space: pre; font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;"
-                />
-                <flux:error name="yamlContent" />
-                <flux:description>
-                    {{ __('cms_edit_yaml_content') }}
-                    {{ __('cms_ensure_correct_yaml_syntax') }}
-                </flux:description>
-            </flux:field>
+        <div class="grid gap-2">
+            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('cms_yaml_content') }}</label>
+            <textarea
+                wire:model="yamlContent"
+                rows="20"
+                class="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent dark:bg-zinc-800 dark:border-zinc-600 dark:text-white"
+                style="white-space: pre; font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;"
+            ></textarea>
+            @error('yamlContent')
+                <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                {{ __('cms_edit_yaml_content') }}
+                {{ __('cms_ensure_correct_yaml_syntax') }}
+            </p>
         </div>
     </div>
 

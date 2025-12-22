@@ -603,13 +603,13 @@ new class () extends Component {
                 <div class="flex ml-auto items-center my-6 space-x-4">
                     <div class="flex ml-auto items-center space-x-2">
                         <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
-                        <flux:input
+                        <input
                             wire:model="model.sort"
                             id="sort"
                             type="number"
-                            class="w-16 text-sm"
                             min="0"
                             step="1"
+                            class="w-16 rounded-md border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent dark:bg-zinc-800 dark:border-zinc-600 dark:text-white"
                         />
                     </div>
                 </div>
