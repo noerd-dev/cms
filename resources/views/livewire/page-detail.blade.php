@@ -141,6 +141,12 @@ new class () extends Component {
         if (is_dir($layoutsDirectory)) {
             foreach (glob($layoutsDirectory . '/*.blade.php') as $filePath) {
                 $fileName = basename($filePath, '.blade.php');
+
+                // Skip include files that start with underscore
+                if (str_starts_with($fileName, '_')) {
+                    continue;
+                }
+
                 $options[$fileName] = $fileName;
             }
         }
