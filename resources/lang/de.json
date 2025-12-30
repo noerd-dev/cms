@@ -113,7 +113,29 @@
     "cms_google_analytics_placeholder": "z.B. G-XXXXXXXXXX",
     "cms_google_analytics_hint": "Google Analytics Mess-ID (z.B. G-XXXXXXXXXX)",
     "cms_saved": "Gespeichert",
-    "cms_settings_saved": "Die Einstellungen wurden gespeichert."
+    "cms_settings_saved": "Die Einstellungen wurden gespeichert.",
+
+    "cms_metadata": "Metadaten",
+    "cms_page_info": "Seiteninfos",
+    "cms_seo_metadata": "SEO Metadaten",
+    "cms_meta_title": "Meta Titel",
+    "cms_meta_description": "Meta Beschreibung",
+    "cms_project": "Projekt",
+    "cms_slider": "Slider",
+    "cms_projects": "Projekte",
+    "cms_new_project": "Neues Projekt",
+    "cms_sliders": "Startseiten Slider",
+    "cms_new_slider": "Neuer Slider",
+    "cms_pages": "Seiten",
+    "cms_new_page": "Neue Seite",
+    "cms_service": "Leistung",
+    "cms_services": "Leistungen",
+    "cms_new_service": "Neue Leistung",
+    "cms_form_type": "Formulartyp",
+    "cms_form_type_description": "E-Mail-Konfiguration für Formulartypen",
+    "cms_send_email_notification": "E-Mail-Benachrichtigung senden",
+    "cms_email_subject": "E-Mail-Betreff",
+    "cms_notification_email": "Benachrichtigungs-E-Mail (optional)"
 }
 
 

@@ -75,7 +75,29 @@
     "cms_google_analytics_placeholder": "e.g. G-XXXXXXXXXX",
     "cms_google_analytics_hint": "Google Analytics Measurement ID (e.g. G-XXXXXXXXXX)",
     "cms_saved": "Saved",
-    "cms_settings_saved": "The settings have been saved."
+    "cms_settings_saved": "The settings have been saved.",
+
+    "cms_metadata": "Metadata",
+    "cms_page_info": "Page Info",
+    "cms_seo_metadata": "SEO Metadata",
+    "cms_meta_title": "Meta Title",
+    "cms_meta_description": "Meta Description",
+    "cms_project": "Project",
+    "cms_slider": "Slider",
+    "cms_projects": "Projects",
+    "cms_new_project": "New Project",
+    "cms_sliders": "Homepage Sliders",
+    "cms_new_slider": "New Slider",
+    "cms_pages": "Pages",
+    "cms_new_page": "New Page",
+    "cms_service": "Service",
+    "cms_services": "Services",
+    "cms_new_service": "New Service",
+    "cms_form_type": "Form Type",
+    "cms_form_type_description": "Email configuration for form types",
+    "cms_send_email_notification": "Send email notification",
+    "cms_email_subject": "Email subject",
+    "cms_notification_email": "Notification email (optional)"
 }
 
 
