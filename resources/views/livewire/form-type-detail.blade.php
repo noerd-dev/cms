@@ -167,7 +167,7 @@ new class () extends Component {
 
                 <div class="mt-4">
                     <x-noerd::input-label class="pb-2" value="{{ __('E-Mail-Inhalt (HTML)') }}"/>
-                    <x-noerd::forms.quill
+                    <x-noerd::forms.tiptap
                         :field="'formType.email_body'"
                         :content="$formType['email_body'] ?? ''"/>
                 </div>
