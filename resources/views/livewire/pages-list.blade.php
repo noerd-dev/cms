@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
-use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
@@ -52,6 +51,8 @@ new class extends Component
 
     public function with()
     {
+        $this->ensureDefaultLanguage();
+
         // Get all collections with hasPage: false to exclude their pages
         $collectionsWithoutPages = Collection::where('tenant_id', Auth::user()->selected_tenant_id)
             ->get()
@@ -80,8 +81,7 @@ new class extends Component
 
         // Parse JSON attributes to show only current language values
         $selectedLanguage = $this->activeTableFilters['language']
-            ?? session('selectedLanguage')
-            ?? $this->getDefaultLanguageCode();
+            ?? session('selectedLanguage');
 
         foreach ($rows->items() as $row) {
             if (is_array($row->name)) {
@@ -112,9 +112,8 @@ new class extends Component
 
         // Set default language if nothing is set
         if (empty($this->activeTableFilters['language']) && empty(session('selectedLanguage'))) {
-            $defaultCode = $this->getDefaultLanguageCode();
+            $defaultCode = $this->ensureDefaultLanguage();
             $this->activeTableFilters['language'] = $defaultCode;
-            session(['selectedLanguage' => $defaultCode]);
         }
 
         if ((int) request()->pageId) {
@@ -124,15 +123,6 @@ new class extends Component
         if (request()->create) {
             $this->tableAction();
         }
-    }
-
-    private function getDefaultLanguageCode(): string
-    {
-        $defaultLanguage = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
-            ->where('is_default', true)
-            ->first();
-
-        return $defaultLanguage?->code ?? 'en';
     }
 } ?>
 

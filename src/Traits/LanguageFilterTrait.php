@@ -6,6 +6,21 @@ use Noerd\Cms\Models\CmsLanguage;
 
 trait LanguageFilterTrait
 {
+    protected function ensureDefaultLanguage(): string
+    {
+        if (empty(session('selectedLanguage'))) {
+            $defaultLanguage = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
+                ->where('is_default', true)
+                ->first();
+            $code = $defaultLanguage?->code ?? 'de';
+            session(['selectedLanguage' => $code]);
+
+            return $code;
+        }
+
+        return session('selectedLanguage');
+    }
+
     protected function hasMultipleLanguages(): bool
     {
         return CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
