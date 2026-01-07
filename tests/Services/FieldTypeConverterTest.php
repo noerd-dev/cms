@@ -28,8 +28,9 @@ describe('FieldTypeConverter', function (): void {
 
         $tenant->tenantApps()->attach($cmsApp->id);
 
-        $user = User::factory()->create(['selected_tenant_id' => $tenant->id]);
+        $user = User::factory()->create();
         $user->tenants()->attach($tenant->id);
+        $user->setting->update(['selected_tenant_id' => $tenant->id]);
 
         $this->actingAs($user);
     });

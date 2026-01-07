@@ -34,8 +34,9 @@ uses(TestCase::class, RefreshDatabase::class)
 
         $tenant->tenantApps()->attach($cmsApp->id);
 
-        $this->user = User::factory()->create(['selected_tenant_id' => $tenant->id]);
+        $this->user = User::factory()->create();
         $this->user->tenants()->attach($tenant->id);
+        $this->user->setting->update(['selected_tenant_id' => $tenant->id]);
         $this->tenant = $tenant;
     })
     ->in(__DIR__);

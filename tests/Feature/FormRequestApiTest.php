@@ -11,8 +11,8 @@ it('stores a form request via API using user api token', function (): void {
     $tenant = Tenant::factory()->create();
     $user = User::factory()->create([
         'api_token' => 'test_token_123',
-        'selected_tenant_id' => $tenant->id,
     ]);
+    $user->setting->update(['selected_tenant_id' => $tenant->id]);
 
     $payload = [
         'form' => 'contact',
