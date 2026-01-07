@@ -47,13 +47,10 @@ it('does not override existing language session', function (): void {
         'is_default' => true,
     ]);
 
-    CmsLanguage::create([
-        'tenant_id' => $tenant->id,
-        'code' => 'en',
-        'name' => 'English',
-        'is_active' => true,
-        'is_default' => false,
-    ]);
+    CmsLanguage::firstOrCreate(
+        ['tenant_id' => $tenant->id, 'code' => 'en'],
+        ['name' => 'English', 'is_active' => true, 'is_default' => false]
+    );
 
     // Set session to non-default language
     session(['selectedLanguage' => 'en']);

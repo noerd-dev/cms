@@ -53,13 +53,10 @@ it('returns existing session language when it exists in cms_languages', function
         'is_default' => true,
     ]);
 
-    CmsLanguage::create([
-        'tenant_id' => $tenant->id,
-        'code' => 'en',
-        'name' => 'English',
-        'is_active' => true,
-        'is_default' => false,
-    ]);
+    CmsLanguage::firstOrCreate(
+        ['tenant_id' => $tenant->id, 'code' => 'en'],
+        ['name' => 'English', 'is_active' => true, 'is_default' => false]
+    );
 
     session(['selectedLanguage' => 'en']);
 

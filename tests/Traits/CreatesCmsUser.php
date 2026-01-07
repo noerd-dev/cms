@@ -28,11 +28,12 @@ trait CreatesCmsUser
 
         $tenant->tenantApps()->attach($cmsApp->id);
 
-        $user = User::factory()->create([
+        $user = User::factory()->create();
+        $user->tenants()->attach($tenant->id);
+        $user->setting->update([
             'selected_tenant_id' => $tenant->id,
             'selected_app' => 'cms',
         ]);
-        $user->tenants()->attach($tenant->id);
 
         return ['user' => $user, 'tenant' => $tenant];
     }
