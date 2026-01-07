@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
@@ -21,6 +22,8 @@ new class extends Component
 
     public function mount(): void
     {
+        $this->tableId = Str::random();
+        $this->loadActiveTableFilters();
         $this->ensureDefaultLanguage();
     }
 
