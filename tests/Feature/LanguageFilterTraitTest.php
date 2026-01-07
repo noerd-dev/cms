@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Livewire\Volt\Volt;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -94,3 +95,4 @@ it('displays pages list without htmlspecialchars error when no session is set', 
     $response->assertStatus(200);
     $response->assertDontSee('htmlspecialchars()');
 });
+

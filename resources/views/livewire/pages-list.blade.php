@@ -19,6 +19,11 @@ new class extends Component
 
     protected const ALLOWED_TABLE_FILTERS = ['language'];
 
+    public function mount(): void
+    {
+        $this->ensureDefaultLanguage();
+    }
+
     #[Computed]
     public function tableFilters(): array
     {
@@ -51,8 +56,6 @@ new class extends Component
 
     public function with()
     {
-        $this->ensureDefaultLanguage();
-
         // Get all collections with hasPage: false to exclude their pages
         $collectionsWithoutPages = Collection::where('tenant_id', Auth::user()->selected_tenant_id)
             ->get()
@@ -105,15 +108,8 @@ new class extends Component
         $this->loadActiveTableFilters();
 
         // Sync selectedLanguage with activeTableFilters
-        $selectedLanguage = session('selectedLanguage');
-        if ($selectedLanguage && empty($this->activeTableFilters['language'])) {
-            $this->activeTableFilters['language'] = $selectedLanguage;
-        }
-
-        // Set default language if nothing is set
-        if (empty($this->activeTableFilters['language']) && empty(session('selectedLanguage'))) {
-            $defaultCode = $this->ensureDefaultLanguage();
-            $this->activeTableFilters['language'] = $defaultCode;
+        if (empty($this->activeTableFilters['language'])) {
+            $this->activeTableFilters['language'] = session('selectedLanguage');
         }
 
         if ((int) request()->pageId) {

@@ -8,17 +8,30 @@ trait LanguageFilterTrait
 {
     protected function ensureDefaultLanguage(): string
     {
-        if (empty(session('selectedLanguage'))) {
-            $defaultLanguage = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
-                ->where('is_default', true)
-                ->first();
-            $code = $defaultLanguage?->code ?? 'de';
-            session(['selectedLanguage' => $code]);
+        $tenantId = auth()->user()->selected_tenant_id;
+        $currentLanguage = session('selectedLanguage');
 
-            return $code;
+        // Check if the current session language exists and is active for this tenant
+        if ($currentLanguage) {
+            $languageExists = CmsLanguage::where('tenant_id', $tenantId)
+                ->where('code', $currentLanguage)
+                ->where('is_active', true)
+                ->exists();
+
+            if ($languageExists) {
+                return $currentLanguage;
+            }
         }
 
-        return session('selectedLanguage');
+        // Get the default language for this tenant
+        $defaultLanguage = CmsLanguage::where('tenant_id', $tenantId)
+            ->where('is_default', true)
+            ->first();
+
+        $code = $defaultLanguage?->code ?? 'de';
+        session(['selectedLanguage' => $code]);
+
+        return $code;
     }
 
     protected function hasMultipleLanguages(): bool
