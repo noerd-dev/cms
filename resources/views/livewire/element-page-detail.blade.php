@@ -167,7 +167,7 @@ new class extends Component {
             >
             </x-noerd::buttons.delete>
 
-            @include('noerd::components.detail.block', $elementLayout)
+            <x-noerd::tab-content :layout="$elementLayout" />
         </div>
     @else
         <div
