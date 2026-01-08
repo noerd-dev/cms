@@ -64,7 +64,7 @@ new class extends Component {
     </x-slot:header>
 
     @php($pageLayout = StaticConfigHelper::getComponentFields('cms-language-detail'))
-    @include('noerd::components.detail.block', $pageLayout)
+    <x-noerd::tab-content :layout="$pageLayout" />
 
     <x-slot:footer>
         <x-noerd::delete-save-bar :showDelete="$cmsLanguageId"/>

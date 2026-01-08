@@ -126,7 +126,7 @@ new class extends Component {
         </x-noerd::modal-title>
     </x-slot:header>
 
-    @include('noerd::components.detail.block', $pageLayout)
+    <x-noerd::tab-content :layout="$pageLayout" />
 
     <x-slot:footer>
         <x-noerd::delete-save-bar :showDelete="isset($modelId)"/>
