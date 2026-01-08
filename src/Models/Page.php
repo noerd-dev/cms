@@ -14,7 +14,6 @@ class Page extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'is_active' => 'boolean',
         'meta_noindex' => 'boolean',
         'data' => 'array',
         'name' => 'array',

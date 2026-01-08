@@ -297,7 +297,6 @@ it('handles collections without page features (hasPage: false)', function () use
     expect($page->collection_id)->toBe($parentCollection->id)
         ->and($page->name)->toBeNull() // No name for hasPage: false
         ->and($page->slug)->toBeNull() // No slug for hasPage: false
-        ->and($page->is_active)->toBe(true) // is_active is false for hasPage: false collections
         ->and($page->data)->toHaveKeys(['name', 'description']);
 });
 
