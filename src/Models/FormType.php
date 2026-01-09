@@ -55,16 +55,25 @@ class FormType extends Model
      */
     public function loadYmlConfig(): ?array
     {
-        if (! $this->yml_path || ! File::exists($this->yml_path)) {
+        if (! $this->yml_path) {
+            return null;
+        }
+
+        // Support both relative and absolute paths
+        $fullPath = str_starts_with($this->yml_path, '/')
+            ? $this->yml_path
+            : base_path($this->yml_path);
+
+        if (! File::exists($fullPath)) {
             return null;
         }
 
         try {
-            return Yaml::parseFile($this->yml_path);
+            return Yaml::parseFile($fullPath);
         } catch (Exception $e) {
             logger()->error('Failed to load YML config for FormType', [
                 'form_type_id' => $this->id,
-                'yml_path' => $this->yml_path,
+                'yml_path' => $fullPath,
                 'error' => $e->getMessage(),
             ]);
 
