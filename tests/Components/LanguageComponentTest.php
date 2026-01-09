@@ -48,7 +48,19 @@ it('ensures only one default language per tenant', function () use ($testSetting
 
     $this->actingAs($admin);
 
-    // English is auto-created as default, create German as new default
+    // Delete any auto-created languages and set up test-specific languages
+    CmsLanguage::where('tenant_id', $tenant->id)->delete();
+
+    // Create English as initial default
+    CmsLanguage::create([
+        'tenant_id' => $tenant->id,
+        'code' => 'en',
+        'name' => 'English',
+        'is_default' => true,
+        'is_active' => true,
+    ]);
+
+    // Create German as new default via component
     Volt::test($testSettings['componentName'])
         ->set('model.code', 'de')
         ->set('model.name', 'Deutsch')

@@ -1,6 +1,7 @@
 <?php
 
 use Noerd\Cms\Helpers\CollectionHelper;
+use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -52,6 +53,10 @@ it('displays dynamic columns from YAML configuration for projects', function ():
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
+    // Set up German as test language (project-independent)
+    CmsLanguage::where('tenant_id', $tenant->id)->delete();
+    CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_default' => true, 'is_active' => true]);
+
     // Create parent collection
     $parentCollection = Collection::create([
         'tenant_id' => $tenant->id,
@@ -73,11 +78,10 @@ it('displays dynamic columns from YAML configuration for projects', function ():
         'sort' => 1,
     ]);
 
-    // Test using HTTP request
-    // Note: Default language is 'en', so English values are displayed
+    // Test using HTTP request - German values displayed
     $response = $this->get('/cms/collections?key=projects');
     $response->assertStatus(200);
-    $response->assertSee('Test Project');
+    $response->assertSee('Test Projekt');
     $response->assertSee('✓ Bild vorhanden');
     $response->assertSee('Name');
     $response->assertSee('Image');
@@ -87,6 +91,10 @@ it('displays dynamic columns from YAML configuration for projects', function ():
 it('displays dynamic columns from YAML configuration for customers', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
+
+    // Set up German as test language (project-independent)
+    CmsLanguage::where('tenant_id', $tenant->id)->delete();
+    CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_default' => true, 'is_active' => true]);
 
     // Create parent collection
     $parentCollection = Collection::create([
@@ -112,12 +120,11 @@ it('displays dynamic columns from YAML configuration for customers', function ()
         'sort' => 0,
     ]);
 
-    // Test using HTTP request
-    // Note: Default language is 'en', so English values are displayed
+    // Test using HTTP request - German values displayed
     $response = $this->get('/cms/collections?key=customers');
     $response->assertStatus(200);
-    $response->assertSee('Test Customer');
-    $response->assertSee('A description');
+    $response->assertSee('Test Kunde');
+    $response->assertSee('Eine Beschreibung');
     $response->assertSee('Name');
     $response->assertSee('Description');
 });
@@ -125,6 +132,10 @@ it('displays dynamic columns from YAML configuration for customers', function ()
 it('handles empty collection entries gracefully', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
+
+    // Set up German as test language (project-independent)
+    CmsLanguage::where('tenant_id', $tenant->id)->delete();
+    CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_default' => true, 'is_active' => true]);
 
     // Test using HTTP request - should show column headers even with no data
     $response = $this->get('/cms/collections?key=projects');
@@ -136,6 +147,10 @@ it('handles empty collection entries gracefully', function (): void {
 it('displays multiple entries correctly', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
+
+    // Set up German as test language (project-independent)
+    CmsLanguage::where('tenant_id', $tenant->id)->delete();
+    CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_default' => true, 'is_active' => true]);
 
     // Create parent collection
     $parentCollection = Collection::create([
@@ -169,9 +184,9 @@ it('displays multiple entries correctly', function (): void {
         'sort' => 2,
     ]);
 
-    // Test that both entries are visible (using English values as default language is 'en')
+    // Test that both entries are visible - German values displayed
     $response = $this->get('/cms/collections?key=projects');
     $response->assertStatus(200);
-    $response->assertSee('Laravel Project');
-    $response->assertSee('Vue.js Application');
+    $response->assertSee('Laravel Projekt');
+    $response->assertSee('Vue.js Anwendung');
 });
