@@ -14,6 +14,9 @@ uses(CreatesCmsUser::class);
 
 // Mock CollectionHelper to ensure consistent behavior across test runs
 beforeEach(function (): void {
+    // Clear any previously set session language (from Pest.php beforeEach or elsewhere)
+    session()->forget('selectedLanguage');
+
     $mock = \Mockery::mock('overload:' . CollectionHelper::class);
 
     // Mock getCollectionFields for projects

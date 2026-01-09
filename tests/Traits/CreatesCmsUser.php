@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Noerd\Cms\Tests\Traits;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Noerd\Models\Tenant;
 use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
@@ -12,6 +13,7 @@ use Noerd\Noerd\Models\User;
 trait CreatesCmsUser
 {
     use RefreshDatabase;
+
     protected function createUserWithCmsAccess(): array
     {
         $tenant = Tenant::factory()->create();
@@ -27,6 +29,9 @@ trait CreatesCmsUser
         );
 
         $tenant->tenantApps()->attach($cmsApp->id);
+
+        // Ensure default English language exists for this tenant
+        CmsLanguage::ensureDefaultLanguageForTenant($tenant->id);
 
         $user = User::factory()->create();
         $user->tenants()->attach($tenant->id);

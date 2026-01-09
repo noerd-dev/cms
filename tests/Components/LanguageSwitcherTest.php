@@ -8,6 +8,9 @@ uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
 it('renders languages from database and sets default session', function (): void {
+    // Clear any previously set session value (from Pest.php beforeEach or elsewhere)
+    session()->forget('selectedLanguage');
+
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
