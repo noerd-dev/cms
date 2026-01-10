@@ -73,7 +73,7 @@ new class extends Component
             }
         }
 
-        $tableConfig = StaticConfigHelper::getTableConfig('global-parameters-list');
+        $tableConfig = $this->getTableConfig();
 
         return [
             'rows' => $rows,

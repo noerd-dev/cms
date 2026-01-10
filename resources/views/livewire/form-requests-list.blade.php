@@ -32,7 +32,7 @@ new class extends Component {
             })
             ->paginate(self::PAGINATION);
 
-        $tableConfig = StaticConfigHelper::getTableConfig('form-requests-list');
+        $tableConfig = $this->getTableConfig();
 
         return [
             'rows' => $rows,

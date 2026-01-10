@@ -11,8 +11,7 @@ use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Noerd\Helpers\StaticConfigHelper;
 use Noerd\Noerd\Traits\Noerd;
 
-new class extends Component
-{
+new class extends Component {
     use LanguageFilterTrait;
     use Noerd;
 
@@ -30,7 +29,7 @@ new class extends Component
     #[Computed]
     public function tableFilters(): array
     {
-        if (! $this->hasMultipleLanguages()) {
+        if (!$this->hasMultipleLanguages()) {
             return [];
         }
 
@@ -42,13 +41,19 @@ new class extends Component
         session(['activeTableFilters' => $this->activeTableFilters]);
 
         // Sync with selectedLanguage for page-detail consistency
-        if (! empty($this->activeTableFilters['language'])) {
+        if (!empty($this->activeTableFilters['language'])) {
             session(['selectedLanguage' => $this->activeTableFilters['language']]);
         }
     }
 
     public function tableAction(mixed $modelId = null, mixed $relationId = null): void
     {
+        if ($this->actionMode === 'selectRelation') {
+            $this->selectRelation($modelId);
+
+            return;
+        }
+
         $this->dispatch(
             event: 'noerdModal',
             component: 'page-detail',
@@ -65,7 +70,7 @@ new class extends Component
             ->filter(function ($collection) {
                 $collectionFields = CollectionHelper::getCollectionFields(strtolower($collection->collection_key));
 
-                return ! ($collectionFields['hasPage'] ?? true);
+                return !($collectionFields['hasPage'] ?? true);
             })
             ->pluck('id')
             ->toArray();
@@ -80,7 +85,7 @@ new class extends Component
             ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')
             ->when($this->search, function ($query): void {
                 $query->where(function ($query): void {
-                    $query->where('name', 'like', '%'.$this->search.'%');
+                    $query->where('name', 'like', '%' . $this->search . '%');
                 });
             })
             ->paginate(self::PAGINATION);
@@ -98,7 +103,7 @@ new class extends Component
             }
         }
 
-        $tableConfig = StaticConfigHelper::getTableConfig('pages-list');
+        $tableConfig = $this->getTableConfig();
 
         return [
             'rows' => $rows,
@@ -115,7 +120,7 @@ new class extends Component
             $this->activeTableFilters['language'] = session('selectedLanguage');
         }
 
-        if ((int) request()->pageId) {
+        if ((int)request()->pageId) {
             $this->tableAction(request()->pageId);
         }
 
