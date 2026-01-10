@@ -11,6 +11,6 @@ new class extends Component {
 
 <div class="py-4 pt-2">
     <div class="pb-4 text-left text-lg font-light">
-        {!! $element->text ?? '' !!}
+        <x-noerd::markdown :content="$element->text ?? ''" />
     </div>
 </div>
