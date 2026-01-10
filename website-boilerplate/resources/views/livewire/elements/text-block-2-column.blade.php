@@ -12,12 +12,12 @@ new class extends Component {
 <div class="grid md:grid-cols-2 gap-8 py-4 pt-2">
     @if(strlen($element->text1 ?? '' ) > 0)
     <div class="pb-4 text-left text-lg font-light">
-    {!! $element->text1 ?? '' !!}
+        <x-noerd::markdown :content="$element->text1 ?? ''" />
     </div>
     @endif
     @if(strlen($element->text2 ?? '' ) > 0)
         <div class="pb-4 text-left text-lg font-light">
-            {!! $element->text2 ?? '' !!}
+            <x-noerd::markdown :content="$element->text2 ?? ''" />
         </div>
     @endif
 </div>

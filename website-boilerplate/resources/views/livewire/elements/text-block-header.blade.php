@@ -34,11 +34,11 @@ new class extends Component {
             @endif
         @endisset
 
-        {!! $element->title ?? '' !!}
+        {{ $element->title ?? '' }}
 
     </div>
     <div class="text-left text-lg font-light">
-        {!! $element->description ?? '' !!}
+        <x-noerd::markdown :content="$element->description ?? ''" />
     </div>
     <style>
         .auswall-kopf a {
