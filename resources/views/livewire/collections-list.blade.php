@@ -22,6 +22,12 @@ new class () extends Component {
 
     public function tableAction(mixed $modelId = null, mixed $relationId = null): void
     {
+        if ($this->actionMode === 'selectRelation') {
+            $this->selectRelation($modelId);
+
+            return;
+        }
+
         $this->dispatch(
             event: 'noerdModal',
             component: 'collection-detail',

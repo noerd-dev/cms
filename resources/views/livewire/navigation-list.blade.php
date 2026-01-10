@@ -69,7 +69,7 @@ new class extends Component
             $row->name = $decoded[$selectedLanguage] ?? array_values($decoded)[0] ?? $oldName;
         }
 
-        $tableConfig = StaticConfigHelper::getTableConfig('navigation-list');
+        $tableConfig = $this->getTableConfig();
 
         return [
             'rows' => $rows,
