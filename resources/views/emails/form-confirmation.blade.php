@@ -1,43 +1,36 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('cms_form_confirmation') }}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.6;
             color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+        }
+        .container {
             max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 20px auto;
+            padding: 32px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        h1, h2, h3, h4, h5, h6 {
-            color: #2c3e50;
-            margin-top: 1em;
-            margin-bottom: 0.5em;
-        }
-        p {
-            margin: 1em 0;
-        }
-        strong {
-            font-weight: 600;
-        }
-        hr {
-            border: none;
-            border-top: 1px solid #ddd;
-            margin: 2em 0;
-        }
-        code {
-            background-color: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: monospace;
-        }
+        h1 { font-size: 1.5rem; margin-top: 0; color: #1a202c; }
+        h2 { font-size: 1.25rem; color: #2d3748; margin-top: 1.5rem; }
+        h3 { font-size: 1.1rem; color: #4a5568; }
+        p { margin: 1rem 0; }
+        a { color: #3182ce; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    {!! $emailBody !!}
+    <div class="container">
+        {!! Str::markdown($emailBody) !!}
+    </div>
 </body>
 </html>

@@ -28,7 +28,7 @@ new class () extends Component {
 
     protected function getEmailRateLimitPrefix(): string
     {
-        return 'form-type';
+        return 'form-type:' . ($this->formTypeId ?? 'new');
     }
 
     protected function getEmailViewName(): string
@@ -166,7 +166,7 @@ new class () extends Component {
 
                 <x-slot:tab1>
                     <div class="mt-4">
-                        <x-noerd::input-label class="pb-2" value="{{ __('E-Mail-Inhalt (HTML)') }}"/>
+                        <x-noerd::input-label class="pb-2" value="{{ __('E-Mail-Inhalt') }}"/>
                         <x-noerd::forms.tiptap
                             :field="'formType.email_body'"
                             :content="$formType['email_body'] ?? ''"/>
@@ -198,18 +198,43 @@ new class () extends Component {
                             {{ __('E-Mail-Vorschau') }}
                         </x-noerd::buttons.secondary>
 
-                        <x-noerd::buttons.secondary
-                            wire:click="sendTestEmail"
-                            wire:loading.attr="disabled"
-                            wire:target="sendTestEmail"
-                            :disabled="!$this->canSendTestEmail">
-                            <span wire:loading.remove wire:target="sendTestEmail">
-                                {{ __('Testemail senden') }}
-                            </span>
-                            <span wire:loading wire:target="sendTestEmail">
-                                {{ __('Wird gesendet...') }}
-                            </span>
-                        </x-noerd::buttons.secondary>
+                        <div x-data="{
+                            cooldown: @js($this->canSendTestEmail ? 0 : $this->testEmailCooldownSeconds),
+                            interval: null,
+                            init() {
+                                if (this.cooldown > 0) {
+                                    this.startCountdown();
+                                }
+                            },
+                            startCountdown() {
+                                this.interval = setInterval(() => {
+                                    this.cooldown--;
+                                    if (this.cooldown <= 0) {
+                                        clearInterval(this.interval);
+                                        $wire.$refresh();
+                                    }
+                                }, 1000);
+                            }
+                        }">
+                            <x-noerd::buttons.secondary
+                                wire:click="sendTestEmail"
+                                wire:loading.attr="disabled"
+                                wire:target="sendTestEmail"
+                                x-bind:disabled="cooldown > 0"
+                                :disabled="!$this->canSendTestEmail">
+                                <span wire:loading.remove wire:target="sendTestEmail">
+                                    <template x-if="cooldown <= 0">
+                                        <span>{{ __('Testemail senden') }}</span>
+                                    </template>
+                                    <template x-if="cooldown > 0">
+                                        <span>{{ __('Testemail senden') }} (<span x-text="cooldown"></span>s)</span>
+                                    </template>
+                                </span>
+                                <span wire:loading wire:target="sendTestEmail">
+                                    {{ __('Wird gesendet...') }}
+                                </span>
+                            </x-noerd::buttons.secondary>
+                        </div>
                     </div>
                 @endif
 
