@@ -30,13 +30,7 @@ new class extends Component {
 
     public function store(): void
     {
-        $this->validate([
-            'model.code' => ['required', 'string', 'max:10'],
-            'model.name' => ['required', 'string', 'max:100'],
-            'model.is_active' => ['boolean'],
-            'model.is_default' => ['boolean'],
-            'model.sort_order' => ['nullable', 'integer'],
-        ]);
+        $this->validateFromLayout();
 
         $data = $this->model;
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
