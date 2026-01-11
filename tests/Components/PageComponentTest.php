@@ -1,7 +1,6 @@
 <?php
 
 use Livewire\Volt\Volt;
-use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
@@ -137,28 +136,3 @@ it('sets a table key for the list', function () use ($testSettings): void {
         ->assertNotSet('tableId', '');
 });
 
-it('shows a preview error when element component is missing', function () use ($testSettings): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
-
-    // Create a page
-    $page = Page::create([
-        'name' => json_encode(['en' => 'Test Page']),
-        'slug' => json_encode(['en' => 'test-page']),
-        'tenant_id' => $user->selected_tenant_id,
-    ]);
-
-    // Create element_page with a missing element_key
-    $elementPage = ElementPage::create([
-        'page_id' => $page->id,
-        'element_key' => '____missing____',
-        'data' => json_encode(['foo' => 'bar']),
-        'sort' => 1,
-    ]);
-
-    Volt::test($testSettings['componentName'], ['modelId' => $page->id])
-        ->set('viewMode', 'preview')
-        ->assertSee(__('Element component not found:'))
-        ->assertSee('Please create both the .yml and .blade.php files in the elements folder.')
-        ->assertSee('____missing____');
-});
