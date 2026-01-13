@@ -72,7 +72,12 @@ new class extends Component {
 
     public function openPageSelect(): void
     {
-        $this->dispatch(event: 'noerdModal', component: 'page-select-modal', source: self::COMPONENT, arguments: []);
+        $this->dispatch(
+            event: 'noerdModal',
+            component: 'pages-list',
+            source: self::COMPONENT,
+            arguments: ['tableActionMethod' => 'selectAction'],
+        );
     }
 
     #[On('pageSelected')]
