@@ -1,8 +1,0 @@
-title: 'Collections'
-newLabel: null
-component: null
-disableSearch: false
-redirectAction: ''
-columns:
-  - { field: name, label: 'Name', width: 40 }
-  - { field: rows_count, label: noerd_entries, width: 20 }

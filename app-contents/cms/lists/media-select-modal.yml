@@ -1,9 +1,0 @@
-title: noerd_select_media
-search: true
-columns:
-  - { label: ID, field: id, width: 10 }
-  - { label: Name, field: name, width: 40 }
-  - { label: Type, field: type, width: 20 }
-  - { label: Size, field: size, width: 20 }
-  - { label: Created, field: created_at, width: 20 }
-
