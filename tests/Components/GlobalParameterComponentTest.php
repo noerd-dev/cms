@@ -26,10 +26,10 @@ it('validates the data', function () use ($testSettings): void {
     $this->actingAs($user);
 
     Volt::test($testSettings['componentName'])
-        ->set('model.key', '')
-        ->set('model.value', '')
+        ->set('globalParameterData.key', '')
+        ->set('globalParameterData.value', '')
         ->call('store')
-        ->assertHasErrors(['model.key', 'model.value']);
+        ->assertHasErrors(['globalParameterData.key', 'globalParameterData.value']);
 });
 
 it('successfully stores the data', function () use ($testSettings): void {
@@ -39,8 +39,8 @@ it('successfully stores the data', function () use ($testSettings): void {
     $parameterValue = fake()->sentence;
 
     Volt::test($testSettings['componentName'])
-        ->set('model.key', $parameterKey)
-        ->set('model.value', $parameterValue)
+        ->set('globalParameterData.key', $parameterKey)
+        ->set('globalParameterData.value', $parameterValue)
         ->call('store')
         ->assertHasNoErrors();
 
@@ -63,9 +63,9 @@ it('validates that key is required', function () use ($testSettings): void {
     $this->actingAs($user);
 
     Volt::test($testSettings['componentName'])
-        ->set('model.value', fake()->sentence)
+        ->set('globalParameterData.value', fake()->sentence)
         ->call('store')
-        ->assertHasErrors(['model.key']);
+        ->assertHasErrors(['globalParameterData.key']);
 });
 
 it('validates that value is required', function () use ($testSettings): void {
@@ -73,10 +73,10 @@ it('validates that value is required', function () use ($testSettings): void {
     $this->actingAs($user);
 
     Volt::test($testSettings['componentName'])
-        ->set('model.key', fake()->word)
-        ->set('model.value', '')
+        ->set('globalParameterData.key', fake()->word)
+        ->set('globalParameterData.value', '')
         ->call('store')
-        ->assertHasErrors(['model.value']);
+        ->assertHasErrors(['globalParameterData.value']);
 });
 
 it('can retrieve existing global parameter data', function (): void {
@@ -104,10 +104,10 @@ it('validates key is string and has max length', function () use ($testSettings)
     $longKey = str_repeat('a', 256); // Over 255 characters
 
     Volt::test($testSettings['componentName'])
-        ->set('model.key', $longKey)
-        ->set('model.value', 'test value')
+        ->set('globalParameterData.key', $longKey)
+        ->set('globalParameterData.value', 'test value')
         ->call('store')
-        ->assertHasErrors(['model.key']);
+        ->assertHasErrors(['globalParameterData.key']);
 });
 
 it('stores data with tenant_id', function () use ($testSettings): void {
@@ -117,8 +117,8 @@ it('stores data with tenant_id', function () use ($testSettings): void {
     $parameterValue = fake()->sentence;
 
     Volt::test($testSettings['componentName'])
-        ->set('model.key', $parameterKey)
-        ->set('model.value', $parameterValue)
+        ->set('globalParameterData.key', $parameterKey)
+        ->set('globalParameterData.value', $parameterValue)
         ->call('store')
         ->assertHasNoErrors();
 
@@ -138,7 +138,7 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
         ->assertDispatched('noerdModal', component: $testSettings['componentName']);
 
     Volt::test($testSettings['componentName'], [$model->id])
-        ->assertSet('model.id', $model->id)
+        ->assertSet('globalParameterData.id', $model->id)
         ->assertSet($testSettings['id'], $model->id) // URL Parameter
         ->call('delete')
         ->assertDispatched('reloadTable-' . $testSettings['listName'])
@@ -157,8 +157,8 @@ it('loads existing string value into component model for editing', function () u
     ]);
 
     Volt::test($testSettings['componentName'], [$existingParameter->id])
-        ->assertSet('model.key', 'test_key_string')
-        ->assertSet('model.value', 'test_value_string');
+        ->assertSet('globalParameterData.key', 'test_key_string')
+        ->assertSet('globalParameterData.value', 'test_value_string');
 });
 
 it('loads existing array value into component model for editing', function () use ($testSettings): void {
@@ -172,6 +172,6 @@ it('loads existing array value into component model for editing', function () us
     ]);
 
     Volt::test($testSettings['componentName'], [$existingParameter->id])
-        ->assertSet('model.key', 'test_key_array')
-        ->assertSet('model.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+        ->assertSet('globalParameterData.key', 'test_key_array')
+        ->assertSet('globalParameterData.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
 });

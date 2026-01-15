@@ -17,7 +17,7 @@ new class extends Component {
             event: 'noerdModal',
             component: 'form-request-detail',
             source: self::COMPONENT,
-            arguments: ['modelId' => $modelId, 'relationId' => $relationId],
+            arguments: ['formRequestId' => $modelId, 'relationId' => $relationId],
         );
     }
 

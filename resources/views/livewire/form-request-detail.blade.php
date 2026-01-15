@@ -15,23 +15,20 @@ new class extends Component {
     public const ID = 'formRequestId';
 
     #[Url(keep: false, except: '')]
-    public ?string $formRequestId = null;
+    public $formRequestId = null;
 
-    public array $model = [];
-    public FormRequest $formRequestModel;
+    public array $formRequestData = [];
 
     public function mount(FormRequest $formRequest): void
     {
-        if ($this->modelId) {
-            $formRequest = FormRequest::find($this->modelId);
+        if ($this->formRequestId) {
+            $formRequest = FormRequest::find($this->formRequestId);
         }
 
-        $this->modelId = $formRequest->id;
         $this->formRequestId = $formRequest->id;
-        $this->formRequestModel = $formRequest;
 
         // Prepare view model
-        $this->model = [
+        $this->formRequestData = [
             'id' => $formRequest->id,
             'tenant_id' => $formRequest->tenant_id,
             'created_at' => $formRequest->created_at,
@@ -42,7 +39,7 @@ new class extends Component {
 
     public function delete(): void
     {
-        $fr = FormRequest::find($this->modelId);
+        $fr = FormRequest::find($this->formRequestId);
         if ($fr) {
             $fr->delete();
         }
@@ -58,19 +55,19 @@ new class extends Component {
 
 <x-noerd::page :disableModal="$disableModal">
     <x-slot:header>
-        <x-noerd::modal-title>{{ __('Form Request') }} #{{$model['id'] ?? ''}}</x-noerd::modal-title>
+        <x-noerd::modal-title>{{ __('Form Request') }} #{{$formRequestData['id'] ?? ''}}</x-noerd::modal-title>
     </x-slot:header>
 
     <div class="p-4 border border-b-gray-200 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-gray-950/[2.5%] after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-gray-950/5 dark:after:inset-ring-white/10">
         <div class="text-sm text-gray-600 mb-4">
             <div><strong>{{ __('Created') }}:</strong>
-                {{\Carbon\Carbon::parse($model['created_at'])->format('d.m.Y H:i')}}
+                {{\Carbon\Carbon::parse($formRequestData['created_at'])->format('d.m.Y H:i')}}
             </div>
         </div>
 
         <div class="bg-white rounded border p-4">
             <div class="font-semibold mb-2">{{ __('Data') }}</div>
-            @php($data = $model['data'] ?? [])
+            @php($data = $formRequestData['data'] ?? [])
             @if(is_array($data))
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     @foreach($data as $key => $value)
@@ -93,7 +90,7 @@ new class extends Component {
     </div>
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="$modelId" />
+        <x-noerd::delete-save-bar :showDelete="$formRequestId" />
     </x-slot:footer>
 </x-noerd::page>
 

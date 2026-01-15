@@ -18,12 +18,12 @@ new class () extends Component {
     #[Url(keep: false, except: '')]
     public $formTypeId = null;
 
-    public array $formType;
+    public array $formTypeData = [];
     public ?array $ymlConfig = null;
 
     protected function getEmailData(): array
     {
-        return $this->formType;
+        return $this->formTypeData;
     }
 
     protected function getEmailRateLimitPrefix(): string
@@ -39,14 +39,14 @@ new class () extends Component {
     public function getSampleEmailData(): array
     {
         $sampleData = [
-            '{{form_title}}' => $this->formType['title'] ?? 'Formulartyp',
+            '{{form_title}}' => $this->formTypeData['title'] ?? 'Formulartyp',
             '{{submission_date}}' => now()->format('d.m.Y H:i'),
         ];
 
         if ($this->formTypeId) {
-            $model = FormType::find($this->formTypeId);
-            if ($model) {
-                $fieldPlaceholders = $model->getFieldPlaceholders();
+            $formType = FormType::find($this->formTypeId);
+            if ($formType) {
+                $fieldPlaceholders = $formType->getFieldPlaceholders();
                 foreach ($fieldPlaceholders as $placeholder => $description) {
                     $sampleData[$placeholder] = 'Beispiel: ' . $description;
                 }
@@ -62,9 +62,9 @@ new class () extends Component {
         $placeholders = FormType::getEmailPlaceholders();
 
         if ($this->formTypeId) {
-            $model = FormType::find($this->formTypeId);
-            if ($model) {
-                $fieldPlaceholders = $model->getFieldPlaceholders();
+            $formType = FormType::find($this->formTypeId);
+            if ($formType) {
+                $fieldPlaceholders = $formType->getFieldPlaceholders();
                 $placeholders = array_merge($placeholders, $fieldPlaceholders);
             }
         }
@@ -72,35 +72,35 @@ new class () extends Component {
         return $placeholders;
     }
 
-    public function mount(FormType $model): void
+    public function mount(FormType $formType): void
     {
-        if ($this->modelId) {
-            $model = FormType::find($this->modelId);
+        if ($this->formTypeId) {
+            $formType = FormType::find($this->formTypeId);
         }
 
-        $this->mountModalProcess(self::COMPONENT, $model);
-        $this->formType = $model->toArray();
-        $this->ymlConfig = $model->loadYmlConfig();
-        $this->modalTitle = __('Formulartyp') . ' ' . ($this->formType['title'] ?? '');
+        $this->mountModalProcess(self::COMPONENT, $formType);
+        $this->formTypeData = $formType->toArray();
+        $this->ymlConfig = $formType->loadYmlConfig();
+        $this->modalTitle = __('Formulartyp') . ' ' . ($this->formTypeData['title'] ?? '');
     }
 
     public function store(): void
     {
         $this->validate([
-            'formType.send_email' => ['boolean'],
-            'formType.email_subject' => ['nullable', 'string', 'max:255'],
-            'formType.email_body' => ['nullable', 'string'],
-            'formType.notification_email' => ['nullable', 'email', 'max:255'],
+            'formTypeData.send_email' => ['boolean'],
+            'formTypeData.email_subject' => ['nullable', 'string', 'max:255'],
+            'formTypeData.email_body' => ['nullable', 'string'],
+            'formTypeData.notification_email' => ['nullable', 'email', 'max:255'],
         ]);
 
         $formType = FormType::find($this->formTypeId);
 
         if ($formType) {
             $formType->update([
-                'send_email' => $this->formType['send_email'] ?? false,
-                'email_subject' => $this->formType['email_subject'] ?? null,
-                'email_body' => $this->formType['email_body'] ?? null,
-                'notification_email' => $this->formType['notification_email'] ?? null,
+                'send_email' => $this->formTypeData['send_email'] ?? false,
+                'email_subject' => $this->formTypeData['email_subject'] ?? null,
+                'email_body' => $this->formTypeData['email_body'] ?? null,
+                'notification_email' => $this->formTypeData['notification_email'] ?? null,
             ]);
 
             $this->showSuccessIndicator = true;
@@ -149,15 +149,15 @@ new class () extends Component {
                         <div class="grid grid-cols-3 gap-4 text-sm">
                             <div>
                                 <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Key') }}</label>
-                                <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formType['key'] ?? '-' }}</p>
+                                <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formTypeData['key'] ?? '-' }}</p>
                             </div>
                             <div>
                                 <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Titel') }}</label>
-                                <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formType['title'] ?? '-' }}</p>
+                                <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formTypeData['title'] ?? '-' }}</p>
                             </div>
                             <div>
                                 <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Beschreibung') }}</label>
-                                <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formType['description'] ?? '-' }}</p>
+                                <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formTypeData['description'] ?? '-' }}</p>
                             </div>
                         </div>
 
@@ -168,8 +168,8 @@ new class () extends Component {
                     <div class="mt-4">
                         <x-noerd::input-label class="pb-2" value="{{ __('E-Mail-Inhalt') }}"/>
                         <x-noerd::forms.tiptap
-                            :field="'formType.email_body'"
-                            :content="$formType['email_body'] ?? ''"/>
+                            :field="'formTypeData.email_body'"
+                            :content="$formTypeData['email_body'] ?? ''"/>
                     </div>
 
                     {{-- Email Placeholders --}}
@@ -244,7 +244,7 @@ new class () extends Component {
     </x-noerd::page>
 
     <x-noerd::email-preview-modal
-        :emailSubject="$formType['email_subject'] ?? ''"
+        :emailSubject="$formTypeData['email_subject'] ?? ''"
         :sampleData="$this->getSampleEmailData()"
         :previewHtml="$this->previewEmailHtml"
     />

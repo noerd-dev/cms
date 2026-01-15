@@ -29,7 +29,7 @@ new class extends Component {
             event: 'noerdModal',
             component: 'cms-language-detail',
             source: self::COMPONENT,
-            arguments: ['modelId' => $modelId, 'relationId' => $relationId],
+            arguments: ['cmsLanguageId' => $modelId, 'relationId' => $relationId],
         );
     }
 
@@ -57,5 +57,4 @@ new class extends Component {
 
 <x-noerd::page :disableModal="$disableModal">
     @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
-
 </x-noerd::page>

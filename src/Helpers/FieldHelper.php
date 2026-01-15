@@ -65,9 +65,10 @@ class FieldHelper
         $flattenedFields = self::flattenFields($componentFields['fields'] ?? []);
 
         foreach ($flattenedFields as $elementField) {
-            if (in_array($elementField['type'], ['translatableText', 'translatableRichText'])) {
-                $baseKey = str_replace('model.', '', $elementField['name']);
+            // Strip common prefixes (model., page., etc.) to get the base key
+            $baseKey = preg_replace('/^(model|page)\./', '', $elementField['name']);
 
+            if (in_array($elementField['type'], ['translatableText', 'translatableRichText'])) {
                 foreach (['de', 'en'] as $lang) {
                     $value = $datas[$baseKey][$lang] ?? $datas[$baseKey] ?? '';
                     if (self::isJsonAndDecode($value)) {
@@ -77,7 +78,6 @@ class FieldHelper
                     $model[$baseKey][$lang] = $value;
                 }
             } else {
-                $baseKey = str_replace('model.', '', $elementField['name']);
                 $model[$baseKey] = $datas[$baseKey] ?? $elementField['default'] ?? '';
             }
         }

@@ -24,22 +24,23 @@ it('create a page', function (): void {
         ->assertOk();
 
     Volt::test('page-detail')
-        ->set('model.name.de', 'Test Page')
+        ->set('pageData.name.de', 'Test Page')
         ->call('store')
         ->assertOk();
 
     $this->assertDatabaseHas('pages', [
         'tenant_id' => $tenant->id,
-        'name' => '{"de":"Test Page","en":""}',
+        'name' => '{"de":"Test Page"}',
     ]);
 
     // Open the page-component for a created page and edit it
     $page = Page::where('tenant_id', $tenant->id)
-        ->where('name', '{"de":"Test Page","en":""}')
+        ->where('name', '{"de":"Test Page"}')
         ->first();
 
-    Volt::test('page-detail', ['modelId' => $page->id])
-        ->set('model.name.en', 'Test Page English')
+    Volt::test('page-detail', ['pageId' => $page->id])
+        ->set('pageData.name.de', 'Test Page')
+        ->set('pageData.name.en', 'Test Page English')
         ->call('store')
         ->assertOk();
 

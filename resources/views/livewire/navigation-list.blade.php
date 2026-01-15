@@ -43,7 +43,7 @@ new class extends Component
             event: 'noerdModal',
             component: 'navigation-detail',
             source: self::COMPONENT,
-            arguments: ['modelId' => $modelId, 'relationId' => $relationId],
+            arguments: ['navigationId' => $modelId, 'relationId' => $relationId],
         );
     }
 

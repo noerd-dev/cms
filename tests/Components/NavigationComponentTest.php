@@ -21,10 +21,10 @@ it('validates that either page or link must be present', function (): void {
     $this->actingAs($user);
 
     Volt::test('navigation-detail')
-        ->set('model.navigation_key', 'MAIN')
-        ->set('model.name', ['de' => 'Start', 'en' => 'Start'])
+        ->set('navigationData.navigation_key', 'MAIN')
+        ->set('navigationData.name', ['de' => 'Start', 'en' => 'Start'])
         ->call('store')
-        ->assertHasErrors(['model.page_id' => 'required_without', 'model.link' => 'required_without']);
+        ->assertHasErrors(['navigationData.page_id' => 'required_without', 'navigationData.link' => 'required_without']);
 });
 
 it('stores a navigation with page and clears link', function (): void {
@@ -34,9 +34,9 @@ it('stores a navigation with page and clears link', function (): void {
     $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => json_encode(['de' => 'Seite', 'en' => 'Page'])]);
 
     Volt::test('navigation-detail')
-        ->set('model.navigation_key', 'MAIN')
-        ->set('model.name', ['de' => 'Start', 'en' => 'Start'])
-        ->set('model.link', 'https://example.com')
+        ->set('navigationData.navigation_key', 'MAIN')
+        ->set('navigationData.name', ['de' => 'Start', 'en' => 'Start'])
+        ->set('navigationData.link', 'https://example.com')
         ->call('pageSelected', $page->id)
         ->call('store')
         ->assertHasNoErrors();
@@ -54,9 +54,9 @@ it('stores a navigation with link and clears page', function (): void {
     $this->actingAs($user);
 
     Volt::test('navigation-detail')
-        ->set('model.navigation_key', 'MAIN')
-        ->set('model.name', ['de' => 'Kontakt', 'en' => 'Contact'])
-        ->set('model.link', 'https://example.com/contact')
+        ->set('navigationData.navigation_key', 'MAIN')
+        ->set('navigationData.name', ['de' => 'Kontakt', 'en' => 'Contact'])
+        ->set('navigationData.link', 'https://example.com/contact')
         ->call('store')
         ->assertHasNoErrors();
 
@@ -73,9 +73,9 @@ it('normalizes new_tab default and stores 0 when not set', function (): void {
     $this->actingAs($user);
 
     Volt::test('navigation-detail')
-        ->set('model.navigation_key', 'MAIN')
-        ->set('model.name', ['de' => 'Blog', 'en' => 'Blog'])
-        ->set('model.link', 'https://example.com/blog')
+        ->set('navigationData.navigation_key', 'MAIN')
+        ->set('navigationData.name', ['de' => 'Blog', 'en' => 'Blog'])
+        ->set('navigationData.link', 'https://example.com/blog')
         ->call('store')
         ->assertHasNoErrors();
 

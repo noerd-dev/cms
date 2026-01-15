@@ -30,7 +30,7 @@ beforeEach(function (): void {
             'buttonList' => 'New Project',
             'hasPage' => true,
             'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'page.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ['name' => 'image', 'label' => 'Image', 'type' => 'image'],
             ],
         ]);
@@ -44,7 +44,7 @@ beforeEach(function (): void {
             'buttonList' => 'New Contact',
             'hasPage' => true,
             'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'page.name', 'label' => 'Name', 'type' => 'translatableText'],
             ],
         ]);
 
@@ -57,7 +57,7 @@ beforeEach(function (): void {
             'buttonList' => 'New Slider',
             'hasPage' => false,
             'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'page.name', 'label' => 'Name', 'type' => 'translatableText'],
             ],
         ]);
 
@@ -70,8 +70,8 @@ beforeEach(function (): void {
             'buttonList' => 'New Customer',
             'hasPage' => false,
             'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
-                ['name' => 'model.description', 'label' => 'Description', 'type' => 'translatableText'],
+                ['name' => 'page.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'page.description', 'label' => 'Description', 'type' => 'translatableText'],
             ],
         ]);
 });
@@ -114,9 +114,9 @@ it('uploads an image via images.field binding and stores path into model', funct
     $before = MediaModel::count();
 
     // Set the Livewire-bound temporary file; component must process it
-    Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'collectionKey' => 'projects'])
+    Volt::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
         ->set('images.image', $fakeImage)
-        ->assertSet('model.image', fn($value) => is_string($value) && $value !== '');
+        ->assertSet('pageData.image', fn($value) => is_string($value) && $value !== '');
 
     expect(MediaModel::count())->toBe($before + 1);
 
@@ -145,9 +145,9 @@ it('deletes an image value from model', function () use ($testSettings): void {
         'sort' => 0,
     ]);
 
-    Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'collectionKey' => 'projects'])
+    Volt::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
         ->call('deleteImage', 'image')
-        ->assertSet('model.image', null);
+        ->assertSet('pageData.image', null);
 });
 
 it('tests collection factory without page', function (): void {
@@ -287,8 +287,8 @@ it('handles collections without page features (hasPage: false)', function () use
         ->assertSet('collectionKey', 'customers')
         ->assertSet('collectionLayout.hasPage', false)
         ->assertSet('hasPageFeatures', false)
-        ->set('model.name', ['de' => 'Test Kunde', 'en' => 'Test Customer'])
-        ->set('model.description', ['de' => 'Test Beschreibung', 'en' => 'Test Description'])
+        ->set('pageData.name', ['de' => 'Test Kunde', 'en' => 'Test Customer'])
+        ->set('pageData.description', ['de' => 'Test Beschreibung', 'en' => 'Test Description'])
         ->call('store')
         ->assertHasNoErrors();
 
@@ -330,15 +330,15 @@ it('does not update image on mediaSelected when token mismatches; updates when t
         'size' => 1,
     ]);
 
-    $component = Volt::test($testSettings['componentName'], ['modelId' => $collection->id, 'collectionKey' => 'projects'])
-        ->set('model.__mediaToken', 'token-abc')
-        ->set('model.image', 'UNCHANGED');
+    $component = Volt::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
+        ->set('pageData.__mediaToken', 'token-abc')
+        ->set('pageData.image', 'UNCHANGED');
 
     // Wrong token -> should not change
     $component->call('mediaSelected', $media->id, 'image', 'wrong-token')
-        ->assertSet('model.image', 'UNCHANGED');
+        ->assertSet('pageData.image', 'UNCHANGED');
 
     // Correct token -> should change
     $component->call('mediaSelected', $media->id, 'image', 'token-abc')
-        ->assertSet('model.image', fn($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED');
+        ->assertSet('pageData.image', fn($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED');
 });

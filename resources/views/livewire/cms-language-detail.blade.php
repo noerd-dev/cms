@@ -15,35 +15,34 @@ new class extends Component {
     #[\Livewire\Attributes\Url(keep: false, except: '')]
     public ?string $cmsLanguageId = null;
 
-    public array $model;
-    public CmsLanguage $cmsLanguage;
+    public array $cmsLanguageData = [];
 
-    public function mount(CmsLanguage $model): void
+    public function mount(CmsLanguage $cmsLanguage): void
     {
-        if ($this->modelId) {
-            $model = CmsLanguage::find($this->modelId);
+        if ($this->cmsLanguageId) {
+            $cmsLanguage = CmsLanguage::find($this->cmsLanguageId);
         }
 
-        $this->mountModalProcess(self::COMPONENT, $model);
-        $this->cmsLanguage = $model;
+        $this->mountModalProcess(self::COMPONENT, $cmsLanguage);
+        $this->cmsLanguageData = $cmsLanguage->toArray();
     }
 
     public function store(): void
     {
         $this->validateFromLayout();
 
-        $data = $this->model;
+        $data = $this->cmsLanguageData;
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
 
         // Model events handle is_default consistency
-        $cmsLanguage = CmsLanguage::updateOrCreate(['id' => $this->modelId], $data);
+        $cmsLanguage = CmsLanguage::updateOrCreate(['id' => $this->cmsLanguageId], $data);
 
         $this->storeProcess($cmsLanguage);
     }
 
     public function delete(): void
     {
-        $cmsLanguage = CmsLanguage::find($this->modelId);
+        $cmsLanguage = CmsLanguage::find($this->cmsLanguageId);
         if ($cmsLanguage) {
             $cmsLanguage->delete();
         }

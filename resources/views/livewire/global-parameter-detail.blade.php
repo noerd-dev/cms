@@ -16,24 +16,24 @@ new class extends Component {
     public const LIST_COMPONENT = 'global-parameters-list';
     public const ID = 'globalParameterId';
     #[Url(keep: false, except: '')]
-    public ?string $globalParameterId = null;
+    public $globalParameterId = null;
 
-    public array $model;
-    public GlobalParameter $globalParameter;
+    public array $globalParameterData = [];
 
-    public function mount(GlobalParameter $model): void
+    public function mount(GlobalParameter $globalParameter): void
     {
-        if ($this->modelId) {
-            $model = GlobalParameter::find($this->modelId);
+        if ($this->globalParameterId) {
+            $globalParameter = GlobalParameter::find($this->globalParameterId);
         }
 
-        $this->mountModalProcess(self::COMPONENT, $model);
+        $this->mountModalProcess(self::COMPONENT, $globalParameter);
+        $this->globalParameterData = $globalParameter->toArray();
 
         // Normalize value for editing: decode JSON into PHP value (string or array)
-        if (isset($this->model['value']) && is_string($this->model['value'])) {
-            $decoded = json_decode($this->model['value'], true);
+        if (isset($this->globalParameterData['value']) && is_string($this->globalParameterData['value'])) {
+            $decoded = json_decode($this->globalParameterData['value'], true);
             if (json_last_error() === JSON_ERROR_NONE) {
-                $this->model['value'] = $decoded;
+                $this->globalParameterData['value'] = $decoded;
             }
         }
     }
@@ -41,35 +41,33 @@ new class extends Component {
     public function store(): void
     {
         $this->validate([
-            'model.key' => ['required', 'string', 'max:255'],
-            'model.value' => ['required'],
+            'globalParameterData.key' => ['required', 'string', 'max:255'],
+            'globalParameterData.value' => ['required'],
         ]);
 
-        $model = $this->model;
-        $model['tenant_id'] = auth()->user()->selected_tenant_id;
+        $data = $this->globalParameterData;
+        $data['tenant_id'] = auth()->user()->selected_tenant_id;
         // auto detect if value is an array and convert it to JSON; if string, encode plain string
-        $value = $this->model['value'];
+        $value = $this->globalParameterData['value'];
         // If array with languages, keep as is; else wrap in current language if available
         if (is_array($value)) {
-            $model['value'] = json_encode($value);
+            $data['value'] = json_encode($value);
         } else {
-            $model['value'] = json_encode((string) $value);
+            $data['value'] = json_encode((string) $value);
         }
-        $globalParameter = GlobalParameter::updateOrCreate(['id' => $this->modelId],
-            $model);
+        $globalParameter = GlobalParameter::updateOrCreate(['id' => $this->globalParameterId], $data);
 
         $this->dispatch('storeElements');
         $this->showSuccessIndicator = true;
 
         if ($globalParameter->wasRecentlyCreated) {
-            $this->modelId = $globalParameter['id'];
-            $this->page = $globalParameter;
+            $this->globalParameterId = $globalParameter['id'];
         }
     }
 
     public function delete(): void
     {
-        $globalParameter = GlobalParameter::find($this->modelId);
+        $globalParameter = GlobalParameter::find($this->globalParameterId);
         $globalParameter->delete();
         $this->closeModalProcess(self::LIST_COMPONENT);
     }
@@ -97,6 +95,6 @@ new class extends Component {
     <x-noerd::tab-content :layout="$pageLayout" />
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="false && isset($globalParameter->id)"/>
+        <x-noerd::delete-save-bar :showDelete="false && isset($globalParameterId)"/>
     </x-slot:footer>
 </x-noerd::page>
