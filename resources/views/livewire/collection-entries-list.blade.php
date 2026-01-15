@@ -86,7 +86,7 @@ new class extends Component
             event: 'noerdModal',
             component: 'page-detail',
             source: self::COMPONENT,
-            arguments: ['modelId' => $modelId, 'collectionKey' => $this->collectionKey, 'relationId' => $relationId],
+            arguments: ['pageId' => $modelId, 'collectionKey' => $this->collectionKey, 'relationId' => $relationId],
         );
     }
 

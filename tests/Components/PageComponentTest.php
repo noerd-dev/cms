@@ -10,7 +10,7 @@ uses(CreatesCmsUser::class);
 $testSettings = [
     'componentName' => 'page-detail',
     'listName' => 'pages-list',
-    'id' => 'modelId',
+    'id' => 'pageId',
 ];
 
 it('test the route', function (): void {
@@ -29,9 +29,9 @@ it('validates the data', function () use ($testSettings): void {
 
     // Test with invalid data (empty name array)
     Volt::test($testSettings['componentName'])
-        ->set('model.name', [])
+        ->set('pageData.name', [])
         ->call('store')
-        ->assertHasErrors(['model.name']);
+        ->assertHasErrors(['pageData.name']);
 });
 
 it('successfully stores the data', function () use ($testSettings): void {
@@ -40,9 +40,9 @@ it('successfully stores the data', function () use ($testSettings): void {
     $this->actingAs($user);
 
     $component = Volt::test($testSettings['componentName'])
-        ->set('model.name.de', 'Test Seite')
-        ->set('model.name.en', 'Test Page')
-        ->set('model.layout', 'weblayout')
+        ->set('pageData.name.de', 'Test Seite')
+        ->set('pageData.name.en', 'Test Page')
+        ->set('pageData.layout', 'weblayout')
         ->call('store')
         ->assertOk();
 
@@ -63,7 +63,7 @@ it('successfully deletes a page', function () use ($testSettings): void {
         'slug' => '{"de":"/test-seite","en":"/test-page"}',
     ]);
 
-    Volt::test($testSettings['componentName'], ['modelId' => $model->id])
+    Volt::test($testSettings['componentName'], ['pageId' => $model->id])
         ->call('delete')
         ->assertDispatched('reloadTable-' . $testSettings['listName']);
 
@@ -72,7 +72,7 @@ it('successfully deletes a page', function () use ($testSettings): void {
     ]);
 });
 
-it('opens page with modelId', function () use ($testSettings): void {
+it('opens page with pageId', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
     $this->actingAs($user);
@@ -82,9 +82,9 @@ it('opens page with modelId', function () use ($testSettings): void {
         'slug' => '{"de":"/test-seite","en":"/test-page"}',
     ]);
 
-    $component = Volt::test($testSettings['componentName'], ['modelId' => $model->id]);
+    $component = Volt::test($testSettings['componentName'], ['pageId' => $model->id]);
 
-    $component->assertSet('modelId', $model->id);
+    $component->assertSet('pageId', $model->id);
     // Note: model.id might be set differently due to FieldHelper parsing
 });
 
@@ -98,9 +98,9 @@ it('opens and stores existing page', function () use ($testSettings): void {
         'slug' => '{"de":"/alte-seite","en":"/old-page"}',
     ]);
 
-    Volt::test($testSettings['componentName'], ['modelId' => $model->id])
-        ->set('model.name.de', 'Neue Seite')
-        ->set('model.name.en', 'New Page')
+    Volt::test($testSettings['componentName'], ['pageId' => $model->id])
+        ->set('pageData.name.de', 'Neue Seite')
+        ->set('pageData.name.en', 'New Page')
         ->call('store')
         ->assertOk();
 
@@ -123,7 +123,7 @@ it('dispatches table action from pages table', function () use ($testSettings): 
             'noerdModal',
             component: $testSettings['componentName'],
             source: $testSettings['listName'],
-            arguments: ['modelId' => 123, 'relationId' => null],
+            arguments: ['pageId' => 123, 'relationId' => null],
         );
 });
 

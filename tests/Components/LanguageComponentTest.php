@@ -20,7 +20,7 @@ it('validates the language data', function () use ($testSettings): void {
 
     Volt::test($testSettings['componentName'])
         ->call('store')
-        ->assertHasErrors(['model.code', 'model.name']);
+        ->assertHasErrors(['cmsLanguageData.code', 'cmsLanguageData.name']);
 });
 
 it('creates a new language and stores tenant_id', function () use ($testSettings): void {
@@ -29,9 +29,9 @@ it('creates a new language and stores tenant_id', function () use ($testSettings
     $this->actingAs($admin);
 
     Volt::test($testSettings['componentName'])
-        ->set('model.code', 'de')
-        ->set('model.name', 'Deutsch')
-        ->set('model.is_default', true)
+        ->set('cmsLanguageData.code', 'de')
+        ->set('cmsLanguageData.name', 'Deutsch')
+        ->set('cmsLanguageData.is_default', true)
         ->call('store')
         ->assertOk();
 
@@ -62,9 +62,9 @@ it('ensures only one default language per tenant', function () use ($testSetting
 
     // Create German as new default via component
     Volt::test($testSettings['componentName'])
-        ->set('model.code', 'de')
-        ->set('model.name', 'Deutsch')
-        ->set('model.is_default', true)
+        ->set('cmsLanguageData.code', 'de')
+        ->set('cmsLanguageData.name', 'Deutsch')
+        ->set('cmsLanguageData.is_default', true)
         ->call('store');
 
     // German should now be default, English should not
@@ -92,8 +92,8 @@ it('updates an existing language', function () use ($testSettings): void {
         'is_default' => false,
     ]);
 
-    Volt::test($testSettings['componentName'], ['modelId' => $language->id])
-        ->set('model.name', 'Französisch')
+    Volt::test($testSettings['componentName'], ['cmsLanguageId' => $language->id])
+        ->set('cmsLanguageData.name', 'Französisch')
         ->call('store')
         ->assertOk();
 
@@ -114,7 +114,7 @@ it('deletes a language', function () use ($testSettings): void {
         'is_default' => false,
     ]);
 
-    Volt::test($testSettings['componentName'], ['modelId' => $language->id])
+    Volt::test($testSettings['componentName'], ['cmsLanguageId' => $language->id])
         ->call('delete')
         ->assertDispatched('reloadTable-' . $testSettings['listName']);
 

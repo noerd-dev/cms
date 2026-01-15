@@ -3,17 +3,17 @@ description: cms_form_type_description
 cols: 6
 fields:
   -
-    name: formType.send_email
+    name: formTypeData.send_email
     label: cms_send_email_notification
     type: checkbox
     colspan: 6
   -
-    name: formType.email_subject
+    name: formTypeData.email_subject
     label: cms_email_subject
     type: text
     colspan: 6
   -
-    name: formType.notification_email
+    name: formTypeData.notification_email
     label: cms_notification_email
     type: text
     colspan: 6

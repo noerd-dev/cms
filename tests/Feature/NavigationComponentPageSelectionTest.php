@@ -24,14 +24,14 @@ test('page selection auto-fills empty name field', function (): void {
     session(['selectedLanguage' => 'de']);
 
     Volt::test('navigation-detail')
-        ->set('model', [
+        ->set('navigationData', [
             'navigation_key' => 'test-nav',
             'name' => [], // Empty name field
             'page_id' => null,
         ])
         ->call('pageSelected', $page->id)
-        ->assertSet('model.page_id', $page->id)
-        ->assertSet('model.name', [
+        ->assertSet('navigationData.page_id', $page->id)
+        ->assertSet('navigationData.name', [
             'de' => 'Test Seite',
             'en' => 'Test Page',
         ]);
@@ -57,14 +57,14 @@ test('page selection does not overwrite existing name field', function (): void 
     session(['selectedLanguage' => 'de']);
 
     Volt::test('navigation-detail')
-        ->set('model', [
+        ->set('navigationData', [
             'navigation_key' => 'test-nav',
             'name' => $existingName, // Pre-filled name field
             'page_id' => null,
         ])
         ->call('pageSelected', $page->id)
-        ->assertSet('model.page_id', $page->id)
-        ->assertSet('model.name', $existingName); // Should remain unchanged
+        ->assertSet('navigationData.page_id', $page->id)
+        ->assertSet('navigationData.name', $existingName); // Should remain unchanged
 });
 
 test('page selection auto-fills when name field has only empty values', function (): void {
@@ -82,14 +82,14 @@ test('page selection auto-fills when name field has only empty values', function
     session(['selectedLanguage' => 'de']);
 
     Volt::test('navigation-detail')
-        ->set('model', [
+        ->set('navigationData', [
             'navigation_key' => 'test-nav',
             'name' => ['de' => '', 'en' => ''], // Empty string values
             'page_id' => null,
         ])
         ->call('pageSelected', $page->id)
-        ->assertSet('model.page_id', $page->id)
-        ->assertSet('model.name', [
+        ->assertSet('navigationData.page_id', $page->id)
+        ->assertSet('navigationData.name', [
             'de' => 'Test Seite',
             'en' => 'Test Page',
         ]);

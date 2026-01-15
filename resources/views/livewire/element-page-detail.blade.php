@@ -22,7 +22,7 @@ new class extends Component {
     public const LIST_COMPONENT = 'element-pages-list';
     public const ID = 'elementPageId';
 
-    public ?string $modelId = null;
+    public ?string $elementPageId = null;
 
     public array $elementLayout;
     public $model;
@@ -35,19 +35,19 @@ new class extends Component {
 
     public function mount(ElementPage $elementPage): void
     {
-        if ($this->modelId) {
-            $elementPage = ElementPage::find($this->modelId);
+        if ($this->elementPageId) {
+            $elementPage = ElementPage::find($this->elementPageId);
         }
         $this->elementLayout = FieldHelper::getElementFields($elementPage->element_key) ?? [];
 
         $this->model = FieldHelper::parseElementToData($elementPage->element_key,
             json_decode($elementPage->data, true));
-        $this->modelId = $elementPage->id;
+        $this->elementPageId = $elementPage->id;
         $this->elementPage = $elementPage;
 
         // Send initial data to a parent component for live preview
         $this->dispatch('updateLiveElementData',
-            elementPageId: $this->modelId,
+            elementPageId: $this->elementPageId,
             data: $this->model
         );
     }
@@ -62,7 +62,7 @@ new class extends Component {
     #[On('storeElements')]
     public function store(): void
     {
-        $elementPage = ElementPage::find($this->modelId);
+        $elementPage = ElementPage::find($this->elementPageId);
         $elementPage->data = json_encode($this->model);
         $elementPage->save();
         $this->dispatch('reloadPageComponent');
@@ -73,7 +73,7 @@ new class extends Component {
         // When any model property changes, dispatch the live data to parent
         if (str_starts_with($propertyName, 'model.')) {
             $this->dispatch('updateLiveElementData',
-                elementPageId: $this->modelId,
+                elementPageId: $this->elementPageId,
                 data: $this->model
             );
         }
@@ -81,7 +81,7 @@ new class extends Component {
 
     public function delete(): void
     {
-        $elementPage = ElementPage::find($this->modelId);
+        $elementPage = ElementPage::find($this->elementPageId);
         $elementPage->delete();
         $this->dispatch('reloadPageComponent');
     }
@@ -95,7 +95,7 @@ new class extends Component {
 
         // Notify parent to refresh live preview with updated image paths
         $this->dispatch('updateLiveElementData',
-            elementPageId: $this->modelId,
+            elementPageId: $this->elementPageId,
             data: $this->model
         );
     }
@@ -106,7 +106,7 @@ new class extends Component {
 
         // Notify parent to refresh live preview after deletion
         $this->dispatch('updateLiveElementData',
-            elementPageId: $this->modelId,
+            elementPageId: $this->elementPageId,
             data: $this->model
         );
     }
@@ -143,7 +143,7 @@ new class extends Component {
 
         // Notify parent to refresh live preview after media selection
         $this->dispatch('updateLiveElementData',
-            elementPageId: $this->modelId,
+            elementPageId: $this->elementPageId,
             data: $this->model
         );
     }

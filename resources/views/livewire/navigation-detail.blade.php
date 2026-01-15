@@ -17,55 +17,55 @@ new class extends Component {
     public const ID = 'navigationId';
 
     #[Url(keep: false, except: '')]
-    public ?string $navigationId = null;
+    public $navigationId = null;
 
-    public array $model = [];
+    public array $navigationData = [];
 
-    public function mount(Navigation $model): void
+    public function mount(Navigation $navigation): void
     {
-        if ($this->modelId) {
-            $model = Navigation::find($this->modelId);
+        if ($this->navigationId) {
+            $navigation = Navigation::find($this->navigationId);
         }
-        $this->mountModalProcess(self::COMPONENT, $model);
+        $this->mountModalProcess(self::COMPONENT, $navigation);
 
-        if ($model['page_id']) {
-            $this->dispatch('pageSelected', $model['page_id']);
+        if ($navigation['page_id']) {
+            $this->dispatch('pageSelected', $navigation['page_id']);
         }
 
-        $this->model = FieldHelper::parseComponentToData(self::COMPONENT, $model->toArray());
+        $this->navigationData = FieldHelper::parseComponentToData(self::COMPONENT, $navigation->toArray());
     }
 
     public function store(): void
     {
         $this->validate([
-            'model.navigation_key' => ['required', 'string', 'max:255'],
-            'model.name' => ['required', 'array'],
-            'model.page_id' => ['nullable', 'numeric', 'required_without:model.link'],
-            'model.link' => ['nullable', 'string', 'max:2048', 'required_without:model.page_id'],
-            'model.new_tab' => ['nullable', 'boolean'],
+            'navigationData.navigation_key' => ['required', 'string', 'max:255'],
+            'navigationData.name' => ['required', 'array'],
+            'navigationData.page_id' => ['nullable', 'numeric', 'required_without:navigationData.link'],
+            'navigationData.link' => ['nullable', 'string', 'max:2048', 'required_without:navigationData.page_id'],
+            'navigationData.new_tab' => ['nullable', 'boolean'],
         ]);
 
-        $model = $this->model;
-        $model['tenant_id'] = auth()->user()->selected_tenant_id;
+        $data = $this->navigationData;
+        $data['tenant_id'] = auth()->user()->selected_tenant_id;
         // TODO auto detect if value is an array and convert it to JSON
-        $model['name'] = json_encode($model['name']);
+        $data['name'] = json_encode($data['name']);
 
-        if (isset($model['link'])) {
-            $model['link'] = trim((string) $model['link']) ?: null;
-            $model['page_id'] = null;
+        if (isset($data['link'])) {
+            $data['link'] = trim((string) $data['link']) ?: null;
+            $data['page_id'] = null;
         }
-        $model['new_tab'] = !empty($model['new_tab']) ? 1 : 0;
+        $data['new_tab'] = !empty($data['new_tab']) ? 1 : 0;
 
-        $model = Navigation::updateOrCreate(['id' => $this->modelId], $model);
+        $navigation = Navigation::updateOrCreate(['id' => $this->navigationId], $data);
 
-       $this->storeProcess($model);
+        $this->storeProcess($navigation);
     }
 
     public function delete(): void
     {
-        if ($this->modelId) {
-            $model = Navigation::find($this->modelId);
-            $model?->delete();
+        if ($this->navigationId) {
+            $navigation = Navigation::find($this->navigationId);
+            $navigation?->delete();
         }
         $this->closeModalProcess(self::LIST_COMPONENT);
     }
@@ -84,29 +84,27 @@ new class extends Component {
     public function pageSelected($value): void
     {
         $page = Page::find($value);
-        $this->model['page_id'] = $page->id;
+        $this->navigationData['page_id'] = $page->id;
         $decoded = is_string($page->name) ? json_decode($page->name, true) : ($page->name ?? []);
         $lang = session('selectedLanguage');
         $this->relationTitles['page_id'] = $decoded[$lang] ?? (is_array($decoded) ? (array_values($decoded)[0] ?? '') : $page->name);
 
         // Auto-fill name field only if it's empty
-        $currentName = $this->model['name'] ?? [];
+        $currentName = $this->navigationData['name'] ?? [];
         $isNameEmpty = empty($currentName) || (is_array($currentName) && empty(array_filter($currentName)));
 
         if ($isNameEmpty) {
-            $this->model['name'] = $decoded;
+            $this->navigationData['name'] = $decoded;
         }
 
-        $this->collection = null;
-        $this->model['link'] = null;
+        $this->navigationData['link'] = null;
     }
 
-    public function updatedModelLink($value): void
+    public function updatedNavigationDataLink($value): void
     {
         if ($value && $value !== '') {
             // Exclusivity: when link entered, clear relations
-            $this->model['page_id'] = null;
-            $this->page = null;
+            $this->navigationData['page_id'] = null;
         }
     }
 
@@ -134,7 +132,7 @@ new class extends Component {
     <x-noerd::tab-content :layout="$pageLayout" />
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="isset($modelId)"/>
+        <x-noerd::delete-save-bar :showDelete="isset($navigationId)"/>
     </x-slot:footer>
 </x-noerd::page>
 

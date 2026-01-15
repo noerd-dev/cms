@@ -52,7 +52,7 @@ new class extends Component {
             event: 'noerdModal',
             component: 'page-detail',
             source: self::COMPONENT,
-            arguments: ['modelId' => $modelId, 'relationId' => $relationId],
+            arguments: ['pageId' => $modelId, 'relationId' => $relationId],
         );
     }
 

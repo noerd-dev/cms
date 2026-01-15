@@ -43,7 +43,7 @@ new class extends Component
             event: 'noerdModal',
             component: 'global-parameter-detail',
             source: self::COMPONENT,
-            arguments: ['modelId' => $modelId, 'relationId' => $relationId],
+            arguments: ['globalParameterId' => $modelId, 'relationId' => $relationId],
         );
     }
 
