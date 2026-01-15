@@ -22,7 +22,7 @@ new class extends Component {
     public const LIST_COMPONENT = 'element-pages-list';
     public const ID = 'elementPageId';
 
-    public ?string $elementPageId = null;
+    public $elementPageId = null;
 
     public array $elementLayout;
     public $model;

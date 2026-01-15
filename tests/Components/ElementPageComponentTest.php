@@ -11,7 +11,7 @@ uses(CreatesCmsUser::class);
 $testSettings = [
     'componentName' => 'element-page-detail',
     'listName' => 'element-pages-list',
-    'id' => 'modelId',
+    'id' => 'elementPageId',
 ];
 
 it('successfully mounts with element page', function () use ($testSettings): void {
@@ -35,7 +35,7 @@ it('successfully mounts with element page', function () use ($testSettings): voi
     ]);
 
     Volt::test($testSettings['componentName'], [$elementPage])
-        ->assertSet('modelId', $elementPage->id)
+        ->assertSet('elementPageId', $elementPage->id)
         ->assertSet('elementPage.id', $elementPage->id)
         ->assertHasNoErrors();
 });
