@@ -40,11 +40,6 @@ it('successfully mounts with element page', function () use ($testSettings): voi
         ->assertHasNoErrors();
 });
 
-it('can update element page data', function (): void {
-    // Skip: This test requires YML element definitions from website module
-    $this->markTestSkipped('Requires element YML definitions from website module');
-})->skip('Requires element YML definitions from website module');
-
 it('validates element page data', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
@@ -97,11 +92,6 @@ it('can delete element page', function () use ($testSettings): void {
         'id' => $elementPage->id,
     ]);
 });
-
-it('sets correct element layout', function (): void {
-    // Skip: This test requires YML element definitions from website module
-    $this->markTestSkipped('Requires element YML definitions from website module');
-})->skip('Requires element YML definitions from website module');
 
 it('shows a content error when element layout is missing', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();

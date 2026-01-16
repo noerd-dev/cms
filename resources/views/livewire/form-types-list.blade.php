@@ -1,9 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
 use Livewire\Volt\Component;
 use Noerd\Cms\Models\FormType;
-use Noerd\Noerd\Helpers\StaticConfigHelper;
 use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component {
@@ -23,15 +21,7 @@ new class extends Component {
 
     public function with()
     {
-        $rows = FormType::where('tenant_id', Auth::user()->selected_tenant_id)
-            ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')
-            ->when($this->search, function ($query): void {
-                $query->where(function ($query): void {
-                    $query->where('title', 'like', '%' . $this->search . '%')
-                        ->orWhere('key', 'like', '%' . $this->search . '%');
-                });
-            })
-            ->paginate(self::PAGINATION);
+        $rows = FormType::paginate(self::PAGINATION);
 
         $tableConfig = $this->getTableConfig();
 

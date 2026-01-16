@@ -8,7 +8,8 @@ use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
-use Noerd\Noerd\Helpers\StaticConfigHelper;
+use Noerd\Noerd\Scopes\SearchScope;
+use Noerd\Noerd\Scopes\TenantScope;
 use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component {
@@ -29,7 +30,7 @@ new class extends Component {
     #[Computed]
     public function tableFilters(): array
     {
-        if (!$this->hasMultipleLanguages()) {
+        if (! $this->hasMultipleLanguages()) {
             return [];
         }
 
@@ -41,7 +42,7 @@ new class extends Component {
         session(['activeTableFilters' => $this->activeTableFilters]);
 
         // Sync with selectedLanguage for page-detail consistency
-        if (!empty($this->activeTableFilters['language'])) {
+        if (! empty($this->activeTableFilters['language'])) {
             session(['selectedLanguage' => $this->activeTableFilters['language']]);
         }
     }
@@ -59,27 +60,28 @@ new class extends Component {
     public function with()
     {
         // Get all collections with hasPage: false to exclude their pages
-        $collectionsWithoutPages = Collection::where('tenant_id', Auth::user()->selected_tenant_id)
+        $collectionsWithoutPages = Collection::withoutGlobalScope(TenantScope::class)
+            ->where('tenant_id', Auth::user()->selected_tenant_id)
             ->get()
             ->filter(function ($collection) {
                 $collectionFields = CollectionHelper::getCollectionFields(strtolower($collection->collection_key));
 
-                return !($collectionFields['hasPage'] ?? true);
+                return ! ($collectionFields['hasPage'] ?? true);
             })
             ->pluck('id')
             ->toArray();
 
-        $rows = Page::where('tenant_id', Auth::user()->selected_tenant_id)
+        // Disable SearchScope since we need custom JSON search for translatable fields
+        $rows = Page::withoutGlobalScope(SearchScope::class)
             ->where(function ($query) use ($collectionsWithoutPages) {
                 // Show pages that don't belong to any collection
                 $query->whereNull('collection_id')
                     // OR pages that belong to collections with hasPage: true (exclude hasPage: false collections)
                     ->orWhereNotIn('collection_id', $collectionsWithoutPages);
             })
-            ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')
             ->when($this->search, function ($query): void {
                 $query->where(function ($query): void {
-                    $query->where('name', 'like', '%' . $this->search . '%');
+                    $query->where('name', 'like', '%'.$this->search.'%');
                 });
             })
             ->paginate(self::PAGINATION);

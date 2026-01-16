@@ -3,12 +3,22 @@
 namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Noerd\Noerd\Traits\BelongsToTenant;
+use Noerd\Noerd\Traits\HasListScopes;
 
 class CmsLanguage extends Model
 {
+    use BelongsToTenant;
+    use HasListScopes;
+
     protected $table = 'cms_languages';
 
     protected $guarded = [];
+
+    protected array $searchable = [
+        'name',
+        'code',
+    ];
 
     protected $casts = [
         'is_active' => 'boolean',

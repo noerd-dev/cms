@@ -6,12 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Database\Factories\PageFactory;
 use Noerd\Cms\Services\FieldTypeConverter;
+use Noerd\Noerd\Traits\BelongsToTenant;
+use Noerd\Noerd\Traits\HasListScopes;
 
 class Page extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
+    use HasListScopes;
 
     protected $guarded = [];
+
+    protected array $searchable = [
+        'name',
+    ];
 
     protected $casts = [
         'meta_noindex' => 'boolean',

@@ -1,27 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
 use Livewire\Volt\Component;
 use Noerd\Cms\Models\CmsLanguage;
-use Noerd\Noerd\Helpers\StaticConfigHelper;
 use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component {
-
     use Noerd;
 
     public const COMPONENT = 'cms-languages-list';
-
-    public function mount()
-    {
-        if ((int)request()->customerId) {
-            $this->tableAction(request()->customerId);
-        }
-
-        if (request()->create) {
-            $this->tableAction();
-        }
-    }
 
     public function tableAction(mixed $modelId = null, mixed $relationId = null): void
     {
@@ -35,15 +21,7 @@ new class extends Component {
 
     public function with(): array
     {
-        $rows = CmsLanguage::where('tenant_id', Auth::user()->selected_tenant_id)
-            ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')
-            ->when($this->search, function ($query): void {
-                $query->where(function ($query): void {
-                    $query->where('code', 'like', '%' . $this->search . '%')
-                        ->orWhere('name', 'like', '%' . $this->search . '%');
-                });
-            })
-            ->paginate(self::PAGINATION);
+        $rows = CmsLanguage::paginate(self::PAGINATION);
 
         $tableConfig = $this->getTableConfig();
 
@@ -53,6 +31,16 @@ new class extends Component {
         ];
     }
 
+    public function rendering()
+    {
+        if ((int) request()->cmsLanguageId) {
+            $this->tableAction(request()->cmsLanguageId);
+        }
+
+        if (request()->create) {
+            $this->tableAction();
+        }
+    }
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">
