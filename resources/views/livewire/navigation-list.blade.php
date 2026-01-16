@@ -1,12 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Traits\LanguageFilterTrait;
-use Noerd\Noerd\Helpers\StaticConfigHelper;
 use Noerd\Noerd\Traits\Noerd;
 
 new class extends Component
@@ -49,14 +47,7 @@ new class extends Component
 
     public function with(): array
     {
-        $rows = Navigation::where('tenant_id', Auth::user()->selected_tenant_id)
-            ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')
-            ->when($this->search, function ($query): void {
-                $query->where(function ($query): void {
-                    $query->where('navigation_key', 'like', '%'.$this->search.'%');
-                });
-            })
-            ->paginate(self::PAGINATION);
+        $rows = Navigation::paginate(self::PAGINATION);
 
         $selectedLanguage = $this->activeTableFilters['language']
             ?? session('selectedLanguage')

@@ -1,12 +1,10 @@
 <?php
 
 use Livewire\Volt\Component;
-use Noerd\Cms\Models\FormRequest;
 use Noerd\Noerd\Traits\Noerd;
-use Noerd\Noerd\Helpers\StaticConfigHelper;
+use Noerd\Website\Models\FormRequest;
 
 new class extends Component {
-
     use Noerd;
 
     public const COMPONENT = 'form-requests-list';
@@ -23,14 +21,7 @@ new class extends Component {
 
     public function with(): array
     {
-        $rows = FormRequest::where('tenant_id', auth()->user()->selected_tenant_id)
-            ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')
-            ->when($this->search, function ($query): void {
-                $query->where(function ($query): void {
-                    $query->where('data', 'like', '%' . $this->search . '%');
-                });
-            })
-            ->paginate(self::PAGINATION);
+        $rows = FormRequest::paginate(self::PAGINATION);
 
         $tableConfig = $this->getTableConfig();
 

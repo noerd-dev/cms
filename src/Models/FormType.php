@@ -8,12 +8,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\File;
 use Noerd\Noerd\Models\Tenant;
+use Noerd\Noerd\Traits\BelongsToTenant;
+use Noerd\Noerd\Traits\HasListScopes;
 use Noerd\Website\Models\FormRequest;
 use Symfony\Component\Yaml\Yaml;
 
 class FormType extends Model
 {
+    use BelongsToTenant;
+    use HasListScopes;
+
     protected $table = 'form_types';
+
+    protected array $searchable = [
+        'title',
+        'key',
+    ];
 
     protected $fillable = [
         'tenant_id',
