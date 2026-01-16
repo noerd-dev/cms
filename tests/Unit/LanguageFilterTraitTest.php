@@ -34,7 +34,7 @@ it('returns default language when session is not set', function (): void {
 
     session()->forget('selectedLanguage');
 
-    $testClass = new TestLanguageFilterClass;
+    $testClass = new TestLanguageFilterClass();
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('de');
@@ -55,12 +55,12 @@ it('returns existing session language when it exists in cms_languages', function
 
     CmsLanguage::firstOrCreate(
         ['tenant_id' => $tenant->id, 'code' => 'en'],
-        ['name' => 'English', 'is_active' => true, 'is_default' => false]
+        ['name' => 'English', 'is_active' => true, 'is_default' => false],
     );
 
     session(['selectedLanguage' => 'en']);
 
-    $testClass = new TestLanguageFilterClass;
+    $testClass = new TestLanguageFilterClass();
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('en');
@@ -86,7 +86,7 @@ it('resets to default language when session language does not exist', function (
     // Set session to non-existing language
     session(['selectedLanguage' => 'en']);
 
-    $testClass = new TestLanguageFilterClass;
+    $testClass = new TestLanguageFilterClass();
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('de');
@@ -119,7 +119,7 @@ it('resets to default language when session language is inactive', function (): 
 
     session(['selectedLanguage' => 'en']);
 
-    $testClass = new TestLanguageFilterClass;
+    $testClass = new TestLanguageFilterClass();
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('de');
