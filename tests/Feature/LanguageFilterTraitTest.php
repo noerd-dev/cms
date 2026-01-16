@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Livewire\Volt\Volt;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -49,7 +48,7 @@ it('does not override existing language session', function (): void {
 
     CmsLanguage::firstOrCreate(
         ['tenant_id' => $tenant->id, 'code' => 'en'],
-        ['name' => 'English', 'is_active' => true, 'is_default' => false]
+        ['name' => 'English', 'is_active' => true, 'is_default' => false],
     );
 
     // Set session to non-default language
@@ -92,4 +91,3 @@ it('displays pages list without htmlspecialchars error when no session is set', 
     $response->assertStatus(200);
     $response->assertDontSee('htmlspecialchars()');
 });
-

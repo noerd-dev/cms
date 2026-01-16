@@ -135,4 +135,3 @@ it('sets a table key for the list', function () use ($testSettings): void {
     Volt::test($testSettings['listName'])
         ->assertNotSet('tableId', '');
 });
-
