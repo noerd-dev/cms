@@ -74,7 +74,7 @@ new class extends Component {
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'pages-list',
+            modalComponent: 'pages-list',
             source: self::COMPONENT,
             arguments: ['tableActionMethod' => 'selectAction'],
         );

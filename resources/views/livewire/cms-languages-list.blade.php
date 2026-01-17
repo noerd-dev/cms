@@ -13,7 +13,7 @@ new class extends Component {
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'cms-language-detail',
+            modalComponent: 'cms-language-detail',
             source: self::COMPONENT,
             arguments: ['cmsLanguageId' => $modelId, 'relationId' => $relationId],
         );

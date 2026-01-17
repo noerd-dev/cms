@@ -51,7 +51,7 @@ new class extends Component {
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'page-detail',
+            modalComponent: 'page-detail',
             source: self::COMPONENT,
             arguments: ['pageId' => $modelId, 'relationId' => $relationId],
         );

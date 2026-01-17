@@ -5,8 +5,7 @@
     "version": "v1.0.1",
     "license": "proprietary",
     "require": {
-        "livewire/livewire": "^3.4",
-        "livewire/volt": "^v1.6.7",
+        "livewire/livewire": "^3.4|^4.0",
         "noerd/noerd":  "^1.0",
         "noerd/media":  "^1.0"
     },

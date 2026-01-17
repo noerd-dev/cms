@@ -39,7 +39,7 @@ new class extends Component
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'navigation-detail',
+            modalComponent: 'navigation-detail',
             source: self::COMPONENT,
             arguments: ['navigationId' => $modelId, 'relationId' => $relationId],
         );
