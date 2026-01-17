@@ -324,7 +324,7 @@ new class () extends Component {
         $this->pageData['__mediaToken'] = $token;
         $this->dispatch(
             event: 'noerdModal',
-            component: 'media-list',
+            modalComponent: 'media-list',
             arguments: ['selectMode' => true, 'selectContext' => $fieldName, 'selectToken' => $token],
         );
     }
@@ -423,7 +423,7 @@ new class () extends Component {
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'element-page-detail',
+            modalComponent: 'element-page-detail',
             source: self::COMPONENT,
             arguments: ['elementPageId' => $this->pageId],
         );
@@ -639,7 +639,7 @@ new class () extends Component {
                     <div class="mt-8 mb-8 flex">
                         <div class="mt-4 mx-auto">
                             <x-noerd::buttons.primary
-                                wire:click="$dispatch('noerdModal', {component: 'element-picker-modal', arguments: { token: 'insert-end' }})">
+                                wire:click="$dispatch('noerdModal', {modalComponent: 'element-picker-modal', arguments: { token: 'insert-end' }})">
                                 {{ __('Add Element') }}
                             </x-noerd::buttons.primary>
                         </div>

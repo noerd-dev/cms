@@ -135,7 +135,7 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
     $model = GlobalParameter::factory()->withTenantId($tenant->id)->create();
 
     Volt::test($testSettings['listName'])->call('tableAction', $model->id)
-        ->assertDispatched('noerdModal', component: $testSettings['componentName']);
+        ->assertDispatched('noerdModal', modalComponent: $testSettings['componentName']);
 
     Volt::test($testSettings['componentName'], [$model->id])
         ->assertSet('globalParameterData.id', $model->id)

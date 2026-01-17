@@ -121,7 +121,7 @@ it('dispatches table action from pages table', function () use ($testSettings): 
     $component->call('tableAction', 123)
         ->assertDispatched(
             'noerdModal',
-            component: $testSettings['componentName'],
+            modalComponent: $testSettings['componentName'],
             source: $testSettings['listName'],
             arguments: ['pageId' => 123, 'relationId' => null],
         );

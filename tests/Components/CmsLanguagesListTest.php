@@ -42,5 +42,5 @@ it('opens cms-language-detail modal from table', function () use ($testSettings)
 
     Volt::test($testSettings['listName'])
         ->call('tableAction', 5)
-        ->assertDispatched('noerdModal', component: 'cms-language-detail');
+        ->assertDispatched('noerdModal', modalComponent: 'cms-language-detail');
 });

@@ -39,7 +39,7 @@ new class extends Component
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'global-parameter-detail',
+            modalComponent: 'global-parameter-detail',
             source: self::COMPONENT,
             arguments: ['globalParameterId' => $modelId, 'relationId' => $relationId],
         );

@@ -13,7 +13,7 @@ new class extends Component {
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'form-request-detail',
+            modalComponent: 'form-request-detail',
             source: self::COMPONENT,
             arguments: ['formRequestId' => $modelId, 'relationId' => $relationId],
         );

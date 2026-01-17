@@ -24,7 +24,7 @@ new class () extends Component {
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'collection-detail',
+            modalComponent: 'collection-detail',
             source: self::COMPONENT,
             arguments: ['fileName' => $modelId, 'relationId' => $relationId],
         );
@@ -34,7 +34,7 @@ new class () extends Component {
     {
         $this->dispatch(
             event: 'noerdModal',
-            component: 'collection-detail.blade.php',
+            modalComponent: 'collection-detail.blade.php',
             source: self::COMPONENT,
             arguments: ['fileName' => $fileName],
         );
