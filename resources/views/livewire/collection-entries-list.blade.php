@@ -129,7 +129,8 @@ new class extends Component
                 if ($this->collectionLayout && isset($this->collectionLayout['fields'])) {
                     foreach ($this->collectionLayout['fields'] as $field) {
                         $fieldName = $field['name'] ?? '';
-                        $fieldKey = str_replace('model.', '', $fieldName);
+                        // Remove 'model.' or 'pageData.' prefix
+                        $fieldKey = preg_replace('/^(model\.|pageData\.)/', '', $fieldName);
 
                         // Skip image fields for search
                         if (($field['type'] ?? '') === 'image') {
@@ -164,7 +165,8 @@ new class extends Component
             if ($this->collectionLayout && isset($this->collectionLayout['fields'])) {
                 foreach ($this->collectionLayout['fields'] as $field) {
                     $fieldName = $field['name'] ?? '';
-                    $fieldKey = str_replace('model.', '', $fieldName); // Remove 'model.' prefix
+                    // Remove 'model.' or 'pageData.' prefix
+                    $fieldKey = preg_replace('/^(model\.|pageData\.)/', '', $fieldName);
 
                     $value = '';
                     if (isset($data[$fieldKey])) {
@@ -198,7 +200,8 @@ new class extends Component
         if ($this->collectionLayout && isset($this->collectionLayout['fields'])) {
             foreach ($this->collectionLayout['fields'] as $field) {
                 $fieldName = $field['name'] ?? '';
-                $fieldKey = str_replace('model.', '', $fieldName); // Remove 'model.' prefix
+                // Remove 'model.' or 'pageData.' prefix
+                $fieldKey = preg_replace('/^(model\.|pageData\.)/', '', $fieldName);
                 $label = $field['label'] ?? ucfirst($fieldKey);
 
                 // Calculate width based on field type and position

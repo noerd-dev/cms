@@ -39,6 +39,7 @@ new class () extends Component {
 
         return Page::with('elements')->find($this->pageId);
     }
+
     public ?array $collectionLayout = null;
     public ?string $collectionKey = null;
     public array $images = [];
@@ -104,16 +105,27 @@ new class () extends Component {
         $this->mountModalProcess(self::COMPONENT, $page);
 
         // Load data differently for collection pages vs regular pages
-        if ($this->collectionKey && $page->data) {
-            // For collection pages, load data from the JSON data field
-            $rawData = is_array($page->data) ? $page->data : [];
+        //   if ($this->collectionKey && $page->data) {
+        //       // For collection pages, load data from the JSON data field
+        //        $rawData = is_array($page->data) ? $page->data : [];
+        //        // Apply field type conversion when loading existing entries
+        //        // This ensures users see the correct field structure immediately
+        // $this->pageData = FieldTypeConverter::convertCollectionData($rawData, $this->collectionKey);
+        //    } else {
+        //       // For regular pages, use the standard page fields
+        //        $this->pageData = FieldHelper::parseComponentToData('page-detail', $page->toArray());
+        //    }
 
-            // Apply field type conversion when loading existing entries
-            // This ensures users see the correct field structure immediately
-            $this->pageData = FieldTypeConverter::convertCollectionData($rawData, $this->collectionKey);
-        } else {
-            // For regular pages, use the standard page fields
-            $this->pageData = FieldHelper::parseComponentToData('page-detail', $page->toArray());
+        $this->pageData = $page->toArray();
+
+        // For collection entries: Merge data from the data column into pageData for proper wire:model binding
+        if ($this->collectionKey && isset($this->pageData['data']) && is_array($this->pageData['data'])) {
+            foreach ($this->pageData['data'] as $key => $value) {
+                // Only merge collection fields, skip internal keys
+                if (!str_starts_with($key, 'pageData.')) {
+                    $this->pageData[$key] = $value;
+                }
+            }
         }
 
         // Ensure a layout is always preselected
@@ -579,7 +591,7 @@ new class () extends Component {
     </div>
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="isset($pageModel->id)"/>
+        <x-noerd::delete-save-bar :showDelete="isset($pageId)"/>
     </x-slot:footer>
 
 </x-noerd::page>

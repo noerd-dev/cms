@@ -23,6 +23,7 @@ new class extends Component {
     public const ID = 'elementPageId';
 
     public $elementPageId = null;
+    public $modelId = null;
 
     public array $elementLayout;
     public $model;
@@ -35,8 +36,8 @@ new class extends Component {
 
     public function mount(ElementPage $elementPage): void
     {
-        if ($this->elementPageId) {
-            $elementPage = ElementPage::find($this->elementPageId);
+        if ($this->modelId) {
+            $elementPage = ElementPage::find($this->modelId);
         }
         $this->elementLayout = FieldHelper::getElementFields($elementPage->element_key) ?? [];
 

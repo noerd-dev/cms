@@ -59,8 +59,8 @@ it('successfully deletes a page', function () use ($testSettings): void {
     $this->actingAs($user);
     $model = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
-        'name' => '{"de":"Test Seite","en":"Test Page"}',
-        'slug' => '{"de":"/test-seite","en":"/test-page"}',
+        'name' => ['de' => 'Test Seite', 'en' => 'Test Page'],
+        'slug' => ['de' => '/test-seite', 'en' => '/test-page'],
     ]);
 
     Volt::test($testSettings['componentName'], ['pageId' => $model->id])
@@ -78,8 +78,8 @@ it('opens page with pageId', function () use ($testSettings): void {
     $this->actingAs($user);
     $model = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
-        'name' => '{"de":"Test Seite","en":"Test Page"}',
-        'slug' => '{"de":"/test-seite","en":"/test-page"}',
+        'name' => ['de' => 'Test Seite', 'en' => 'Test Page'],
+        'slug' => ['de' => '/test-seite', 'en' => '/test-page'],
     ]);
 
     $component = Volt::test($testSettings['componentName'], ['pageId' => $model->id]);
@@ -94,8 +94,8 @@ it('opens and stores existing page', function () use ($testSettings): void {
     $this->actingAs($user);
     $model = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
-        'name' => '{"de":"Alte Seite","en":"Old Page"}',
-        'slug' => '{"de":"/alte-seite","en":"/old-page"}',
+        'name' => ['de' => 'Alte Seite', 'en' => 'Old Page'],
+        'slug' => ['de' => '/alte-seite', 'en' => '/old-page'],
     ]);
 
     Volt::test($testSettings['componentName'], ['pageId' => $model->id])
