@@ -2,4 +2,4 @@ title: 'Google Map'
 description: 'Embed Google Map with custom coordinates'
 group: 'Maps & Media'
 fields:
-  - { name: latLng, label: Koordinaten Punkt, type: text, colspan: 12 }
+  - { name: model.latLng, label: Koordinaten Punkt, type: text, colspan: 12 }

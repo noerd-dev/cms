@@ -12,11 +12,22 @@ class FieldHelper
         // Convert element key to kebab-case for yml file lookup (same as blade component naming)
         $elementFileName = str_replace('_', '-', $element);
 
-        // Check in livewire elements directory (co-located with components)
-        if (file_exists(base_path('app-modules/website/resources/views/livewire/elements/' . $elementFileName . '.yml'))) {
-            $content = file_get_contents(base_path('app-modules/website/resources/views/livewire/elements/' . $elementFileName . '.yml'));
+        // Search for YML file co-located with blade component in app-modules
+        $livewireElementFiles = glob(base_path('app-modules/*/resources/views/livewire/elements/' . $elementFileName . '.blade.php'));
 
-            return Yaml::parse($content ?: '');
+        // Also check project-level
+        $projectLevelFile = base_path('resources/views/livewire/elements/' . $elementFileName . '.blade.php');
+        if (file_exists($projectLevelFile)) {
+            array_unshift($livewireElementFiles, $projectLevelFile);
+        }
+
+        foreach ($livewireElementFiles as $bladeFile) {
+            $ymlFile = str_replace('.blade.php', '.yml', $bladeFile);
+            if (file_exists($ymlFile)) {
+                $content = file_get_contents($ymlFile);
+
+                return Yaml::parse($content ?: '');
+            }
         }
 
         return null;
@@ -92,13 +103,17 @@ class FieldHelper
         // Get all livewire element components from app-modules
         $livewireElementFiles = glob(base_path('app-modules/*/resources/views/livewire/elements/*.blade.php'));
 
+        // Also check project-level
+        $projectLevelFiles = glob(base_path('resources/views/livewire/elements/*.blade.php'));
+        $livewireElementFiles = array_merge($projectLevelFiles, $livewireElementFiles);
+
         foreach ($livewireElementFiles as $livewireFile) {
             $fileName = basename($livewireFile, '.blade.php');
             // Convert kebab-case filename to snake_case for element key
             $elementKey = str_replace('-', '_', $fileName);
 
-            // Try to find corresponding yml definition (co-located with livewire component, same naming as blade file)
-            $ymlFile = base_path('app-modules/website/resources/views/livewire/elements/' . $fileName . '.yml');
+            // Look for YML file co-located with the blade component
+            $ymlFile = str_replace('.blade.php', '.yml', $livewireFile);
 
             if (file_exists($ymlFile)) {
                 $content = file_get_contents($ymlFile);
