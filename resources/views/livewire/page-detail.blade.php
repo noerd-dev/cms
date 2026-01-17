@@ -558,7 +558,7 @@ new class () extends Component {
         <x-noerd::tab-content :layout="$pageLayout" :showBlock="$this->hasPageFeatures" :model="$pageData">
             <x-slot:tab1>
                 @if($collectionLayout)
-                    @include('noerd::components.detail.block', $collectionLayout)
+                    @include('noerd::components.detail.block', array_merge($collectionLayout, ['model' => $pageData]))
                 @endif
 
                 {{-- Elements für Tab 1 --}}
