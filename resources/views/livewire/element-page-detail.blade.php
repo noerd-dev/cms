@@ -168,7 +168,7 @@ new class extends Component {
             >
             </x-noerd::buttons.delete>
 
-            <x-noerd::tab-content :layout="$elementLayout" />
+            <x-noerd::tab-content :layout="$elementLayout" :model="$model" />
         </div>
     @else
         <div

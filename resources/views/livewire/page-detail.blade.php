@@ -555,7 +555,7 @@ new class () extends Component {
             </div>
         @endif
 
-        <x-noerd::tab-content :layout="$pageLayout" :showBlock="$this->hasPageFeatures">
+        <x-noerd::tab-content :layout="$pageLayout" :showBlock="$this->hasPageFeatures" :model="$pageData">
             <x-slot:tab1>
                 @if($collectionLayout)
                     @include('noerd::components.detail.block', $collectionLayout)
