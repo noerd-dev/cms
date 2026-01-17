@@ -558,7 +558,9 @@ new class () extends Component {
         <x-noerd::tab-content :layout="$pageLayout" :showBlock="$this->hasPageFeatures" :model="$pageData">
             <x-slot:tab1>
                 @if($collectionLayout)
-                    @include('noerd::components.detail.block', array_merge($collectionLayout, ['model' => $pageData]))
+                    <div class="p-4 border border-blue-200 mb-4 relative overflow-hidden rounded-lg bg-blue-50 dark:bg-blue-950/20 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-blue-950/5 dark:after:inset-ring-blue/10 bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-blue-950)]/5 dark:[--pattern-fg:var(--color-blue-300)]/10">
+                        @include('noerd::components.detail.block', array_merge($collectionLayout, ['model' => $pageData]))
+                    </div>
                 @endif
 
                 {{-- Elements für Tab 1 --}}
