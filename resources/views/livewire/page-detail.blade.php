@@ -451,11 +451,19 @@ new class () extends Component {
         // Apply field type conversion before saving
         $convertedData = FieldTypeConverter::convertCollectionData($this->pageData, $this->collectionKey);
 
+        $data = [
+            'tenant_id' => auth()->user()->selected_tenant_id,
+            'collection_id' => $parentCollection->id,
+            'data' => $convertedData,
+            'sort' => (int)($this->pageData['sort'] ?? 0),
+        ];
+
         // Persist selected layout for collections as well
         $availableLayouts = $this->layoutOptions();
+        $data['layout'] = $this->pageData['layout'] ?? array_key_first($availableLayouts);
 
         if ($hasPageFeatures) {
-            // For collections with hasPage: true, store name and slug in dedicated columns
+            // For collections with hasPage: true, store name and slug as JSON (translatable)
             $nameData = [];
             $slugData = [];
 
@@ -463,10 +471,7 @@ new class () extends Component {
                 foreach ($convertedData['name'] as $lang => $nameValue) {
                     if (!empty($nameValue)) {
                         $nameData[$lang] = $nameValue;
-                        // Use user-entered slug if available, otherwise generate from name
-                        $slugData[$lang] = !empty($this->pageData['slug'][$lang])
-                            ? $this->pageData['slug'][$lang]
-                            : $this->generateSlug($nameValue, $lang);
+                        $slugData[$lang] = $this->generateSlug($nameValue, $lang);
                     }
                 }
             }
@@ -478,34 +483,14 @@ new class () extends Component {
                 $slugData[$defaultLang] = '/collection-page';
             }
 
-            // Remove fields that are stored in dedicated columns, not in the data JSON
-            unset($convertedData['slug']);
-            unset($convertedData['name']);
-            unset($convertedData['is_active']);
-            unset($convertedData['layout']);
-
-            $data = [
-                'tenant_id' => auth()->user()->selected_tenant_id,
-                'collection_id' => $parentCollection->id,
-                'data' => $convertedData,
-                'sort' => (int)($this->pageData['sort'] ?? 0),
-                'layout' => $this->pageData['layout'] ?? array_key_first($availableLayouts),
-                'name' => $nameData,
-                'slug' => $slugData,
-                'is_active' => true,
-            ];
+            $data['name'] = $nameData;
+            $data['slug'] = $slugData;
+            $data['is_active'] = true;
         } else {
-            // For collections with hasPage: false, keep all data in the data column
-            $data = [
-                'tenant_id' => auth()->user()->selected_tenant_id,
-                'collection_id' => $parentCollection->id,
-                'data' => $convertedData,
-                'sort' => (int)($this->pageData['sort'] ?? 0),
-                'layout' => $this->pageData['layout'] ?? array_key_first($availableLayouts),
-                'name' => null,
-                'slug' => null,
-                'is_active' => true,
-            ];
+            // For collections with hasPage: false, use minimal page data
+            $data['name'] = null;
+            $data['slug'] = null;
+            $data['is_active'] = true; // Collection pages without page features are always active
         }
 
         $page = Page::updateOrCreate(['id' => $this->pageId], $data);
