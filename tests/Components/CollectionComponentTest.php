@@ -30,7 +30,7 @@ beforeEach(function (): void {
             'buttonList' => 'New Project',
             'hasPage' => true,
             'fields' => [
-                ['name' => 'page.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ['name' => 'image', 'label' => 'Image', 'type' => 'image'],
             ],
         ]);
@@ -44,7 +44,7 @@ beforeEach(function (): void {
             'buttonList' => 'New Contact',
             'hasPage' => true,
             'fields' => [
-                ['name' => 'page.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
             ],
         ]);
 
@@ -57,7 +57,7 @@ beforeEach(function (): void {
             'buttonList' => 'New Slider',
             'hasPage' => false,
             'fields' => [
-                ['name' => 'page.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
             ],
         ]);
 
@@ -70,8 +70,8 @@ beforeEach(function (): void {
             'buttonList' => 'New Customer',
             'hasPage' => false,
             'fields' => [
-                ['name' => 'page.name', 'label' => 'Name', 'type' => 'translatableText'],
-                ['name' => 'page.description', 'label' => 'Description', 'type' => 'translatableText'],
+                ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ['name' => 'pageData.description', 'label' => 'Description', 'type' => 'translatableText'],
             ],
         ]);
 });
