@@ -136,7 +136,13 @@
     "cms_form_type_description": "E-Mail-Konfiguration für Formulartypen",
     "cms_send_email_notification": "E-Mail-Benachrichtigung senden",
     "cms_email_subject": "E-Mail-Betreff",
-    "cms_notification_email": "Benachrichtigungs-E-Mail (optional)"
+    "cms_notification_email": "Benachrichtigungs-E-Mail (optional)",
+
+    "cookie_banner_title": "Cookie-Einstellungen",
+    "cookie_banner_description": "Wir verwenden Cookies, um Ihre Erfahrung zu verbessern. Einige Cookies sind notwendig, andere helfen uns die Website zu analysieren. Weitere Informationen in unserer",
+    "cookie_banner_privacy_link": "Datenschutzerklärung",
+    "cookie_banner_accept_all": "Alle akzeptieren",
+    "cookie_banner_necessary_only": "Nur notwendige"
 }
 
 
