@@ -26,7 +26,7 @@ new class extends Component
         return [$this->getLanguageFilter()];
     }
 
-    public function storeActiveTableFilters(): void
+    public function storeActiveListFilters(): void
     {
         session(['activeTableFilters' => $this->activeTableFilters]);
 
@@ -35,7 +35,7 @@ new class extends Component
         }
     }
 
-    public function tableAction(mixed $modelId = null, mixed $relationId = null): void
+    public function listAction(mixed $modelId = null, mixed $relationId = null): void
     {
         $this->dispatch(
             event: 'noerdModal',
@@ -63,17 +63,14 @@ new class extends Component
             }
         }
 
-        $tableConfig = $this->getTableConfig();
-
         return [
-            'rows' => $rows,
-            'tableConfig' => $tableConfig,
+            'listConfig' => $this->buildList($rows),
         ];
     }
 
     public function rendering()
     {
-        $this->loadActiveTableFilters();
+        $this->loadActiveListFilters();
 
         $selectedLanguage = session('selectedLanguage');
         if ($selectedLanguage && empty($this->activeTableFilters['language'])) {
@@ -87,11 +84,11 @@ new class extends Component
         }
 
         if ((int) request()->globalParameterId) {
-            $this->tableAction(request()->globalParameterId);
+            $this->listAction(request()->globalParameterId);
         }
 
         if (request()->create) {
-            $this->tableAction();
+            $this->listAction();
         }
     }
 
@@ -106,7 +103,5 @@ new class extends Component
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">
-    <div>
-        @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
-    </div>
+    <x-noerd::list />
 </x-noerd::page>

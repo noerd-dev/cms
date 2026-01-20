@@ -32,7 +32,7 @@ new class extends Component
         return [$this->getLanguageFilter()];
     }
 
-    public function storeActiveTableFilters(): void
+    public function storeActiveListFilters(): void
     {
         session(['activeTableFilters' => $this->activeTableFilters]);
 
@@ -76,11 +76,11 @@ new class extends Component
         $this->collectionLayout = CollectionHelper::getCollectionFields($this->collectionKey);
 
         if (request()->create) {
-            $this->tableAction();
+            $this->listAction();
         }
     }
 
-    public function tableAction(mixed $modelId = null, mixed $relationId = null): void
+    public function listAction(mixed $modelId = null, mixed $relationId = null): void
     {
         $this->dispatch(
             event: 'noerdModal',
@@ -94,13 +94,12 @@ new class extends Component
     {
         if (! $this->collectionKey) {
             return [
-                'rows' => collect([]),
-                'tableConfig' => [
+                'listConfig' => $this->buildList(collect([]), [
                     'title' => 'Collections',
                     'newLabel' => 'Neuer Eintrag',
                     'disableSearch' => false,
                     'columns' => [],
-                ],
+                ]),
             ];
         }
 
@@ -225,19 +224,18 @@ new class extends Component
         $columns[] = ['field' => 'updated_at', 'label' => __('Last Modified'), 'width' => 15];
 
         return [
-            'rows' => $rows,
-            'tableConfig' => [
+            'listConfig' => $this->buildList($rows, [
                 'title' => $collectionTitle,
                 'newLabel' => $newLabel,
                 'disableSearch' => false,
                 'columns' => $columns,
-            ],
+            ]),
         ];
     }
 
     public function rendering(): void
     {
-        $this->loadActiveTableFilters();
+        $this->loadActiveListFilters();
 
         $selectedLanguage = session('selectedLanguage');
         if ($selectedLanguage && empty($this->activeTableFilters['language'])) {
@@ -263,11 +261,7 @@ new class extends Component
 
 <x-noerd::page :disableModal="$disableModal">
     @if($collectionKey)
-        @include('noerd::components.table.table-build', [
-            'rows' => $rows,
-            'tableConfig' => $tableConfig,
-            'component' => self::COMPONENT
-        ])
+        <x-noerd::list />
     @else
         <div class="text-center py-8">
             <p class="text-gray-500">{{ __('cms_please_select_collection') }}</p>

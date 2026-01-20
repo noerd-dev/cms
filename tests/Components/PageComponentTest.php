@@ -65,7 +65,7 @@ it('successfully deletes a page', function () use ($testSettings): void {
 
     Volt::test($testSettings['componentName'], ['pageId' => $model->id])
         ->call('delete')
-        ->assertDispatched('reloadTable-' . $testSettings['listName']);
+        ->assertDispatched('refreshList-' . $testSettings['listName']);
 
     $this->assertDatabaseMissing('pages', [
         'id' => $model->id,
@@ -115,10 +115,10 @@ it('dispatches table action from pages table', function () use ($testSettings): 
 
     $this->actingAs($user);
 
-    // Test just the tableAction method without rendering the full table
+    // Test just the listAction method without rendering the full table
     $component = Volt::test($testSettings['listName']);
 
-    $component->call('tableAction', 123)
+    $component->call('listAction', 123)
         ->assertDispatched(
             'noerdModal',
             modalComponent: $testSettings['componentName'],
@@ -133,5 +133,5 @@ it('sets a table key for the list', function () use ($testSettings): void {
     $this->actingAs($user);
 
     Volt::test($testSettings['listName'])
-        ->assertNotSet('tableId', '');
+        ->assertNotSet('listId', '');
 });

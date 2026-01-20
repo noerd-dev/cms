@@ -12,7 +12,7 @@ new class () extends Component {
     public function mount(): void
     {
         if (request()->create) {
-            $this->tableAction();
+            $this->listAction();
         }
 
         if (request()->file) {
@@ -20,7 +20,7 @@ new class () extends Component {
         }
     }
 
-    public function tableAction(mixed $modelId = null, mixed $relationId = null): void
+    public function listAction(mixed $modelId = null, mixed $relationId = null): void
     {
         $this->dispatch(
             event: 'noerdModal',
@@ -101,8 +101,7 @@ new class () extends Component {
         );
 
         return [
-            'rows' => $paginated,
-            'tableConfig' => [
+            'listConfig' => $this->buildList($paginated, [
                 'title' => 'Collections',
                 'newLabel' => 'cms_new_collection',
                 'disableSearch' => false,
@@ -112,7 +111,7 @@ new class () extends Component {
                     ['field' => 'last_modified', 'label' => __('Last Modified'), 'width' => 20],
                     ['field' => 'size', 'label' => 'cms_size', 'width' => 15],
                 ],
-            ],
+            ]),
         ];
     }
 
@@ -130,5 +129,5 @@ new class () extends Component {
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">
-    @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
+    <x-noerd::list />
 </x-noerd::page>

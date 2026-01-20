@@ -9,7 +9,7 @@ new class extends Component {
 
     public const COMPONENT = 'form-types-list';
 
-    public function tableAction(mixed $modelId = null, mixed $relationId = null): void
+    public function listAction(mixed $modelId = null, mixed $relationId = null): void
     {
         $this->dispatch(
             event: 'noerdModal',
@@ -23,28 +23,23 @@ new class extends Component {
     {
         $rows = FormType::paginate(self::PAGINATION);
 
-        $tableConfig = $this->getTableConfig();
-
         return [
-            'rows' => $rows,
-            'tableConfig' => $tableConfig,
+            'listConfig' => $this->buildList($rows),
         ];
     }
 
     public function rendering()
     {
         if ((int) request()->formTypeId) {
-            $this->tableAction(request()->formTypeId);
+            $this->listAction(request()->formTypeId);
         }
 
         if (request()->create) {
-            $this->tableAction();
+            $this->listAction();
         }
     }
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">
-    <div>
-        @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
-    </div>
+    <x-noerd::list />
 </x-noerd::page>

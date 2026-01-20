@@ -55,7 +55,7 @@ it('sets a table key for the list', function () use ($testSettings): void {
     $this->actingAs($user);
 
     Volt::test($testSettings['listName'])
-        ->assertNotSet('tableId', '');
+        ->assertNotSet('listId', '');
 });
 
 it('validates that key is required', function () use ($testSettings): void {
@@ -134,14 +134,14 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
     $this->actingAs($user);
     $model = GlobalParameter::factory()->withTenantId($tenant->id)->create();
 
-    Volt::test($testSettings['listName'])->call('tableAction', $model->id)
+    Volt::test($testSettings['listName'])->call('listAction', $model->id)
         ->assertDispatched('noerdModal', modalComponent: $testSettings['componentName']);
 
     Volt::test($testSettings['componentName'], [$model->id])
         ->assertSet('globalParameterData.id', $model->id)
         ->assertSet($testSettings['id'], $model->id) // URL Parameter
         ->call('delete')
-        ->assertDispatched('reloadTable-' . $testSettings['listName'])
+        ->assertDispatched('refreshList-' . $testSettings['listName'])
         ->assertSet($testSettings['id'], '') // URL Parameter should be removed
         ->assertHasNoErrors();
 });
