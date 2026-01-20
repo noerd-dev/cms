@@ -126,8 +126,9 @@ new class () extends Component {
             $this->collectionData = $this->pageData['data'];
             // Merge into pageData for wire:model binding
             foreach ($this->pageData['data'] as $key => $value) {
-                // Only merge collection fields, skip internal keys
-                if (!str_starts_with($key, 'pageData.')) {
+                // Only merge collection fields, skip internal keys and core page fields
+                // Core fields (name, slug, layout, sort) are stored as dedicated columns and should not be overwritten
+                if (!str_starts_with($key, 'pageData.') && !in_array($key, ['name', 'slug', 'layout', 'sort'], true)) {
                     $this->pageData[$key] = $value;
                 }
             }

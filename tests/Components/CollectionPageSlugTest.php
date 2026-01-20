@@ -135,3 +135,64 @@ it('stores only collection-specific fields in data column', function () {
     expect($data)->not->toHaveKey('tenant_id');
     expect($data)->not->toHaveKey('collection_id');
 });
+
+it('does not overwrite slug column with stale data.slug value on mount', function () {
+    // Create a page where the data column contains an outdated slug
+    // This simulates the bug where editing a page would show the wrong slug
+    $page = Page::factory()->create([
+        'tenant_id' => $this->user->selected_tenant_id,
+        'collection_id' => $this->collection->id,
+        'name' => ['de' => 'Steuerberater'],
+        'slug' => ['de' => '/steuerberaterwirtschaftspruefer-mwd'],  // Correct slug in column
+        'data' => [
+            'title' => 'Steuerberater',
+            'slug' => ['de' => '/stellenangebot'],  // Stale/old slug in data - should NOT overwrite
+        ],
+        'layout' => 'weblayout',
+    ]);
+
+    // Mount the page-detail component
+    $component = Volt::test('page-detail', [
+        'pageId' => $page->id,
+        'collectionKey' => 'mitarbeiter',
+    ]);
+
+    // Verify the correct slug from the column is displayed, not the stale one from data
+    $pageData = $component->get('pageData');
+    expect($pageData['slug']['de'])->toBe('/steuerberaterwirtschaftspruefer-mwd');
+});
+
+it('does not overwrite core page fields from data column on mount', function () {
+    // Create a page with stale core fields in the data column
+    $page = Page::factory()->create([
+        'tenant_id' => $this->user->selected_tenant_id,
+        'collection_id' => $this->collection->id,
+        'name' => ['de' => 'Correct Name'],
+        'slug' => ['de' => '/correct-slug'],
+        'layout' => 'correct-layout',
+        'sort' => 5,
+        'data' => [
+            'title' => 'Collection Field',
+            'name' => ['de' => 'Stale Name'],      // Should NOT overwrite
+            'slug' => ['de' => '/stale-slug'],     // Should NOT overwrite
+            'layout' => 'stale-layout',            // Should NOT overwrite
+            'sort' => 99,                          // Should NOT overwrite
+        ],
+    ]);
+
+    // Mount the page-detail component
+    $component = Volt::test('page-detail', [
+        'pageId' => $page->id,
+        'collectionKey' => 'mitarbeiter',
+    ]);
+
+    // Verify core fields are preserved from columns, not overwritten by data
+    $pageData = $component->get('pageData');
+    expect($pageData['name']['de'])->toBe('Correct Name');
+    expect($pageData['slug']['de'])->toBe('/correct-slug');
+    expect($pageData['layout'])->toBe('correct-layout');
+    expect($pageData['sort'])->toBe(5);
+
+    // Collection-specific field should still be merged
+    expect($pageData['title'])->toBe('Collection Field');
+});
