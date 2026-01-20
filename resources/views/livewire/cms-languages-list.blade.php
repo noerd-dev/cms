@@ -9,7 +9,7 @@ new class extends Component {
 
     public const COMPONENT = 'cms-languages-list';
 
-    public function tableAction(mixed $modelId = null, mixed $relationId = null): void
+    public function listAction(mixed $modelId = null, mixed $relationId = null): void
     {
         $this->dispatch(
             event: 'noerdModal',
@@ -23,26 +23,23 @@ new class extends Component {
     {
         $rows = CmsLanguage::paginate(self::PAGINATION);
 
-        $tableConfig = $this->getTableConfig();
-
         return [
-            'rows' => $rows,
-            'tableConfig' => $tableConfig,
+            'listConfig' => $this->buildList($rows),
         ];
     }
 
     public function rendering()
     {
         if ((int) request()->cmsLanguageId) {
-            $this->tableAction(request()->cmsLanguageId);
+            $this->listAction(request()->cmsLanguageId);
         }
 
         if (request()->create) {
-            $this->tableAction();
+            $this->listAction();
         }
     }
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">
-    @include('noerd::components.table.table-build', ['tableConfig' => $tableConfig])
+    <x-noerd::list />
 </x-noerd::page>

@@ -31,8 +31,8 @@ it('has correct component configuration', function () use ($testSettings): void 
     $componentData = $component->instance();
     $withData = $componentData->with();
 
-    expect($withData['tableConfig'])->toBeArray();
-    expect($withData['tableConfig']['title'])->toBe('Collections');
+    expect($withData['listSettings'])->toBeArray();
+    expect($withData['listSettings']['title'])->toBe('Collections');
 });
 
 it('returns paginated results', function () use ($testSettings): void {

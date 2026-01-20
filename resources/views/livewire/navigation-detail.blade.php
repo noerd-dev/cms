@@ -76,7 +76,7 @@ new class extends Component {
             event: 'noerdModal',
             modalComponent: 'pages-list',
             source: self::COMPONENT,
-            arguments: ['tableActionMethod' => 'selectAction'],
+            arguments: ['listActionMethod' => 'selectAction'],
         );
     }
 
