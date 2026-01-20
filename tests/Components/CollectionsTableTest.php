@@ -31,8 +31,8 @@ it('has correct component configuration', function () use ($testSettings): void 
     $componentData = $component->instance();
     $withData = $componentData->with();
 
-    expect($withData['listSettings'])->toBeArray();
-    expect($withData['listSettings']['title'])->toBe('Collections');
+    expect($withData['listConfig']['listSettings'])->toBeArray();
+    expect($withData['listConfig']['listSettings']['title'])->toBe('Collections');
 });
 
 it('returns paginated results', function () use ($testSettings): void {
@@ -43,8 +43,8 @@ it('returns paginated results', function () use ($testSettings): void {
     $componentData = $component->instance();
     $withData = $componentData->with();
 
-    expect($withData['rows'])->toBeInstanceOf(\Illuminate\Pagination\LengthAwarePaginator::class);
-    expect(method_exists($withData['rows'], 'links'))->toBe(true);
+    expect($withData['listConfig']['rows'])->toBeInstanceOf(\Illuminate\Pagination\LengthAwarePaginator::class);
+    expect(method_exists($withData['listConfig']['rows'], 'links'))->toBe(true);
 });
 
 it('supports search functionality', function () use ($testSettings): void {
