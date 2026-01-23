@@ -640,7 +640,7 @@ new class () extends Component {
                     <div class="mt-8 mb-8 flex">
                         <div class="mt-4 mx-auto">
                             <x-noerd::buttons.primary
-                                wire:click="$dispatch('noerdModal', {modalComponent: 'element-picker-modal', arguments: { token: 'insert-end' }})">
+                                @click="$modal('element-picker-modal', { token: 'insert-end' })">
                                 {{ __('Add Element') }}
                             </x-noerd::buttons.primary>
                         </div>
