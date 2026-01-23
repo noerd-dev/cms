@@ -39,11 +39,11 @@ new class extends Component {
 
     public function storeActiveListFilters(): void
     {
-        session(['activeTableFilters' => $this->activeTableFilters]);
+        session(['activeListFilters' => $this->activeListFilters]);
 
         // Sync with selectedLanguage for page-detail consistency
-        if (! empty($this->activeTableFilters['language'])) {
-            session(['selectedLanguage' => $this->activeTableFilters['language']]);
+        if (! empty($this->activeListFilters['language'])) {
+            session(['selectedLanguage' => $this->activeListFilters['language']]);
         }
     }
 
@@ -87,7 +87,7 @@ new class extends Component {
             ->paginate(self::PAGINATION);
 
         // Parse JSON attributes to show only current language values
-        $selectedLanguage = $this->activeTableFilters['language']
+        $selectedLanguage = $this->activeListFilters['language']
             ?? session('selectedLanguage');
 
         foreach ($rows->items() as $row) {
@@ -108,9 +108,9 @@ new class extends Component {
     {
         $this->loadActiveListFilters();
 
-        // Sync selectedLanguage with activeTableFilters
-        if (empty($this->activeTableFilters['language'])) {
-            $this->activeTableFilters['language'] = session('selectedLanguage');
+        // Sync selectedLanguage with activeListFilters
+        if (empty($this->activeListFilters['language'])) {
+            $this->activeListFilters['language'] = session('selectedLanguage');
         }
 
         if ((int)request()->pageId) {
