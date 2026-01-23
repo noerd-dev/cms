@@ -13,67 +13,63 @@ use Noerd\Media\Models\Media as MediaModel;
 uses(Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
-/**
- * @group no-parallel
- */
-
-// Mock CollectionHelper to avoid file system dependencies
+// Mock CollectionHelper via Laravel's container
 beforeEach(function (): void {
-    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
+    $this->mock(CollectionHelper::class, function ($mock) {
+        // Mock resolveCollectionFields for projects (hasPage: true)
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('projects')
+            ->andReturn([
+                'title' => 'Project',
+                'titleList' => 'Projects',
+                'buttonList' => 'New Project',
+                'hasPage' => true,
+                'fields' => [
+                    ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'image', 'label' => 'Image', 'type' => 'image'],
+                ],
+            ]);
 
-    // Mock getCollectionFields for projects (hasPage: true)
-    $mock->shouldReceive('getCollectionFields')
-        ->with('projects')
-        ->andReturn([
-            'title' => 'Project',
-            'titleList' => 'Projects',
-            'buttonList' => 'New Project',
-            'hasPage' => true,
-            'fields' => [
-                ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
-                ['name' => 'image', 'label' => 'Image', 'type' => 'image'],
-            ],
-        ]);
+        // Mock resolveCollectionFields for contacts (hasPage: true)
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('contacts')
+            ->andReturn([
+                'title' => 'Contact',
+                'titleList' => 'Contacts',
+                'buttonList' => 'New Contact',
+                'hasPage' => true,
+                'fields' => [
+                    ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ],
+            ]);
 
-    // Mock getCollectionFields for contacts (hasPage: true)
-    $mock->shouldReceive('getCollectionFields')
-        ->with('contacts')
-        ->andReturn([
-            'title' => 'Contact',
-            'titleList' => 'Contacts',
-            'buttonList' => 'New Contact',
-            'hasPage' => true,
-            'fields' => [
-                ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
-            ],
-        ]);
+        // Mock resolveCollectionFields for sliders (hasPage: false)
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('sliders')
+            ->andReturn([
+                'title' => 'Slider',
+                'titleList' => 'Sliders',
+                'buttonList' => 'New Slider',
+                'hasPage' => false,
+                'fields' => [
+                    ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ],
+            ]);
 
-    // Mock getCollectionFields for sliders (hasPage: false)
-    $mock->shouldReceive('getCollectionFields')
-        ->with('sliders')
-        ->andReturn([
-            'title' => 'Slider',
-            'titleList' => 'Sliders',
-            'buttonList' => 'New Slider',
-            'hasPage' => false,
-            'fields' => [
-                ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
-            ],
-        ]);
-
-    // Mock getCollectionFields for customers (hasPage: false)
-    $mock->shouldReceive('getCollectionFields')
-        ->with('customers')
-        ->andReturn([
-            'title' => 'Customer',
-            'titleList' => 'Customers',
-            'buttonList' => 'New Customer',
-            'hasPage' => false,
-            'fields' => [
-                ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
-                ['name' => 'pageData.description', 'label' => 'Description', 'type' => 'translatableText'],
-            ],
-        ]);
+        // Mock resolveCollectionFields for customers (hasPage: false)
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('customers')
+            ->andReturn([
+                'title' => 'Customer',
+                'titleList' => 'Customers',
+                'buttonList' => 'New Customer',
+                'hasPage' => false,
+                'fields' => [
+                    ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'pageData.description', 'label' => 'Description', 'type' => 'translatableText'],
+                ],
+            ]);
+    });
 });
 
 $testSettings = [

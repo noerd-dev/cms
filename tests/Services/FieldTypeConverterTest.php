@@ -33,75 +33,69 @@ describe('FieldTypeConverter', function (): void {
         $user->setting->update(['selected_tenant_id' => $tenant->id]);
 
         $this->actingAs($user);
+
+        // Mock CollectionHelper via Laravel's container
+        $this->mock(CollectionHelper::class, function ($mock) {
+            // Default beratung collection
+            $mock->shouldReceive('resolveCollectionFields')
+                ->with('beratung')
+                ->andReturn([
+                    'title' => 'Beratung',
+                    'titleList' => 'Beratungseinträge',
+                    'key' => 'BERATUNG',
+                    'buttonList' => 'Neuer Eintrag',
+                    'description' => '',
+                    'hasPage' => false,
+                    'fields' => [
+                        ['name' => 'model.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
+                        ['name' => 'model.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
+                        ['name' => 'model.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
+                    ],
+                ]);
+
+            // Non-existent collection
+            $mock->shouldReceive('resolveCollectionFields')
+                ->with('non_existent_collection')
+                ->andReturn(null);
+
+            // Text conversion collection
+            $mock->shouldReceive('resolveCollectionFields')
+                ->with('test_text_conversion')
+                ->andReturn([
+                    'fields' => [
+                        ['name' => 'model.title', 'label' => 'Title', 'type' => 'text', 'colspan' => 6],
+                        ['name' => 'model.description', 'label' => 'Description', 'type' => 'text', 'colspan' => 6],
+                    ],
+                ]);
+
+            // Mixed field types collection
+            $mock->shouldReceive('resolveCollectionFields')
+                ->with('test_mixed')
+                ->andReturn([
+                    'fields' => [
+                        ['name' => 'model.translatable_field', 'label' => 'Translatable', 'type' => 'translatableText', 'colspan' => 6],
+                        ['name' => 'model.text_field', 'label' => 'Text', 'type' => 'text', 'colspan' => 6],
+                        ['name' => 'model.number_field', 'label' => 'Number', 'type' => 'number', 'colspan' => 6],
+                    ],
+                ]);
+
+            // Rich text collection
+            $mock->shouldReceive('resolveCollectionFields')
+                ->with('test_richtext')
+                ->andReturn([
+                    'fields' => [
+                        ['name' => 'model.rich_content', 'label' => 'Rich Content', 'type' => 'translatableRichText', 'colspan' => 12],
+                        ['name' => 'model.textarea_content', 'label' => 'Textarea Content', 'type' => 'translatableTextarea', 'colspan' => 12],
+                    ],
+                ]);
+
+            // Allow any other collection key (for dynamic tests)
+            $mock->shouldReceive('resolveCollectionFields')
+                ->andReturn(null);
+        });
     });
-
-    afterEach(function (): void {
-        // Ensure all Mockery mocks are properly reset after each test
-        \Mockery::close();
-    });
-
-    // Helper function to create isolated mocks for each test
-    function createCollectionHelperMock(): void
-    {
-        $mock = \Mockery::mock('alias:' . CollectionHelper::class);
-
-        // Default beratung collection
-        $mock->shouldReceive('getCollectionFields')
-            ->with('beratung')
-            ->andReturn([
-                'title' => 'Beratung',
-                'titleList' => 'Beratungseinträge',
-                'key' => 'BERATUNG',
-                'buttonList' => 'Neuer Eintrag',
-                'description' => '',
-                'hasPage' => false,
-                'fields' => [
-                    ['name' => 'model.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
-                    ['name' => 'model.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
-                    ['name' => 'model.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
-                ],
-            ]);
-
-        // Non-existent collection
-        $mock->shouldReceive('getCollectionFields')
-            ->with('non_existent_collection')
-            ->andReturn(null);
-
-        // Text conversion collection
-        $mock->shouldReceive('getCollectionFields')
-            ->with('test_text_conversion')
-            ->andReturn([
-                'fields' => [
-                    ['name' => 'model.title', 'label' => 'Title', 'type' => 'text', 'colspan' => 6],
-                    ['name' => 'model.description', 'label' => 'Description', 'type' => 'text', 'colspan' => 6],
-                ],
-            ]);
-
-        // Mixed field types collection
-        $mock->shouldReceive('getCollectionFields')
-            ->with('test_mixed')
-            ->andReturn([
-                'fields' => [
-                    ['name' => 'model.translatable_field', 'label' => 'Translatable', 'type' => 'translatableText', 'colspan' => 6],
-                    ['name' => 'model.text_field', 'label' => 'Text', 'type' => 'text', 'colspan' => 6],
-                    ['name' => 'model.number_field', 'label' => 'Number', 'type' => 'number', 'colspan' => 6],
-                ],
-            ]);
-
-        // Rich text collection
-        $mock->shouldReceive('getCollectionFields')
-            ->with('test_richtext')
-            ->andReturn([
-                'fields' => [
-                    ['name' => 'model.rich_content', 'label' => 'Rich Content', 'type' => 'translatableRichText', 'colspan' => 12],
-                    ['name' => 'model.textarea_content', 'label' => 'Textarea Content', 'type' => 'translatableTextarea', 'colspan' => 12],
-                ],
-            ]);
-    }
 
     it('converts text fields to translatableText format', function (): void {
-        createCollectionHelperMock();
-
         $originalData = [
             'title' => 'German Title',
             'description' => 'German Description',
@@ -120,8 +114,6 @@ describe('FieldTypeConverter', function (): void {
     });
 
     it('preserves already correct translatableText format', function (): void {
-        createCollectionHelperMock();
-
         $correctData = [
             'title' => ['de' => 'Deutscher Titel', 'en' => 'English Title'],
             'description' => ['de' => 'Deutsche Beschreibung', 'en' => 'English Description'],
@@ -134,8 +126,6 @@ describe('FieldTypeConverter', function (): void {
     });
 
     it('handles empty and null values gracefully', function (): void {
-        createCollectionHelperMock();
-
         $dataWithEmpties = [
             'title' => '',
             'description' => null,
@@ -152,8 +142,6 @@ describe('FieldTypeConverter', function (): void {
     });
 
     it('returns original data when collection config is missing', function (): void {
-        createCollectionHelperMock();
-
         $originalData = [
             'title' => 'Some Title',
             'description' => 'Some Description',
@@ -165,8 +153,6 @@ describe('FieldTypeConverter', function (): void {
     });
 
     it('converts translatableText back to text format', function (): void {
-        createCollectionHelperMock();
-
         $translatableData = [
             'title' => ['de' => 'Deutscher Titel', 'en' => 'English Title'],
             'description' => ['de' => 'Deutsche Beschreibung', 'en' => 'English Description'],
@@ -179,8 +165,6 @@ describe('FieldTypeConverter', function (): void {
     });
 
     it('handles mixed field types correctly', function (): void {
-        createCollectionHelperMock();
-
         $originalData = [
             'translatable_field' => 'Should become translatable',
             'text_field' => 'Should stay text',
@@ -203,22 +187,29 @@ describe('FieldTypeConverter', function (): void {
 
         // Create mock that responds to the lowercase collection key (as per Page model behavior)
         $lowercaseCollectionKey = mb_strtolower($uniqueCollectionKey);
-        $mock = \Mockery::mock('alias:' . CollectionHelper::class);
-        $mock->shouldReceive('getCollectionFields')
-            ->with($lowercaseCollectionKey)
-            ->andReturn([
-                'title' => 'Beratung',
-                'titleList' => 'Beratungseinträge',
-                'key' => $uniqueCollectionKey,
-                'buttonList' => 'Neuer Eintrag',
-                'description' => '',
-                'hasPage' => false,
-                'fields' => [
-                    ['name' => 'model.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
-                    ['name' => 'model.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
-                    ['name' => 'model.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
-                ],
-            ]);
+
+        // Re-mock CollectionHelper with the dynamic collection key
+        $this->mock(CollectionHelper::class, function ($mock) use ($lowercaseCollectionKey, $uniqueCollectionKey) {
+            $mock->shouldReceive('resolveCollectionFields')
+                ->with($lowercaseCollectionKey)
+                ->andReturn([
+                    'title' => 'Beratung',
+                    'titleList' => 'Beratungseinträge',
+                    'key' => $uniqueCollectionKey,
+                    'buttonList' => 'Neuer Eintrag',
+                    'description' => '',
+                    'hasPage' => false,
+                    'fields' => [
+                        ['name' => 'model.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
+                        ['name' => 'model.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
+                        ['name' => 'model.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
+                    ],
+                ]);
+
+            // Allow any other collection key
+            $mock->shouldReceive('resolveCollectionFields')
+                ->andReturn(null);
+        });
 
         $collection = Collection::create([
             'tenant_id' => $this->tenantId,
@@ -253,8 +244,6 @@ describe('FieldTypeConverter', function (): void {
     });
 
     it('handles translatableRichText and translatableTextarea types', function (): void {
-        createCollectionHelperMock();
-
         $originalData = [
             'rich_content' => '<p>Rich text content</p>',
             'textarea_content' => 'Long textarea content',
@@ -271,8 +260,6 @@ describe('FieldTypeConverter', function (): void {
     });
 
     it('preserves non-model fields unchanged', function (): void {
-        createCollectionHelperMock();
-
         $originalData = [
             'title' => 'Will be converted',
             'description' => 'Will be converted',

@@ -7,7 +7,28 @@ use Symfony\Component\Yaml\Yaml;
 
 class CollectionHelper
 {
+    /**
+     * Get collection fields from YAML configuration.
+     * Static method delegates to container-resolved instance for mockability.
+     */
     public static function getCollectionFields(?string $collection): ?array
+    {
+        return app(self::class)->resolveCollectionFields($collection);
+    }
+
+    /**
+     * Get collection table configuration.
+     * Static method delegates to container-resolved instance for mockability.
+     */
+    public static function getCollectionTable(string $collection): array
+    {
+        return app(self::class)->resolveCollectionTable($collection);
+    }
+
+    /**
+     * Instance method: resolve collection fields from YAML file.
+     */
+    public function resolveCollectionFields(?string $collection): ?array
     {
         if ($collection === null) {
             return null;
@@ -30,10 +51,13 @@ class CollectionHelper
         return $fields;
     }
 
-    public static function getCollectionTable(string $collection): array
+    /**
+     * Instance method: resolve collection table configuration.
+     */
+    public function resolveCollectionTable(string $collection): array
     {
         $table = [];
-        $collectionFields = self::getCollectionFields($collection);
+        $collectionFields = $this->resolveCollectionFields($collection);
 
         foreach ($collectionFields['fields'] as $collectionField) {
             $tableColumn = [];

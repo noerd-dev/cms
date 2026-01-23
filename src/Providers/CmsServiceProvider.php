@@ -8,6 +8,7 @@ use Livewire\Volt\Volt;
 use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
 use Noerd\Cms\Commands\NoerdCmsInstallCommand;
 use Noerd\Cms\Console\Commands\SyncFormTypesCommand;
+use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Middleware\CmsApiAuth;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Noerd\Models\Tenant;
@@ -16,6 +17,9 @@ class CmsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Register CollectionHelper as singleton for mockability in tests
+        $this->app->singleton(CollectionHelper::class);
+
         // Register CMS PageElementService as fallback for Website namespace
         if (! $this->app->bound(\Noerd\Website\Services\PageElementService::class)) {
             $this->app->singleton(
