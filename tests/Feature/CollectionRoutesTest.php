@@ -6,70 +6,65 @@ use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
-/**
- * @group no-parallel
- */
-
-// Mock CollectionHelper to avoid file system dependencies
+// Mock CollectionHelper via Laravel's container
 beforeEach(function (): void {
-    // Create an overload mock for better parallel test isolation
-    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
+    $this->mock(CollectionHelper::class, function ($mock) {
+        // Mock resolveCollectionFields for various collections used in tests
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('projects')
+            ->andReturn([
+                'title' => 'Project',
+                'titleList' => 'Projects',
+                'buttonList' => 'New Project',
+                'fields' => [
+                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ],
+            ]);
 
-    // Mock getCollectionFields for various collections used in tests
-    $mock->shouldReceive('getCollectionFields')
-        ->with('projects')
-        ->andReturn([
-            'title' => 'Project',
-            'titleList' => 'Projects',
-            'buttonList' => 'New Project',
-            'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
-            ],
-        ]);
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('services')
+            ->andReturn([
+                'title' => 'Test Collection',
+                'titleList' => 'Test Collections',
+                'buttonList' => 'New Entry',
+                'fields' => [
+                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ],
+            ]);
 
-    $mock->shouldReceive('getCollectionFields')
-        ->with('services')
-        ->andReturn([
-            'title' => 'Test Collection',
-            'titleList' => 'Test Collections',
-            'buttonList' => 'New Entry',
-            'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
-            ],
-        ]);
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('customers')
+            ->andReturn([
+                'title' => 'Test Collection',
+                'titleList' => 'Test Collections',
+                'buttonList' => 'New Entry',
+                'fields' => [
+                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ],
+            ]);
 
-    $mock->shouldReceive('getCollectionFields')
-        ->with('customers')
-        ->andReturn([
-            'title' => 'Test Collection',
-            'titleList' => 'Test Collections',
-            'buttonList' => 'New Entry',
-            'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
-            ],
-        ]);
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('contacts')
+            ->andReturn([
+                'title' => 'Test Collection',
+                'titleList' => 'Test Collections',
+                'buttonList' => 'New Entry',
+                'fields' => [
+                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ],
+            ]);
 
-    $mock->shouldReceive('getCollectionFields')
-        ->with('contacts')
-        ->andReturn([
-            'title' => 'Test Collection',
-            'titleList' => 'Test Collections',
-            'buttonList' => 'New Entry',
-            'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
-            ],
-        ]);
-
-    $mock->shouldReceive('getCollectionFields')
-        ->with('sliders')
-        ->andReturn([
-            'title' => 'Test Collection',
-            'titleList' => 'Test Collections',
-            'buttonList' => 'New Entry',
-            'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
-            ],
-        ]);
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('sliders')
+            ->andReturn([
+                'title' => 'Test Collection',
+                'titleList' => 'Test Collections',
+                'buttonList' => 'New Entry',
+                'fields' => [
+                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ],
+            ]);
+    });
 });
 
 it('can access collection entries route with key parameter', function (): void {

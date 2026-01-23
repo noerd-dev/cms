@@ -9,10 +9,6 @@ use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
-/**
- * @group no-parallel
- */
-
 beforeEach(function () {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
@@ -26,21 +22,22 @@ beforeEach(function () {
         'name' => 'Mitarbeiter',
     ]);
 
-    // Mock CollectionHelper to avoid conflicts with other test files
-    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
-    $mock->shouldReceive('getCollectionFields')
-        ->with('mitarbeiter')
-        ->andReturn([
-            'title' => 'Mitarbeiter',
-            'hasPage' => true,
-            'fields' => [
-                ['name' => 'pageData.title', 'label' => 'Name', 'type' => 'text'],
-                ['name' => 'pageData.title2', 'label' => 'Titel', 'type' => 'text'],
-                ['name' => 'pageData.phone', 'label' => 'Telefon', 'type' => 'text'],
-                ['name' => 'pageData.email', 'label' => 'E-Mail', 'type' => 'text'],
-                ['name' => 'image', 'label' => 'Bild', 'type' => 'image'],
-            ],
-        ]);
+    // Mock CollectionHelper via Laravel's container
+    $this->mock(CollectionHelper::class, function ($mock) {
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('mitarbeiter')
+            ->andReturn([
+                'title' => 'Mitarbeiter',
+                'hasPage' => true,
+                'fields' => [
+                    ['name' => 'pageData.title', 'label' => 'Name', 'type' => 'text'],
+                    ['name' => 'pageData.title2', 'label' => 'Titel', 'type' => 'text'],
+                    ['name' => 'pageData.phone', 'label' => 'Telefon', 'type' => 'text'],
+                    ['name' => 'pageData.email', 'label' => 'E-Mail', 'type' => 'text'],
+                    ['name' => 'image', 'label' => 'Bild', 'type' => 'image'],
+                ],
+            ]);
+    });
 });
 
 it('preserves manually edited slug when saving collection page', function () {

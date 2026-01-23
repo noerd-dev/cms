@@ -11,43 +11,40 @@ use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 uses(Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
-/**
- * @group no-parallel
- */
 beforeEach(function (): void {
     ['user' => $this->user] = $this->createUserWithCmsAccess();
     $this->actingAs($this->user);
 
-    // Mock CollectionHelper for standort and mitarbeiter
-    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
+    // Mock CollectionHelper via Laravel's container
+    $this->mock(CollectionHelper::class, function ($mock) {
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('standort')
+            ->andReturn([
+                'title' => 'Standort',
+                'titleList' => 'Standorte',
+                'buttonList' => 'Neuer Standort',
+                'hasPage' => true,
+                'fields' => [
+                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                ],
+            ]);
 
-    $mock->shouldReceive('getCollectionFields')
-        ->with('standort')
-        ->andReturn([
-            'title' => 'Standort',
-            'titleList' => 'Standorte',
-            'buttonList' => 'Neuer Standort',
-            'hasPage' => true,
-            'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
-            ],
-        ]);
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('mitarbeiter')
+            ->andReturn([
+                'title' => 'Mitarbeiter',
+                'titleList' => 'Mitarbeiter',
+                'buttonList' => 'Neuer Mitarbeiter',
+                'hasPage' => true,
+                'fields' => [
+                    ['name' => 'model.title', 'label' => 'Name', 'type' => 'text'],
+                ],
+            ]);
 
-    $mock->shouldReceive('getCollectionFields')
-        ->with('mitarbeiter')
-        ->andReturn([
-            'title' => 'Mitarbeiter',
-            'titleList' => 'Mitarbeiter',
-            'buttonList' => 'Neuer Mitarbeiter',
-            'hasPage' => true,
-            'fields' => [
-                ['name' => 'model.title', 'label' => 'Name', 'type' => 'text'],
-            ],
-        ]);
-
-    $mock->shouldReceive('getCollectionFields')
-        ->with(null)
-        ->andReturn(null);
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with(null)
+            ->andReturn(null);
+    });
 });
 
 it('accepts collection key as string (existing behavior)', function (): void {

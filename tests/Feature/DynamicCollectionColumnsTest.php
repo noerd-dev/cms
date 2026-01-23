@@ -9,44 +9,40 @@ use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
-/**
- * @group no-parallel
- */
-
-// Mock CollectionHelper to ensure consistent behavior across test runs
+// Mock CollectionHelper via Laravel's container
 beforeEach(function (): void {
     // Clear any previously set session language (from Pest.php beforeEach or elsewhere)
     session()->forget('selectedLanguage');
 
-    $mock = \Mockery::mock('overload:' . CollectionHelper::class);
+    $this->mock(CollectionHelper::class, function ($mock) {
+        // Mock resolveCollectionFields for projects
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('projects')
+            ->andReturn([
+                'title' => 'Project',
+                'titleList' => 'Projects',
+                'buttonList' => 'New Project',
+                'hasPage' => true,
+                'fields' => [
+                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'image', 'label' => 'Image', 'type' => 'image'],
+                ],
+            ]);
 
-    // Mock getCollectionFields for projects
-    $mock->shouldReceive('getCollectionFields')
-        ->with('projects')
-        ->andReturn([
-            'title' => 'Project',
-            'titleList' => 'Projects',
-            'buttonList' => 'New Project',
-            'hasPage' => true,
-            'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
-                ['name' => 'image', 'label' => 'Image', 'type' => 'image'],
-            ],
-        ]);
-
-    // Mock getCollectionFields for customers
-    $mock->shouldReceive('getCollectionFields')
-        ->with('customers')
-        ->andReturn([
-            'title' => 'Customer',
-            'titleList' => 'Customers',
-            'buttonList' => 'New Customer',
-            'hasPage' => false,
-            'fields' => [
-                ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
-                ['name' => 'model.description', 'label' => 'Description', 'type' => 'translatableText'],
-            ],
-        ]);
+        // Mock resolveCollectionFields for customers
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('customers')
+            ->andReturn([
+                'title' => 'Customer',
+                'titleList' => 'Customers',
+                'buttonList' => 'New Customer',
+                'hasPage' => false,
+                'fields' => [
+                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'model.description', 'label' => 'Description', 'type' => 'translatableText'],
+                ],
+            ]);
+    });
 });
 
 it('displays dynamic columns from YAML configuration for projects', function (): void {
