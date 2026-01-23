@@ -116,7 +116,7 @@ it('deletes a language', function () use ($testSettings): void {
 
     Volt::test($testSettings['componentName'], ['cmsLanguageId' => $language->id])
         ->call('delete')
-        ->assertDispatched('refreshList-' . $testSettings['listName']);
+        ->assertDispatched('closeModal');
 
     $this->assertDatabaseMissing('cms_languages', ['id' => $language->id]);
 });
