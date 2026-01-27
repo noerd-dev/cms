@@ -81,7 +81,6 @@ new class () extends Component {
         $this->mountModalProcess(self::COMPONENT, $formType);
         $this->formTypeData = $formType->toArray();
         $this->ymlConfig = $formType->loadYmlConfig();
-        $this->modalTitle = __('Formulartyp') . ' ' . ($this->formTypeData['title'] ?? '');
     }
 
     public function store(): void
