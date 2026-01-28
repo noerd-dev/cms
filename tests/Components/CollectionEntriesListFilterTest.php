@@ -11,6 +11,8 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
+    session()->forget(['activeListFilters', 'selectedLanguage']);
+
     ['user' => $this->user, 'tenant' => $this->tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($this->user);
 
