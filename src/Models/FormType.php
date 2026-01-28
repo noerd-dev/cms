@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\File;
-use Noerd\Noerd\Models\Tenant;
-use Noerd\Noerd\Traits\BelongsToTenant;
-use Noerd\Noerd\Traits\HasListScopes;
+use Noerd\Models\Tenant;
+use Noerd\Traits\BelongsToTenant;
+use Noerd\Traits\HasListScopes;
 use Noerd\Website\Models\FormRequest;
 use Symfony\Component\Yaml\Yaml;
 

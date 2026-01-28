@@ -8,9 +8,9 @@ use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
-use Noerd\Noerd\Scopes\SearchScope;
-use Noerd\Noerd\Scopes\TenantScope;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Scopes\SearchScope;
+use Noerd\Scopes\TenantScope;
+use Noerd\Traits\Noerd;
 
 new class extends Component {
     use LanguageFilterTrait;

@@ -11,7 +11,7 @@ use Noerd\Cms\Console\Commands\SyncFormTypesCommand;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Middleware\CmsApiAuth;
 use Noerd\Cms\Models\CmsLanguage;
-use Noerd\Noerd\Models\Tenant;
+use Noerd\Models\Tenant;
 
 class CmsServiceProvider extends ServiceProvider
 {

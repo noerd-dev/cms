@@ -5,7 +5,7 @@ use Livewire\Volt\Component;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Traits\LanguageFilterTrait;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Traits\Noerd;
 
 new class extends Component
 {

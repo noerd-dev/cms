@@ -4,8 +4,8 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use Noerd\Cms\Models\FormType;
-use Noerd\Noerd\Traits\HasEmailPreview;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Traits\HasEmailPreview;
+use Noerd\Traits\Noerd;
 
 new class () extends Component {
     use HasEmailPreview;

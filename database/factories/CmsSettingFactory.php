@@ -5,7 +5,7 @@ namespace Noerd\Cms\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Models\Tenant;
+use Noerd\Models\Tenant;
 
 /**
  * @extends Factory<CmsSetting>

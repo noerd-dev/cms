@@ -5,8 +5,8 @@ namespace Noerd\Cms\Commands;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use Noerd\Noerd\Traits\HasModuleInstallation;
-use Noerd\Noerd\Traits\RequiresNoerdInstallation;
+use Noerd\Traits\HasModuleInstallation;
+use Noerd\Traits\RequiresNoerdInstallation;
 
 class NoerdCmsInstallCommand extends Command
 {

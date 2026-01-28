@@ -7,7 +7,7 @@ use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Traits\Noerd;
 
 new class () extends Component {
     use Noerd;

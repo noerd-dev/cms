@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\File;
 use Livewire\Volt\Component;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Traits\Noerd;
 
 new class () extends Component {
     use Noerd;

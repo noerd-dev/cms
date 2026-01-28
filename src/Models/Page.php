@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Database\Factories\PageFactory;
 use Noerd\Cms\Services\FieldTypeConverter;
-use Noerd\Noerd\Traits\BelongsToTenant;
-use Noerd\Noerd\Traits\HasListScopes;
+use Noerd\Traits\BelongsToTenant;
+use Noerd\Traits\HasListScopes;
 
 class Page extends Model
 {

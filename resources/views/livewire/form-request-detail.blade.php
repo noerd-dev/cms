@@ -4,7 +4,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use Noerd\Cms\Models\FormRequest;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Traits\Noerd;
 
 new class extends Component {
 

@@ -2,7 +2,7 @@
 
 namespace Noerd\Cms\Helpers;
 
-use Noerd\Noerd\Helpers\StaticConfigHelper;
+use Noerd\Helpers\StaticConfigHelper;
 use Symfony\Component\Yaml\Yaml;
 
 class FieldHelper

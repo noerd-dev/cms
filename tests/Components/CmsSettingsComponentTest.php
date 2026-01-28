@@ -4,11 +4,11 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Helpers\TenantHelper;
-use Noerd\Noerd\Models\Profile;
-use Noerd\Noerd\Models\Tenant;
-use Noerd\Noerd\Models\TenantApp;
-use Noerd\Noerd\Models\User;
+use Noerd\Helpers\TenantHelper;
+use Noerd\Models\Profile;
+use Noerd\Models\Tenant;
+use Noerd\Models\TenantApp;
+use Noerd\Models\User;
 
 uses(Tests\TestCase::class);
 uses(RefreshDatabase::class);
