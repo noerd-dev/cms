@@ -2,12 +2,11 @@
     "name": "noerd/cms",
     "description": "",
     "type": "library",
-    "version": "v1.0.1",
+    "version": "v0.1.1",
     "license": "proprietary",
     "require": {
-        "livewire/livewire": "^3.4|^4.0",
-        "noerd/noerd":  "^1.0",
-        "noerd/media":  "^1.0"
+        "noerd/noerd": "^0.1",
+        "noerd/media":  "^0.1"
     },
     "autoload": {
         "psr-4": {
