@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
-use Noerd\Noerd\Models\Tenant;
+use Noerd\Models\Tenant;
 
 return new class () extends Migration {
     /**

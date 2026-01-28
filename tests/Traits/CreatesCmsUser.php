@@ -6,10 +6,10 @@ namespace Noerd\Cms\Tests\Traits;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\CmsLanguage;
-use Noerd\Noerd\Helpers\TenantHelper;
-use Noerd\Noerd\Models\Tenant;
-use Noerd\Noerd\Models\TenantApp;
-use Noerd\Noerd\Models\User;
+use Noerd\Helpers\TenantHelper;
+use Noerd\Models\Tenant;
+use Noerd\Models\TenantApp;
+use Noerd\Models\User;
 
 trait CreatesCmsUser
 {

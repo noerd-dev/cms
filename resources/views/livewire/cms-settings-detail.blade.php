@@ -3,7 +3,7 @@
 use Livewire\Volt\Component;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Traits\Noerd;
 
 new class extends Component {
 

@@ -5,10 +5,10 @@ use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\FieldTypeConverter;
-use Noerd\Noerd\Helpers\TenantHelper;
-use Noerd\Noerd\Models\Tenant;
-use Noerd\Noerd\Models\TenantApp;
-use Noerd\Noerd\Models\User;
+use Noerd\Helpers\TenantHelper;
+use Noerd\Models\Tenant;
+use Noerd\Models\TenantApp;
+use Noerd\Models\User;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 

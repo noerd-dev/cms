@@ -3,8 +3,8 @@
 namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Noerd\Noerd\Traits\BelongsToTenant;
-use Noerd\Noerd\Traits\HasListScopes;
+use Noerd\Traits\BelongsToTenant;
+use Noerd\Traits\HasListScopes;
 
 class CmsLanguage extends Model
 {

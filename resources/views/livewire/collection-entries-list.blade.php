@@ -7,7 +7,7 @@ use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Traits\Noerd;
 
 new class extends Component
 {

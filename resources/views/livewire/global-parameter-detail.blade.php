@@ -5,8 +5,8 @@ use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\GlobalParameter;
-use Noerd\Noerd\Helpers\StaticConfigHelper;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Helpers\StaticConfigHelper;
+use Noerd\Traits\Noerd;
 
 new class extends Component {
 

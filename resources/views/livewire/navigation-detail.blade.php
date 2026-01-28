@@ -6,7 +6,7 @@ use Livewire\Volt\Component;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Traits\Noerd;
 
 new class extends Component {
 

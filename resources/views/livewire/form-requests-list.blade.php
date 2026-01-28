@@ -1,7 +1,7 @@
 <?php
 
 use Livewire\Volt\Component;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Traits\Noerd;
 use Noerd\Website\Models\FormRequest;
 
 new class extends Component {

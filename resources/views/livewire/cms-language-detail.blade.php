@@ -2,8 +2,8 @@
 
 use Livewire\Volt\Component;
 use Noerd\Cms\Models\CmsLanguage;
-use Noerd\Noerd\Helpers\StaticConfigHelper;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Helpers\StaticConfigHelper;
+use Noerd\Traits\Noerd;
 
 new class extends Component {
 

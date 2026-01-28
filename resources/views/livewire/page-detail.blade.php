@@ -15,7 +15,7 @@ use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Services\MediaUploadService;
 use Noerd\Cms\Models\CmsLanguage;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Traits\Noerd;
 
 new class () extends Component {
     use Noerd;

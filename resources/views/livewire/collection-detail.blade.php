@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Livewire\Volt\Component;
-use Noerd\Noerd\Traits\Noerd;
+use Noerd\Traits\Noerd;
 
 new class extends Component {
 

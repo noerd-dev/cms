@@ -4,8 +4,8 @@ namespace Noerd\Cms\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Noerd\Noerd\Models\Tenant;
-use Noerd\Noerd\Models\User;
+use Noerd\Models\Tenant;
+use Noerd\Models\User;
 use Symfony\Component\HttpFoundation\Response;
 
 class CmsApiAuth

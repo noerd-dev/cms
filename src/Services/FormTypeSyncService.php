@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\File;
 use Noerd\Cms\Models\FormType;
-use Noerd\Noerd\Models\Tenant;
+use Noerd\Models\Tenant;
 use Symfony\Component\Yaml\Yaml;
 
 class FormTypeSyncService
