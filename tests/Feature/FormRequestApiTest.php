@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Noerd\Noerd\Helpers\TenantHelper;
 use Noerd\Noerd\Models\Tenant;
 use Noerd\Noerd\Models\User;
 
@@ -12,7 +13,7 @@ it('stores a form request via API using user api token', function (): void {
     $user = User::factory()->create([
         'api_token' => 'test_token_123',
     ]);
-    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+    TenantHelper::setSelectedTenantId($tenant->id);
 
     $payload = [
         'form' => 'contact',

@@ -5,6 +5,7 @@ use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\FieldTypeConverter;
+use Noerd\Noerd\Helpers\TenantHelper;
 use Noerd\Noerd\Models\Tenant;
 use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
@@ -30,7 +31,7 @@ describe('FieldTypeConverter', function (): void {
 
         $user = User::factory()->create();
         $user->tenants()->attach($tenant->id);
-        $user->setting->update(['selected_tenant_id' => $tenant->id]);
+        TenantHelper::setSelectedTenantId($tenant->id);
 
         $this->actingAs($user);
 
