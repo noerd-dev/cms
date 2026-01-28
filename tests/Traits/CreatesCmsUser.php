@@ -6,6 +6,7 @@ namespace Noerd\Cms\Tests\Traits;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\CmsLanguage;
+use Noerd\Noerd\Helpers\TenantHelper;
 use Noerd\Noerd\Models\Tenant;
 use Noerd\Noerd\Models\TenantApp;
 use Noerd\Noerd\Models\User;
@@ -35,10 +36,9 @@ trait CreatesCmsUser
 
         $user = User::factory()->create();
         $user->tenants()->attach($tenant->id);
-        $user->setting->update([
-            'selected_tenant_id' => $tenant->id,
-            'selected_app' => 'cms',
-        ]);
+
+        TenantHelper::setSelectedTenantId($tenant->id);
+        TenantHelper::setSelectedApp('CMS');
 
         return ['user' => $user, 'tenant' => $tenant];
     }

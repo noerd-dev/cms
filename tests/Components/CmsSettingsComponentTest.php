@@ -4,6 +4,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\Page;
+use Noerd\Noerd\Helpers\TenantHelper;
 use Noerd\Noerd\Models\Profile;
 use Noerd\Noerd\Models\Tenant;
 use Noerd\Noerd\Models\TenantApp;
@@ -33,7 +34,7 @@ it('loads and displays page options with localized names and saves selection', f
 
     $user = User::factory()->create();
     $user->tenants()->attach($tenant->id, ['profile_id' => $profile->id]);
-    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+    TenantHelper::setSelectedTenantId($tenant->id);
 
     // Zwei Seiten mit lokalisierten Namen (als JSON gespeichert)
     $page1 = Page::factory()->create([
