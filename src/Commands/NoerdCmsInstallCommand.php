@@ -151,7 +151,7 @@ class NoerdCmsInstallCommand extends Command
         }
 
         $this->line('');
-        if (! $this->confirm('Would you like to install the website module?', false)) {
+        if (! $this->confirm('Would you like to install the website boilerplate?', false)) {
             $this->line('<comment>Skipping website module installation.</comment>');
 
             return;

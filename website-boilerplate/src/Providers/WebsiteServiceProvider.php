@@ -29,6 +29,7 @@ class WebsiteServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'website');
         $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'website');
+        $this->loadRoutesFrom(__DIR__ . '/../../routes/website-routes.php');
 
         // Register route loading after all providers have been registered
         $this->app->booted(function (): void {
