@@ -142,21 +142,21 @@ new class () extends Component {
 
                     {{-- Basic Information (Read-Only) --}}
                     <div
-                        class="space-y-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">{{ __('Grundinformationen (aus YML)') }}</h3>
+                        class="space-y-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h3 class="text-base font-semibold text-gray-900">{{ __('Grundinformationen (aus YML)') }}</h3>
 
                         <div class="grid grid-cols-3 gap-4 text-sm">
                             <div>
-                                <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Key') }}</label>
-                                <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formTypeData['key'] ?? '-' }}</p>
+                                <label class="font-medium text-gray-600">{{ __('Key') }}</label>
+                                <p class="mt-1 text-gray-900">{{ $formTypeData['key'] ?? '-' }}</p>
                             </div>
                             <div>
-                                <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Titel') }}</label>
-                                <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formTypeData['title'] ?? '-' }}</p>
+                                <label class="font-medium text-gray-600">{{ __('Titel') }}</label>
+                                <p class="mt-1 text-gray-900">{{ $formTypeData['title'] ?? '-' }}</p>
                             </div>
                             <div>
-                                <label class="font-medium text-gray-600 dark:text-gray-400">{{ __('Beschreibung') }}</label>
-                                <p class="mt-1 text-gray-900 dark:text-gray-100">{{ $formTypeData['description'] ?? '-' }}</p>
+                                <label class="font-medium text-gray-600">{{ __('Beschreibung') }}</label>
+                                <p class="mt-1 text-gray-900">{{ $formTypeData['description'] ?? '-' }}</p>
                             </div>
                         </div>
 
@@ -172,14 +172,14 @@ new class () extends Component {
                     </div>
 
                     {{-- Email Placeholders --}}
-                    <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <h4 class="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h4 class="text-sm font-semibold text-blue-900 mb-2">
                             {{ __('cms_available_placeholders') }}
                         </h4>
-                        <div class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        <div class="text-sm text-blue-800 space-y-1">
                             @foreach($this->emailPlaceholders as $placeholder => $description)
                                 <div class="flex gap-2">
-                                    <code class="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">{{ $placeholder }}</code>
+                                    <code class="bg-blue-100 px-2 py-1 rounded">{{ $placeholder }}</code>
                                     <span>{{ $description }}</span>
                                 </div>
                             @endforeach
