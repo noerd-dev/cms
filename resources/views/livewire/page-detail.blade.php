@@ -607,7 +607,7 @@ new class () extends Component {
                             type="number"
                             min="0"
                             step="1"
-                            class="w-16 rounded-md border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent dark:bg-zinc-800 dark:border-zinc-600 dark:text-white"
+                            class="w-16 rounded-md border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                         />
                     </div>
                 </div>
@@ -617,7 +617,7 @@ new class () extends Component {
         <x-noerd::tab-content :layout="$pageLayout" :showBlock="$this->hasPageFeatures" :model="$pageData">
             <x-slot:tab1>
                 @if($collectionLayout)
-                    <div class="p-4 border border-blue-200 mb-4 relative overflow-hidden rounded-lg bg-blue-50 dark:bg-blue-950/20 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-blue-950/5 dark:after:inset-ring-blue/10 bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-blue-950)]/5 dark:[--pattern-fg:var(--color-blue-300)]/10">
+                    <div class="p-4 border border-blue-200 mb-4 relative overflow-hidden rounded-lg bg-blue-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-blue-950/5 bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-blue-950)]/5">
                         @include('noerd::components.detail.block', array_merge($collectionLayout, ['model' => $pageData]))
                     </div>
                 @endif
