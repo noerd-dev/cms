@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Symfony\Component\Yaml\Yaml;
 
 class InstallWebsiteBoilerplateCommand extends Command
 {
@@ -51,6 +52,9 @@ class InstallWebsiteBoilerplateCommand extends Command
 
             // Register the module
             $this->registerModule();
+
+            // Ensure quick-menu config contains the website link button
+            $this->installQuickMenuConfig();
 
             $this->info('Website boilerplate successfully installed!');
             $this->line('');
@@ -172,6 +176,37 @@ class InstallWebsiteBoilerplateCommand extends Command
         } else {
             $this->line('<info>Website package installed successfully.</info>');
         }
+    }
+
+    /**
+     * Ensure the quick-menu config contains the website link button.
+     */
+    private function installQuickMenuConfig(): void
+    {
+        $configPath = base_path('app-configs/quick-menu.yml');
+        $button = ['policy' => 'canCms', 'component' => 'quick-menu.website-link'];
+
+        if (file_exists($configPath)) {
+            $config = Yaml::parse(file_get_contents($configPath)) ?? [];
+            $buttons = $config['buttons'] ?? [];
+
+            foreach ($buttons as $existing) {
+                if (($existing['policy'] ?? null) === $button['policy']
+                    && ($existing['component'] ?? null) === $button['component']) {
+                    $this->line('<comment>Quick-menu already contains the website link button.</comment>');
+
+                    return;
+                }
+            }
+
+            $config['buttons'] = [...$buttons, $button];
+        } else {
+            File::ensureDirectoryExists(dirname($configPath));
+            $config = ['buttons' => [$button]];
+        }
+
+        file_put_contents($configPath, Yaml::dump($config, 10, 2));
+        $this->line('<info>Quick-menu config updated:</info> app-configs/quick-menu.yml');
     }
 
     /**
