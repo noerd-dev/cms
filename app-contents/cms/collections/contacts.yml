@@ -1,10 +1,15 @@
-title: 'Kontakt'
-titleList: 'Kontaktseiten'
-key: 'CONTACTS'
+title: Kontakt
+titleList: Kontaktseiten
+key: CONTACTS
 buttonList: 'Neue Kontaktseite'
 description: ''
 hasPage: true
 fields:
-  - { name: model.name, label: Name, type: translatableText, colspan: 6 }
-  - { name: image, label: Bild, type: image, colspan: 6 }
-#  - { name: model.category, label: 'Kategorie', type: select, options: ['as', 'asd'], colspan: 6 }
+  - name: model.name
+    label: Name
+    type: translatableText
+    colspan: 6
+  - name: image
+    label: Bild
+    type: image
+    colspan: 6

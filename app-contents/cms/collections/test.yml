@@ -1,6 +1,10 @@
-title: 'Project'
-titleList: 'Projects'
+title: Project
+titleList: Projects
 buttonList: 'New Project'
 fields:
-  - { name: model.name, label: Name, type: translatableText }
-  - { name: image, label: Image, type: image }
+  - name: model.name
+    label: Name
+    type: translatableText
+  - name: image
+    label: Image
+    type: image

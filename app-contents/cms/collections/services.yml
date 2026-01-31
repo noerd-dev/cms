@@ -1,10 +1,15 @@
 title: cms_service
 titleList: cms_services
-key: 'SERVICES'
+key: SERVICES
 buttonList: cms_new_service
 description: ''
 hasPage: true
 fields:
-  - { name: model.name, label: Name, type: translatableText, colspan: 6 }
-  - { name: image, label: Image, type: image, colspan: 6 }
-#  - { name: model.category, label: 'Kategorie', type: select, options: ['as', 'asd'], colspan: 6 }
+  - name: model.name
+    label: Name
+    type: translatableText
+    colspan: 6
+  - name: image
+    label: Image
+    type: image
+    colspan: 6

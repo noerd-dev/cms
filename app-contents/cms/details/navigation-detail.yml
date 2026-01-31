@@ -1,10 +1,25 @@
-title: 'Navigationspunkt'
+title: Navigationspunkt
 description: ''
 fields:
-  - { name: navigationData.navigation_key, label: Key, type: text, colspan: 6 }
-  - { name: navigationData.name, label: Name, type: translatableText, colspan: 6 }
-  - { name: navigationData.page_id, label: Page, type: relation, relationField: relationTitles.page_id, modalComponent: pages-list, colspan: 6 }
-  - { name: navigationData.link, label: Link (URL), type: text, colspan: 6 }
-  - { name: navigationData.new_tab, label: New Tab, type: checkbox, colspan: 6 }
-
-
+  - name: navigationData.navigation_key
+    label: Key
+    type: text
+    colspan: 6
+  - name: navigationData.name
+    label: Name
+    type: translatableText
+    colspan: 6
+  - name: navigationData.page_id
+    label: Page
+    type: relation
+    relationField: relationTitles.page_id
+    modalComponent: pages-list
+    colspan: 6
+  - name: navigationData.link
+    label: 'Link (URL)'
+    type: text
+    colspan: 6
+  - name: navigationData.new_tab
+    label: 'New Tab'
+    type: checkbox
+    colspan: 6
