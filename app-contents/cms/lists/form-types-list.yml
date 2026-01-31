@@ -1,5 +1,5 @@
-title: 'Formulartypen'
-component: 'form-type-detail'
+title: Formulartypen
+component: form-type-detail
 columns:
   - field: key
     label: Key

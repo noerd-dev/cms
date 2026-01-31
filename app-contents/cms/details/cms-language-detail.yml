@@ -1,8 +1,25 @@
 title: cms_label_language
 description: cms_language_description
 fields:
-  - { name: cmsLanguageData.code, label: cms_label_code_example, type: text, colspan: 4, required: true }
-  - { name: cmsLanguageData.name, label: cms_label_name, type: text, colspan: 8, required: true }
-  - { name: cmsLanguageData.is_active, label: cms_label_is_active, type: checkbox, colspan: 4 }
-  - { name: cmsLanguageData.is_default, label: cms_label_is_default, type: checkbox, colspan: 4 }
-  - { name: cmsLanguageData.sort_order, label: cms_label_sort_order, type: number, colspan: 4 }
+  - name: cmsLanguageData.code
+    label: cms_label_code_example
+    type: text
+    colspan: 4
+    required: true
+  - name: cmsLanguageData.name
+    label: cms_label_name
+    type: text
+    colspan: 8
+    required: true
+  - name: cmsLanguageData.is_active
+    label: cms_label_is_active
+    type: checkbox
+    colspan: 4
+  - name: cmsLanguageData.is_default
+    label: cms_label_is_default
+    type: checkbox
+    colspan: 4
+  - name: cmsLanguageData.sort_order
+    label: cms_label_sort_order
+    type: number
+    colspan: 4

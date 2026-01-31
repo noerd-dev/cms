@@ -5,13 +5,11 @@ buttonList: 'Neue Seite'
 description: ''
 hasPage: true
 fields:
-  -
-    name: model.name
+  - name: model.name
     label: Name
     type: translatableText
     colspan: 6
-  -
-    name: image
+  - name: image
     label: Bild
     type: image
     colspan: 6

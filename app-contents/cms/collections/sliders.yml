@@ -1,9 +1,11 @@
 title: cms_slider
 titleList: cms_sliders
-key: 'SLIDERS'
+key: SLIDERS
 buttonList: cms_new_slider
 description: ''
 hasPage: false
 fields:
-  - { name: image, label: Image, type: image, colspan: 6 }
-#  - { name: model.category, label: 'Kategorie', type: select, options: ['as', 'asd'], colspan: 6 }
+  - name: image
+    label: Image
+    type: image
+    colspan: 6

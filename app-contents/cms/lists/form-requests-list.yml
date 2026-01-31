@@ -4,5 +4,9 @@ component: from-request-component
 disableSearch: false
 redirectAction: ''
 columns:
-  - { field: 'form', label: 'Form', width: 30 }
-  - { field: 'created_at', label: 'Created At', width: 30 }
+  - field: form
+    label: Form
+    width: 30
+  - field: created_at
+    label: 'Created At'
+    width: 30

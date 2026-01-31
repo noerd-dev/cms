@@ -1,10 +1,15 @@
 title: cms_project
 titleList: cms_projects
-key: 'PROJECTS'
+key: PROJECTS
 buttonList: cms_new_project
 description: ''
 hasPage: true
 fields:
-  - { name: model.name, label: Name, type: translatableText, colspan: 6 }
-  - { name: image, label: Image, type: image, colspan: 6 }
-#  - { name: model.category, label: 'Kategorie', type: select, options: ['as', 'asd'], colspan: 6 }
+  - name: model.name
+    label: Name
+    type: translatableText
+    colspan: 6
+  - name: image
+    label: Image
+    type: image
+    colspan: 6
