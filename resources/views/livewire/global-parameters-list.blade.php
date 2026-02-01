@@ -12,7 +12,7 @@ new class extends Component
     use LanguageFilterTrait;
     use Noerd;
 
-    public const COMPONENT = 'global-parameters-list';
+    public const DETAIL_COMPONENT = 'global-parameters-list';
 
     protected const ALLOWED_TABLE_FILTERS = ['language'];
 
@@ -40,7 +40,7 @@ new class extends Component
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'global-parameter-detail',
-            source: self::COMPONENT,
+            source: self::DETAIL_COMPONENT,
             arguments: ['globalParameterId' => $modelId, 'relationId' => $relationId],
         );
     }

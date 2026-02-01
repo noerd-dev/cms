@@ -18,7 +18,7 @@ new class extends Component {
     use WithFileUploads;
     use Noerd;
 
-    public const COMPONENT = 'element-page-detail';
+    public const DETAIL_COMPONENT = 'element-page-detail';
     public const LIST_COMPONENT = 'element-pages-list';
     public const ID = 'elementPageId';
 

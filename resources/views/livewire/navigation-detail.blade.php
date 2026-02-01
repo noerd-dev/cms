@@ -12,7 +12,7 @@ new class extends Component {
 
     use Noerd;
 
-    public const COMPONENT = 'navigation-detail';
+    public const DETAIL_COMPONENT = 'navigation-detail';
     public const LIST_COMPONENT = 'navigation-list';
     public const ID = 'navigationId';
 
@@ -26,13 +26,13 @@ new class extends Component {
         if ($this->navigationId) {
             $navigation = Navigation::find($this->navigationId);
         }
-        $this->mountModalProcess(self::COMPONENT, $navigation);
+        $this->mountModalProcess(self::DETAIL_COMPONENT, $navigation);
 
         if ($navigation['page_id']) {
             $this->dispatch('pageSelected', $navigation['page_id']);
         }
 
-        $this->navigationData = FieldHelper::parseComponentToData(self::COMPONENT, $navigation->toArray());
+        $this->navigationData = FieldHelper::parseComponentToData(self::DETAIL_COMPONENT, $navigation->toArray());
     }
 
     public function store(): void
@@ -75,7 +75,7 @@ new class extends Component {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'pages-list',
-            source: self::COMPONENT,
+            source: self::DETAIL_COMPONENT,
             arguments: ['listActionMethod' => 'selectAction'],
         );
     }

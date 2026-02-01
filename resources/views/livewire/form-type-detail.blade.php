@@ -11,7 +11,7 @@ new class () extends Component {
     use HasEmailPreview;
     use Noerd;
 
-    public const COMPONENT = 'form-type-detail';
+    public const DETAIL_COMPONENT = 'form-type-detail';
     public const LIST_COMPONENT = 'form-types-list';
     public const ID = 'formTypeId';
 
@@ -78,7 +78,7 @@ new class () extends Component {
             $formType = FormType::find($this->formTypeId);
         }
 
-        $this->mountModalProcess(self::COMPONENT, $formType);
+        $this->mountModalProcess(self::DETAIL_COMPONENT, $formType);
         $this->formTypeData = $formType->toArray();
         $this->ymlConfig = $formType->loadYmlConfig();
     }
