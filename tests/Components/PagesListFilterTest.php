@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
@@ -22,13 +22,13 @@ beforeEach(function (): void {
 });
 
 it('can set activeListFilters without error', function (): void {
-    Volt::test('pages-list')
+    Livewire::test('pages-list')
         ->set('activeListFilters.language', 'de')
         ->assertHasNoErrors();
 });
 
 it('applies language filter without error', function (): void {
-    $component = Volt::test('pages-list')
+    $component = Livewire::test('pages-list')
         ->set('activeListFilters.language', 'en');
 
     expect($component->get('activeListFilters')['language'])->toBe('en');

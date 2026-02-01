@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
@@ -28,7 +28,7 @@ it('validates the data', function () use ($testSettings): void {
     $this->actingAs($user);
 
     // Test with invalid data (empty name array)
-    Volt::test($testSettings['componentName'])
+    Livewire::test($testSettings['componentName'])
         ->set('pageData.name', [])
         ->call('store')
         ->assertHasErrors(['pageData.name']);
@@ -39,7 +39,7 @@ it('successfully stores the data', function () use ($testSettings): void {
 
     $this->actingAs($user);
 
-    $component = Volt::test($testSettings['componentName'])
+    $component = Livewire::test($testSettings['componentName'])
         ->set('pageData.name.de', 'Test Seite')
         ->set('pageData.name.en', 'Test Page')
         ->set('pageData.layout', 'weblayout')
@@ -63,7 +63,7 @@ it('successfully deletes a page', function () use ($testSettings): void {
         'slug' => ['de' => '/test-seite', 'en' => '/test-page'],
     ]);
 
-    Volt::test($testSettings['componentName'], ['pageId' => $model->id])
+    Livewire::test($testSettings['componentName'], ['pageId' => $model->id])
         ->call('delete')
         ->assertDispatched('closeModal');
 
@@ -82,7 +82,7 @@ it('opens page with pageId', function () use ($testSettings): void {
         'slug' => ['de' => '/test-seite', 'en' => '/test-page'],
     ]);
 
-    $component = Volt::test($testSettings['componentName'], ['pageId' => $model->id]);
+    $component = Livewire::test($testSettings['componentName'], ['pageId' => $model->id]);
 
     $component->assertSet('pageId', $model->id);
     // Note: model.id might be set differently due to FieldHelper parsing
@@ -98,7 +98,7 @@ it('opens and stores existing page', function () use ($testSettings): void {
         'slug' => ['de' => '/alte-seite', 'en' => '/old-page'],
     ]);
 
-    Volt::test($testSettings['componentName'], ['pageId' => $model->id])
+    Livewire::test($testSettings['componentName'], ['pageId' => $model->id])
         ->set('pageData.name.de', 'Neue Seite')
         ->set('pageData.name.en', 'New Page')
         ->call('store')
@@ -116,7 +116,7 @@ it('dispatches table action from pages table', function () use ($testSettings): 
     $this->actingAs($user);
 
     // Test just the listAction method without rendering the full table
-    $component = Volt::test($testSettings['listName']);
+    $component = Livewire::test($testSettings['listName']);
 
     $component->call('listAction', 123)
         ->assertDispatched(
@@ -132,6 +132,6 @@ it('sets a table key for the list', function () use ($testSettings): void {
 
     $this->actingAs($user);
 
-    Volt::test($testSettings['listName'])
+    Livewire::test($testSettings['listName'])
         ->assertNotSet('listId', '');
 });

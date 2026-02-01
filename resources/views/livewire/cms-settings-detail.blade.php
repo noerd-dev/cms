@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\Page;
 use Noerd\Traits\Noerd;

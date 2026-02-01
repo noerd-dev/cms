@@ -1,11 +1,11 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Noerd\Website\Models\FormRequest;
 use Noerd\Website\Services\RecaptchaService;
 
 new class extends Component {
-    
+
     public string $name = '';
     public string $email = '';
     public string $phone = '';
@@ -14,7 +14,7 @@ new class extends Component {
     public bool $isSubmitting = false;
     public bool $showSuccess = false;
     public string $errorMessage = '';
-    
+
     public function mount()
     {
         // Share reCAPTCHA site key with frontend
@@ -23,7 +23,7 @@ new class extends Component {
             $this->dispatch('recaptcha-site-key', $recaptchaService->getSiteKey());
         }
     }
-    
+
     protected function rules(): array
     {
         return [
@@ -33,7 +33,7 @@ new class extends Component {
             'message' => ['required', 'string', 'max:2000'],
         ];
     }
-    
+
     protected function messages(): array
     {
         return [
@@ -48,16 +48,16 @@ new class extends Component {
             'recaptchaToken.required' => 'Bitte bestätigen Sie, dass Sie kein Roboter sind.',
         ];
     }
-    
+
     public function submit()
     {
         $this->isSubmitting = true;
         $this->showSuccess = false;
         $this->errorMessage = '';
-        
+
         try {
             $this->validate();
-            
+
             // Verify reCAPTCHA if enabled (but don't require token - fail-open approach)
             $recaptchaService = new RecaptchaService();
             if ($recaptchaService->isEnabled() && !empty($this->recaptchaToken)) {
@@ -71,10 +71,10 @@ new class extends Component {
             $this->isSubmitting = false;
             throw $e; // Re-throw validation exceptions so Livewire can handle them
         }
-        
+
         // Get tenant_id from session (set by middleware)
         $tenantId = session('selectedTenantId');
-                   
+
         if (!$tenantId) {
             // Try to get tenant via hash from session
             $hash = session('hash');
@@ -86,13 +86,13 @@ new class extends Component {
                 }
             }
         }
-        
+
         if (!$tenantId) {
             $this->errorMessage = 'Fehler: Mandanten-Information fehlt. Bitte laden Sie die Seite neu.';
             $this->isSubmitting = false;
             return;
         }
-        
+
         try {
             FormRequest::create([
                 'form' => 'contact',
@@ -104,19 +104,19 @@ new class extends Component {
                     'message' => $this->message,
                 ],
             ]);
-            
+
             $this->reset(['name', 'email', 'phone', 'message', 'recaptchaToken']);
             $this->showSuccess = true;
-            
+
         } catch (\Exception $e) {
             $this->errorMessage = 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.';
             $this->isSubmitting = false;
             return;
         }
-        
+
         $this->isSubmitting = false;
     }
-    
+
     public function resetForm()
     {
         $this->reset(['name', 'email', 'phone', 'message', 'recaptchaToken', 'showSuccess', 'errorMessage']);
@@ -126,7 +126,7 @@ new class extends Component {
 
 <div class="bg-white p-6 rounded-lg shadow-md max-w-md mx-auto" x-data="{ siteKey: '', recaptchaLoaded: false }">
     <h3 class="text-xl font-semibold text-gray-900 mb-4">{{ __('Kontakt') }}</h3>
-    
+
     @if($showSuccess)
         <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
             <p class="font-medium">{{ __('Nachricht erfolgreich gesendet!') }}</p>
@@ -154,7 +154,7 @@ new class extends Component {
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
-            
+
             {{-- Email Field --}}
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
@@ -172,7 +172,7 @@ new class extends Component {
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
-            
+
             {{-- Phone Field --}}
             <div>
                 <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
@@ -189,7 +189,7 @@ new class extends Component {
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
-            
+
             {{-- Message Field --}}
             <div>
                 <label for="message" class="block text-sm font-medium text-gray-700 mb-1">
@@ -207,24 +207,24 @@ new class extends Component {
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
-            
+
             {{-- Hidden reCAPTCHA Token Field --}}
             <input type="hidden" wire:model="recaptchaToken">
-            
+
             {{-- reCAPTCHA Error --}}
             @error('recaptchaToken')
                 <div class="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                     {{ $message }}
                 </div>
             @enderror
-            
+
             {{-- Error Message --}}
             @if($errorMessage)
                 <div class="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                     {{ $errorMessage }}
                 </div>
             @endif
-            
+
             {{-- Submit Button --}}
             <button
                 type="submit"
@@ -254,11 +254,11 @@ new class extends Component {
                 loadRecaptcha(siteKey);
             }
         });
-        
+
         // Load reCAPTCHA script
         function loadRecaptcha(siteKey) {
             if (document.querySelector(`script[src*="recaptcha"]`)) return;
-            
+
             const script = document.createElement('script');
             script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
             script.onload = () => {

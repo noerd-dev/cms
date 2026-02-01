@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -97,27 +97,27 @@ it('resolves collection key correctly in livewire component', function (): void 
     ]);
 
     // Test component with integer ID
-    Volt::test('collection-entries-list', ['collectionKey' => $collection->id])
+    Livewire::test('collection-entries-list', ['collectionKey' => $collection->id])
         ->assertSet('collectionKey', 'standort') // Should be resolved to lowercase string
         ->assertStatus(200);
 });
 
 it('resolves collection key correctly when passed as string', function (): void {
     // Test component with string key
-    Volt::test('collection-entries-list', ['collectionKey' => 'mitarbeiter'])
+    Livewire::test('collection-entries-list', ['collectionKey' => 'mitarbeiter'])
         ->assertSet('collectionKey', 'mitarbeiter')
         ->assertStatus(200);
 });
 
 it('handles null collection key gracefully', function (): void {
-    Volt::test('collection-entries-list', ['collectionKey' => null])
+    Livewire::test('collection-entries-list', ['collectionKey' => null])
         ->assertSet('collectionKey', null)
         ->assertSee(__('cms_please_select_collection'))
         ->assertStatus(200);
 });
 
 it('handles non-existent collection ID gracefully', function (): void {
-    Volt::test('collection-entries-list', ['collectionKey' => 999999])
+    Livewire::test('collection-entries-list', ['collectionKey' => 999999])
         ->assertSet('collectionKey', null)
         ->assertSee(__('cms_please_select_collection'))
         ->assertStatus(200);

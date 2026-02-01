@@ -2,7 +2,7 @@
 
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;

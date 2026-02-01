@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Noerd\Website\Models\Language;
 use Noerd\Website\Models\Page;
 

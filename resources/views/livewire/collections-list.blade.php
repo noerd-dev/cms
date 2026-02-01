@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\File;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Noerd\Traits\Noerd;
 
 new class () extends Component {

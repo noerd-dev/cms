@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
@@ -25,7 +25,7 @@ it('validates the data', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Volt::test($testSettings['componentName'])
+    Livewire::test($testSettings['componentName'])
         ->set('globalParameterData.key', '')
         ->set('globalParameterData.value', '')
         ->call('store')
@@ -38,7 +38,7 @@ it('successfully stores the data', function () use ($testSettings): void {
     $parameterKey = fake()->word;
     $parameterValue = fake()->sentence;
 
-    Volt::test($testSettings['componentName'])
+    Livewire::test($testSettings['componentName'])
         ->set('globalParameterData.key', $parameterKey)
         ->set('globalParameterData.value', $parameterValue)
         ->call('store')
@@ -54,7 +54,7 @@ it('sets a table key for the list', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Volt::test($testSettings['listName'])
+    Livewire::test($testSettings['listName'])
         ->assertNotSet('listId', '');
 });
 
@@ -62,7 +62,7 @@ it('validates that key is required', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Volt::test($testSettings['componentName'])
+    Livewire::test($testSettings['componentName'])
         ->set('globalParameterData.value', fake()->sentence)
         ->call('store')
         ->assertHasErrors(['globalParameterData.key']);
@@ -72,7 +72,7 @@ it('validates that value is required', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Volt::test($testSettings['componentName'])
+    Livewire::test($testSettings['componentName'])
         ->set('globalParameterData.key', fake()->word)
         ->set('globalParameterData.value', '')
         ->call('store')
@@ -103,7 +103,7 @@ it('validates key is string and has max length', function () use ($testSettings)
     // Test max length validation
     $longKey = str_repeat('a', 256); // Over 255 characters
 
-    Volt::test($testSettings['componentName'])
+    Livewire::test($testSettings['componentName'])
         ->set('globalParameterData.key', $longKey)
         ->set('globalParameterData.value', 'test value')
         ->call('store')
@@ -116,7 +116,7 @@ it('stores data with tenant_id', function () use ($testSettings): void {
     $parameterKey = fake()->word;
     $parameterValue = fake()->sentence;
 
-    Volt::test($testSettings['componentName'])
+    Livewire::test($testSettings['componentName'])
         ->set('globalParameterData.key', $parameterKey)
         ->set('globalParameterData.value', $parameterValue)
         ->call('store')
@@ -134,10 +134,10 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
     $this->actingAs($user);
     $model = GlobalParameter::factory()->withTenantId($tenant->id)->create();
 
-    Volt::test($testSettings['listName'])->call('listAction', $model->id)
+    Livewire::test($testSettings['listName'])->call('listAction', $model->id)
         ->assertDispatched('noerdModal', modalComponent: $testSettings['componentName']);
 
-    Volt::test($testSettings['componentName'], [$model->id])
+    Livewire::test($testSettings['componentName'], [$model->id])
         ->assertSet('globalParameterData.id', $model->id)
         ->assertSet($testSettings['id'], $model->id) // URL Parameter
         ->call('delete')
@@ -156,7 +156,7 @@ it('loads existing string value into component model for editing', function () u
         'tenant_id' => $tenant->id,
     ]);
 
-    Volt::test($testSettings['componentName'], [$existingParameter->id])
+    Livewire::test($testSettings['componentName'], [$existingParameter->id])
         ->assertSet('globalParameterData.key', 'test_key_string')
         ->assertSet('globalParameterData.value', 'test_value_string');
 });
@@ -171,7 +171,7 @@ it('loads existing array value into component model for editing', function () us
         'tenant_id' => $tenant->id,
     ]);
 
-    Volt::test($testSettings['componentName'], [$existingParameter->id])
+    Livewire::test($testSettings['componentName'], [$existingParameter->id])
         ->assertSet('globalParameterData.key', 'test_key_array')
         ->assertSet('globalParameterData.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
 });
