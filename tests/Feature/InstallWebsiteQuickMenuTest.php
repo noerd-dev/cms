@@ -16,12 +16,12 @@ it('creates quick-menu.yml with website link button when file does not exist', f
             unlink($path);
         }
 
-        $command = new InstallWebsiteBoilerplateCommand;
+        $command = new InstallWebsiteBoilerplateCommand();
         $method = new ReflectionMethod($command, 'installQuickMenuConfig');
         $command->setLaravel(app());
         $command->setOutput(new \Illuminate\Console\OutputStyle(
             new \Symfony\Component\Console\Input\ArrayInput([]),
-            new \Symfony\Component\Console\Output\NullOutput,
+            new \Symfony\Component\Console\Output\NullOutput(),
         ));
         $method->invoke($command);
 
@@ -56,12 +56,12 @@ it('appends website link button to existing quick-menu.yml', function (): void {
             ],
         ], 10, 2));
 
-        $command = new InstallWebsiteBoilerplateCommand;
+        $command = new InstallWebsiteBoilerplateCommand();
         $method = new ReflectionMethod($command, 'installQuickMenuConfig');
         $command->setLaravel(app());
         $command->setOutput(new \Illuminate\Console\OutputStyle(
             new \Symfony\Component\Console\Input\ArrayInput([]),
-            new \Symfony\Component\Console\Output\NullOutput,
+            new \Symfony\Component\Console\Output\NullOutput(),
         ));
         $method->invoke($command);
 
@@ -94,12 +94,12 @@ it('does not duplicate website link button if already present', function (): voi
             ],
         ], 10, 2));
 
-        $command = new InstallWebsiteBoilerplateCommand;
+        $command = new InstallWebsiteBoilerplateCommand();
         $method = new ReflectionMethod($command, 'installQuickMenuConfig');
         $command->setLaravel(app());
         $command->setOutput(new \Illuminate\Console\OutputStyle(
             new \Symfony\Component\Console\Input\ArrayInput([]),
-            new \Symfony\Component\Console\Output\NullOutput,
+            new \Symfony\Component\Console\Output\NullOutput(),
         ));
         $method->invoke($command);
 
@@ -123,12 +123,12 @@ it('handles existing file with missing buttons key', function (): void {
         File::ensureDirectoryExists(dirname($path));
         file_put_contents($path, Yaml::dump(['other_key' => 'value'], 10, 2));
 
-        $command = new InstallWebsiteBoilerplateCommand;
+        $command = new InstallWebsiteBoilerplateCommand();
         $method = new ReflectionMethod($command, 'installQuickMenuConfig');
         $command->setLaravel(app());
         $command->setOutput(new \Illuminate\Console\OutputStyle(
             new \Symfony\Component\Console\Input\ArrayInput([]),
-            new \Symfony\Component\Console\Output\NullOutput,
+            new \Symfony\Component\Console\Output\NullOutput(),
         ));
         $method->invoke($command);
 

@@ -14,7 +14,7 @@ beforeEach(function (): void {
     // Clear any previously set session language (from Pest.php beforeEach or elsewhere)
     session()->forget('selectedLanguage');
 
-    $this->mock(CollectionHelper::class, function ($mock) {
+    $this->mock(CollectionHelper::class, function ($mock): void {
         // Mock resolveCollectionFields for projects
         $mock->shouldReceive('resolveCollectionFields')
             ->with('projects')

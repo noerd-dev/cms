@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-
 Route::prefix('cms')
     ->as('cms.')
     ->middleware(['web', 'auth', 'verified', 'app-access:cms'])

@@ -36,7 +36,7 @@ describe('FieldTypeConverter', function (): void {
         $this->actingAs($user);
 
         // Mock CollectionHelper via Laravel's container
-        $this->mock(CollectionHelper::class, function ($mock) {
+        $this->mock(CollectionHelper::class, function ($mock): void {
             // Default beratung collection
             $mock->shouldReceive('resolveCollectionFields')
                 ->with('beratung')
@@ -190,7 +190,7 @@ describe('FieldTypeConverter', function (): void {
         $lowercaseCollectionKey = mb_strtolower($uniqueCollectionKey);
 
         // Re-mock CollectionHelper with the dynamic collection key
-        $this->mock(CollectionHelper::class, function ($mock) use ($lowercaseCollectionKey, $uniqueCollectionKey) {
+        $this->mock(CollectionHelper::class, function ($mock) use ($lowercaseCollectionKey, $uniqueCollectionKey): void {
             $mock->shouldReceive('resolveCollectionFields')
                 ->with($lowercaseCollectionKey)
                 ->andReturn([

@@ -3,7 +3,6 @@
 namespace Noerd\Website\Providers;
 
 use Illuminate\Support\ServiceProvider;
-
 use Noerd\Website\Controllers\WebsiteController;
 use Noerd\Website\Middleware\WebsiteMiddleware;
 use Noerd\Website\Models\Navigation;

@@ -8,7 +8,7 @@ uses(CreatesCmsUser::class);
 
 // Mock CollectionHelper via Laravel's container
 beforeEach(function (): void {
-    $this->mock(CollectionHelper::class, function ($mock) {
+    $this->mock(CollectionHelper::class, function ($mock): void {
         // Mock resolveCollectionFields for various collections used in tests
         $mock->shouldReceive('resolveCollectionFields')
             ->with('projects')

@@ -9,7 +9,7 @@ use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
     $this->user = $user;
@@ -23,7 +23,7 @@ beforeEach(function () {
     ]);
 
     // Mock CollectionHelper via Laravel's container
-    $this->mock(CollectionHelper::class, function ($mock) {
+    $this->mock(CollectionHelper::class, function ($mock): void {
         $mock->shouldReceive('resolveCollectionFields')
             ->with('mitarbeiter')
             ->andReturn([
@@ -40,7 +40,7 @@ beforeEach(function () {
     });
 });
 
-it('preserves manually edited slug when saving collection page', function () {
+it('preserves manually edited slug when saving collection page', function (): void {
     // Create a page with initial slug
     $page = Page::factory()->create([
         'tenant_id' => $this->user->selected_tenant_id,
@@ -65,7 +65,7 @@ it('preserves manually edited slug when saving collection page', function () {
     expect($updatedPage->slug)->toBe(['de' => '/gerit-woerner-updated']);
 });
 
-it('auto-generates slug only when slug is empty', function () {
+it('auto-generates slug only when slug is empty', function (): void {
     // Create a page with empty slug
     $page = Page::factory()->create([
         'tenant_id' => $this->user->selected_tenant_id,
@@ -91,7 +91,7 @@ it('auto-generates slug only when slug is empty', function () {
     expect($updatedPage->slug['de'])->toContain('max-mustermann');
 });
 
-it('stores only collection-specific fields in data column', function () {
+it('stores only collection-specific fields in data column', function (): void {
     // Create a page
     $page = Page::factory()->create([
         'tenant_id' => $this->user->selected_tenant_id,
@@ -133,7 +133,7 @@ it('stores only collection-specific fields in data column', function () {
     expect($data)->not->toHaveKey('collection_id');
 });
 
-it('does not overwrite slug column with stale data.slug value on mount', function () {
+it('does not overwrite slug column with stale data.slug value on mount', function (): void {
     // Create a page where the data column contains an outdated slug
     // This simulates the bug where editing a page would show the wrong slug
     $page = Page::factory()->create([
@@ -159,7 +159,7 @@ it('does not overwrite slug column with stale data.slug value on mount', functio
     expect($pageData['slug']['de'])->toBe('/steuerberaterwirtschaftspruefer-mwd');
 });
 
-it('does not overwrite core page fields from data column on mount', function () {
+it('does not overwrite core page fields from data column on mount', function (): void {
     // Create a page with stale core fields in the data column
     $page = Page::factory()->create([
         'tenant_id' => $this->user->selected_tenant_id,
