@@ -3,7 +3,6 @@
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
@@ -15,7 +14,7 @@ uses(CreatesCmsUser::class);
 
 // Mock CollectionHelper via Laravel's container
 beforeEach(function (): void {
-    $this->mock(CollectionHelper::class, function ($mock) {
+    $this->mock(CollectionHelper::class, function ($mock): void {
         // Mock resolveCollectionFields for projects (hasPage: true)
         $mock->shouldReceive('resolveCollectionFields')
             ->with('projects')

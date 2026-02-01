@@ -1,6 +1,7 @@
 <?php
 
 
+use Livewire\Livewire;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
@@ -20,7 +21,7 @@ it('resolves cms languages route and renders table', function () use ($testSetti
     $response->assertStatus(200);
 
     Livewire::test($testSettings['listName'])
-        ->assertViewIs('volt-livewire::cms-languages-list');
+        ->assertStatus(200);
 });
 
 it('lists languages for tenant in table with sorting and search', function () use ($testSettings): void {

@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -16,7 +15,7 @@ beforeEach(function (): void {
     $this->actingAs($this->user);
 
     // Mock CollectionHelper via Laravel's container
-    $this->mock(CollectionHelper::class, function ($mock) {
+    $this->mock(CollectionHelper::class, function ($mock): void {
         $mock->shouldReceive('resolveCollectionFields')
             ->with('standort')
             ->andReturn([
