@@ -9,7 +9,7 @@ new class extends Component {
 
     use Noerd;
 
-    public const COMPONENT = 'collection-detail';
+    public const DETAIL_COMPONENT = 'collection-detail';
     public const LIST_COMPONENT = 'collections-list';
 
     public ?string $fileName = null;

@@ -21,7 +21,7 @@ new class () extends Component {
     use Noerd;
     use WithFileUploads;
 
-    public const COMPONENT = 'page-detail';
+    public const DETAIL_COMPONENT = 'page-detail';
     public const LIST_COMPONENT = 'pages-list';
     public const ID = 'pageId';
     #[Url(keep: false, except: '')]
@@ -103,7 +103,7 @@ new class () extends Component {
             $this->collectionLayout = CollectionHelper::getCollectionFields($this->collectionKey);
         }
 
-        $this->mountModalProcess(self::COMPONENT, $page);
+        $this->mountModalProcess(self::DETAIL_COMPONENT, $page);
 
         // Load data differently for collection pages vs regular pages
         //   if ($this->collectionKey && $page->data) {
@@ -425,7 +425,7 @@ new class () extends Component {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'element-page-detail',
-            source: self::COMPONENT,
+            source: self::DETAIL_COMPONENT,
             arguments: ['elementPageId' => $this->pageId],
         );
     }

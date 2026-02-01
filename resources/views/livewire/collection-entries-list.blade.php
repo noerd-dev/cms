@@ -14,7 +14,7 @@ new class extends Component
     use LanguageFilterTrait;
     use Noerd;
 
-    public const COMPONENT = 'collection-entries-list';
+    public const DETAIL_COMPONENT = 'collection-entries-list';
 
     protected const ALLOWED_TABLE_FILTERS = ['language'];
 
@@ -85,7 +85,7 @@ new class extends Component
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'page-detail',
-            source: self::COMPONENT,
+            source: self::DETAIL_COMPONENT,
             arguments: ['pageId' => $modelId, 'collectionKey' => $this->collectionKey, 'relationId' => $relationId],
         );
     }

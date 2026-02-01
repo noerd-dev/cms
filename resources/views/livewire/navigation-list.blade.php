@@ -12,7 +12,7 @@ new class extends Component
     use LanguageFilterTrait;
     use Noerd;
 
-    public const COMPONENT = 'navigation-list';
+    public const DETAIL_COMPONENT = 'navigation-list';
 
     protected const ALLOWED_TABLE_FILTERS = ['language'];
 
@@ -40,7 +40,7 @@ new class extends Component
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'navigation-detail',
-            source: self::COMPONENT,
+            source: self::DETAIL_COMPONENT,
             arguments: ['navigationId' => $modelId, 'relationId' => $relationId],
         );
     }

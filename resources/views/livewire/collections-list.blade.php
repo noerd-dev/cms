@@ -7,7 +7,7 @@ use Noerd\Traits\Noerd;
 new class () extends Component {
     use Noerd;
 
-    public const COMPONENT = 'collections-list';
+    public const DETAIL_COMPONENT = 'collections-list';
 
     public function mount(): void
     {
@@ -25,7 +25,7 @@ new class () extends Component {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'collection-detail',
-            source: self::COMPONENT,
+            source: self::DETAIL_COMPONENT,
             arguments: ['fileName' => $modelId, 'relationId' => $relationId],
         );
     }
@@ -35,7 +35,7 @@ new class () extends Component {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'collection-detail.blade.php',
-            source: self::COMPONENT,
+            source: self::DETAIL_COMPONENT,
             arguments: ['fileName' => $fileName],
         );
     }

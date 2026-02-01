@@ -8,7 +8,7 @@ use Noerd\Traits\Noerd;
 new class extends Component {
     use Noerd;
 
-    public const COMPONENT = 'element-picker-modal';
+    public const DETAIL_COMPONENT = 'element-picker-modal';
 
     public ?string $token = null;
 
@@ -27,7 +27,7 @@ new class extends Component {
     public function pick(string $elementKey): void
     {
         $this->dispatch('elementPicked', elementKey: $elementKey, token: $this->token);
-        $this->dispatch('close-modal-' . self::COMPONENT);
+        $this->dispatch('close-modal-' . self::DETAIL_COMPONENT);
     }
 } ?>
 

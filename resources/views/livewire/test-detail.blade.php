@@ -6,7 +6,7 @@ use Livewire\Component;
 new class () extends Component {
     use Noerd;
 
-    public const COMPONENT = 'test-detail';
+    public const DETAIL_COMPONENT = 'test-detail';
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">

@@ -7,14 +7,14 @@ use Noerd\Traits\Noerd;
 new class extends Component {
     use Noerd;
 
-    public const COMPONENT = 'cms-languages-list';
+    public const DETAIL_COMPONENT = 'cms-languages-list';
 
     public function listAction(mixed $modelId = null, mixed $relationId = null): void
     {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'cms-language-detail',
-            source: self::COMPONENT,
+            source: self::DETAIL_COMPONENT,
             arguments: ['cmsLanguageId' => $modelId, 'relationId' => $relationId],
         );
     }

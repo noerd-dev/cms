@@ -9,7 +9,7 @@ new class extends Component {
 
     use Noerd;
 
-    public const COMPONENT = 'cms-language-detail';
+    public const DETAIL_COMPONENT = 'cms-language-detail';
     public const LIST_COMPONENT = 'cms-languages-list';
     public const ID = 'cmsLanguageId';
     #[\Livewire\Attributes\Url(keep: false, except: '')]
@@ -23,7 +23,7 @@ new class extends Component {
             $cmsLanguage = CmsLanguage::find($this->cmsLanguageId);
         }
 
-        $this->mountModalProcess(self::COMPONENT, $cmsLanguage);
+        $this->mountModalProcess(self::DETAIL_COMPONENT, $cmsLanguage);
         $this->cmsLanguageData = $cmsLanguage->toArray();
     }
 

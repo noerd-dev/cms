@@ -10,7 +10,7 @@ new class extends Component {
     use Noerd;
 
     public const ID = 'cmsSettingsId';
-    public const COMPONENT = 'cms-settings-detail';
+    public const DETAIL_COMPONENT = 'cms-settings-detail';
 
     public array $cmsSettingsData = [
         'homepage_page_id' => null,

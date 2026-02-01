@@ -12,7 +12,7 @@ new class extends Component {
 
     use Noerd;
 
-    public const COMPONENT = 'global-parameter-detail';
+    public const DETAIL_COMPONENT = 'global-parameter-detail';
     public const LIST_COMPONENT = 'global-parameters-list';
     public const ID = 'globalParameterId';
     #[Url(keep: false, except: '')]
@@ -26,7 +26,7 @@ new class extends Component {
             $globalParameter = GlobalParameter::find($this->globalParameterId);
         }
 
-        $this->mountModalProcess(self::COMPONENT, $globalParameter);
+        $this->mountModalProcess(self::DETAIL_COMPONENT, $globalParameter);
         $this->globalParameterData = $globalParameter->toArray();
 
         // Normalize value for editing: decode JSON into PHP value (string or array)

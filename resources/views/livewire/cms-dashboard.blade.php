@@ -12,7 +12,7 @@ use Noerd\Traits\Noerd;
 new class () extends Component {
     use Noerd;
 
-    protected const COMPONENT = 'cms-dashboard';
+    public const DETAIL_COMPONENT = 'cms-dashboard';
 
     #[Locked]
     public $clientId = null;
