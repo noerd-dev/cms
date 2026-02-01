@@ -4,7 +4,7 @@ namespace Noerd\Cms\Providers;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
 use Noerd\Cms\Commands\NoerdCmsInstallCommand;
 use Noerd\Cms\Console\Commands\SyncFormTypesCommand;
@@ -33,6 +33,7 @@ class CmsServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cms');
+        Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/livewire');
         $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'cms');
         $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-routes.php');
@@ -43,8 +44,6 @@ class CmsServiceProvider extends ServiceProvider
 
         $router = $this->app['router'];
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
-
-        Volt::mount(__DIR__ . '/../../resources/views/livewire');
 
         // Register gate for CMS access
         Gate::define('canCms', function ($user) {

@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
@@ -20,11 +20,11 @@ it('create a page', function (): void {
     $this->actingAs($user);
 
     // Create empty page is possible
-    Volt::test('page-detail')
+    Livewire::test('page-detail')
         ->call('store')
         ->assertOk();
 
-    Volt::test('page-detail')
+    Livewire::test('page-detail')
         ->set('pageData.name.de', 'Test Page')
         ->call('store')
         ->assertOk();
@@ -39,7 +39,7 @@ it('create a page', function (): void {
         ->where('name', '{"de":"Test Page"}')
         ->first();
 
-    Volt::test('page-detail', ['pageId' => $page->id])
+    Livewire::test('page-detail', ['pageId' => $page->id])
         ->set('pageData.name.de', 'Test Page')
         ->set('pageData.name.en', 'Test Page English')
         ->call('store')

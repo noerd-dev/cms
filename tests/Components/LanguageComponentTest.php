@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
@@ -18,7 +18,7 @@ it('validates the language data', function () use ($testSettings): void {
 
     $this->actingAs($admin);
 
-    Volt::test($testSettings['componentName'])
+    Livewire::test($testSettings['componentName'])
         ->call('store')
         ->assertHasErrors(['cmsLanguageData.code', 'cmsLanguageData.name']);
 });
@@ -28,7 +28,7 @@ it('creates a new language and stores tenant_id', function () use ($testSettings
 
     $this->actingAs($admin);
 
-    Volt::test($testSettings['componentName'])
+    Livewire::test($testSettings['componentName'])
         ->set('cmsLanguageData.code', 'de')
         ->set('cmsLanguageData.name', 'Deutsch')
         ->set('cmsLanguageData.is_default', true)
@@ -61,7 +61,7 @@ it('ensures only one default language per tenant', function () use ($testSetting
     ]);
 
     // Create German as new default via component
-    Volt::test($testSettings['componentName'])
+    Livewire::test($testSettings['componentName'])
         ->set('cmsLanguageData.code', 'de')
         ->set('cmsLanguageData.name', 'Deutsch')
         ->set('cmsLanguageData.is_default', true)
@@ -92,7 +92,7 @@ it('updates an existing language', function () use ($testSettings): void {
         'is_default' => false,
     ]);
 
-    Volt::test($testSettings['componentName'], ['cmsLanguageId' => $language->id])
+    Livewire::test($testSettings['componentName'], ['cmsLanguageId' => $language->id])
         ->set('cmsLanguageData.name', 'Französisch')
         ->call('store')
         ->assertOk();
@@ -114,7 +114,7 @@ it('deletes a language', function () use ($testSettings): void {
         'is_default' => false,
     ]);
 
-    Volt::test($testSettings['componentName'], ['cmsLanguageId' => $language->id])
+    Livewire::test($testSettings['componentName'], ['cmsLanguageId' => $language->id])
         ->call('delete')
         ->assertDispatched('closeModal');
 

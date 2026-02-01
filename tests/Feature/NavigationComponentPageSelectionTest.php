@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
@@ -23,7 +23,7 @@ test('page selection auto-fills empty name field', function (): void {
 
     session(['selectedLanguage' => 'de']);
 
-    Volt::test('navigation-detail')
+    Livewire::test('navigation-detail')
         ->set('navigationData', [
             'navigation_key' => 'test-nav',
             'name' => [], // Empty name field
@@ -56,7 +56,7 @@ test('page selection does not overwrite existing name field', function (): void 
 
     session(['selectedLanguage' => 'de']);
 
-    Volt::test('navigation-detail')
+    Livewire::test('navigation-detail')
         ->set('navigationData', [
             'navigation_key' => 'test-nav',
             'name' => $existingName, // Pre-filled name field
@@ -81,7 +81,7 @@ test('page selection auto-fills when name field has only empty values', function
 
     session(['selectedLanguage' => 'de']);
 
-    Volt::test('navigation-detail')
+    Livewire::test('navigation-detail')
         ->set('navigationData', [
             'navigation_key' => 'test-nav',
             'name' => ['de' => '', 'en' => ''], // Empty string values

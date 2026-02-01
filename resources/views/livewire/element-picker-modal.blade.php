@@ -1,7 +1,7 @@
 <?php
 
 use Livewire\Attributes\Computed;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Traits\Noerd;
 

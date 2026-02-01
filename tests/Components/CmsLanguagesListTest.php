@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
@@ -19,7 +19,7 @@ it('resolves cms languages route and renders table', function () use ($testSetti
     $response = $this->get(route('cms.languages'));
     $response->assertStatus(200);
 
-    Volt::test($testSettings['listName'])
+    Livewire::test($testSettings['listName'])
         ->assertViewIs('volt-livewire::cms-languages-list');
 });
 
@@ -30,7 +30,7 @@ it('lists languages for tenant in table with sorting and search', function () us
     // English is auto-created as default, add German
     CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => false]);
 
-    Volt::test($testSettings['listName'])
+    Livewire::test($testSettings['listName'])
         ->set('search', 'Eng')
         ->call('with')
         ->assertSet('search', 'Eng');
@@ -40,7 +40,7 @@ it('opens cms-language-detail modal from table', function () use ($testSettings)
     ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($admin);
 
-    Volt::test($testSettings['listName'])
+    Livewire::test($testSettings['listName'])
         ->call('listAction', 5)
         ->assertDispatched('noerdModal', modalComponent: 'cms-language-detail');
 });

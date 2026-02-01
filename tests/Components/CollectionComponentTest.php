@@ -3,7 +3,7 @@
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
@@ -110,7 +110,7 @@ it('uploads an image via images.field binding and stores path into model', funct
     $before = MediaModel::count();
 
     // Set the Livewire-bound temporary file; component must process it
-    Volt::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
+    Livewire::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
         ->set('images.image', $fakeImage)
         ->assertSet('pageData.image', fn($value) => is_string($value) && $value !== '');
 
@@ -141,7 +141,7 @@ it('deletes an image value from model', function () use ($testSettings): void {
         'sort' => 0,
     ]);
 
-    Volt::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
+    Livewire::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
         ->call('deleteImage', 'image')
         ->assertSet('pageData.image', null);
 });
@@ -279,7 +279,7 @@ it('handles collections without page features (hasPage: false)', function () use
     ]);
 
     // Test the page-component with customers collection key
-    $component = Volt::test($testSettings['componentName'], ['collectionKey' => 'customers'])
+    $component = Livewire::test($testSettings['componentName'], ['collectionKey' => 'customers'])
         ->assertSet('collectionKey', 'customers')
         ->assertSet('collectionLayout.hasPage', false)
         ->assertSet('hasPageFeatures', false)
@@ -326,7 +326,7 @@ it('does not update image on mediaSelected when token mismatches; updates when t
         'size' => 1,
     ]);
 
-    $component = Volt::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
+    $component = Livewire::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
         ->set('pageData.__mediaToken', 'token-abc')
         ->set('pageData.image', 'UNCHANGED');
 

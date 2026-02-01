@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Noerd\Cms\Models\CmsLanguage;
 
 new class extends Component {

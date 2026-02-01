@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
@@ -52,7 +52,7 @@ it('preserves manually edited slug when saving collection page', function () {
     ]);
 
     // Open the page and change the slug manually
-    $component = Volt::test('page-detail', [
+    $component = Livewire::test('page-detail', [
         'pageId' => $page->id,
         'collectionKey' => 'mitarbeiter',
     ])
@@ -77,7 +77,7 @@ it('auto-generates slug only when slug is empty', function () {
     ]);
 
     // Set a name but leave slug empty - should auto-generate
-    $component = Volt::test('page-detail', [
+    $component = Livewire::test('page-detail', [
         'pageId' => $page->id,
         'collectionKey' => 'mitarbeiter',
     ])
@@ -103,7 +103,7 @@ it('stores only collection-specific fields in data column', function () {
     ]);
 
     // Update collection fields
-    $component = Volt::test('page-detail', [
+    $component = Livewire::test('page-detail', [
         'pageId' => $page->id,
         'collectionKey' => 'mitarbeiter',
     ])
@@ -149,7 +149,7 @@ it('does not overwrite slug column with stale data.slug value on mount', functio
     ]);
 
     // Mount the page-detail component
-    $component = Volt::test('page-detail', [
+    $component = Livewire::test('page-detail', [
         'pageId' => $page->id,
         'collectionKey' => 'mitarbeiter',
     ]);
@@ -178,7 +178,7 @@ it('does not overwrite core page fields from data column on mount', function () 
     ]);
 
     // Mount the page-detail component
-    $component = Volt::test('page-detail', [
+    $component = Livewire::test('page-detail', [
         'pageId' => $page->id,
         'collectionKey' => 'mitarbeiter',
     ]);

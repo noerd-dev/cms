@@ -2,7 +2,7 @@
 
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Noerd\Cms\Models\FormType;
 use Noerd\Traits\HasEmailPreview;
 use Noerd\Traits\Noerd;

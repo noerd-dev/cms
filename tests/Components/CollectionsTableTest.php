@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
 uses(Tests\TestCase::class);
@@ -17,7 +17,7 @@ it('loads collections table component successfully', function () use ($testSetti
     $this->actingAs($user);
 
     // Simply test that the component loads without errors
-    $component = Volt::test($testSettings['componentName']);
+    $component = Livewire::test($testSettings['componentName']);
 
     expect($component)->not->toBeNull();
     expect($component->instance())->not->toBeNull();
@@ -27,7 +27,7 @@ it('has correct component configuration', function () use ($testSettings): void 
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    $component = Volt::test($testSettings['componentName']);
+    $component = Livewire::test($testSettings['componentName']);
     $componentData = $component->instance();
     $withData = $componentData->with();
 
@@ -39,7 +39,7 @@ it('returns paginated results', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    $component = Volt::test($testSettings['componentName']);
+    $component = Livewire::test($testSettings['componentName']);
     $componentData = $component->instance();
     $withData = $componentData->with();
 
@@ -51,7 +51,7 @@ it('supports search functionality', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    $component = Volt::test($testSettings['componentName'])
+    $component = Livewire::test($testSettings['componentName'])
         ->set('search', 'test');
 
     // Should not throw any errors when search is set

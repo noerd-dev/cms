@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Noerd\Website\Traits\NoerdElement;
 use function Livewire\Volt\{state};
 

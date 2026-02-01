@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -12,7 +12,7 @@ it('renders the navigation component', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Volt::test('navigation-detail')
+    Livewire::test('navigation-detail')
         ->assertOk();
 });
 
@@ -20,7 +20,7 @@ it('validates that either page or link must be present', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Volt::test('navigation-detail')
+    Livewire::test('navigation-detail')
         ->set('navigationData.navigation_key', 'MAIN')
         ->set('navigationData.name', ['de' => 'Start', 'en' => 'Start'])
         ->call('store')
@@ -33,7 +33,7 @@ it('stores a navigation with page and clears link', function (): void {
 
     $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => json_encode(['de' => 'Seite', 'en' => 'Page'])]);
 
-    Volt::test('navigation-detail')
+    Livewire::test('navigation-detail')
         ->set('navigationData.navigation_key', 'MAIN')
         ->set('navigationData.name', ['de' => 'Start', 'en' => 'Start'])
         ->set('navigationData.link', 'https://example.com')
@@ -53,7 +53,7 @@ it('stores a navigation with link and clears page', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Volt::test('navigation-detail')
+    Livewire::test('navigation-detail')
         ->set('navigationData.navigation_key', 'MAIN')
         ->set('navigationData.name', ['de' => 'Kontakt', 'en' => 'Contact'])
         ->set('navigationData.link', 'https://example.com/contact')
@@ -72,7 +72,7 @@ it('normalizes new_tab default and stores 0 when not set', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Volt::test('navigation-detail')
+    Livewire::test('navigation-detail')
         ->set('navigationData.navigation_key', 'MAIN')
         ->set('navigationData.name', ['de' => 'Blog', 'en' => 'Blog'])
         ->set('navigationData.link', 'https://example.com/blog')
@@ -97,7 +97,7 @@ it('respects language switching behavior for page selection display', function (
     ]);
 
     // default language from session is used internally by component; we ensure action does not error
-    Volt::test('navigation-detail')
+    Livewire::test('navigation-detail')
         ->call('pageSelected', $page->id)
         ->assertHasNoErrors();
 });

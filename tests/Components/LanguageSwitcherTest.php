@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
@@ -21,7 +21,7 @@ it('renders languages from database and sets default session', function (): void
     CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_default' => true, 'is_active' => true]);
     CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'en', 'name' => 'English', 'is_default' => false, 'is_active' => true]);
 
-    $component = Volt::test('language-switcher');
+    $component = Livewire::test('language-switcher');
 
     // German is the default
     expect(session('selectedLanguage'))->toBe('de');
@@ -42,7 +42,7 @@ it('changes session language on click', function (): void {
     CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_default' => true, 'is_active' => true]);
     CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'en', 'name' => 'English', 'is_default' => false, 'is_active' => true]);
 
-    $component = Volt::test('language-switcher');
+    $component = Livewire::test('language-switcher');
     $component->call('setLanguage', 'en');
     expect(session('selectedLanguage'))->toBe('en');
 });
@@ -60,7 +60,7 @@ it('does not render switcher if only one language exists', function (): void {
     $languageCount = CmsLanguage::where('tenant_id', $tenant->id)->count();
     expect($languageCount)->toBe(1);
 
-    $html = Volt::test('language-switcher')->html();
+    $html = Livewire::test('language-switcher')->html();
     expect($html)->toBeString();
     // Switcher should not render language links when only one language exists (count > 1 check)
     expect($html)->not->toContain('<a');

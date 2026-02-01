@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Locked;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Models\Navigation;

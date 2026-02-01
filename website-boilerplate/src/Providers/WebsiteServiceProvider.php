@@ -3,7 +3,7 @@
 namespace Noerd\Website\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Livewire\Volt\Volt;
+
 use Noerd\Website\Controllers\WebsiteController;
 use Noerd\Website\Middleware\WebsiteMiddleware;
 use Noerd\Website\Models\Navigation;
@@ -35,8 +35,6 @@ class WebsiteServiceProvider extends ServiceProvider
         $this->app->booted(function (): void {
             $this->registerCatchAllRoutes();
         });
-
-        Volt::mount(__DIR__ . '/../../resources/views/livewire');
 
         // Share website data to views
         view()->composer('*', function ($view): void {

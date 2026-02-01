@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Volt;
+
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -34,7 +34,7 @@ it('successfully mounts with element page', function () use ($testSettings): voi
         'sort' => 1,
     ]);
 
-    Volt::test($testSettings['componentName'], [$elementPage])
+    Livewire::test($testSettings['componentName'], [$elementPage])
         ->assertSet('elementPageId', $elementPage->id)
         ->assertSet('elementPage.id', $elementPage->id)
         ->assertHasNoErrors();
@@ -60,7 +60,7 @@ it('validates element page data', function () use ($testSettings): void {
     ]);
 
     // Test without setting required fields (this depends on the element_key configuration)
-    Volt::test($testSettings['componentName'], [$elementPage])
+    Livewire::test($testSettings['componentName'], [$elementPage])
         ->call('store')
         ->assertHasNoErrors(); // Element validation depends on the specific element configuration
 });
@@ -84,7 +84,7 @@ it('can delete element page', function () use ($testSettings): void {
         'sort' => 1,
     ]);
 
-    Volt::test($testSettings['componentName'], [$elementPage])
+    Livewire::test($testSettings['componentName'], [$elementPage])
         ->call('delete')
         ->assertHasNoErrors();
 
@@ -111,7 +111,7 @@ it('shows a content error when element layout is missing', function () use ($tes
         'sort' => 1,
     ]);
 
-    Volt::test($testSettings['componentName'], [$elementPage])
+    Livewire::test($testSettings['componentName'], [$elementPage])
         ->assertSee(__('Element component not found:'))
         ->assertSee('Please create both the .yml and .blade.php files in the elements folder.')
         ->assertSee('____missing____');
