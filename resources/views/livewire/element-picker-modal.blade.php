@@ -27,7 +27,7 @@ new class extends Component {
     public function pick(string $elementKey): void
     {
         $this->dispatch('elementPicked', elementKey: $elementKey, token: $this->token);
-        $this->dispatch('close-modal-' . self::DETAIL_COMPONENT);
+        $this->dispatch('closeTopModal');
     }
 } ?>
 
