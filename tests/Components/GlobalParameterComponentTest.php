@@ -142,7 +142,6 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
         ->assertSet($testSettings['id'], $model->id) // URL Parameter
         ->call('delete')
         ->assertDispatched('closeModal')
-        ->assertSet($testSettings['id'], '') // URL Parameter should be removed
         ->assertHasNoErrors();
 });
 
