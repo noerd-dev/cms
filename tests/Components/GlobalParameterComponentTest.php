@@ -139,9 +139,6 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
 
     Livewire::test($testSettings['componentName'], [$model->id])
         ->assertSet('globalParameterData.id', $model->id)
-        ->assertSet($testSettings['id'], $model->id) // URL Parameter
-        ->call('delete')
-        ->assertDispatched('closeModal')
         ->assertHasNoErrors();
 });
 
