@@ -20,7 +20,7 @@ it('validates the language data', function () use ($testSettings): void {
 
     Livewire::test($testSettings['componentName'])
         ->call('store')
-        ->assertHasErrors(['cmsLanguageData.code', 'cmsLanguageData.name']);
+        ->assertHasErrors(['detailData.code', 'detailData.name']);
 });
 
 it('creates a new language and stores tenant_id', function () use ($testSettings): void {
@@ -29,9 +29,9 @@ it('creates a new language and stores tenant_id', function () use ($testSettings
     $this->actingAs($admin);
 
     Livewire::test($testSettings['componentName'])
-        ->set('cmsLanguageData.code', 'de')
-        ->set('cmsLanguageData.name', 'Deutsch')
-        ->set('cmsLanguageData.is_default', true)
+        ->set('detailData.code', 'de')
+        ->set('detailData.name', 'Deutsch')
+        ->set('detailData.is_default', true)
         ->call('store')
         ->assertOk();
 
@@ -62,9 +62,9 @@ it('ensures only one default language per tenant', function () use ($testSetting
 
     // Create German as new default via component
     Livewire::test($testSettings['componentName'])
-        ->set('cmsLanguageData.code', 'de')
-        ->set('cmsLanguageData.name', 'Deutsch')
-        ->set('cmsLanguageData.is_default', true)
+        ->set('detailData.code', 'de')
+        ->set('detailData.name', 'Deutsch')
+        ->set('detailData.is_default', true)
         ->call('store');
 
     // German should now be default, English should not
@@ -94,7 +94,7 @@ it('updates an existing language', function () use ($testSettings): void {
 
     Livewire::withUrlParams(['id' => $language->id])
         ->test($testSettings['componentName'])
-        ->set('cmsLanguageData.name', 'Französisch')
+        ->set('detailData.name', 'Französisch')
         ->call('store')
         ->assertOk();
 
