@@ -16,6 +16,8 @@ new class extends Component {
     use WithFileUploads;
     use NoerdDetail;
 
+    public $modelId = null; // Override trait's #[Url] - child receives ID from parent
+
     public array $elementLayout;
     public $model;
     public ElementPage $elementPage;
@@ -62,6 +64,9 @@ new class extends Component {
     public function store(): void
     {
         $elementPage = ElementPage::find($this->modelId);
+        if (! $elementPage) {
+            return;
+        }
         $elementPage->data = json_encode($this->model);
         $elementPage->save();
         $this->dispatch('reloadPageComponent');
@@ -81,6 +86,9 @@ new class extends Component {
     public function delete(): void
     {
         $elementPage = ElementPage::find($this->modelId);
+        if (! $elementPage) {
+            return;
+        }
         $elementPage->delete();
         $this->dispatch('reloadPageComponent');
     }
