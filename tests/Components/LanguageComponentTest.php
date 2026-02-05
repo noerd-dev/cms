@@ -116,7 +116,7 @@ it('deletes a language', function () use ($testSettings): void {
 
     Livewire::test($testSettings['componentName'], ['cmsLanguageId' => $language->id])
         ->call('delete')
-        ->assertDispatched('closeModal');
+        ->assertDispatched('closeTopModal');
 
     $this->assertDatabaseMissing('cms_languages', ['id' => $language->id]);
 });
