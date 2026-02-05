@@ -10,13 +10,11 @@ use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Scopes\SearchScope;
 use Noerd\Scopes\TenantScope;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdList;
 
 new class extends Component {
     use LanguageFilterTrait;
-    use Noerd;
-
-    public const DETAIL_COMPONENT = 'pages-list';
+    use NoerdList;
 
     protected const ALLOWED_TABLE_FILTERS = ['language'];
 
@@ -52,8 +50,8 @@ new class extends Component {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'page-detail',
-            source: self::DETAIL_COMPONENT,
-            arguments: ['pageId' => $modelId, 'relationId' => $relationId],
+            source: $this->getComponentName(),
+            arguments: ['modelId' => $modelId, 'relationId' => $relationId],
         );
     }
 
@@ -113,8 +111,8 @@ new class extends Component {
             $this->activeListFilters['language'] = session('selectedLanguage');
         }
 
-        if ((int)request()->pageId) {
-            $this->listAction(request()->pageId);
+        if ((int) request()->id) {
+            $this->listAction(request()->id);
         }
 
         if (request()->create) {

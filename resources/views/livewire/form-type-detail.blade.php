@@ -1,22 +1,16 @@
 <?php
 
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Models\FormType;
 use Noerd\Traits\HasEmailPreview;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdDetail;
 
 new class () extends Component {
     use HasEmailPreview;
-    use Noerd;
+    use NoerdDetail;
 
-    public const DETAIL_COMPONENT = 'form-type-detail';
-    public const LIST_COMPONENT = 'form-types-list';
-    public const ID = 'formTypeId';
-
-    #[Url(keep: false, except: '')]
-    public $formTypeId = null;
+    public const DETAIL_CLASS = FormType::class;
 
     public array $formTypeData = [];
     public ?array $ymlConfig = null;
@@ -28,7 +22,7 @@ new class () extends Component {
 
     protected function getEmailRateLimitPrefix(): string
     {
-        return 'form-type:' . ($this->formTypeId ?? 'new');
+        return 'form-type:' . ($this->modelId ?? 'new');
     }
 
     protected function getEmailViewName(): string
@@ -43,8 +37,8 @@ new class () extends Component {
             '{{submission_date}}' => now()->format('d.m.Y H:i'),
         ];
 
-        if ($this->formTypeId) {
-            $formType = FormType::find($this->formTypeId);
+        if ($this->modelId) {
+            $formType = FormType::find($this->modelId);
             if ($formType) {
                 $fieldPlaceholders = $formType->getFieldPlaceholders();
                 foreach ($fieldPlaceholders as $placeholder => $description) {
@@ -61,8 +55,8 @@ new class () extends Component {
     {
         $placeholders = FormType::getEmailPlaceholders();
 
-        if ($this->formTypeId) {
-            $formType = FormType::find($this->formTypeId);
+        if ($this->modelId) {
+            $formType = FormType::find($this->modelId);
             if ($formType) {
                 $fieldPlaceholders = $formType->getFieldPlaceholders();
                 $placeholders = array_merge($placeholders, $fieldPlaceholders);
@@ -72,13 +66,15 @@ new class () extends Component {
         return $placeholders;
     }
 
-    public function mount(FormType $formType): void
+    public function mount(mixed $model = null): void
     {
-        if ($this->formTypeId) {
-            $formType = FormType::find($this->formTypeId);
+        $this->initDetail($model);
+
+        $formType = new FormType;
+        if ($this->modelId) {
+            $formType = FormType::find($this->modelId) ?? new FormType;
         }
 
-        $this->mountModalProcess(self::DETAIL_COMPONENT, $formType);
         $this->formTypeData = $formType->toArray();
         $this->ymlConfig = $formType->loadYmlConfig();
     }
@@ -92,7 +88,7 @@ new class () extends Component {
             'formTypeData.notification_email' => ['nullable', 'email', 'max:255'],
         ]);
 
-        $formType = FormType::find($this->formTypeId);
+        $formType = FormType::find($this->modelId);
 
         if ($formType) {
             $formType->update([

@@ -5,14 +5,12 @@ use Livewire\Component;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Traits\LanguageFilterTrait;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdList;
 
 new class extends Component
 {
     use LanguageFilterTrait;
-    use Noerd;
-
-    public const DETAIL_COMPONENT = 'navigation-list';
+    use NoerdList;
 
     protected const ALLOWED_TABLE_FILTERS = ['language'];
 
@@ -40,8 +38,8 @@ new class extends Component
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'navigation-detail',
-            source: self::DETAIL_COMPONENT,
-            arguments: ['navigationId' => $modelId, 'relationId' => $relationId],
+            source: $this->getComponentName(),
+            arguments: ['modelId' => $modelId, 'relationId' => $relationId],
         );
     }
 
@@ -80,8 +78,8 @@ new class extends Component
             session(['selectedLanguage' => $defaultCode]);
         }
 
-        if ((int) request()->navigationId) {
-            $this->listAction(request()->navigationId);
+        if ((int) request()->id) {
+            $this->listAction(request()->id);
         }
 
         if (request()->create) {

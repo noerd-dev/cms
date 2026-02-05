@@ -10,7 +10,7 @@ uses(CreatesCmsUser::class);
 $testSettings = [
     'componentName' => 'global-parameter-detail',
     'listName' => 'global-parameters-list',
-    'id' => 'globalParameterId',
+    'id' => 'id',
 ];
 
 it('test the route', function (): void {
@@ -137,7 +137,8 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
     Livewire::test($testSettings['listName'])->call('listAction', $model->id)
         ->assertDispatched('noerdModal', modalComponent: $testSettings['componentName']);
 
-    Livewire::test($testSettings['componentName'], [$model->id])
+    Livewire::withUrlParams(['id' => $model->id])
+        ->test($testSettings['componentName'])
         ->assertSet('globalParameterData.id', $model->id)
         ->assertHasNoErrors();
 });
@@ -152,7 +153,8 @@ it('loads existing string value into component model for editing', function () u
         'tenant_id' => $tenant->id,
     ]);
 
-    Livewire::test($testSettings['componentName'], [$existingParameter->id])
+    Livewire::withUrlParams(['id' => $existingParameter->id])
+        ->test($testSettings['componentName'])
         ->assertSet('globalParameterData.key', 'test_key_string')
         ->assertSet('globalParameterData.value', 'test_value_string');
 });
@@ -167,7 +169,8 @@ it('loads existing array value into component model for editing', function () us
         'tenant_id' => $tenant->id,
     ]);
 
-    Livewire::test($testSettings['componentName'], [$existingParameter->id])
+    Livewire::withUrlParams(['id' => $existingParameter->id])
+        ->test($testSettings['componentName'])
         ->assertSet('globalParameterData.key', 'test_key_array')
         ->assertSet('globalParameterData.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
 });

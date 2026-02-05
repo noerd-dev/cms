@@ -1,38 +1,33 @@
 <?php
 
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
+    use NoerdDetail;
 
-    use Noerd;
-
-    public const DETAIL_COMPONENT = 'navigation-detail';
-    public const LIST_COMPONENT = 'navigation-list';
-    public const ID = 'navigationId';
-
-    #[Url(keep: false, except: '')]
-    public $navigationId = null;
+    public const DETAIL_CLASS = Navigation::class;
 
     public array $navigationData = [];
 
-    public function mount(Navigation $navigation): void
+    public function mount(mixed $model = null): void
     {
-        if ($this->navigationId) {
-            $navigation = Navigation::find($this->navigationId);
+        $this->initDetail($model);
+
+        $navigation = new Navigation;
+        if ($this->modelId) {
+            $navigation = Navigation::find($this->modelId) ?? new Navigation;
         }
-        $this->mountModalProcess(self::DETAIL_COMPONENT, $navigation);
 
         if ($navigation['page_id']) {
             $this->dispatch('pageSelected', $navigation['page_id']);
         }
 
-        $this->navigationData = FieldHelper::parseComponentToData(self::DETAIL_COMPONENT, $navigation->toArray());
+        $this->navigationData = FieldHelper::parseComponentToData($this->getComponentName(), $navigation->toArray());
     }
 
     public function store(): void
@@ -56,18 +51,22 @@ new class extends Component {
         }
         $data['new_tab'] = !empty($data['new_tab']) ? 1 : 0;
 
-        $navigation = Navigation::updateOrCreate(['id' => $this->navigationId], $data);
+        $navigation = Navigation::updateOrCreate(['id' => $this->modelId], $data);
 
-        $this->storeProcess($navigation);
+        $this->showSuccessIndicator = true;
+
+        if ($navigation->wasRecentlyCreated) {
+            $this->modelId = $navigation->id;
+        }
     }
 
     public function delete(): void
     {
-        if ($this->navigationId) {
-            $navigation = Navigation::find($this->navigationId);
+        if ($this->modelId) {
+            $navigation = Navigation::find($this->modelId);
             $navigation?->delete();
         }
-        $this->closeModalProcess(self::LIST_COMPONENT);
+        $this->closeModalProcess($this->getListComponent());
     }
 
     public function openPageSelect(): void
@@ -75,7 +74,7 @@ new class extends Component {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'pages-list',
-            source: self::DETAIL_COMPONENT,
+            source: $this->getComponentName(),
             arguments: ['listActionMethod' => 'selectAction'],
         );
     }
@@ -132,7 +131,7 @@ new class extends Component {
     <x-noerd::tab-content :layout="$pageLayout" />
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="isset($navigationId)"/>
+        <x-noerd::delete-save-bar :showDelete="isset($modelId)"/>
     </x-slot:footer>
 </x-noerd::page>
 

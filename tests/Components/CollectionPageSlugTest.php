@@ -52,10 +52,8 @@ it('preserves manually edited slug when saving collection page', function (): vo
     ]);
 
     // Open the page and change the slug manually
-    $component = Livewire::test('page-detail', [
-        'pageId' => $page->id,
-        'collectionKey' => 'mitarbeiter',
-    ])
+    $component = Livewire::withUrlParams(['id' => $page->id])
+        ->test('page-detail', ['collectionKey' => 'mitarbeiter'])
         ->set('pageData.slug.de', '/gerit-woerner-updated')  // Manual slug change
         ->call('store')
         ->assertOk();
@@ -77,10 +75,8 @@ it('auto-generates slug only when slug is empty', function (): void {
     ]);
 
     // Set a name but leave slug empty - should auto-generate
-    $component = Livewire::test('page-detail', [
-        'pageId' => $page->id,
-        'collectionKey' => 'mitarbeiter',
-    ])
+    $component = Livewire::withUrlParams(['id' => $page->id])
+        ->test('page-detail', ['collectionKey' => 'mitarbeiter'])
         ->set('pageData.name.de', 'Max Mustermann')
         ->set('pageData.slug.de', '')  // Empty slug
         ->call('store')
@@ -103,10 +99,8 @@ it('stores only collection-specific fields in data column', function (): void {
     ]);
 
     // Update collection fields
-    $component = Livewire::test('page-detail', [
-        'pageId' => $page->id,
-        'collectionKey' => 'mitarbeiter',
-    ])
+    $component = Livewire::withUrlParams(['id' => $page->id])
+        ->test('page-detail', ['collectionKey' => 'mitarbeiter'])
         ->set('pageData.title', 'New Title')
         ->set('pageData.title2', 'New Subtitle')
         ->set('pageData.phone', '+49 123 456')
@@ -149,10 +143,8 @@ it('does not overwrite slug column with stale data.slug value on mount', functio
     ]);
 
     // Mount the page-detail component
-    $component = Livewire::test('page-detail', [
-        'pageId' => $page->id,
-        'collectionKey' => 'mitarbeiter',
-    ]);
+    $component = Livewire::withUrlParams(['id' => $page->id])
+        ->test('page-detail', ['collectionKey' => 'mitarbeiter']);
 
     // Verify the correct slug from the column is displayed, not the stale one from data
     $pageData = $component->get('pageData');
@@ -178,10 +170,8 @@ it('does not overwrite core page fields from data column on mount', function ():
     ]);
 
     // Mount the page-detail component
-    $component = Livewire::test('page-detail', [
-        'pageId' => $page->id,
-        'collectionKey' => 'mitarbeiter',
-    ]);
+    $component = Livewire::withUrlParams(['id' => $page->id])
+        ->test('page-detail', ['collectionKey' => 'mitarbeiter']);
 
     // Verify core fields are preserved from columns, not overwritten by data
     $pageData = $component->get('pageData');

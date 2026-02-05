@@ -2,28 +2,19 @@
 
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdDetail;
 use Noerd\Media\Models\Media;
 use Illuminate\Support\Facades\Storage;
 
 new class extends Component {
-
     use WithFileUploads;
-    use Noerd;
-
-    public const DETAIL_COMPONENT = 'element-page-detail';
-    public const LIST_COMPONENT = 'element-pages-list';
-    public const ID = 'elementPageId';
-
-    public $elementPageId = null;
-    public $modelId = null;
+    use NoerdDetail;
 
     public array $elementLayout;
     public $model;
@@ -34,21 +25,28 @@ new class extends Component {
     public $image;
     public $image2;
 
-    public function mount(ElementPage $elementPage): void
+    public function mount(mixed $model = null): void
     {
-        if ($this->modelId) {
-            $elementPage = ElementPage::find($this->modelId);
+        $this->initDetail($model);
+        // Set modelId from parameter or URL
+        if ($model !== null) {
+            $this->modelId = $model instanceof ElementPage ? $model->id : $model;
         }
+
+        $elementPage = new ElementPage;
+        if ($this->modelId) {
+            $elementPage = ElementPage::find($this->modelId) ?? new ElementPage;
+        }
+
         $this->elementLayout = FieldHelper::getElementFields($elementPage->element_key) ?? [];
 
         $this->model = FieldHelper::parseElementToData($elementPage->element_key,
             json_decode($elementPage->data, true));
-        $this->elementPageId = $elementPage->id;
         $this->elementPage = $elementPage;
 
         // Send initial data to a parent component for live preview
         $this->dispatch('updateLiveElementData',
-            elementPageId: $this->elementPageId,
+            elementPageId: $this->modelId,
             data: $this->model
         );
     }
@@ -63,7 +61,7 @@ new class extends Component {
     #[On('storeElements')]
     public function store(): void
     {
-        $elementPage = ElementPage::find($this->elementPageId);
+        $elementPage = ElementPage::find($this->modelId);
         $elementPage->data = json_encode($this->model);
         $elementPage->save();
         $this->dispatch('reloadPageComponent');
@@ -74,7 +72,7 @@ new class extends Component {
         // When any model property changes, dispatch the live data to parent
         if (str_starts_with($propertyName, 'model.')) {
             $this->dispatch('updateLiveElementData',
-                elementPageId: $this->elementPageId,
+                elementPageId: $this->modelId,
                 data: $this->model
             );
         }
@@ -82,7 +80,7 @@ new class extends Component {
 
     public function delete(): void
     {
-        $elementPage = ElementPage::find($this->elementPageId);
+        $elementPage = ElementPage::find($this->modelId);
         $elementPage->delete();
         $this->dispatch('reloadPageComponent');
     }
@@ -96,7 +94,7 @@ new class extends Component {
 
         // Notify parent to refresh live preview with updated image paths
         $this->dispatch('updateLiveElementData',
-            elementPageId: $this->elementPageId,
+            elementPageId: $this->modelId,
             data: $this->model
         );
     }
@@ -107,7 +105,7 @@ new class extends Component {
 
         // Notify parent to refresh live preview after deletion
         $this->dispatch('updateLiveElementData',
-            elementPageId: $this->elementPageId,
+            elementPageId: $this->modelId,
             data: $this->model
         );
     }
@@ -144,7 +142,7 @@ new class extends Component {
 
         // Notify parent to refresh live preview after media selection
         $this->dispatch('updateLiveElementData',
-            elementPageId: $this->elementPageId,
+            elementPageId: $this->modelId,
             data: $this->model
         );
     }

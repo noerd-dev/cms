@@ -7,14 +7,12 @@ use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdList;
 
 new class extends Component
 {
     use LanguageFilterTrait;
-    use Noerd;
-
-    public const DETAIL_COMPONENT = 'collection-entries-list';
+    use NoerdList;
 
     protected const ALLOWED_TABLE_FILTERS = ['language'];
 
@@ -85,8 +83,8 @@ new class extends Component
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'page-detail',
-            source: self::DETAIL_COMPONENT,
-            arguments: ['pageId' => $modelId, 'collectionKey' => $this->collectionKey, 'relationId' => $relationId],
+            source: $this->getComponentName(),
+            arguments: ['modelId' => $modelId, 'collectionKey' => $this->collectionKey, 'relationId' => $relationId],
         );
     }
 

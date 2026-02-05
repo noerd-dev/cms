@@ -3,14 +3,7 @@
 use Livewire\Component;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\Page;
-use Noerd\Traits\Noerd;
-
 new class extends Component {
-
-    use Noerd;
-
-    public const ID = 'cmsSettingsId';
-    public const DETAIL_COMPONENT = 'cms-settings-detail';
 
     public array $cmsSettingsData = [
         'homepage_page_id' => null,
@@ -48,7 +41,6 @@ new class extends Component {
             ]
         );
 
-        $this->storeProcess($cmsSettings);
         $this->dispatch('toast', [
             'title' => __('cms_saved'),
             'description' => __('cms_settings_saved'),

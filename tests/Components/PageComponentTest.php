@@ -10,7 +10,7 @@ uses(CreatesCmsUser::class);
 $testSettings = [
     'componentName' => 'page-detail',
     'listName' => 'pages-list',
-    'id' => 'pageId',
+    'id' => 'id',
 ];
 
 it('test the route', function (): void {
@@ -63,7 +63,8 @@ it('successfully deletes a page', function () use ($testSettings): void {
         'slug' => ['de' => '/test-seite', 'en' => '/test-page'],
     ]);
 
-    Livewire::test($testSettings['componentName'], ['pageId' => $model->id])
+    Livewire::withUrlParams(['id' => $model->id])
+        ->test($testSettings['componentName'])
         ->call('delete')
         ->assertDispatched('closeTopModal');
 
@@ -82,9 +83,10 @@ it('opens page with pageId', function () use ($testSettings): void {
         'slug' => ['de' => '/test-seite', 'en' => '/test-page'],
     ]);
 
-    $component = Livewire::test($testSettings['componentName'], ['pageId' => $model->id]);
+    $component = Livewire::withUrlParams(['id' => $model->id])
+        ->test($testSettings['componentName']);
 
-    $component->assertSet('pageId', $model->id);
+    $component->assertSet('modelId', $model->id);
     // Note: model.id might be set differently due to FieldHelper parsing
 });
 
@@ -98,7 +100,8 @@ it('opens and stores existing page', function () use ($testSettings): void {
         'slug' => ['de' => '/alte-seite', 'en' => '/old-page'],
     ]);
 
-    Livewire::test($testSettings['componentName'], ['pageId' => $model->id])
+    Livewire::withUrlParams(['id' => $model->id])
+        ->test($testSettings['componentName'])
         ->set('pageData.name.de', 'Neue Seite')
         ->set('pageData.name.en', 'New Page')
         ->call('store')
@@ -123,7 +126,7 @@ it('dispatches table action from pages table', function () use ($testSettings): 
             'noerdModal',
             modalComponent: $testSettings['componentName'],
             source: $testSettings['listName'],
-            arguments: ['pageId' => 123, 'relationId' => null],
+            arguments: ['modelId' => 123, 'relationId' => null],
         );
 });
 

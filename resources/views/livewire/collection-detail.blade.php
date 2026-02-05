@@ -3,22 +3,21 @@
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Livewire\Component;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
+    use NoerdDetail;
 
-    use Noerd;
-
-    public const DETAIL_COMPONENT = 'collection-detail';
-    public const LIST_COMPONENT = 'collections-list';
+    public const DETAIL_CLASS = \stdClass::class; // File-based, not model-based
 
     public ?string $fileName = null;
     public string $yamlContent = '';
     public string $originalFileName = '';
     public bool $isNewFile = false;
 
-    public function mount(): void
+    public function mount(mixed $model = null): void
     {
+        $this->initDetail($model);
         $this->fileName = $this->fileName ?? request()->get('fileName');
 
         if ($this->fileName) {
@@ -42,7 +41,7 @@ new class extends Component {
                 'type' => 'error',
                 'message' => __('cms_file_not_found')
             ]);
-            $this->closeModalProcess(self::LIST_COMPONENT);
+            $this->closeModalProcess($this->getListComponent());
         }
     }
 
@@ -112,7 +111,7 @@ fields:
         ]);
 
         $this->showSuccessIndicator = true;
-        $this->closeModalProcess(self::LIST_COMPONENT);
+        $this->closeModalProcess($this->getListComponent());
     }
 
     public function delete(): void
@@ -129,7 +128,7 @@ fields:
             }
         }
 
-        $this->closeModalProcess(self::LIST_COMPONENT);
+        $this->closeModalProcess($this->getListComponent());
     }
 
     private function validateYamlSyntax(string $yamlContent): bool
