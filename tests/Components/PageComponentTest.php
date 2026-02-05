@@ -65,7 +65,7 @@ it('successfully deletes a page', function () use ($testSettings): void {
 
     Livewire::test($testSettings['componentName'], ['pageId' => $model->id])
         ->call('delete')
-        ->assertDispatched('closeModal');
+        ->assertDispatched('closeTopModal');
 
     $this->assertDatabaseMissing('pages', [
         'id' => $model->id,
