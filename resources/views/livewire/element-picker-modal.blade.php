@@ -3,14 +3,19 @@
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Helpers\FieldHelper;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
-    use Noerd;
+    use NoerdDetail;
 
-    public const DETAIL_COMPONENT = 'element-picker-modal';
+    public const DETAIL_CLASS = \stdClass::class; // Modal, not model-based
 
     public ?string $token = null;
+
+    public function mount(mixed $model = null): void
+    {
+        $this->initDetail($model);
+    }
 
     #[Computed]
     public function elements()

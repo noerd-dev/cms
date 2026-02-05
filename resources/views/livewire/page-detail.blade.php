@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Noerd\Cms\Helpers\CollectionHelper;
@@ -15,17 +14,13 @@ use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Services\MediaUploadService;
 use Noerd\Cms\Models\CmsLanguage;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdDetail;
 
 new class () extends Component {
-    use Noerd;
+    use NoerdDetail;
     use WithFileUploads;
 
-    public const DETAIL_COMPONENT = 'page-detail';
-    public const LIST_COMPONENT = 'pages-list';
-    public const ID = 'pageId';
-    #[Url(keep: false, except: '')]
-    public $pageId = null;
+    public const DETAIL_CLASS = Page::class;
 
     public array $pageData = [];
     public array $collectionData = [];
@@ -34,11 +29,11 @@ new class () extends Component {
     #[Computed]
     public function pageModel(): ?Page
     {
-        if (!$this->pageId) {
+        if (!$this->modelId) {
             return null;
         }
 
-        return Page::with('elements')->find($this->pageId);
+        return Page::with('elements')->find($this->modelId);
     }
 
     public ?array $collectionLayout = null;
@@ -89,21 +84,21 @@ new class () extends Component {
         return $options;
     }
 
-    public function mount(Page $page, ?string $collectionKey = null): void
+    public function mount(mixed $model = null, ?string $collectionKey = null): void
     {
-        if ($this->pageId) {
-            $page = Page::find($this->pageId);
+        $this->initDetail($model);
+
+        $page = new Page;
+        if ($this->modelId) {
+            $page = Page::find($this->modelId) ?? new Page;
         }
 
-        $this->pageId = $page->id;
         $this->collectionKey = $collectionKey;
 
         // Load collection layout if collectionKey is provided
         if ($this->collectionKey) {
             $this->collectionLayout = CollectionHelper::getCollectionFields($this->collectionKey);
         }
-
-        $this->mountModalProcess(self::DETAIL_COMPONENT, $page);
 
         // Load data differently for collection pages vs regular pages
         //   if ($this->collectionKey && $page->data) {
@@ -292,7 +287,7 @@ new class () extends Component {
         $data['name'] = $this->pageData['name'];
 
         $page = Page::updateOrCreate(
-            ['id' => $this->pageId],
+            ['id' => $this->modelId],
             $data,
         );
 
@@ -301,7 +296,7 @@ new class () extends Component {
         $this->showSuccessIndicator = true;
 
         if ($page->wasRecentlyCreated) {
-            $this->pageId = $page->id;
+            $this->modelId = $page->id;
         }
     }
 
@@ -346,20 +341,20 @@ new class () extends Component {
 
     public function delete(): void
     {
-        $page = Page::find($this->pageId);
+        $page = Page::find($this->modelId);
         $page->delete();
-        $this->closeModalProcess(self::LIST_COMPONENT);
+        $this->closeModalProcess($this->getListComponent());
     }
 
     #[On('elementPicked')]
     public function addElement($elementKey): void
     {
-        $sortElement = ElementPage::where('page_id', $this->pageId)
+        $sortElement = ElementPage::where('page_id', $this->modelId)
             ->orderBy('sort', 'desc')
             ->first();
 
         ElementPage::create([
-            'page_id' => $this->pageId,
+            'page_id' => $this->modelId,
             'element_key' => $elementKey,
             'sort' => ($sortElement?->sort ?? 0) + 1,
             'data' => '{}',
@@ -379,7 +374,7 @@ new class () extends Component {
 
     public function elementSort($elementId, $newPosition): void
     {
-        $elements = ElementPage::where('page_id', $this->pageId)
+        $elements = ElementPage::where('page_id', $this->modelId)
             ->orderBy('sort')
             ->get();
         $loop = 0;
@@ -401,7 +396,7 @@ new class () extends Component {
     public function deleteElement(int $elementPageId): void
     {
         $element = ElementPage::find($elementPageId);
-        if ($element && (int)$element->page_id === (int)$this->pageId) {
+        if ($element && (int)$element->page_id === (int)$this->modelId) {
             $element->delete();
             $this->lastChangeTime = time();
             $this->dispatch('reloadPageComponent');
@@ -425,8 +420,8 @@ new class () extends Component {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'element-page-detail',
-            source: self::DETAIL_COMPONENT,
-            arguments: ['elementPageId' => $this->pageId],
+            source: $this->getComponentName(),
+            arguments: ['elementPageId' => $this->modelId],
         );
     }
 
@@ -550,12 +545,12 @@ new class () extends Component {
             $data['is_active'] = true; // Collection pages without page features are always active
         }
 
-        $page = Page::updateOrCreate(['id' => $this->pageId], $data);
+        $page = Page::updateOrCreate(['id' => $this->modelId], $data);
 
         $this->showSuccessIndicator = true;
 
         if ($page->wasRecentlyCreated) {
-            $this->pageId = $page->id;
+            $this->modelId = $page->id;
         }
 
         $this->dispatch('storeElements');
@@ -652,7 +647,7 @@ new class () extends Component {
     </div>
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="isset($pageId)"/>
+        <x-noerd::delete-save-bar :showDelete="isset($modelId)"/>
     </x-slot:footer>
 
 </x-noerd::page>

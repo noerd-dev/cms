@@ -2,12 +2,10 @@
 
 use Illuminate\Support\Facades\File;
 use Livewire\Component;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdList;
 
 new class () extends Component {
-    use Noerd;
-
-    public const DETAIL_COMPONENT = 'collections-list';
+    use NoerdList;
 
     public function mount(): void
     {
@@ -25,7 +23,7 @@ new class () extends Component {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'collection-detail',
-            source: self::DETAIL_COMPONENT,
+            source: $this->getComponentName(),
             arguments: ['fileName' => $modelId, 'relationId' => $relationId],
         );
     }
@@ -35,7 +33,7 @@ new class () extends Component {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'collection-detail.blade.php',
-            source: self::DETAIL_COMPONENT,
+            source: $this->getComponentName(),
             arguments: ['fileName' => $fileName],
         );
     }

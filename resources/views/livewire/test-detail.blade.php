@@ -1,12 +1,8 @@
 <?php
 
-use Noerd\Traits\Noerd;
 use Livewire\Component;
 
 new class () extends Component {
-    use Noerd;
-
-    public const DETAIL_COMPONENT = 'test-detail';
 } ?>
 
 <x-noerd::page :disableModal="$disableModal">

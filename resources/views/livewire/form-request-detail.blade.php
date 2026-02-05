@@ -1,31 +1,25 @@
 <?php
 
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Models\FormRequest;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
+    use NoerdDetail;
 
-    use Noerd;
-
-    public const DETAIL_COMPONENT = 'form-request-detail';
-    public const LIST_COMPONENT = 'form-requests-list';
-    public const ID = 'formRequestId';
-
-    #[Url(keep: false, except: '')]
-    public $formRequestId = null;
+    public const DETAIL_CLASS = FormRequest::class;
 
     public array $formRequestData = [];
 
-    public function mount(FormRequest $formRequest): void
+    public function mount(mixed $model = null): void
     {
-        if ($this->formRequestId) {
-            $formRequest = FormRequest::find($this->formRequestId);
-        }
+        $this->initDetail($model);
 
-        $this->formRequestId = $formRequest->id;
+        $formRequest = new FormRequest;
+        if ($this->modelId) {
+            $formRequest = FormRequest::find($this->modelId) ?? new FormRequest;
+        }
 
         // Prepare view model
         $this->formRequestData = [
@@ -39,11 +33,11 @@ new class extends Component {
 
     public function delete(): void
     {
-        $fr = FormRequest::find($this->formRequestId);
+        $fr = FormRequest::find($this->modelId);
         if ($fr) {
             $fr->delete();
         }
-        $this->closeModalProcess(self::LIST_COMPONENT);
+        $this->closeModalProcess($this->getListComponent());
     }
 
     #[On('languageChanged')]
@@ -90,7 +84,7 @@ new class extends Component {
     </div>
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="$formRequestId" />
+        <x-noerd::delete-save-bar :showDelete="$modelId" />
     </x-slot:footer>
 </x-noerd::page>
 

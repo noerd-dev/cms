@@ -11,7 +11,7 @@ uses(CreatesCmsUser::class);
 $testSettings = [
     'componentName' => 'element-page-detail',
     'listName' => 'element-pages-list',
-    'id' => 'elementPageId',
+    'id' => 'id',
 ];
 
 it('successfully mounts with element page', function () use ($testSettings): void {
@@ -34,8 +34,9 @@ it('successfully mounts with element page', function () use ($testSettings): voi
         'sort' => 1,
     ]);
 
-    Livewire::test($testSettings['componentName'], [$elementPage])
-        ->assertSet('elementPageId', $elementPage->id)
+    Livewire::withUrlParams(['id' => $elementPage->id])
+        ->test($testSettings['componentName'])
+        ->assertSet('modelId', $elementPage->id)
         ->assertSet('elementPage.id', $elementPage->id)
         ->assertHasNoErrors();
 });
@@ -60,7 +61,8 @@ it('validates element page data', function () use ($testSettings): void {
     ]);
 
     // Test without setting required fields (this depends on the element_key configuration)
-    Livewire::test($testSettings['componentName'], [$elementPage])
+    Livewire::withUrlParams(['id' => $elementPage->id])
+        ->test($testSettings['componentName'])
         ->call('store')
         ->assertHasNoErrors(); // Element validation depends on the specific element configuration
 });
@@ -84,7 +86,8 @@ it('can delete element page', function () use ($testSettings): void {
         'sort' => 1,
     ]);
 
-    Livewire::test($testSettings['componentName'], [$elementPage])
+    Livewire::withUrlParams(['id' => $elementPage->id])
+        ->test($testSettings['componentName'])
         ->call('delete')
         ->assertHasNoErrors();
 
@@ -111,7 +114,8 @@ it('shows a content error when element layout is missing', function () use ($tes
         'sort' => 1,
     ]);
 
-    Livewire::test($testSettings['componentName'], [$elementPage])
+    Livewire::withUrlParams(['id' => $elementPage->id])
+        ->test($testSettings['componentName'])
         ->assertSee(__('Element component not found:'))
         ->assertSee('Please create both the .yml and .blade.php files in the elements folder.')
         ->assertSee('____missing____');

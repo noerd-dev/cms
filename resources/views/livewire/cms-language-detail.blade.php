@@ -3,50 +3,42 @@
 use Livewire\Component;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Helpers\StaticConfigHelper;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
+    use NoerdDetail;
 
-    use Noerd;
+    public const DETAIL_CLASS = CmsLanguage::class;
 
-    public const DETAIL_COMPONENT = 'cms-language-detail';
-    public const LIST_COMPONENT = 'cms-languages-list';
-    public const ID = 'cmsLanguageId';
-    #[\Livewire\Attributes\Url(keep: false, except: '')]
-    public ?string $cmsLanguageId = null;
-
-    public array $cmsLanguageData = [];
-
-    public function mount(CmsLanguage $cmsLanguage): void
+    public function mount(mixed $model = null): void
     {
-        if ($this->cmsLanguageId) {
-            $cmsLanguage = CmsLanguage::find($this->cmsLanguageId);
-        }
-
-        $this->mountModalProcess(self::DETAIL_COMPONENT, $cmsLanguage);
-        $this->cmsLanguageData = $cmsLanguage->toArray();
+        $this->initDetail($model);
     }
 
     public function store(): void
     {
         $this->validateFromLayout();
 
-        $data = $this->cmsLanguageData;
+        $data = $this->detailData;
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
 
         // Model events handle is_default consistency
-        $cmsLanguage = CmsLanguage::updateOrCreate(['id' => $this->cmsLanguageId], $data);
+        $cmsLanguage = CmsLanguage::updateOrCreate(['id' => $this->modelId], $data);
 
-        $this->storeProcess($cmsLanguage);
+        $this->showSuccessIndicator = true;
+
+        if ($cmsLanguage->wasRecentlyCreated) {
+            $this->modelId = $cmsLanguage->id;
+        }
     }
 
     public function delete(): void
     {
-        $cmsLanguage = CmsLanguage::find($this->cmsLanguageId);
+        $cmsLanguage = CmsLanguage::find($this->modelId);
         if ($cmsLanguage) {
             $cmsLanguage->delete();
         }
-        $this->closeModalProcess(self::LIST_COMPONENT);
+        $this->closeModalProcess($this->getListComponent());
     }
 
 } ?>
@@ -60,6 +52,6 @@ new class extends Component {
     <x-noerd::tab-content :layout="$pageLayout" />
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="$cmsLanguageId"/>
+        <x-noerd::delete-save-bar :showDelete="$modelId"/>
     </x-slot:footer>
 </x-noerd::page>

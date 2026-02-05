@@ -1,32 +1,28 @@
 <?php
 
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Helpers\StaticConfigHelper;
-use Noerd\Traits\Noerd;
+use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
+    use NoerdDetail;
 
-    use Noerd;
-
-    public const DETAIL_COMPONENT = 'global-parameter-detail';
-    public const LIST_COMPONENT = 'global-parameters-list';
-    public const ID = 'globalParameterId';
-    #[Url(keep: false, except: '')]
-    public $globalParameterId = null;
+    public const DETAIL_CLASS = GlobalParameter::class;
 
     public array $globalParameterData = [];
 
-    public function mount(GlobalParameter $globalParameter): void
+    public function mount(mixed $model = null): void
     {
-        if ($this->globalParameterId) {
-            $globalParameter = GlobalParameter::find($this->globalParameterId);
+        $this->initDetail($model);
+
+        $globalParameter = new GlobalParameter;
+        if ($this->modelId) {
+            $globalParameter = GlobalParameter::find($this->modelId) ?? new GlobalParameter;
         }
 
-        $this->mountModalProcess(self::DETAIL_COMPONENT, $globalParameter);
         $this->globalParameterData = $globalParameter->toArray();
 
         // Normalize value for editing: decode JSON into PHP value (string or array)
@@ -55,21 +51,21 @@ new class extends Component {
         } else {
             $data['value'] = json_encode((string) $value);
         }
-        $globalParameter = GlobalParameter::updateOrCreate(['id' => $this->globalParameterId], $data);
+        $globalParameter = GlobalParameter::updateOrCreate(['id' => $this->modelId], $data);
 
         $this->dispatch('storeElements');
         $this->showSuccessIndicator = true;
 
         if ($globalParameter->wasRecentlyCreated) {
-            $this->globalParameterId = $globalParameter['id'];
+            $this->modelId = $globalParameter->id;
         }
     }
 
     public function delete(): void
     {
-        $globalParameter = GlobalParameter::find($this->globalParameterId);
+        $globalParameter = GlobalParameter::find($this->modelId);
         $globalParameter->delete();
-        $this->closeModalProcess(self::LIST_COMPONENT);
+        $this->closeModalProcess($this->getListComponent());
     }
 
     #[On('languageChanged')]
@@ -95,6 +91,6 @@ new class extends Component {
     <x-noerd::tab-content :layout="$pageLayout" />
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="false && isset($globalParameterId)"/>
+        <x-noerd::delete-save-bar :showDelete="false && isset($modelId)"/>
     </x-slot:footer>
 </x-noerd::page>
