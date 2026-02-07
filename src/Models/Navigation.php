@@ -4,6 +4,7 @@ namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Noerd\Cms\Database\Factories\NavigationFactory;
 use Noerd\Traits\BelongsToTenant;
 use Noerd\Traits\HasListScopes;
 
@@ -33,5 +34,10 @@ class Navigation extends Model
     public function collection()
     {
         return $this->belongsTo(Collection::class);
+    }
+
+    protected static function newFactory()
+    {
+        return NavigationFactory::new();
     }
 }
