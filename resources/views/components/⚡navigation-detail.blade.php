@@ -18,9 +18,9 @@ new class extends Component {
 
     public array $navigationData = [];
 
-    public function mount(mixed $model = null): void
+    public function mount(): void
     {
-        $this->initDetail($model);
+        $this->initDetail();
 
         $navigation = new Navigation;
         if ($this->modelId) {

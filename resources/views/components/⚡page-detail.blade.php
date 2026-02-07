@@ -88,9 +88,9 @@ new class () extends Component {
         return $options;
     }
 
-    public function mount(mixed $model = null, ?string $collectionKey = null): void
+    public function mount(?string $collectionKey = null): void
     {
-        $this->initDetail($model);
+        $this->initDetail();
 
         $page = new Page;
         if ($this->modelId) {

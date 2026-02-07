@@ -19,9 +19,9 @@ new class extends Component {
     public string $originalFileName = '';
     public bool $isNewFile = false;
 
-    public function mount(mixed $model = null): void
+    public function mount(): void
     {
-        $this->initDetail($model);
+        $this->initDetail();
         $this->fileName = $this->fileName ?? request()->get('fileName');
 
         if ($this->fileName) {
