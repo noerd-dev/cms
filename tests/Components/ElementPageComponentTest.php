@@ -11,7 +11,8 @@ uses(CreatesCmsUser::class);
 $testSettings = [
     'componentName' => 'element-page-detail',
     'listName' => 'element-pages-list',
-    'id' => 'id',
+    'id' => 'modelId',
+    'urlParam' => 'id',
 ];
 
 it('successfully mounts with element page', function () use ($testSettings): void {

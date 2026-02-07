@@ -10,7 +10,8 @@ uses(CreatesCmsUser::class);
 $testSettings = [
     'componentName' => 'page-detail',
     'listName' => 'pages-list',
-    'id' => 'id',
+    'id' => 'modelId',
+    'urlParam' => 'pageId',
 ];
 
 it('test the route', function (): void {
@@ -63,7 +64,7 @@ it('successfully deletes a page', function () use ($testSettings): void {
         'slug' => ['de' => '/test-seite', 'en' => '/test-page'],
     ]);
 
-    Livewire::withUrlParams(['id' => $model->id])
+    Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
         ->test($testSettings['componentName'])
         ->call('delete')
         ->assertDispatched('closeTopModal');
@@ -83,7 +84,7 @@ it('opens page with pageId', function () use ($testSettings): void {
         'slug' => ['de' => '/test-seite', 'en' => '/test-page'],
     ]);
 
-    $component = Livewire::withUrlParams(['id' => $model->id])
+    $component = Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
         ->test($testSettings['componentName']);
 
     $component->assertSet('modelId', $model->id);
@@ -100,7 +101,7 @@ it('opens and stores existing page', function () use ($testSettings): void {
         'slug' => ['de' => '/alte-seite', 'en' => '/old-page'],
     ]);
 
-    Livewire::withUrlParams(['id' => $model->id])
+    Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
         ->test($testSettings['componentName'])
         ->set('pageData.name.de', 'Neue Seite')
         ->set('pageData.name.en', 'New Page')

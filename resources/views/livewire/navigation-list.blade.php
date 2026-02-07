@@ -78,8 +78,8 @@ new class extends Component
             session(['selectedLanguage' => $defaultCode]);
         }
 
-        if ((int) request()->id) {
-            $this->listAction(request()->id);
+        if ((int) request()->navigationId) {
+            $this->listAction(request()->navigationId);
         }
 
         if (request()->create) {

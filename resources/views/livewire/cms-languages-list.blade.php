@@ -28,8 +28,8 @@ new class extends Component {
 
     public function rendering()
     {
-        if ((int) request()->id) {
-            $this->listAction(request()->id);
+        if ((int) request()->cmsLanguageId) {
+            $this->listAction(request()->cmsLanguageId);
         }
 
         if (request()->create) {

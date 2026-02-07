@@ -111,8 +111,8 @@ new class extends Component {
             $this->activeListFilters['language'] = session('selectedLanguage');
         }
 
-        if ((int) request()->id) {
-            $this->listAction(request()->id);
+        if ((int) request()->pageId) {
+            $this->listAction(request()->pageId);
         }
 
         if (request()->create) {

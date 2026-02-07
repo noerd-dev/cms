@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Models\FormType;
 use Noerd\Traits\HasEmailPreview;
@@ -9,6 +10,9 @@ use Noerd\Traits\NoerdDetail;
 new class () extends Component {
     use HasEmailPreview;
     use NoerdDetail;
+
+    #[Url(as: 'formTypeId', keep: false, except: '')]
+    public $modelId = null;
 
     public const DETAIL_CLASS = FormType::class;
 

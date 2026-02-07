@@ -1,12 +1,16 @@
 <?php
 
 use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Models\FormRequest;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
     use NoerdDetail;
+
+    #[Url(as: 'formRequestId', keep: false, except: '')]
+    public $modelId = null;
 
     public const DETAIL_CLASS = FormRequest::class;
 
