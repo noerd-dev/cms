@@ -90,6 +90,8 @@ new class extends Component {
             return;
         }
         $elementPage->delete();
+        $this->elementPage = new ElementPage;
+        $this->modelId = null;
         $this->dispatch('reloadPageComponent');
     }
 
