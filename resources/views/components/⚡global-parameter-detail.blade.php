@@ -18,9 +18,9 @@ new class extends Component {
 
     public array $globalParameterData = [];
 
-    public function mount(mixed $model = null): void
+    public function mount(): void
     {
-        $this->initDetail($model);
+        $this->initDetail();
 
         $globalParameter = new GlobalParameter;
         if ($this->modelId) {

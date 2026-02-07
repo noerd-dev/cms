@@ -70,9 +70,9 @@ new class () extends Component {
         return $placeholders;
     }
 
-    public function mount(mixed $model = null): void
+    public function mount(): void
     {
-        $this->initDetail($model);
+        $this->initDetail();
 
         $formType = new FormType;
         if ($this->modelId) {

@@ -27,13 +27,9 @@ new class extends Component {
     public $image;
     public $image2;
 
-    public function mount(mixed $model = null): void
+    public function mount(): void
     {
-        $this->initDetail($model);
-        // Set modelId from parameter or URL
-        if ($model !== null) {
-            $this->modelId = $model instanceof ElementPage ? $model->id : $model;
-        }
+        $this->initDetail();
 
         $elementPage = new ElementPage;
         if ($this->modelId) {

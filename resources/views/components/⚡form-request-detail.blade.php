@@ -16,9 +16,9 @@ new class extends Component {
 
     public array $formRequestData = [];
 
-    public function mount(mixed $model = null): void
+    public function mount(): void
     {
-        $this->initDetail($model);
+        $this->initDetail();
 
         $formRequest = new FormRequest;
         if ($this->modelId) {
