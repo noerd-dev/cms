@@ -2,11 +2,15 @@
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
     use NoerdDetail;
+
+    #[Url(as: 'collectionId', keep: false, except: '')]
+    public $modelId = null;
 
     public const DETAIL_CLASS = \stdClass::class; // File-based, not model-based
 

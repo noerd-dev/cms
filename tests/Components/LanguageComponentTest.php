@@ -10,7 +10,8 @@ uses(CreatesCmsUser::class);
 $testSettings = [
     'componentName' => 'cms-language-detail',
     'listName' => 'cms-languages-list',
-    'id' => 'id',
+    'id' => 'modelId',
+    'urlParam' => 'cmsLanguageId',
 ];
 
 it('validates the language data', function () use ($testSettings): void {
@@ -92,7 +93,7 @@ it('updates an existing language', function () use ($testSettings): void {
         'is_default' => false,
     ]);
 
-    Livewire::withUrlParams(['id' => $language->id])
+    Livewire::withUrlParams([$testSettings['urlParam'] => $language->id])
         ->test($testSettings['componentName'])
         ->set('detailData.name', 'Französisch')
         ->call('store')
@@ -115,7 +116,7 @@ it('deletes a language', function () use ($testSettings): void {
         'is_default' => false,
     ]);
 
-    Livewire::withUrlParams(['id' => $language->id])
+    Livewire::withUrlParams([$testSettings['urlParam'] => $language->id])
         ->test($testSettings['componentName'])
         ->call('delete')
         ->assertDispatched('closeTopModal');

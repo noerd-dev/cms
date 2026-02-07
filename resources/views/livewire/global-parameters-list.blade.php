@@ -81,8 +81,8 @@ new class extends Component
             session(['selectedLanguage' => $defaultCode]);
         }
 
-        if ((int) request()->id) {
-            $this->listAction(request()->id);
+        if ((int) request()->globalParameterId) {
+            $this->listAction(request()->globalParameterId);
         }
 
         if (request()->create) {
