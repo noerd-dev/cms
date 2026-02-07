@@ -7,13 +7,13 @@ use Noerd\Traits\NoerdList;
 new class extends Component {
     use NoerdList;
 
-    public function listAction(mixed $modelId = null, mixed $relationId = null): void
+    public function listAction(mixed $modelId = null, array $relations = []): void
     {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'form-type-detail',
             source: $this->getComponentName(),
-            arguments: ['modelId' => $modelId, 'relationId' => $relationId],
+            arguments: ['modelId' => $modelId, 'relations' => $relations],
         );
     }
 

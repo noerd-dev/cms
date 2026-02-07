@@ -127,7 +127,7 @@ it('dispatches table action from pages table', function () use ($testSettings): 
             'noerdModal',
             modalComponent: $testSettings['componentName'],
             source: $testSettings['listName'],
-            arguments: ['modelId' => 123, 'relationId' => null],
+            arguments: ['modelId' => 123, 'relations' => []],
         );
 });
 
