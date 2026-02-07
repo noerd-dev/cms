@@ -2,13 +2,16 @@
 
 namespace Noerd\Cms\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Noerd\Cms\Database\Factories\CmsLanguageFactory;
 use Noerd\Traits\BelongsToTenant;
 use Noerd\Traits\HasListScopes;
 
 class CmsLanguage extends Model
 {
     use BelongsToTenant;
+    use HasFactory;
     use HasListScopes;
 
     protected $table = 'cms_languages';
@@ -44,6 +47,11 @@ class CmsLanguage extends Model
             'is_default' => true,
             'sort_order' => 0,
         ]);
+    }
+
+    protected static function newFactory()
+    {
+        return CmsLanguageFactory::new();
     }
 
     protected static function boot(): void

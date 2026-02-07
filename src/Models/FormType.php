@@ -3,10 +3,12 @@
 namespace Noerd\Cms\Models;
 
 use Exception;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\File;
+use Noerd\Cms\Database\Factories\FormTypeFactory;
 use Noerd\Models\Tenant;
 use Noerd\Traits\BelongsToTenant;
 use Noerd\Traits\HasListScopes;
@@ -16,6 +18,7 @@ use Symfony\Component\Yaml\Yaml;
 class FormType extends Model
 {
     use BelongsToTenant;
+    use HasFactory;
     use HasListScopes;
 
     protected $table = 'form_types';
@@ -25,18 +28,7 @@ class FormType extends Model
         'key',
     ];
 
-    protected $fillable = [
-        'tenant_id',
-        'key',
-        'title',
-        'description',
-        'send_email',
-        'email_subject',
-        'email_body',
-        'notification_email',
-        'yml_path',
-        'yml_synced_at',
-    ];
+    protected $guarded = [];
 
     /**
      * Get available email placeholders with descriptions
@@ -135,6 +127,11 @@ class FormType extends Model
         }
 
         return $placeholders;
+    }
+
+    protected static function newFactory()
+    {
+        return FormTypeFactory::new();
     }
 
     protected function casts(): array
