@@ -18,13 +18,13 @@ new class () extends Component {
         }
     }
 
-    public function listAction(mixed $modelId = null, mixed $relationId = null): void
+    public function listAction(mixed $modelId = null, array $relations = []): void
     {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'collection-detail',
             source: $this->getComponentName(),
-            arguments: ['fileName' => $modelId, 'relationId' => $relationId],
+            arguments: ['fileName' => $modelId, 'relations' => $relations],
         );
     }
 

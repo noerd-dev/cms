@@ -7,13 +7,13 @@ use Noerd\Website\Models\FormRequest;
 new class extends Component {
     use NoerdList;
 
-    public function listAction(mixed $modelId = null, mixed $relationId = null): void
+    public function listAction(mixed $modelId = null, array $relations = []): void
     {
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'form-request-detail',
             source: $this->getComponentName(),
-            arguments: ['modelId' => $modelId, 'relationId' => $relationId],
+            arguments: ['modelId' => $modelId, 'relations' => $relations],
         );
     }
 
