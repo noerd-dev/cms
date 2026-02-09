@@ -10,7 +10,7 @@ uses(Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
-    session()->forget(['activeListFilters', 'selectedLanguage']);
+    session()->forget(['listFilters', 'selectedLanguage']);
 
     ['user' => $this->user, 'tenant' => $this->tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($this->user);
@@ -22,15 +22,15 @@ beforeEach(function (): void {
     );
 });
 
-it('can set activeListFilters without error', function (): void {
+it('can set listFilters without error', function (): void {
     Livewire::test('navigation-list')
-        ->set('activeListFilters.language', 'de')
+        ->set('listFilters.language', 'de')
         ->assertHasNoErrors();
 });
 
 it('applies language filter without error', function (): void {
     $component = Livewire::test('navigation-list')
-        ->set('activeListFilters.language', 'en');
+        ->set('listFilters.language', 'en');
 
-    expect($component->get('activeListFilters')['language'])->toBe('en');
+    expect($component->get('listFilters')['language'])->toBe('en');
 });

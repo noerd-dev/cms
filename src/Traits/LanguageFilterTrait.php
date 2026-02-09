@@ -41,7 +41,7 @@ trait LanguageFilterTrait
             ->count() > 1;
     }
 
-    protected function getLanguageFilter(): array
+    protected function getLanguageListFilter(): array
     {
         $filter['label'] = __('cms_label_language');
         $filter['column'] = 'language';

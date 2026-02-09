@@ -16,12 +16,10 @@ new class extends Component {
     use LanguageFilterTrait;
     use NoerdList;
 
-    protected const ALLOWED_TABLE_FILTERS = ['language'];
-
     public function mount(): void
     {
         $this->listId = Str::random();
-        $this->loadActiveListFilters();
+        $this->loadListFilters();
         $this->ensureDefaultLanguage();
     }
 
@@ -32,16 +30,16 @@ new class extends Component {
             return [];
         }
 
-        return [$this->getLanguageFilter()];
+        return [$this->getLanguageListFilter()];
     }
 
     public function storeActiveListFilters(): void
     {
-        session(['activeListFilters' => $this->activeListFilters]);
+        session(['listFilters' => $this->listFilters]);
 
         // Sync with selectedLanguage for page-detail consistency
-        if (! empty($this->activeListFilters['language'])) {
-            session(['selectedLanguage' => $this->activeListFilters['language']]);
+        if (! empty($this->listFilters['language'])) {
+            session(['selectedLanguage' => $this->listFilters['language']]);
         }
     }
 
@@ -85,7 +83,7 @@ new class extends Component {
             ->paginate(self::PAGINATION);
 
         // Parse JSON attributes to show only current language values
-        $selectedLanguage = $this->activeListFilters['language']
+        $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage');
 
         foreach ($rows->items() as $row) {
@@ -104,11 +102,11 @@ new class extends Component {
 
     public function rendering()
     {
-        $this->loadActiveListFilters();
+        $this->loadListFilters();
 
-        // Sync selectedLanguage with activeListFilters
-        if (empty($this->activeListFilters['language'])) {
-            $this->activeListFilters['language'] = session('selectedLanguage');
+        // Sync selectedLanguage with listFilters
+        if (empty($this->listFilters['language'])) {
+            $this->listFilters['language'] = session('selectedLanguage');
         }
 
         if ((int) request()->pageId) {
