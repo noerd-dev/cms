@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
+use Noerd\Cms\Commands\CmsUpdateCommand;
 use Noerd\Cms\Commands\NoerdCmsInstallCommand;
 use Noerd\Cms\Console\Commands\SyncFormTypesCommand;
 use Noerd\Cms\Helpers\CollectionHelper;
@@ -62,6 +63,7 @@ class CmsServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 NoerdCmsInstallCommand::class,
+                CmsUpdateCommand::class,
                 InstallWebsiteBoilerplateCommand::class,
                 SyncFormTypesCommand::class,
             ]);
