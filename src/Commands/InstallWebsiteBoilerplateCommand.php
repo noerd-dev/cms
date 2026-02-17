@@ -58,6 +58,11 @@ class InstallWebsiteBoilerplateCommand extends Command
 
             $this->info('Website boilerplate successfully installed!');
             $this->line('');
+
+            if ($this->confirm('Would you like to run migrations now to seed demo data?', true)) {
+                Artisan::call('migrate', ['--force' => true], $this->output);
+            }
+
             $this->line('<info>Next steps:</info>');
             $this->line('- Review the generated files in app-modules/website');
             $this->line('- Customize the module according to your needs');
