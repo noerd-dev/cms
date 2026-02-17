@@ -3,6 +3,7 @@
 namespace Noerd\Website\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 use Noerd\Website\Controllers\WebsiteController;
 use Noerd\Website\Middleware\WebsiteMiddleware;
 use Noerd\Website\Models\Navigation;
@@ -29,6 +30,8 @@ class WebsiteServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'website');
         $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'website');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/website-routes.php');
+
+        Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/livewire');
 
         // Register route loading after all providers have been registered
         $this->app->booted(function (): void {
