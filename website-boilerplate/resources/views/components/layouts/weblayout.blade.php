@@ -107,7 +107,7 @@
 
 <footer class="bg-gray-800 text-white py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid md:grid-cols-2 gap-8">
+        <div class="grid md:grid-cols-3 gap-8">
             <!-- Navigation Links -->
             <div>
                 <h3 class="text-lg font-semibold mb-4">{{ __('Navigation') }}</h3>
@@ -134,6 +134,16 @@
                     @endforeach
                 </div>
             </div>
+
+            <!-- Contact Info -->
+            @if(!empty($globals['phone']))
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">{{ __('Kontakt') }}</h3>
+                    <a href="tel:{{ $globals['phone'] }}" class="text-gray-300 hover:text-white transition-colors duration-200">
+                        {{ $globals['phone'] }}
+                    </a>
+                </div>
+            @endif
 
             <!-- Contact Form -->
             <div>
