@@ -5,6 +5,8 @@ use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\Page;
 new class extends Component {
 
+    public bool $showSuccessIndicator = false;
+
     public array $cmsSettingsData = [
         'homepage_page_id' => null,
         'google_analytics_id' => null,
@@ -40,6 +42,8 @@ new class extends Component {
                 'show_cookie_banner' => $this->cmsSettingsData['show_cookie_banner'],
             ]
         );
+
+        $this->showSuccessIndicator = true;
 
         $this->dispatch('toast', [
             'title' => __('cms_saved'),
