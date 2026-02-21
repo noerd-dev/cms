@@ -100,11 +100,11 @@ class FieldHelper
     {
         $elements = [];
 
-        // Get all livewire element components from app-modules
-        $livewireElementFiles = glob(base_path('app-modules/*/resources/views/livewire/elements/*.blade.php'));
+        // Get all element components from app-modules
+        $livewireElementFiles = glob(base_path('app-modules/*/resources/views/components/elements/*.blade.php'));
 
         // Also check project-level
-        $projectLevelFiles = glob(base_path('resources/views/livewire/elements/*.blade.php'));
+        $projectLevelFiles = glob(base_path('resources/views/components/elements/*.blade.php'));
         $livewireElementFiles = array_merge($projectLevelFiles, $livewireElementFiles);
 
         foreach ($livewireElementFiles as $livewireFile) {
