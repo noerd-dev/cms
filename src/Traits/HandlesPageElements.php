@@ -53,7 +53,9 @@ trait HandlesPageElements
             $bladeFiles = array_merge($bladeFiles, $customFiles);
         }
 
-        $fallbackFiles = glob(base_path('app-modules/*/resources/views/livewire/elements/*.blade.php')) ?: [];
+        $fallbackFiles = glob(base_path('app-modules/*/resources/views/components/elements/*.blade.php')) ?: [];
+        $projectLevelFiles = glob(base_path('resources/views/components/elements/*.blade.php')) ?: [];
+        $fallbackFiles = array_merge($fallbackFiles, $projectLevelFiles);
         $allFiles = array_merge($fallbackFiles, $bladeFiles);
 
         $uniqueFiles = [];
@@ -78,8 +80,14 @@ trait HandlesPageElements
         $parts = explode('.', $componentName);
         $fileBase = end($parts) ?: $componentName;
 
-        $bladeMatches = glob(base_path('app-modules/*/resources/views/livewire/elements/' . $fileBase . '.blade.php')) ?: [];
-        $ymlMatches = glob(base_path('app-modules/*/resources/views/livewire/elements/' . $fileBase . '.yml')) ?: [];
+        $bladeMatches = array_merge(
+            glob(base_path('app-modules/*/resources/views/components/elements/' . $fileBase . '.blade.php')) ?: [],
+            glob(base_path('resources/views/components/elements/' . $fileBase . '.blade.php')) ?: []
+        );
+        $ymlMatches = array_merge(
+            glob(base_path('app-modules/*/resources/views/components/elements/' . $fileBase . '.yml')) ?: [],
+            glob(base_path('resources/views/components/elements/' . $fileBase . '.yml')) ?: []
+        );
 
         return ! empty($bladeMatches) && ! empty($ymlMatches);
     }
