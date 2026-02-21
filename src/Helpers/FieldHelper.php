@@ -13,10 +13,10 @@ class FieldHelper
         $elementFileName = str_replace('_', '-', $element);
 
         // Search for YML file co-located with blade component in app-modules
-        $livewireElementFiles = glob(base_path('app-modules/*/resources/views/livewire/elements/' . $elementFileName . '.blade.php'));
+        $livewireElementFiles = glob(base_path('app-modules/*/resources/views/components/elements/' . $elementFileName . '.blade.php'));
 
         // Also check project-level
-        $projectLevelFile = base_path('resources/views/livewire/elements/' . $elementFileName . '.blade.php');
+        $projectLevelFile = base_path('resources/views/components/elements/' . $elementFileName . '.blade.php');
         if (file_exists($projectLevelFile)) {
             array_unshift($livewireElementFiles, $projectLevelFile);
         }
