@@ -38,7 +38,7 @@ input: [
 The website boilerplate uses its own layout template:
 - **Layout**: `resources/views/components/layouts/weblayout.blade.php`
 - **Page Template**: `resources/views/page.blade.php`
-- **Element Components**: `resources/views/livewire/elements/*.blade.php`
+- **Element Components**: `resources/views/components/elements/*.blade.php`
 
 ## CSS Classes
 
