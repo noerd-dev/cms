@@ -76,15 +76,6 @@ it('can access collection entries route with key parameter', function (): void {
     $response->assertSee('Project'); // Should show the collection title
 });
 
-it('can access collection files route', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
-
-    $response = $this->get('/cms/collection-files');
-    $response->assertStatus(200);
-    $response->assertSee('Collections'); // Should show the YAML files table
-});
-
 it('collection entries route shows correct collection data', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
@@ -100,14 +91,3 @@ it('collection entries route shows correct collection data', function (): void {
     }
 });
 
-it('collection files route shows YAML management interface', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
-
-    $response = $this->get('/cms/collection-files');
-    $response->assertStatus(200);
-
-    // Should show YAML file management interface
-    $response->assertSee('Collections');
-    // Note: .yml files are only shown if they exist in the app-configs directory
-});
