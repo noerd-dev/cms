@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\CmsLanguage;
-use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\FormRequest;
 use Noerd\Cms\Models\FormType;
 use Noerd\Cms\Models\GlobalParameter;
@@ -51,16 +50,6 @@ it('loads global-parameter-detail via direct route', function (): void {
         ->assertSuccessful()
         ->assertSeeLivewire('global-parameter-detail');
 });
-
-it('loads collection-detail via direct route', function (): void {
-    $collection = Collection::factory()->create([
-        'tenant_id' => $this->tenant->id,
-    ]);
-
-    $this->get('/cms/collection/' . $collection->id)
-        ->assertSuccessful()
-        ->assertSeeLivewire('collection-detail');
-})->skip('collection-detail is file-based (stdClass), not model-based');
 
 it('loads form-request-detail via direct route', function (): void {
     $formRequest = FormRequest::factory()->create([

@@ -15,8 +15,6 @@ Route::prefix('cms')
         Route::livewire('global-parameter/{modelId}', 'global-parameter-detail')->name('global-parameter.detail');
 
         Route::livewire('/collections', 'collection-entries-list')->name('collections');
-        Route::livewire('/collection/{modelId}', 'collection-detail')->name('collection.detail');
-        Route::livewire('/collection-files', 'collections-list')->name('collection-files');
         Route::livewire('/form-requests', 'form-requests-list')->name('form-requests');
         Route::livewire('/form-request/{modelId}', 'form-request-detail')->name('form-request.detail');
         Route::livewire('/form-types', 'form-types-list')->name('form-types');
