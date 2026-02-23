@@ -32,6 +32,7 @@ class WebsiteServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/../../routes/website-routes.php');
 
         Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/livewire');
+        Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/components');
 
         // Register route loading after all providers have been registered
         $this->app->booted(function (): void {
