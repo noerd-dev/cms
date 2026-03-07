@@ -90,4 +90,3 @@ it('collection entries route shows correct collection data', function (): void {
         $response->assertDontSee('Collection-Datei wurde erfolgreich gelöscht');
     }
 });
-

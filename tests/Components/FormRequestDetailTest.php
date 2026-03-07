@@ -138,10 +138,8 @@ it('sends notification email only to the notification address', function (): voi
         ->test('form-request-detail', ['modelId' => $formRequest->id])
         ->call('resendNotificationEmail');
 
-    Mail::assertSent(FormConfirmation::class, function (FormConfirmation $mail) {
-        return $mail->hasTo('admin@example.com')
-            && ! $mail->hasTo('customer@example.com');
-    });
+    Mail::assertSent(FormConfirmation::class, fn(FormConfirmation $mail) => $mail->hasTo('admin@example.com')
+            && ! $mail->hasTo('customer@example.com'));
 
     Mail::assertSent(FormConfirmation::class, 1);
 });
