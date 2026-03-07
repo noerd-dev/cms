@@ -82,11 +82,11 @@ trait HandlesPageElements
 
         $bladeMatches = array_merge(
             glob(base_path('app-modules/*/resources/views/components/elements/' . $fileBase . '.blade.php')) ?: [],
-            glob(base_path('resources/views/components/elements/' . $fileBase . '.blade.php')) ?: []
+            glob(base_path('resources/views/components/elements/' . $fileBase . '.blade.php')) ?: [],
         );
         $ymlMatches = array_merge(
             glob(base_path('app-modules/*/resources/views/components/elements/' . $fileBase . '.yml')) ?: [],
-            glob(base_path('resources/views/components/elements/' . $fileBase . '.yml')) ?: []
+            glob(base_path('resources/views/components/elements/' . $fileBase . '.yml')) ?: [],
         );
 
         return ! empty($bladeMatches) && ! empty($ymlMatches);
