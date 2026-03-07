@@ -77,7 +77,7 @@ class FieldHelper
 
         foreach ($flattenedFields as $elementField) {
             // Strip common prefixes (model., page., etc.) to get the base key
-            $baseKey = preg_replace('/^(model|page)\./', '', $elementField['name']);
+            $baseKey = preg_replace('/^\w+\./', '', $elementField['name']);
 
             if (in_array($elementField['type'], ['translatableText', 'translatableRichText'])) {
                 foreach (['de', 'en'] as $lang) {
