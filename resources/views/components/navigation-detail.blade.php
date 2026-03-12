@@ -57,11 +57,7 @@ new class extends Component {
 
         $navigation = Navigation::updateOrCreate(['id' => $this->modelId], $data);
 
-        $this->showSuccessIndicator = true;
-
-        if ($navigation->wasRecentlyCreated) {
-            $this->modelId = $navigation->id;
-        }
+        $this->storeProcess($navigation);
     }
 
     public function delete(): void

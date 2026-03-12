@@ -199,12 +199,12 @@ new class extends Component
                 $fieldKey = preg_replace('/^(model\.|pageData\.)/', '', $fieldName);
                 $label = $field['label'] ?? ucfirst($fieldKey);
 
-                // Calculate width based on field type and position
+                // Calculate width weight based on field type
                 $width = match ($field['type'] ?? 'text') {
-                    'image' => 15,
-                    'translatableText' => 25,
-                    'translatableTextarea' => 30,
-                    default => 20,
+                    'image' => 0.8,
+                    'translatableText' => 1.2,
+                    'translatableTextarea' => 1.5,
+                    default => 1,
                 };
 
                 $columns[] = [
@@ -216,8 +216,8 @@ new class extends Component
         }
 
         // Add standard columns
-        $columns[] = ['field' => 'sort', 'label' => 'Sortierung', 'width' => 10];
-        $columns[] = ['field' => 'updated_at', 'label' => __('Last Modified'), 'width' => 15];
+        $columns[] = ['field' => 'sort', 'label' => 'Sortierung', 'width' => 0.5];
+        $columns[] = ['field' => 'updated_at', 'label' => __('Last Modified')];
 
         return [
             'listConfig' => $this->buildList($rows, [

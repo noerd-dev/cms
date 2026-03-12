@@ -58,11 +58,7 @@ new class extends Component {
         $globalParameter = GlobalParameter::updateOrCreate(['id' => $this->modelId], $data);
 
         $this->dispatch('storeElements');
-        $this->showSuccessIndicator = true;
-
-        if ($globalParameter->wasRecentlyCreated) {
-            $this->modelId = $globalParameter->id;
-        }
+        $this->storeProcess($globalParameter);
     }
 
     public function delete(): void
