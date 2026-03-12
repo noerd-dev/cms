@@ -390,11 +390,7 @@ new class extends Component
 
         $this->dispatch('storeElements');
 
-        $this->showSuccessIndicator = true;
-
-        if ($page->wasRecentlyCreated) {
-            $this->modelId = $page->id;
-        }
+        $this->storeProcess($page);
     }
 
     public function delete(): void
@@ -504,11 +500,7 @@ new class extends Component
 
         $page = Page::updateOrCreate(['id' => $this->modelId], $data);
 
-        $this->showSuccessIndicator = true;
-
-        if ($page->wasRecentlyCreated) {
-            $this->modelId = $page->id;
-        }
+        $this->storeProcess($page);
 
         $this->dispatch('storeElements');
     }

@@ -6,7 +6,5 @@ redirectAction: ''
 columns:
   - field: key
     label: noerd_key
-    width: 30
   - field: value
     label: Value
-    width: 50

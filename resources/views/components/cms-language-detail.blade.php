@@ -29,11 +29,7 @@ new class extends Component {
         // Model events handle is_default consistency
         $cmsLanguage = CmsLanguage::updateOrCreate(['id' => $this->modelId], $data);
 
-        $this->showSuccessIndicator = true;
-
-        if ($cmsLanguage->wasRecentlyCreated) {
-            $this->modelId = $cmsLanguage->id;
-        }
+        $this->storeProcess($cmsLanguage);
     }
 
     public function delete(): void
