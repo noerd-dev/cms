@@ -36,6 +36,16 @@ class Navigation extends Model
         return $this->belongsTo(Collection::class);
     }
 
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order');
+    }
+
     protected static function newFactory()
     {
         return NavigationFactory::new();

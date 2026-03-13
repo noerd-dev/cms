@@ -62,7 +62,7 @@ new class extends Component {
             ->filter(function ($collection) {
                 $collectionFields = CollectionHelper::getCollectionFields(strtolower($collection->collection_key));
 
-                return ! ($collectionFields['hasPage'] ?? true);
+                return $collectionFields === null || ! ($collectionFields['hasPage'] ?? true);
             })
             ->pluck('id')
             ->toArray();

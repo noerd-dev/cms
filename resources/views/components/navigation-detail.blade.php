@@ -27,11 +27,37 @@ new class extends Component {
             $navigation = Navigation::find($this->modelId) ?? new Navigation;
         }
 
+        $this->navigationData = FieldHelper::parseComponentToData($this->getComponentName(), $navigation->toArray());
+
         if ($navigation['page_id']) {
-            $this->dispatch('pageSelected', $navigation['page_id']);
+            $this->pageSelected($navigation['page_id']);
+        }
+    }
+
+    public function parentOptions(): array
+    {
+        $tenantId = auth()->user()->selected_tenant_id;
+        $query = Navigation::where('tenant_id', $tenantId)
+            ->whereNull('parent_id');
+
+        if ($this->modelId) {
+            $query->where('id', '!=', $this->modelId);
         }
 
-        $this->navigationData = FieldHelper::parseComponentToData($this->getComponentName(), $navigation->toArray());
+        if (!empty($this->navigationData['navigation_key'])) {
+            $query->where('navigation_key', $this->navigationData['navigation_key']);
+        }
+
+        $selectedLanguage = session('selectedLanguage', 'de');
+        $options = ['' => '-- Kein übergeordneter Punkt --'];
+
+        foreach ($query->orderBy('sort_order')->get() as $item) {
+            $decoded = is_string($item->name) ? json_decode($item->name, true) : ($item->name ?? []);
+            $label = $decoded[$selectedLanguage] ?? (is_array($decoded) ? (array_values($decoded)[0] ?? '') : $item->name);
+            $options[$item->id] = $label ?: '(ID: ' . $item->id . ')';
+        }
+
+        return $options;
     }
 
     public function store(): void
@@ -39,6 +65,8 @@ new class extends Component {
         $this->validate([
             'navigationData.navigation_key' => ['required', 'string', 'max:255'],
             'navigationData.name' => ['required', 'array'],
+            'navigationData.parent_id' => ['nullable', 'numeric', 'exists:cms_navigations,id'],
+            'navigationData.sort_order' => ['nullable', 'integer', 'min:0'],
             'navigationData.page_id' => ['nullable', 'numeric', 'required_without:navigationData.link'],
             'navigationData.link' => ['nullable', 'string', 'max:2048', 'required_without:navigationData.page_id'],
             'navigationData.new_tab' => ['nullable', 'boolean'],
@@ -54,6 +82,8 @@ new class extends Component {
             $data['page_id'] = null;
         }
         $data['new_tab'] = !empty($data['new_tab']) ? 1 : 0;
+        $data['parent_id'] = !empty($data['parent_id']) ? (int) $data['parent_id'] : null;
+        $data['sort_order'] = (int) ($data['sort_order'] ?? 0);
 
         $navigation = Navigation::updateOrCreate(['id' => $this->modelId], $data);
 
