@@ -14,6 +14,6 @@ new class extends Component {
         {{ $element->title ?? '' }}
     </div>
     <div class="text-left text-lg font-light">
-        <x-noerd::markdown :content="$element->description ?? ''" />
+        <div class="rich-text">{!! $element->description ?? '' !!}</div>
     </div>
 </div>

@@ -10,6 +10,6 @@ new class extends Component {
 }; ?>
 
 <div class="grid grid-cols-2 text-lg lg:grid-cols-4 gap-10 py-4 pt-2">
-    <div><x-noerd::markdown :content="$element->text1 ?? ''" /></div>
-    <div class="text-gray-500 lg:col-span-3"><x-noerd::markdown :content="$element->text2 ?? ''" /></div>
+    <div><div class="rich-text">{!! $element->text1 ?? '' !!}</div></div>
+    <div class="text-gray-500 lg:col-span-3"><div class="rich-text">{!! $element->text2 ?? '' !!}</div></div>
 </div>

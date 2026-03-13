@@ -38,7 +38,7 @@ new class extends Component {
 
     </div>
     <div class="text-left text-lg font-light">
-        <x-noerd::markdown :content="$element->description ?? ''" />
+        <div class="rich-text">{!! $element->description ?? '' !!}</div>
     </div>
     <style>
         .auswall-kopf a {
