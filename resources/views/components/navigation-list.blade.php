@@ -43,17 +43,32 @@ new class extends Component
 
     public function with(): array
     {
-        $rows = Navigation::paginate(self::PAGINATION);
+        $rows = Navigation::orderBy('parent_id')->orderBy('sort_order')->paginate(self::PAGINATION);
 
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage')
             ?? $this->getDefaultLanguageCode();
 
+        // Collect parent names for display
+        $parentIds = $rows->pluck('parent_id')->filter()->unique()->toArray();
+        $parents = $parentIds ? Navigation::whereIn('id', $parentIds)->get()->keyBy('id') : collect();
+
         // decode name json for table output per selected language
         foreach ($rows as $row) {
             $oldName = $row->name;
             $decoded = is_string($row->name) ? json_decode($row->name, true) : ($row->name ?? []);
-            $row->name = $decoded[$selectedLanguage] ?? array_values($decoded)[0] ?? $oldName;
+            $displayName = $decoded[$selectedLanguage] ?? array_values($decoded)[0] ?? $oldName;
+
+            if ($row->parent_id && $parents->has($row->parent_id)) {
+                $parentDecoded = is_string($parents[$row->parent_id]->name)
+                    ? json_decode($parents[$row->parent_id]->name, true)
+                    : ($parents[$row->parent_id]->name ?? []);
+                $parentName = $parentDecoded[$selectedLanguage] ?? (is_array($parentDecoded) ? array_values($parentDecoded)[0] ?? '' : '');
+                $displayName = '↳ ' . $displayName;
+                $row->parent_name = $parentName;
+            }
+
+            $row->name = $displayName;
         }
 
         return [
