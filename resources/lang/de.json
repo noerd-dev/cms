@@ -142,7 +142,25 @@
     "cookie_banner_description": "Wir verwenden Cookies, um Ihre Erfahrung zu verbessern. Einige Cookies sind notwendig, andere helfen uns die Website zu analysieren. Weitere Informationen in unserer",
     "cookie_banner_privacy_link": "Datenschutzerklärung",
     "cookie_banner_accept_all": "Alle akzeptieren",
-    "cookie_banner_necessary_only": "Nur notwendige"
+    "cookie_banner_necessary_only": "Nur notwendige",
+
+    "cms_label_collection_definitions": "Collection-Definitionen",
+    "cms_label_collection_definition": "Collection-Definition",
+    "cms_label_new_collection_definition": "Neue Collection",
+    "cms_nav_collection_definitions": "Collections verwalten",
+    "cms_label_title_singular": "Titel (Singular)",
+    "cms_label_title_plural": "Titel (Plural)",
+    "cms_label_button_label": "Button-Bezeichnung",
+    "cms_label_has_page": "Hat Seite",
+    "cms_label_fields": "Felder",
+    "cms_label_add_field": "Feld hinzufügen",
+    "cms_label_field_name": "Feldname",
+    "cms_label_field_label": "Bezeichnung",
+    "cms_label_field_type": "Typ",
+    "cms_label_colspan": "Breite",
+    "cms_label_field_count": "Felder",
+    "cms_label_no_fields": "Noch keine Felder definiert.",
+    "cms_label_description": "Beschreibung"
 }
 
 
