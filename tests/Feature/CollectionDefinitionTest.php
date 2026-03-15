@@ -12,9 +12,25 @@ function collectionsPath(): string
     return base_path('app-configs/cms/collections');
 }
 
+function createContactsFixture(): void
+{
+    $path = collectionsPath() . '/contacts.yml';
+    file_put_contents($path, Yaml::dump([
+        'title' => 'Kontakt',
+        'titleList' => 'Kontakte',
+        'key' => 'CONTACTS',
+        'buttonList' => 'cms_new_contact',
+        'description' => '',
+        'hasPage' => true,
+        'fields' => [
+            ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText', 'colspan' => 6],
+        ],
+    ]));
+}
+
 afterEach(function (): void {
     // Clean up test-created YAML files
-    foreach (['test-definition', 'test-definition-2', 'test-store', 'test-duplicate', 'film', 'my-collection'] as $name) {
+    foreach (['test-definition', 'test-definition-2', 'test-store', 'test-duplicate', 'film', 'my-collection', 'contacts'] as $name) {
         $path = collectionsPath() . '/' . $name . '.yml';
         if (file_exists($path)) {
             unlink($path);
@@ -37,6 +53,8 @@ it('dispatches modal when listAction is called', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
+    createContactsFixture();
+
     Livewire::test('collection-definitions-list')
         ->call('listAction', 'contacts')
         ->assertDispatched('noerdModal', modalComponent: 'collection-definition-detail');
@@ -45,6 +63,8 @@ it('dispatches modal when listAction is called', function (): void {
 it('loads existing collection definition in detail component', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
+
+    createContactsFixture();
 
     Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
         ->assertSet('isEditing', true)
@@ -72,6 +92,8 @@ it('loads pageLayout with metadata fields from YAML config', function (): void {
 it('sets filename field to readonly when editing', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
+
+    createContactsFixture();
 
     $component = Livewire::test('collection-definition-detail', ['modelId' => 'contacts']);
 
