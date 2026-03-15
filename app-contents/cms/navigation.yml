@@ -19,6 +19,11 @@
           heroicon: list-bullet
     - title: cms_nav_collections
       dynamic: collections
+    - title: cms_nav_collection_definitions
+      navigations:
+        - title: cms_nav_collection_definitions
+          route: cms.collection-definitions
+          heroicon: rectangle-stack
     - title: cms_nav_settings
       navigations:
         - title: noerd_nav_settings

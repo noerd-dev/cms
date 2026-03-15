@@ -98,7 +98,25 @@
     "cms_form_type_description": "Email configuration for form types",
     "cms_send_email_notification": "Send email notification",
     "cms_email_subject": "Email subject",
-    "cms_notification_email": "Notification email (optional)"
+    "cms_notification_email": "Notification email (optional)",
+
+    "cms_label_collection_definitions": "Collection Definitions",
+    "cms_label_collection_definition": "Collection Definition",
+    "cms_label_new_collection_definition": "New Collection",
+    "cms_nav_collection_definitions": "Manage Collections",
+    "cms_label_title_singular": "Title (Singular)",
+    "cms_label_title_plural": "Title (Plural)",
+    "cms_label_button_label": "Button Label",
+    "cms_label_has_page": "Has Page",
+    "cms_label_fields": "Fields",
+    "cms_label_add_field": "Add Field",
+    "cms_label_field_name": "Field Name",
+    "cms_label_field_label": "Label",
+    "cms_label_field_type": "Type",
+    "cms_label_colspan": "Width",
+    "cms_label_field_count": "Fields",
+    "cms_label_no_fields": "No fields defined yet.",
+    "cms_label_description": "Description"
 }
 
 
