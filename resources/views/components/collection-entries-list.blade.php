@@ -92,7 +92,7 @@ new class extends Component
             return [
                 'listConfig' => $this->buildList(collect([]), [
                     'title' => 'Collections',
-                    'newLabel' => 'Neuer Eintrag',
+                    'actions' => [['label' => 'Neuer Eintrag', 'action' => 'listAction']],
                     'disableSearch' => false,
                     'columns' => [],
                 ]),
@@ -188,7 +188,7 @@ new class extends Component
         });
 
         $collectionTitle = $this->collectionLayout['title'] ?? ucfirst($this->collectionKey);
-        $newLabel = $this->collectionLayout['buttonList'] ?? 'Neuer Eintrag';
+        $actionLabel = $this->collectionLayout['buttonList'] ?? 'Neuer Eintrag';
 
         // Generate dynamic columns from YAML fields
         $columns = [];
@@ -222,7 +222,7 @@ new class extends Component
         return [
             'listConfig' => $this->buildList($rows, [
                 'title' => $collectionTitle,
-                'newLabel' => $newLabel,
+                'actions' => [['label' => $actionLabel, 'action' => 'listAction']],
                 'disableSearch' => false,
                 'columns' => $columns,
             ]),

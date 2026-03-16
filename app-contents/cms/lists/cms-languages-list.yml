@@ -1,6 +1,7 @@
 title: cms_label_languages
-newLabel: cms_label_new_language
-component: cms-language-detail
+actions:
+  - label: cms_label_new_language
+    action: listAction
 disableSearch: false
 columns:
   - field: code

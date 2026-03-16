@@ -1,8 +1,8 @@
 title: Navigation
-newLabel: 'Neuer Navigationspunkt'
-component: navigation-detail
+actions:
+  - label: Neuer Navigationspunkt
+    action: listAction
 disableSearch: false
-redirectAction: ''
 columns:
   - field: name
     label: Name

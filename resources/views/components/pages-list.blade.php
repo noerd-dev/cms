@@ -8,7 +8,6 @@ use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
-use Noerd\Scopes\SearchScope;
 use Noerd\Scopes\TenantScope;
 use Noerd\Traits\NoerdList;
 
@@ -67,9 +66,7 @@ new class extends Component {
             ->pluck('id')
             ->toArray();
 
-        // Disable SearchScope since we need custom JSON search for translatable fields
-        $rows = Page::withoutGlobalScope(SearchScope::class)
-            ->where(function ($query) use ($collectionsWithoutPages) {
+        $rows = Page::where(function ($query) use ($collectionsWithoutPages) {
                 // Show pages that don't belong to any collection
                 $query->whereNull('collection_id')
                     // OR pages that belong to collections with hasPage: true (exclude hasPage: false collections)

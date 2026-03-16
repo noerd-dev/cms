@@ -19,7 +19,7 @@ new class extends Component {
 
     public function with()
     {
-        $rows = FormType::paginate(self::PAGINATION);
+        $rows = $this->listQuery(FormType::class)->paginate(self::PAGINATION);
 
         return [
             'listConfig' => $this->buildList($rows),

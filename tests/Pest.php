@@ -4,7 +4,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Models\Tenant;
 use Noerd\Models\TenantApp;
-use Noerd\Models\User;
+use Noerd\Models\NoerdUser;
 use Tests\TestCase;
 
 /*
@@ -35,7 +35,7 @@ uses(TestCase::class, RefreshDatabase::class)
 
         $tenant->tenantApps()->attach($cmsApp->id);
 
-        $this->user = User::factory()->create();
+        $this->user = NoerdUser::factory()->create();
         $this->user->tenants()->attach($tenant->id);
         TenantHelper::setSelectedTenantId($tenant->id);
         $this->tenant = $tenant;

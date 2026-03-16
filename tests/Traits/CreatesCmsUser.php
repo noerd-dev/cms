@@ -9,7 +9,7 @@ use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Models\Tenant;
 use Noerd\Models\TenantApp;
-use Noerd\Models\User;
+use Noerd\Models\NoerdUser;
 
 trait CreatesCmsUser
 {
@@ -34,7 +34,7 @@ trait CreatesCmsUser
         // Ensure default English language exists for this tenant
         CmsLanguage::ensureDefaultLanguageForTenant($tenant->id);
 
-        $user = User::factory()->create();
+        $user = NoerdUser::factory()->create();
         $user->tenants()->attach($tenant->id);
 
         TenantHelper::setSelectedTenantId($tenant->id);

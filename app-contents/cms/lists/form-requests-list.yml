@@ -1,8 +1,5 @@
 title: 'Form Requests'
-newLabel: ''
-component: from-request-component
 disableSearch: false
-redirectAction: ''
 columns:
   - field: form
     label: Form

@@ -6,13 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Database\Factories\NavigationFactory;
 use Noerd\Traits\BelongsToTenant;
-use Noerd\Traits\HasListScopes;
 
 class Navigation extends Model
 {
     use BelongsToTenant;
     use HasFactory;
-    use HasListScopes;
 
     public $casts = [
         'new_tab' => 'boolean',
@@ -21,10 +19,6 @@ class Navigation extends Model
     protected $guarded = [];
 
     protected $table = 'cms_navigations';
-
-    protected array $searchable = [
-        'navigation_key',
-    ];
 
     public function page()
     {

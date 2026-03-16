@@ -5,7 +5,7 @@ namespace Noerd\Cms\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Noerd\Models\Tenant;
-use Noerd\Models\User;
+use Noerd\Models\NoerdUser;
 use Symfony\Component\HttpFoundation\Response;
 
 class CmsApiAuth
@@ -37,7 +37,7 @@ class CmsApiAuth
             return response()->json(['message' => 'Unauthorized: missing API token'], 401);
         }
 
-        $user = User::where('api_token', $token)->first();
+        $user = NoerdUser::where('api_token', $token)->first();
         if (! $user || ! $user->selected_tenant_id) {
             return response()->json(['message' => 'Unauthorized: invalid API token'], 401);
         }

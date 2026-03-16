@@ -7,19 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Database\Factories\PageFactory;
 use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Traits\BelongsToTenant;
-use Noerd\Traits\HasListScopes;
 
 class Page extends Model
 {
     use BelongsToTenant;
     use HasFactory;
-    use HasListScopes;
 
     protected $guarded = [];
-
-    protected array $searchable = [
-        'name',
-    ];
 
     protected $casts = [
         'meta_noindex' => 'boolean',

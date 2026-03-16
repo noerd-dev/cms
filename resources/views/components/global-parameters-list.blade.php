@@ -43,7 +43,7 @@ new class extends Component
 
     public function with()
     {
-        $rows = GlobalParameter::paginate(self::PAGINATION);
+        $rows = $this->listQuery(GlobalParameter::class)->paginate(self::PAGINATION);
 
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage')

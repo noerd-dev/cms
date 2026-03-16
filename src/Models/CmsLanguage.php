@@ -6,22 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Database\Factories\CmsLanguageFactory;
 use Noerd\Traits\BelongsToTenant;
-use Noerd\Traits\HasListScopes;
 
 class CmsLanguage extends Model
 {
     use BelongsToTenant;
     use HasFactory;
-    use HasListScopes;
 
     protected $table = 'cms_languages';
 
     protected $guarded = [];
-
-    protected array $searchable = [
-        'name',
-        'code',
-    ];
 
     protected $casts = [
         'is_active' => 'boolean',
