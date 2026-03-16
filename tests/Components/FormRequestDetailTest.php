@@ -9,7 +9,7 @@ use Noerd\Cms\Models\FormType;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Models\Tenant;
 use Noerd\Models\TenantApp;
-use Noerd\Models\User;
+use Noerd\Models\NoerdUser;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
@@ -27,7 +27,7 @@ beforeEach(function (): void {
     );
     $this->tenant->tenantApps()->attach($cmsApp->id);
 
-    $this->user = User::factory()->create();
+    $this->user = NoerdUser::factory()->create();
     $this->user->tenants()->attach($this->tenant->id);
     TenantHelper::setSelectedTenantId($this->tenant->id);
     TenantHelper::setSelectedApp('CMS');

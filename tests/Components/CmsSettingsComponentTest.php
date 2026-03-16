@@ -8,7 +8,7 @@ use Noerd\Helpers\TenantHelper;
 use Noerd\Models\Profile;
 use Noerd\Models\Tenant;
 use Noerd\Models\TenantApp;
-use Noerd\Models\User;
+use Noerd\Models\NoerdUser;
 
 uses(Tests\TestCase::class);
 uses(RefreshDatabase::class);
@@ -32,7 +32,7 @@ it('loads and displays page options with localized names and saves selection', f
         'tenant_id' => $tenant->id,
     ]);
 
-    $user = User::factory()->create();
+    $user = NoerdUser::factory()->create();
     $user->tenants()->attach($tenant->id, ['profile_id' => $profile->id]);
     TenantHelper::setSelectedTenantId($tenant->id);
 

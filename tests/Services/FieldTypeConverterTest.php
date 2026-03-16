@@ -8,7 +8,7 @@ use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Models\Tenant;
 use Noerd\Models\TenantApp;
-use Noerd\Models\User;
+use Noerd\Models\NoerdUser;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
@@ -29,7 +29,7 @@ describe('FieldTypeConverter', function (): void {
 
         $tenant->tenantApps()->attach($cmsApp->id);
 
-        $user = User::factory()->create();
+        $user = NoerdUser::factory()->create();
         $user->tenants()->attach($tenant->id);
         TenantHelper::setSelectedTenantId($tenant->id);
 

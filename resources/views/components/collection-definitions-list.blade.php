@@ -73,7 +73,7 @@ new class extends Component
         return [
             'listConfig' => $this->buildList($rows, [
                 'title' => 'cms_label_collection_definitions',
-                'newLabel' => 'cms_label_new_collection_definition',
+                'actions' => [['label' => 'cms_label_new_collection_definition', 'action' => 'listAction']],
                 'disableSearch' => false,
                 'columns' => [
                     ['field' => 'titleList', 'label' => __('cms_label_title_plural')],

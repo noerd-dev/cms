@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\File;
 use Noerd\Cms\Database\Factories\FormTypeFactory;
 use Noerd\Models\Tenant;
 use Noerd\Traits\BelongsToTenant;
-use Noerd\Traits\HasListScopes;
 use Noerd\Website\Models\FormRequest;
 use Symfony\Component\Yaml\Yaml;
 
@@ -19,14 +18,8 @@ class FormType extends Model
 {
     use BelongsToTenant;
     use HasFactory;
-    use HasListScopes;
 
     protected $table = 'form_types';
-
-    protected array $searchable = [
-        'title',
-        'key',
-    ];
 
     protected $guarded = [];
 

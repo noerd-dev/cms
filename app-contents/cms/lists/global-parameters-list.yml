@@ -1,8 +1,8 @@
 title: noerd_global_parameters
-newLabel: noerd_new_parameter
-component: global-parameter-component
+actions:
+  - label: noerd_new_parameter
+    action: listAction
 disableSearch: false
-redirectAction: ''
 columns:
   - field: key
     label: noerd_key

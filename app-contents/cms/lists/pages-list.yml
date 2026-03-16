@@ -1,8 +1,8 @@
 title: cms_pages
-newLabel: cms_new_page
-component: page-detail
+actions:
+  - label: cms_new_page
+    action: listAction
 disableSearch: false
-redirectAction: ''
 columns:
   - field: name
     label: Name
