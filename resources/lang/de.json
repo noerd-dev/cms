@@ -160,7 +160,22 @@
     "cms_label_colspan": "Breite",
     "cms_label_field_count": "Felder",
     "cms_label_no_fields": "Noch keine Felder definiert.",
-    "cms_label_description": "Beschreibung"
+    "cms_label_description": "Beschreibung",
+
+    "cms_nav_blog": "Blog",
+    "cms_nav_articles": "Artikel",
+    "cms_nav_authors": "Autoren",
+
+    "cms_label_articles": "Artikel",
+    "cms_label_article": "Artikel",
+    "cms_label_new_article": "Neuer Artikel",
+    "cms_label_authors": "Autoren",
+    "cms_label_author": "Autor",
+    "cms_label_new_author": "Neuer Autor",
+    "cms_label_title": "Titel",
+    "cms_label_bio": "Biografie",
+    "cms_label_body": "Inhalt",
+    "cms_label_publication_date": "Veröffentlichungsdatum"
 }
 
 
