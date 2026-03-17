@@ -17,6 +17,16 @@
         - title: cms_nav_form_requests
           route: cms.form-requests
           heroicon: list-bullet
+    - title: cms_nav_blog
+      navigations:
+        - title: cms_nav_articles
+          route: cms.articles
+          heroicon: newspaper
+        - title: cms_nav_authors
+          route: cms.authors
+          heroicon: user-group
+    - title: cms_nav_page_collections
+      dynamic: page-collections
     - title: cms_nav_collections
       dynamic: collections
     - title: cms_nav_collection_definitions
