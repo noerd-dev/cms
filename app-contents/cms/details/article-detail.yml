@@ -1,0 +1,28 @@
+title: cms_label_article
+fields:
+  - name: articleData.title
+    label: cms_label_title
+    type: translatableText
+    colspan: 5
+  - name: articleData.slug
+    label: Slug
+    type: translatableText
+    colspan: 5
+  - name: articleData.is_active
+    label: cms_label_is_active
+    type: checkbox
+    colspan: 2
+  - name: articleData.author_id
+    label: cms_label_author
+    type: relation
+    relationField: relationTitles.author_id
+    modalComponent: authors-list
+    colspan: 6
+  - name: articleData.publication_date
+    label: cms_label_publication_date
+    type: date
+    colspan: 6
+  - name: articleData.body
+    label: cms_label_body
+    type: textarea
+    colspan: 12
