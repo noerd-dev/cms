@@ -116,7 +116,22 @@
     "cms_label_colspan": "Width",
     "cms_label_field_count": "Fields",
     "cms_label_no_fields": "No fields defined yet.",
-    "cms_label_description": "Description"
+    "cms_label_description": "Description",
+
+    "cms_nav_blog": "Blog",
+    "cms_nav_articles": "Articles",
+    "cms_nav_authors": "Authors",
+
+    "cms_label_articles": "Articles",
+    "cms_label_article": "Article",
+    "cms_label_new_article": "New Article",
+    "cms_label_authors": "Authors",
+    "cms_label_author": "Author",
+    "cms_label_new_author": "New Author",
+    "cms_label_title": "Title",
+    "cms_label_bio": "Biography",
+    "cms_label_body": "Content",
+    "cms_label_publication_date": "Publication Date"
 }
 
 
