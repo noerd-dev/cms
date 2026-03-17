@@ -2,7 +2,6 @@
 
 use Livewire\Component;
 use Noerd\Website\Traits\NoerdElement;
-use function Livewire\Volt\{state};
 
 new class extends Component {
     use NoerdElement;
