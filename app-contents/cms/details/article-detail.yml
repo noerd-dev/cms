@@ -28,5 +28,5 @@ fields:
     colspan: 6
   - name: articleData.body
     label: cms_label_body
-    type: textarea
+    type: richText
     colspan: 12
