@@ -27,6 +27,7 @@ class ArticleFactory extends Factory
                 'en' => '/en/' . str($enTitle)->slug()->toString(),
             ],
             'body' => fake()->text(500),
+            'featured_image' => null,
             'publication_date' => fake()->date(),
             'is_active' => true,
         ];

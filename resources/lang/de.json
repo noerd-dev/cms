@@ -175,7 +175,8 @@
     "cms_label_title": "Titel",
     "cms_label_bio": "Biografie",
     "cms_label_body": "Inhalt",
-    "cms_label_publication_date": "Veröffentlichungsdatum"
+    "cms_label_publication_date": "Veröffentlichungsdatum",
+    "cms_label_featured_image": "Titelbild"
 }
 
 

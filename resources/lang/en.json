@@ -131,7 +131,8 @@
     "cms_label_title": "Title",
     "cms_label_bio": "Biography",
     "cms_label_body": "Content",
-    "cms_label_publication_date": "Publication Date"
+    "cms_label_publication_date": "Publication Date",
+    "cms_label_featured_image": "Featured Image"
 }
 
 

@@ -12,6 +12,10 @@ fields:
     label: cms_label_is_active
     type: checkbox
     colspan: 2
+  - name: articleData.featured_image
+    label: cms_label_featured_image
+    type: image
+    colspan: 12
   - name: articleData.author_id
     label: cms_label_author
     type: relation

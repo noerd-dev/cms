@@ -125,6 +125,31 @@ it('filters published articles with scope', function (): void {
     expect($published)->toHaveCount(1);
 });
 
+it('can save and load a featured image', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    $article = Article::factory()->create([
+        'tenant_id' => $tenant->id,
+        'featured_image' => '42',
+    ]);
+
+    $article->refresh();
+
+    expect($article->featured_image)->toBe('42');
+});
+
+it('defaults featured image to null', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    $article = Article::factory()->create(['tenant_id' => $tenant->id]);
+
+    $article->refresh();
+
+    expect($article->featured_image)->toBeNull();
+});
+
 it('includes articles published today in scope', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
