@@ -22,6 +22,7 @@ class Page extends Model
         'slug' => 'array',
         'meta_title' => 'array',
         'meta_description' => 'array',
+        'additional_fields' => 'array',
     ];
 
     protected $attributes = [

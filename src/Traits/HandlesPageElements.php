@@ -110,7 +110,11 @@ trait HandlesPageElements
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 if ($this->isTranslatableArray($value)) {
-                    $localized[$key] = $value[$language] ?? $value['de'] ?? (is_array($value) ? reset($value) : '');
+                    $resolved = $value[$language] ?? $value['de'] ?? reset($value);
+                    if (is_array($resolved)) {
+                        $resolved = $resolved[$language] ?? $resolved['de'] ?? reset($resolved);
+                    }
+                    $localized[$key] = is_string($resolved) ? $resolved : '';
                 } else {
                     $localized[$key] = $this->localizeArray($value, $language);
                 }
