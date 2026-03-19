@@ -14,8 +14,6 @@ new class extends Component
 
     public const DETAIL_CLASS = Author::class;
 
-    public array $authorData = [];
-
     public function mount(): void
     {
         $this->initDetail();
@@ -25,16 +23,16 @@ new class extends Component
             $author = Author::find($this->modelId) ?? new Author;
         }
 
-        $this->authorData = $author->toArray();
+        $this->detailData = $author->toArray();
     }
 
     public function store(): void
     {
         $this->validate([
-            'authorData.name' => ['required', 'string', 'max:255'],
+            'detailData.name' => ['required', 'string', 'max:255'],
         ]);
 
-        $data = $this->authorData;
+        $data = $this->detailData;
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
 
         $author = Author::updateOrCreate(

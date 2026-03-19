@@ -7,7 +7,7 @@ new class extends Component {
 
     public bool $showSuccessIndicator = false;
 
-    public array $cmsSettingsData = [
+    public array $detailData = [
         'homepage_page_id' => null,
         'google_analytics_id' => null,
         'show_cookie_banner' => false,
@@ -17,17 +17,17 @@ new class extends Component {
     {
         $tenantId = auth()->user()?->selected_tenant_id;
         $settings = CmsSetting::query()->firstOrCreate(['tenant_id' => $tenantId]);
-        $this->cmsSettingsData['homepage_page_id'] = $settings->homepage_page_id;
-        $this->cmsSettingsData['google_analytics_id'] = $settings->google_analytics_id;
-        $this->cmsSettingsData['show_cookie_banner'] = $settings->show_cookie_banner ?? false;
+        $this->detailData['homepage_page_id'] = $settings->homepage_page_id;
+        $this->detailData['google_analytics_id'] = $settings->google_analytics_id;
+        $this->detailData['show_cookie_banner'] = $settings->show_cookie_banner ?? false;
     }
 
     public function store(): void
     {
         $this->validate([
-            'cmsSettingsData.homepage_page_id' => ['nullable', 'exists:pages,id'],
-            'cmsSettingsData.google_analytics_id' => ['nullable', 'string', 'max:50'],
-            'cmsSettingsData.show_cookie_banner' => ['boolean'],
+            'detailData.homepage_page_id' => ['nullable', 'exists:pages,id'],
+            'detailData.google_analytics_id' => ['nullable', 'string', 'max:50'],
+            'detailData.show_cookie_banner' => ['boolean'],
         ]);
 
         $tenantId = auth()->user()->selected_tenant_id;
@@ -37,9 +37,9 @@ new class extends Component {
             ['tenant_id' => $tenantId],
             [
                 'tenant_id' => $tenantId,
-                'homepage_page_id' => $this->cmsSettingsData['homepage_page_id'],
-                'google_analytics_id' => $this->cmsSettingsData['google_analytics_id'],
-                'show_cookie_banner' => $this->cmsSettingsData['show_cookie_banner'],
+                'homepage_page_id' => $this->detailData['homepage_page_id'],
+                'google_analytics_id' => $this->detailData['google_analytics_id'],
+                'show_cookie_banner' => $this->detailData['show_cookie_banner'],
             ]
         );
 
@@ -84,7 +84,7 @@ new class extends Component {
 
     <div class="pt-4">
         <x-noerd::forms.input-select
-            name="cmsSettingsData.homepage_page_id"
+            name="detailData.homepage_page_id"
             label="{{ __('Homepage') }}"
             :options="array_merge(
                 [['value' => '', 'label' => '- ' . __('None selected') . ' -']],
@@ -95,17 +95,17 @@ new class extends Component {
 
     <div class="pt-4">
         <x-noerd::forms.checkbox
-            name="cmsSettingsData.show_cookie_banner"
+            name="detailData.show_cookie_banner"
             label="{{ __('cms_show_cookie_banner') }}"
             live
         />
         <p class="text-sm text-gray-500 mt-1">{{ __('cms_cookie_banner_required') }}</p>
     </div>
 
-    @if($cmsSettingsData['show_cookie_banner'] ?? false)
+    @if($detailData['show_cookie_banner'] ?? false)
         <div class="pt-4">
             <x-noerd::forms.input
-                name="cmsSettingsData.google_analytics_id"
+                name="detailData.google_analytics_id"
                 label="{{ __('cms_google_analytics') }}"
             />
             <p class="text-sm text-gray-500 mt-1">{{ __('cms_google_analytics_hint') }}</p>

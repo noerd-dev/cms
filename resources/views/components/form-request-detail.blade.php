@@ -19,8 +19,6 @@ new class extends Component {
 
     public const DETAIL_CLASS = FormRequest::class;
 
-    public array $formRequestData = [];
-
     public function mount(): void
     {
         $this->initDetail();
@@ -31,7 +29,7 @@ new class extends Component {
         }
 
         // Prepare view model
-        $this->formRequestData = [
+        $this->detailData = [
             'id' => $formRequest->id,
             'tenant_id' => $formRequest->tenant_id,
             'form_type_id' => $formRequest->form_type_id,
@@ -44,11 +42,11 @@ new class extends Component {
     #[Computed]
     public function canResendNotification(): bool
     {
-        if (! $this->formRequestData['form_type_id']) {
+        if (! $this->detailData['form_type_id']) {
             return false;
         }
 
-        $formType = FormType::find($this->formRequestData['form_type_id']);
+        $formType = FormType::find($this->detailData['form_type_id']);
 
         if (! $formType) {
             return false;
@@ -98,7 +96,7 @@ new class extends Component {
         }
 
         try {
-            $formType = FormType::find($this->formRequestData['form_type_id']);
+            $formType = FormType::find($this->detailData['form_type_id']);
 
             // Load the Website FormRequest model (has data cast as array for replacePlaceholders)
             $websiteFormRequest = \Noerd\Website\Models\FormRequest::find($this->modelId);
@@ -157,19 +155,19 @@ new class extends Component {
 
 <x-noerd::page :disableModal="$disableModal">
     <x-slot:header>
-        <x-noerd::modal-title>{{ __('Form Request') }} #{{$formRequestData['id'] ?? ''}}</x-noerd::modal-title>
+        <x-noerd::modal-title>{{ __('Form Request') }} #{{$detailData['id'] ?? ''}}</x-noerd::modal-title>
     </x-slot:header>
 
     <div class="p-4 border border-b-gray-200 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-gray-950/[2.5%] after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-gray-950/5">
         <div class="text-sm text-gray-600 mb-4">
             <div><strong>{{ __('Created') }}:</strong>
-                {{\Carbon\Carbon::parse($formRequestData['created_at'])->format('d.m.Y H:i')}}
+                {{\Carbon\Carbon::parse($detailData['created_at'])->format('d.m.Y H:i')}}
             </div>
         </div>
 
         <div class="bg-white rounded border p-4">
             <div class="font-semibold mb-2">{{ __('Data') }}</div>
-            @php($data = $formRequestData['data'] ?? [])
+            @php($data = $detailData['data'] ?? [])
             @if(is_array($data))
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     @foreach($data as $key => $value)

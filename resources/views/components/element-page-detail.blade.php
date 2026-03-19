@@ -19,7 +19,6 @@ new class extends Component {
     public $modelId = null; // Override trait's #[Url] - child receives ID from parent
 
     public array $elementLayout;
-    public $model;
     public ElementPage $elementPage;
     public Page $page;
     public array $images = [];
@@ -38,14 +37,14 @@ new class extends Component {
 
         $this->elementLayout = FieldHelper::getElementFields($elementPage->element_key) ?? [];
 
-        $this->model = FieldHelper::parseElementToData($elementPage->element_key,
-            json_decode($elementPage->data, true));
+        $this->detailData = FieldHelper::parseElementToData($elementPage->element_key,
+            json_decode($elementPage->data, true)) ?? [];
         $this->elementPage = $elementPage;
 
         // Send initial data to a parent component for live preview
         $this->dispatch('updateLiveElementData',
             elementPageId: $this->modelId,
-            data: $this->model
+            data: $this->detailData
         );
     }
 
@@ -63,7 +62,7 @@ new class extends Component {
         if (! $elementPage) {
             return;
         }
-        $elementPage->data = json_encode($this->model);
+        $elementPage->data = json_encode($this->detailData);
         $elementPage->save();
         $this->dispatch('reloadPageComponent');
     }
@@ -71,10 +70,10 @@ new class extends Component {
     public function updated($propertyName, $value): void
     {
         // When any model property changes, dispatch the live data to parent
-        if (str_starts_with($propertyName, 'model.')) {
+        if (str_starts_with($propertyName, 'detailData.')) {
             $this->dispatch('updateLiveElementData',
                 elementPageId: $this->modelId,
-                data: $this->model
+                data: $this->detailData
             );
         }
     }
@@ -95,24 +94,24 @@ new class extends Component {
     {
         foreach ($this->images as $key => $image) {
             $link = $image->storePublicly(path: 'uploads', options: 'public');
-            $this->model[$key] = '/storage/' . $link;
+            $this->detailData[$key] = '/storage/' . $link;
         }
 
         // Notify parent to refresh live preview with updated image paths
         $this->dispatch('updateLiveElementData',
             elementPageId: $this->modelId,
-            data: $this->model
+            data: $this->detailData
         );
     }
 
     public function deleteImage($key)
     {
-        $this->model[$key] = null;
+        $this->detailData[$key] = null;
 
         // Notify parent to refresh live preview after deletion
         $this->dispatch('updateLiveElementData',
             elementPageId: $this->modelId,
-            data: $this->model
+            data: $this->detailData
         );
     }
 
@@ -125,7 +124,7 @@ new class extends Component {
     public function openSelectMediaModal(string $fieldName): void
     {
         $token = uniqid('media_', true);
-        $this->model['__mediaToken'] = $token;
+        $this->detailData['__mediaToken'] = $token;
         $this->dispatch(
             event: 'noerdModal',
             modalComponent: 'media-list',
@@ -136,20 +135,20 @@ new class extends Component {
     #[On('mediaSelected')]
     public function mediaSelected(int $mediaId, ?string $fieldName = 'image', ?string $token = null): void
     {
-        if (($this->model['__mediaToken'] ?? null) !== $token) {
+        if (($this->detailData['__mediaToken'] ?? null) !== $token) {
             return; // ignore events not intended for this instance
         }
         $media = Media::find($mediaId);
         if (!$media) {
             return;
         }
-        $this->model[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
-        unset($this->model['__mediaToken']);
+        $this->detailData[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
+        unset($this->detailData['__mediaToken']);
 
         // Notify parent to refresh live preview after media selection
         $this->dispatch('updateLiveElementData',
             elementPageId: $this->modelId,
-            data: $this->model
+            data: $this->detailData
         );
     }
 
@@ -172,7 +171,7 @@ new class extends Component {
             >
             </x-noerd::buttons.delete>
 
-            <x-noerd::tab-content :layout="$elementLayout" :model="$model" />
+            <x-noerd::tab-content :layout="$elementLayout" :model="$detailData" />
         </div>
     @else
         <div
@@ -189,7 +188,7 @@ new class extends Component {
             </div>
             <details class="mt-2">
                 <summary class="text-xs text-red-600 cursor-pointer">{{ __('Show data') }}</summary>
-                <pre class="text-xs mt-2 text-red-700">{{ json_encode($this->model ?? [], JSON_PRETTY_PRINT) }}</pre>
+                <pre class="text-xs mt-2 text-red-700">{{ json_encode($this->detailData ?? [], JSON_PRETTY_PRINT) }}</pre>
             </details>
         </div>
     @endif

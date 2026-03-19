@@ -24,7 +24,7 @@ beforeEach(function (): void {
                 'buttonList' => 'New Project',
                 'hasPage' => true,
                 'fields' => [
-                    ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                     ['name' => 'image', 'label' => 'Image', 'type' => 'image'],
                 ],
             ]);
@@ -38,7 +38,7 @@ beforeEach(function (): void {
                 'buttonList' => 'New Contact',
                 'hasPage' => true,
                 'fields' => [
-                    ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
             ]);
 
@@ -51,7 +51,7 @@ beforeEach(function (): void {
                 'buttonList' => 'New Slider',
                 'hasPage' => false,
                 'fields' => [
-                    ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
             ]);
 
@@ -64,8 +64,8 @@ beforeEach(function (): void {
                 'buttonList' => 'New Customer',
                 'hasPage' => false,
                 'fields' => [
-                    ['name' => 'pageData.name', 'label' => 'Name', 'type' => 'translatableText'],
-                    ['name' => 'pageData.description', 'label' => 'Description', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.description', 'label' => 'Description', 'type' => 'translatableText'],
                 ],
             ]);
     });
@@ -111,7 +111,7 @@ it('uploads an image via images.field binding and stores path into model', funct
     // Set the Livewire-bound temporary file; component must process it
     Livewire::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
         ->set('images.image', $fakeImage)
-        ->assertSet('pageData.image', fn($value) => is_string($value) && $value !== '');
+        ->assertSet('detailData.image', fn($value) => is_string($value) && $value !== '');
 
     expect(MediaModel::count())->toBe($before + 1);
 
@@ -142,7 +142,7 @@ it('deletes an image value from model', function () use ($testSettings): void {
 
     Livewire::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
         ->call('deleteImage', 'image')
-        ->assertSet('pageData.image', null);
+        ->assertSet('detailData.image', null);
 });
 
 it('tests collection factory without page', function (): void {
@@ -282,8 +282,8 @@ it('handles collections without page features (hasPage: false)', function () use
         ->assertSet('collectionKey', 'customers')
         ->assertSet('collectionLayout.hasPage', false)
         ->assertSet('hasPageFeatures', false)
-        ->set('pageData.name', ['de' => 'Test Kunde', 'en' => 'Test Customer'])
-        ->set('pageData.description', ['de' => 'Test Beschreibung', 'en' => 'Test Description'])
+        ->set('detailData.name', ['de' => 'Test Kunde', 'en' => 'Test Customer'])
+        ->set('detailData.description', ['de' => 'Test Beschreibung', 'en' => 'Test Description'])
         ->call('store')
         ->assertHasNoErrors();
 
@@ -326,14 +326,14 @@ it('does not update image on mediaSelected when token mismatches; updates when t
     ]);
 
     $component = Livewire::test($testSettings['componentName'], ['pageId' => $collection->id, 'collectionKey' => 'projects'])
-        ->set('pageData.__mediaToken', 'token-abc')
-        ->set('pageData.image', 'UNCHANGED');
+        ->set('detailData.__mediaToken', 'token-abc')
+        ->set('detailData.image', 'UNCHANGED');
 
     // Wrong token -> should not change
     $component->call('mediaSelected', $media->id, 'image', 'wrong-token')
-        ->assertSet('pageData.image', 'UNCHANGED');
+        ->assertSet('detailData.image', 'UNCHANGED');
 
     // Correct token -> should change
     $component->call('mediaSelected', $media->id, 'image', 'token-abc')
-        ->assertSet('pageData.image', fn($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED');
+        ->assertSet('detailData.image', fn($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED');
 });

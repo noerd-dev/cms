@@ -16,8 +16,6 @@ new class extends Component {
 
     public const DETAIL_CLASS = Navigation::class;
 
-    public array $navigationData = [];
-
     public function mount(): void
     {
         $this->initDetail();
@@ -27,7 +25,7 @@ new class extends Component {
             $navigation = Navigation::find($this->modelId) ?? new Navigation;
         }
 
-        $this->navigationData = FieldHelper::parseComponentToData($this->getComponentName(), $navigation->toArray());
+        $this->detailData = FieldHelper::parseComponentToData($this->getComponentName(), $navigation->toArray());
 
         if ($navigation['page_id']) {
             $this->pageSelected($navigation['page_id']);
@@ -44,8 +42,8 @@ new class extends Component {
             $query->where('id', '!=', $this->modelId);
         }
 
-        if (!empty($this->navigationData['navigation_key'])) {
-            $query->where('navigation_key', $this->navigationData['navigation_key']);
+        if (!empty($this->detailData['navigation_key'])) {
+            $query->where('navigation_key', $this->detailData['navigation_key']);
         }
 
         $selectedLanguage = session('selectedLanguage', 'de');
@@ -63,16 +61,16 @@ new class extends Component {
     public function store(): void
     {
         $this->validate([
-            'navigationData.navigation_key' => ['required', 'string', 'max:255'],
-            'navigationData.name' => ['required', 'array'],
-            'navigationData.parent_id' => ['nullable', 'numeric', 'exists:cms_navigations,id'],
-            'navigationData.sort_order' => ['nullable', 'integer', 'min:0'],
-            'navigationData.page_id' => ['nullable', 'numeric', 'required_without:navigationData.link'],
-            'navigationData.link' => ['nullable', 'string', 'max:2048', 'required_without:navigationData.page_id'],
-            'navigationData.new_tab' => ['nullable', 'boolean'],
+            'detailData.navigation_key' => ['required', 'string', 'max:255'],
+            'detailData.name' => ['required', 'array'],
+            'detailData.parent_id' => ['nullable', 'numeric', 'exists:cms_navigations,id'],
+            'detailData.sort_order' => ['nullable', 'integer', 'min:0'],
+            'detailData.page_id' => ['nullable', 'numeric', 'required_without:detailData.link'],
+            'detailData.link' => ['nullable', 'string', 'max:2048', 'required_without:detailData.page_id'],
+            'detailData.new_tab' => ['nullable', 'boolean'],
         ]);
 
-        $data = $this->navigationData;
+        $data = $this->detailData;
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
         // TODO auto detect if value is an array and convert it to JSON
         $data['name'] = json_encode($data['name']);
@@ -113,27 +111,27 @@ new class extends Component {
     public function pageSelected($value): void
     {
         $page = Page::find($value);
-        $this->navigationData['page_id'] = $page->id;
+        $this->detailData['page_id'] = $page->id;
         $decoded = is_string($page->name) ? json_decode($page->name, true) : ($page->name ?? []);
         $lang = session('selectedLanguage');
         $this->relationTitles['page_id'] = $decoded[$lang] ?? (is_array($decoded) ? (array_values($decoded)[0] ?? '') : $page->name);
 
         // Auto-fill name field only if it's empty
-        $currentName = $this->navigationData['name'] ?? [];
+        $currentName = $this->detailData['name'] ?? [];
         $isNameEmpty = empty($currentName) || (is_array($currentName) && empty(array_filter($currentName)));
 
         if ($isNameEmpty) {
-            $this->navigationData['name'] = $decoded;
+            $this->detailData['name'] = $decoded;
         }
 
-        $this->navigationData['link'] = null;
+        $this->detailData['link'] = null;
     }
 
-    public function updatedNavigationDataLink($value): void
+    public function updatedDetailDataLink($value): void
     {
         if ($value && $value !== '') {
             // Exclusivity: when link entered, clear relations
-            $this->navigationData['page_id'] = null;
+            $this->detailData['page_id'] = null;
         }
     }
 

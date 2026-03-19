@@ -30,9 +30,9 @@ it('validates the data', function () use ($testSettings): void {
 
     // Test with invalid data (empty name array)
     Livewire::test($testSettings['componentName'])
-        ->set('pageData.name', [])
+        ->set('detailData.name', [])
         ->call('store')
-        ->assertHasErrors(['pageData.name']);
+        ->assertHasErrors(['detailData.name']);
 });
 
 it('successfully stores the data', function () use ($testSettings): void {
@@ -41,9 +41,9 @@ it('successfully stores the data', function () use ($testSettings): void {
     $this->actingAs($user);
 
     $component = Livewire::test($testSettings['componentName'])
-        ->set('pageData.name.de', 'Test Seite')
-        ->set('pageData.name.en', 'Test Page')
-        ->set('pageData.layout', 'weblayout')
+        ->set('detailData.name.de', 'Test Seite')
+        ->set('detailData.name.en', 'Test Page')
+        ->set('detailData.layout', 'weblayout')
         ->call('store')
         ->assertOk();
 
@@ -103,8 +103,8 @@ it('opens and stores existing page', function () use ($testSettings): void {
 
     Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
         ->test($testSettings['componentName'])
-        ->set('pageData.name.de', 'Neue Seite')
-        ->set('pageData.name.en', 'New Page')
+        ->set('detailData.name.de', 'Neue Seite')
+        ->set('detailData.name.en', 'New Page')
         ->call('store')
         ->assertOk();
 

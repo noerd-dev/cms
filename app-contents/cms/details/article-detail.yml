@@ -1,32 +1,32 @@
 title: cms_label_article
 fields:
-  - name: articleData.title
+  - name: detailData.title
     label: cms_label_title
     type: translatableText
     colspan: 5
-  - name: articleData.slug
+  - name: detailData.slug
     label: Slug
     type: translatableText
     colspan: 5
-  - name: articleData.is_active
+  - name: detailData.is_active
     label: cms_label_is_active
     type: checkbox
     colspan: 2
-  - name: articleData.featured_image
+  - name: detailData.featured_image
     label: cms_label_featured_image
     type: image
     colspan: 12
-  - name: articleData.author_id
+  - name: detailData.author_id
     label: cms_label_author
     type: relation
     relationField: relationTitles.author_id
     modalComponent: authors-list
     colspan: 6
-  - name: articleData.publication_date
+  - name: detailData.publication_date
     label: cms_label_publication_date
     type: date
     colspan: 6
-  - name: articleData.body
+  - name: detailData.body
     label: cms_label_body
     type: richText
     colspan: 12

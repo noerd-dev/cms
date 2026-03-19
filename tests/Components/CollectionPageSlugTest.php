@@ -29,10 +29,10 @@ beforeEach(function (): void {
                 'title' => 'Mitarbeiter',
                 'hasPage' => true,
                 'fields' => [
-                    ['name' => 'pageData.title', 'label' => 'Name', 'type' => 'text'],
-                    ['name' => 'pageData.title2', 'label' => 'Titel', 'type' => 'text'],
-                    ['name' => 'pageData.phone', 'label' => 'Telefon', 'type' => 'text'],
-                    ['name' => 'pageData.email', 'label' => 'E-Mail', 'type' => 'text'],
+                    ['name' => 'detailData.title', 'label' => 'Name', 'type' => 'text'],
+                    ['name' => 'detailData.title2', 'label' => 'Titel', 'type' => 'text'],
+                    ['name' => 'detailData.phone', 'label' => 'Telefon', 'type' => 'text'],
+                    ['name' => 'detailData.email', 'label' => 'E-Mail', 'type' => 'text'],
                     ['name' => 'image', 'label' => 'Bild', 'type' => 'image'],
                 ],
             ]);
@@ -53,7 +53,7 @@ it('preserves manually edited slug when saving collection page', function (): vo
     // Open the page and change the slug manually
     $component = Livewire::withUrlParams(['pageId' => $page->id])
         ->test('page-detail', ['collectionKey' => 'mitarbeiter'])
-        ->set('pageData.slug.de', '/gerit-woerner-updated')  // Manual slug change
+        ->set('detailData.slug.de', '/gerit-woerner-updated')  // Manual slug change
         ->call('store')
         ->assertOk();
 
@@ -76,8 +76,8 @@ it('auto-generates slug only when slug is empty', function (): void {
     // Set a name but leave slug empty - should auto-generate
     $component = Livewire::withUrlParams(['pageId' => $page->id])
         ->test('page-detail', ['collectionKey' => 'mitarbeiter'])
-        ->set('pageData.name.de', 'Max Mustermann')
-        ->set('pageData.slug.de', '')  // Empty slug
+        ->set('detailData.name.de', 'Max Mustermann')
+        ->set('detailData.slug.de', '')  // Empty slug
         ->call('store')
         ->assertOk();
 
@@ -100,10 +100,10 @@ it('stores only collection-specific fields in data column', function (): void {
     // Update collection fields
     $component = Livewire::withUrlParams(['pageId' => $page->id])
         ->test('page-detail', ['collectionKey' => 'mitarbeiter'])
-        ->set('pageData.title', 'New Title')
-        ->set('pageData.title2', 'New Subtitle')
-        ->set('pageData.phone', '+49 123 456')
-        ->set('pageData.email', 'test@example.com')
+        ->set('detailData.title', 'New Title')
+        ->set('detailData.title2', 'New Subtitle')
+        ->set('detailData.phone', '+49 123 456')
+        ->set('detailData.email', 'test@example.com')
         ->call('store')
         ->assertOk();
 
@@ -146,8 +146,8 @@ it('does not overwrite slug column with stale data.slug value on mount', functio
         ->test('page-detail', ['collectionKey' => 'mitarbeiter']);
 
     // Verify the correct slug from the column is displayed, not the stale one from data
-    $pageData = $component->get('pageData');
-    expect($pageData['slug']['de'])->toBe('/steuerberaterwirtschaftspruefer-mwd');
+    $detailData = $component->get('detailData');
+    expect($detailData['slug']['de'])->toBe('/steuerberaterwirtschaftspruefer-mwd');
 });
 
 it('does not overwrite core page fields from data column on mount', function (): void {
@@ -173,12 +173,12 @@ it('does not overwrite core page fields from data column on mount', function ():
         ->test('page-detail', ['collectionKey' => 'mitarbeiter']);
 
     // Verify core fields are preserved from columns, not overwritten by data
-    $pageData = $component->get('pageData');
-    expect($pageData['name']['de'])->toBe('Correct Name');
-    expect($pageData['slug']['de'])->toBe('/correct-slug');
-    expect($pageData['layout'])->toBe('correct-layout');
-    expect($pageData['sort'])->toBe(5);
+    $detailData = $component->get('detailData');
+    expect($detailData['name']['de'])->toBe('Correct Name');
+    expect($detailData['slug']['de'])->toBe('/correct-slug');
+    expect($detailData['layout'])->toBe('correct-layout');
+    expect($detailData['sort'])->toBe(5);
 
     // Collection-specific field should still be merged
-    expect($pageData['title'])->toBe('Collection Field');
+    expect($detailData['title'])->toBe('Collection Field');
 });

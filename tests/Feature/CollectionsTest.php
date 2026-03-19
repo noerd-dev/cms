@@ -23,7 +23,7 @@ it('create a page', function (): void {
         ->assertOk();
 
     Livewire::test('page-detail')
-        ->set('pageData.name.de', 'Test Page')
+        ->set('detailData.name.de', 'Test Page')
         ->call('store')
         ->assertOk();
 
@@ -38,8 +38,8 @@ it('create a page', function (): void {
         ->first();
 
     Livewire::test('page-detail', ['pageId' => $page->id])
-        ->set('pageData.name.de', 'Test Page')
-        ->set('pageData.name.en', 'Test Page English')
+        ->set('detailData.name.de', 'Test Page')
+        ->set('detailData.name.en', 'Test Page English')
         ->call('store')
         ->assertOk();
 
