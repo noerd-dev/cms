@@ -27,10 +27,10 @@ it('validates the data', function () use ($testSettings): void {
     $this->actingAs($user);
 
     Livewire::test($testSettings['componentName'])
-        ->set('globalParameterData.key', '')
-        ->set('globalParameterData.value', '')
+        ->set('detailData.key', '')
+        ->set('detailData.value', '')
         ->call('store')
-        ->assertHasErrors(['globalParameterData.key', 'globalParameterData.value']);
+        ->assertHasErrors(['detailData.key', 'detailData.value']);
 });
 
 it('successfully stores the data', function () use ($testSettings): void {
@@ -40,8 +40,8 @@ it('successfully stores the data', function () use ($testSettings): void {
     $parameterValue = fake()->sentence;
 
     Livewire::test($testSettings['componentName'])
-        ->set('globalParameterData.key', $parameterKey)
-        ->set('globalParameterData.value', $parameterValue)
+        ->set('detailData.key', $parameterKey)
+        ->set('detailData.value', $parameterValue)
         ->call('store')
         ->assertHasNoErrors();
 
@@ -64,9 +64,9 @@ it('validates that key is required', function () use ($testSettings): void {
     $this->actingAs($user);
 
     Livewire::test($testSettings['componentName'])
-        ->set('globalParameterData.value', fake()->sentence)
+        ->set('detailData.value', fake()->sentence)
         ->call('store')
-        ->assertHasErrors(['globalParameterData.key']);
+        ->assertHasErrors(['detailData.key']);
 });
 
 it('validates that value is required', function () use ($testSettings): void {
@@ -74,10 +74,10 @@ it('validates that value is required', function () use ($testSettings): void {
     $this->actingAs($user);
 
     Livewire::test($testSettings['componentName'])
-        ->set('globalParameterData.key', fake()->word)
-        ->set('globalParameterData.value', '')
+        ->set('detailData.key', fake()->word)
+        ->set('detailData.value', '')
         ->call('store')
-        ->assertHasErrors(['globalParameterData.value']);
+        ->assertHasErrors(['detailData.value']);
 });
 
 it('can retrieve existing global parameter data', function (): void {
@@ -105,10 +105,10 @@ it('validates key is string and has max length', function () use ($testSettings)
     $longKey = str_repeat('a', 256); // Over 255 characters
 
     Livewire::test($testSettings['componentName'])
-        ->set('globalParameterData.key', $longKey)
-        ->set('globalParameterData.value', 'test value')
+        ->set('detailData.key', $longKey)
+        ->set('detailData.value', 'test value')
         ->call('store')
-        ->assertHasErrors(['globalParameterData.key']);
+        ->assertHasErrors(['detailData.key']);
 });
 
 it('stores data with tenant_id', function () use ($testSettings): void {
@@ -118,8 +118,8 @@ it('stores data with tenant_id', function () use ($testSettings): void {
     $parameterValue = fake()->sentence;
 
     Livewire::test($testSettings['componentName'])
-        ->set('globalParameterData.key', $parameterKey)
-        ->set('globalParameterData.value', $parameterValue)
+        ->set('detailData.key', $parameterKey)
+        ->set('detailData.value', $parameterValue)
         ->call('store')
         ->assertHasNoErrors();
 
@@ -140,7 +140,7 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
 
     Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
         ->test($testSettings['componentName'])
-        ->assertSet('globalParameterData.id', $model->id)
+        ->assertSet('detailData.id', $model->id)
         ->assertHasNoErrors();
 });
 
@@ -156,8 +156,8 @@ it('loads existing string value into component model for editing', function () u
 
     Livewire::withUrlParams([$testSettings['urlParam'] => $existingParameter->id])
         ->test($testSettings['componentName'])
-        ->assertSet('globalParameterData.key', 'test_key_string')
-        ->assertSet('globalParameterData.value', 'test_value_string');
+        ->assertSet('detailData.key', 'test_key_string')
+        ->assertSet('detailData.value', 'test_value_string');
 });
 
 it('loads existing array value into component model for editing', function () use ($testSettings): void {
@@ -172,6 +172,6 @@ it('loads existing array value into component model for editing', function () us
 
     Livewire::withUrlParams([$testSettings['urlParam'] => $existingParameter->id])
         ->test($testSettings['componentName'])
-        ->assertSet('globalParameterData.key', 'test_key_array')
-        ->assertSet('globalParameterData.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+        ->assertSet('detailData.key', 'test_key_array')
+        ->assertSet('detailData.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
 });

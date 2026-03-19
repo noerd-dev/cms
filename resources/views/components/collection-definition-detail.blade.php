@@ -13,15 +13,6 @@ new class extends Component
     #[Url(as: 'collectionDefinitionId', keep: false, except: '')]
     public $modelId = null;
 
-    public array $collectionData = [
-        'filename' => '',
-        'title' => '',
-        'titleList' => '',
-        'buttonList' => '',
-        'description' => '',
-        'hasPage' => false,
-    ];
-
     public array $fields = [];
 
     public bool $isEditing = false;
@@ -31,11 +22,20 @@ new class extends Component
         $this->initDetail();
         $this->pageLayout = StaticConfigHelper::getComponentFields('collection-definition-detail');
 
+        $this->detailData = [
+            'filename' => '',
+            'title' => '',
+            'titleList' => '',
+            'buttonList' => '',
+            'description' => '',
+            'hasPage' => false,
+        ];
+
         if ($this->modelId) {
             $this->isEditing = true;
 
             foreach ($this->pageLayout['fields'] as &$field) {
-                if ($field['name'] === 'collectionData.filename') {
+                if ($field['name'] === 'detailData.filename') {
                     $field['readonly'] = true;
                     break;
                 }
@@ -45,17 +45,17 @@ new class extends Component
 
             if (file_exists($path)) {
                 $content = Yaml::parseFile($path);
-                $this->collectionData['filename'] = $this->modelId;
-                $this->collectionData['title'] = $content['title'] ?? '';
-                $this->collectionData['titleList'] = $content['titleList'] ?? '';
-                $this->collectionData['buttonList'] = $content['buttonList'] ?? '';
-                $this->collectionData['description'] = $content['description'] ?? '';
-                $this->collectionData['hasPage'] = ! empty($content['hasPage']);
+                $this->detailData['filename'] = $this->modelId;
+                $this->detailData['title'] = $content['title'] ?? '';
+                $this->detailData['titleList'] = $content['titleList'] ?? '';
+                $this->detailData['buttonList'] = $content['buttonList'] ?? '';
+                $this->detailData['description'] = $content['description'] ?? '';
+                $this->detailData['hasPage'] = ! empty($content['hasPage']);
 
                 $this->fields = [];
                 foreach ($content['fields'] ?? [] as $field) {
                     $this->fields[] = [
-                        'name' => preg_replace('/^(model\.|pageData\.)/', '', $field['name'] ?? ''),
+                        'name' => preg_replace('/^(model\.|detailData\.)/', '', $field['name'] ?? ''),
                         'label' => $field['label'] ?? '',
                         'type' => $field['type'] ?? 'text',
                         'colspan' => $field['colspan'] ?? 6,
@@ -84,14 +84,14 @@ new class extends Component
     public function store(): void
     {
         // Normalize filename: lowercase, strip .yml extension, replace underscores with hyphens
-        $this->collectionData['filename'] = mb_strtolower($this->collectionData['filename']);
-        $this->collectionData['filename'] = preg_replace('/\.ya?ml$/i', '', $this->collectionData['filename']);
-        $this->collectionData['filename'] = str_replace('_', '-', $this->collectionData['filename']);
+        $this->detailData['filename'] = mb_strtolower($this->detailData['filename']);
+        $this->detailData['filename'] = preg_replace('/\.ya?ml$/i', '', $this->detailData['filename']);
+        $this->detailData['filename'] = str_replace('_', '-', $this->detailData['filename']);
 
         $rules = [
-            'collectionData.filename' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9\-]+$/'],
-            'collectionData.title' => ['required', 'string', 'max:255'],
-            'collectionData.titleList' => ['required', 'string', 'max:255'],
+            'detailData.filename' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9\-]+$/'],
+            'detailData.title' => ['required', 'string', 'max:255'],
+            'detailData.titleList' => ['required', 'string', 'max:255'],
         ];
 
         foreach ($this->fields as $index => $field) {
@@ -102,12 +102,12 @@ new class extends Component
 
         $this->validate($rules);
 
-        $filename = $this->collectionData['filename'];
+        $filename = $this->detailData['filename'];
         $path = base_path('app-configs/cms/collections/' . $filename . '.yml');
 
         // Prevent duplicate filenames when creating
         if (! $this->isEditing && file_exists($path)) {
-            $this->addError('collectionData.filename', __('cms_file_already_exists'));
+            $this->addError('detailData.filename', __('cms_file_already_exists'));
 
             return;
         }
@@ -117,7 +117,7 @@ new class extends Component
         $yamlFields = [];
         foreach ($this->fields as $field) {
             $yamlFields[] = [
-                'name' => 'pageData.' . $field['name'],
+                'name' => 'detailData.' . $field['name'],
                 'label' => $field['label'],
                 'type' => $field['type'],
                 'colspan' => (int) $field['colspan'],
@@ -125,12 +125,12 @@ new class extends Component
         }
 
         $data = [
-            'title' => $this->collectionData['title'],
-            'titleList' => $this->collectionData['titleList'],
+            'title' => $this->detailData['title'],
+            'titleList' => $this->detailData['titleList'],
             'key' => $key,
-            'buttonList' => $this->collectionData['buttonList'] ?: '',
-            'description' => $this->collectionData['description'] ?: '',
-            'hasPage' => (bool) $this->collectionData['hasPage'],
+            'buttonList' => $this->detailData['buttonList'] ?: '',
+            'description' => $this->detailData['description'] ?: '',
+            'hasPage' => (bool) $this->detailData['hasPage'],
             'fields' => $yamlFields,
         ];
 

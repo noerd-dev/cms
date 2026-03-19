@@ -16,8 +16,6 @@ new class extends Component {
 
     public const DETAIL_CLASS = GlobalParameter::class;
 
-    public array $globalParameterData = [];
-
     public function mount(): void
     {
         $this->initDetail();
@@ -27,13 +25,13 @@ new class extends Component {
             $globalParameter = GlobalParameter::find($this->modelId) ?? new GlobalParameter;
         }
 
-        $this->globalParameterData = $globalParameter->toArray();
+        $this->detailData = $globalParameter->toArray();
 
         // Normalize value for editing: decode JSON into PHP value (string or array)
-        if (isset($this->globalParameterData['value']) && is_string($this->globalParameterData['value'])) {
-            $decoded = json_decode($this->globalParameterData['value'], true);
+        if (isset($this->detailData['value']) && is_string($this->detailData['value'])) {
+            $decoded = json_decode($this->detailData['value'], true);
             if (json_last_error() === JSON_ERROR_NONE) {
-                $this->globalParameterData['value'] = $decoded;
+                $this->detailData['value'] = $decoded;
             }
         }
     }
@@ -41,14 +39,14 @@ new class extends Component {
     public function store(): void
     {
         $this->validate([
-            'globalParameterData.key' => ['required', 'string', 'max:255'],
-            'globalParameterData.value' => ['required'],
+            'detailData.key' => ['required', 'string', 'max:255'],
+            'detailData.value' => ['required'],
         ]);
 
-        $data = $this->globalParameterData;
+        $data = $this->detailData;
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
         // auto detect if value is an array and convert it to JSON; if string, encode plain string
-        $value = $this->globalParameterData['value'];
+        $value = $this->detailData['value'];
         // If array with languages, keep as is; else wrap in current language if available
         if (is_array($value)) {
             $data['value'] = json_encode($value);

@@ -168,7 +168,7 @@ it('prevents rapid resending via rate limiting', function (): void {
     Mail::assertSent(FormConfirmation::class, 1);
 });
 
-it('includes form_type_id in formRequestData', function (): void {
+it('includes form_type_id in detailData', function (): void {
     $formType = createFormType($this);
 
     $formRequest = FormRequest::create([
@@ -181,5 +181,5 @@ it('includes form_type_id in formRequestData', function (): void {
     $component = Livewire::actingAs($this->user)
         ->test('form-request-detail', ['modelId' => $formRequest->id]);
 
-    expect($component->get('formRequestData.form_type_id'))->toBe($formType->id);
+    expect($component->get('detailData.form_type_id'))->toBe($formType->id);
 });

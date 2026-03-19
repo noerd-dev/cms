@@ -21,10 +21,10 @@ it('validates that either page or link must be present', function (): void {
     $this->actingAs($user);
 
     Livewire::test('navigation-detail')
-        ->set('navigationData.navigation_key', 'MAIN')
-        ->set('navigationData.name', ['de' => 'Start', 'en' => 'Start'])
+        ->set('detailData.navigation_key', 'MAIN')
+        ->set('detailData.name', ['de' => 'Start', 'en' => 'Start'])
         ->call('store')
-        ->assertHasErrors(['navigationData.page_id' => 'required_without', 'navigationData.link' => 'required_without']);
+        ->assertHasErrors(['detailData.page_id' => 'required_without', 'detailData.link' => 'required_without']);
 });
 
 it('stores a navigation with page and clears link', function (): void {
@@ -34,9 +34,9 @@ it('stores a navigation with page and clears link', function (): void {
     $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => json_encode(['de' => 'Seite', 'en' => 'Page'])]);
 
     Livewire::test('navigation-detail')
-        ->set('navigationData.navigation_key', 'MAIN')
-        ->set('navigationData.name', ['de' => 'Start', 'en' => 'Start'])
-        ->set('navigationData.link', 'https://example.com')
+        ->set('detailData.navigation_key', 'MAIN')
+        ->set('detailData.name', ['de' => 'Start', 'en' => 'Start'])
+        ->set('detailData.link', 'https://example.com')
         ->call('pageSelected', $page->id)
         ->call('store')
         ->assertHasNoErrors();
@@ -54,9 +54,9 @@ it('stores a navigation with link and clears page', function (): void {
     $this->actingAs($user);
 
     Livewire::test('navigation-detail')
-        ->set('navigationData.navigation_key', 'MAIN')
-        ->set('navigationData.name', ['de' => 'Kontakt', 'en' => 'Contact'])
-        ->set('navigationData.link', 'https://example.com/contact')
+        ->set('detailData.navigation_key', 'MAIN')
+        ->set('detailData.name', ['de' => 'Kontakt', 'en' => 'Contact'])
+        ->set('detailData.link', 'https://example.com/contact')
         ->call('store')
         ->assertHasNoErrors();
 
@@ -73,9 +73,9 @@ it('normalizes new_tab default and stores 0 when not set', function (): void {
     $this->actingAs($user);
 
     Livewire::test('navigation-detail')
-        ->set('navigationData.navigation_key', 'MAIN')
-        ->set('navigationData.name', ['de' => 'Blog', 'en' => 'Blog'])
-        ->set('navigationData.link', 'https://example.com/blog')
+        ->set('detailData.navigation_key', 'MAIN')
+        ->set('detailData.name', ['de' => 'Blog', 'en' => 'Blog'])
+        ->set('detailData.link', 'https://example.com/blog')
         ->call('store')
         ->assertHasNoErrors();
 

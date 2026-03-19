@@ -1,11 +1,11 @@
 title: noerd_global_parameter
 description: noerd_global_parameter_description
 fields:
-  - name: globalParameterData.key
+  - name: detailData.key
     label: noerd_key
     type: text
     colspan: 6
-  - name: globalParameterData.value
+  - name: detailData.value
     label: Value
     type: translatableText
     colspan: 6

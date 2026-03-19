@@ -68,8 +68,8 @@ it('loads existing collection definition in detail component', function (): void
 
     Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
         ->assertSet('isEditing', true)
-        ->assertSet('collectionData.filename', 'contacts')
-        ->assertSet('collectionData.title', 'Kontakt');
+        ->assertSet('detailData.filename', 'contacts')
+        ->assertSet('detailData.title', 'Kontakt');
 });
 
 it('loads pageLayout with metadata fields from YAML config', function (): void {
@@ -83,10 +83,10 @@ it('loads pageLayout with metadata fields from YAML config', function (): void {
     expect($pageLayout['fields'])->toBeArray();
 
     $fieldNames = array_column($pageLayout['fields'], 'name');
-    expect($fieldNames)->toContain('collectionData.filename');
-    expect($fieldNames)->toContain('collectionData.title');
-    expect($fieldNames)->toContain('collectionData.titleList');
-    expect($fieldNames)->toContain('collectionData.hasPage');
+    expect($fieldNames)->toContain('detailData.filename');
+    expect($fieldNames)->toContain('detailData.title');
+    expect($fieldNames)->toContain('detailData.titleList');
+    expect($fieldNames)->toContain('detailData.hasPage');
 });
 
 it('sets filename field to readonly when editing', function (): void {
@@ -98,7 +98,7 @@ it('sets filename field to readonly when editing', function (): void {
     $component = Livewire::test('collection-definition-detail', ['modelId' => 'contacts']);
 
     $pageLayout = $component->get('pageLayout');
-    $filenameField = collect($pageLayout['fields'])->firstWhere('name', 'collectionData.filename');
+    $filenameField = collect($pageLayout['fields'])->firstWhere('name', 'detailData.filename');
     expect($filenameField['readonly'])->toBeTrue();
 });
 
@@ -109,7 +109,7 @@ it('does not set filename field to readonly when creating', function (): void {
     $component = Livewire::test('collection-definition-detail');
 
     $pageLayout = $component->get('pageLayout');
-    $filenameField = collect($pageLayout['fields'])->firstWhere('name', 'collectionData.filename');
+    $filenameField = collect($pageLayout['fields'])->firstWhere('name', 'detailData.filename');
     expect($filenameField['readonly'] ?? false)->toBeFalse();
 });
 
@@ -118,11 +118,11 @@ it('creates a new YAML file with correct structure', function (): void {
     $this->actingAs($user);
 
     Livewire::test('collection-definition-detail')
-        ->set('collectionData.filename', 'test-store')
-        ->set('collectionData.title', 'Test Store')
-        ->set('collectionData.titleList', 'Test Stores')
-        ->set('collectionData.buttonList', 'New Test')
-        ->set('collectionData.hasPage', true)
+        ->set('detailData.filename', 'test-store')
+        ->set('detailData.title', 'Test Store')
+        ->set('detailData.titleList', 'Test Stores')
+        ->set('detailData.buttonList', 'New Test')
+        ->set('detailData.hasPage', true)
         ->call('store')
         ->assertHasNoErrors();
 
@@ -149,11 +149,11 @@ it('prevents duplicate filenames', function (): void {
     ]));
 
     Livewire::test('collection-definition-detail')
-        ->set('collectionData.filename', 'test-duplicate')
-        ->set('collectionData.title', 'Duplicate')
-        ->set('collectionData.titleList', 'Duplicates')
+        ->set('detailData.filename', 'test-duplicate')
+        ->set('detailData.title', 'Duplicate')
+        ->set('detailData.titleList', 'Duplicates')
         ->call('store')
-        ->assertHasErrors('collectionData.filename');
+        ->assertHasErrors('detailData.filename');
 });
 
 it('validates required fields', function (): void {
@@ -161,14 +161,14 @@ it('validates required fields', function (): void {
     $this->actingAs($user);
 
     Livewire::test('collection-definition-detail')
-        ->set('collectionData.filename', '')
-        ->set('collectionData.title', '')
-        ->set('collectionData.titleList', '')
+        ->set('detailData.filename', '')
+        ->set('detailData.title', '')
+        ->set('detailData.titleList', '')
         ->call('store')
         ->assertHasErrors([
-            'collectionData.filename',
-            'collectionData.title',
-            'collectionData.titleList',
+            'detailData.filename',
+            'detailData.title',
+            'detailData.titleList',
         ]);
 });
 
@@ -177,11 +177,11 @@ it('validates filename format', function (): void {
     $this->actingAs($user);
 
     Livewire::test('collection-definition-detail')
-        ->set('collectionData.filename', 'Invalid Name!')
-        ->set('collectionData.title', 'Test')
-        ->set('collectionData.titleList', 'Tests')
+        ->set('detailData.filename', 'Invalid Name!')
+        ->set('detailData.title', 'Test')
+        ->set('detailData.titleList', 'Tests')
         ->call('store')
-        ->assertHasErrors('collectionData.filename');
+        ->assertHasErrors('detailData.filename');
 });
 
 it('normalizes filename by lowercasing, stripping yml extension, and replacing underscores', function (): void {
@@ -189,9 +189,9 @@ it('normalizes filename by lowercasing, stripping yml extension, and replacing u
     $this->actingAs($user);
 
     Livewire::test('collection-definition-detail')
-        ->set('collectionData.filename', 'FILM.YML')
-        ->set('collectionData.title', 'Film')
-        ->set('collectionData.titleList', 'Films')
+        ->set('detailData.filename', 'FILM.YML')
+        ->set('detailData.title', 'Film')
+        ->set('detailData.titleList', 'Films')
         ->call('store')
         ->assertHasNoErrors();
 
@@ -203,9 +203,9 @@ it('normalizes underscores to hyphens in filename', function (): void {
     $this->actingAs($user);
 
     Livewire::test('collection-definition-detail')
-        ->set('collectionData.filename', 'My_Collection')
-        ->set('collectionData.title', 'My Collection')
-        ->set('collectionData.titleList', 'My Collections')
+        ->set('detailData.filename', 'My_Collection')
+        ->set('detailData.title', 'My Collection')
+        ->set('detailData.titleList', 'My Collections')
         ->call('store')
         ->assertHasNoErrors();
 
@@ -231,9 +231,9 @@ it('stores fields in YAML file', function (): void {
     $this->actingAs($user);
 
     Livewire::test('collection-definition-detail')
-        ->set('collectionData.filename', 'test-definition')
-        ->set('collectionData.title', 'Test Def')
-        ->set('collectionData.titleList', 'Test Defs')
+        ->set('detailData.filename', 'test-definition')
+        ->set('detailData.title', 'Test Def')
+        ->set('detailData.titleList', 'Test Defs')
         ->call('addField')
         ->set('fields.0.name', 'my_field')
         ->set('fields.0.label', 'My Field')
@@ -244,7 +244,7 @@ it('stores fields in YAML file', function (): void {
 
     $content = Yaml::parseFile(collectionsPath() . '/test-definition.yml');
     expect($content['fields'])->toHaveCount(1);
-    expect($content['fields'][0]['name'])->toBe('pageData.my_field');
+    expect($content['fields'][0]['name'])->toBe('detailData.my_field');
     expect($content['fields'][0]['type'])->toBe('translatableText');
 });
 

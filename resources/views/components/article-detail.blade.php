@@ -19,8 +19,6 @@ new class extends Component
 
     public const DETAIL_COMPONENT = 'article-detail';
 
-    public array $articleData = [];
-
     public function mount(): void
     {
         $this->initDetail();
@@ -30,7 +28,7 @@ new class extends Component
             $article = Article::find($this->modelId) ?? new Article;
         }
 
-        $this->articleData = $article->toArray();
+        $this->detailData = $article->toArray();
 
         $activeLangCodes = $this->getActiveTenantLanguageCodes();
         if (empty($activeLangCodes)) {
@@ -38,30 +36,30 @@ new class extends Component
         }
 
         // Initialize title as translatable array
-        if (! isset($this->articleData['title']) || ! is_array($this->articleData['title'])) {
-            $this->articleData['title'] = array_fill_keys($activeLangCodes, '');
+        if (! isset($this->detailData['title']) || ! is_array($this->detailData['title'])) {
+            $this->detailData['title'] = array_fill_keys($activeLangCodes, '');
         } else {
             foreach ($activeLangCodes as $lang) {
-                if (! isset($this->articleData['title'][$lang])) {
-                    $this->articleData['title'][$lang] = '';
+                if (! isset($this->detailData['title'][$lang])) {
+                    $this->detailData['title'][$lang] = '';
                 }
             }
         }
 
         // Initialize slug as translatable array
-        if (! isset($this->articleData['slug']) || ! is_array($this->articleData['slug'])) {
-            $this->articleData['slug'] = array_fill_keys($activeLangCodes, '');
+        if (! isset($this->detailData['slug']) || ! is_array($this->detailData['slug'])) {
+            $this->detailData['slug'] = array_fill_keys($activeLangCodes, '');
         } else {
             foreach ($activeLangCodes as $lang) {
-                if (! isset($this->articleData['slug'][$lang])) {
-                    $this->articleData['slug'][$lang] = '';
+                if (! isset($this->detailData['slug'][$lang])) {
+                    $this->detailData['slug'][$lang] = '';
                 }
             }
         }
 
         // Load author relation title
-        if (! empty($this->articleData['author_id'])) {
-            $author = Author::find($this->articleData['author_id']);
+        if (! empty($this->detailData['author_id'])) {
+            $author = Author::find($this->detailData['author_id']);
             if ($author) {
                 $this->relationTitles['author_id'] = $author->name;
             }
@@ -103,19 +101,19 @@ new class extends Component
 
     public function updated($propertyName, $value): void
     {
-        if (! str_starts_with($propertyName, 'articleData.title.')) {
+        if (! str_starts_with($propertyName, 'detailData.title.')) {
             return;
         }
 
-        $language = str_replace('articleData.title.', '', $propertyName);
+        $language = str_replace('detailData.title.', '', $propertyName);
 
         if (! empty($value)) {
-            if (! isset($this->articleData['slug']) || ! is_array($this->articleData['slug'])) {
-                $this->articleData['slug'] = array_fill_keys($this->getActiveTenantLanguageCodes(), '');
+            if (! isset($this->detailData['slug']) || ! is_array($this->detailData['slug'])) {
+                $this->detailData['slug'] = array_fill_keys($this->getActiveTenantLanguageCodes(), '');
             }
 
-            if (empty($this->articleData['slug'][$language] ?? '')) {
-                $this->articleData['slug'][$language] = $this->generateSlug($value, $language);
+            if (empty($this->detailData['slug'][$language] ?? '')) {
+                $this->detailData['slug'][$language] = $this->generateSlug($value, $language);
             }
         }
     }
@@ -124,7 +122,7 @@ new class extends Component
     public function authorSelected($authorId): void
     {
         $author = Author::find($authorId);
-        $this->articleData['author_id'] = $author->id;
+        $this->detailData['author_id'] = $author->id;
         $this->relationTitles['author_id'] = $author->name;
     }
 
@@ -137,23 +135,23 @@ new class extends Component
     public function store(): void
     {
         $this->validate([
-            'articleData.title' => ['required', 'array'],
+            'detailData.title' => ['required', 'array'],
         ]);
 
-        $data = $this->articleData;
+        $data = $this->detailData;
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
 
         // Clean empty slug values
         $cleanSlugData = [];
-        if (isset($this->articleData['slug']) && is_array($this->articleData['slug'])) {
-            foreach ($this->articleData['slug'] as $lang => $slug) {
+        if (isset($this->detailData['slug']) && is_array($this->detailData['slug'])) {
+            foreach ($this->detailData['slug'] as $lang => $slug) {
                 if (! empty($slug)) {
                     $cleanSlugData[$lang] = $slug;
                 }
             }
         }
         $data['slug'] = $cleanSlugData;
-        $data['title'] = $this->articleData['title'];
+        $data['title'] = $this->detailData['title'];
 
         $article = Article::updateOrCreate(
             ['id' => $this->modelId],
