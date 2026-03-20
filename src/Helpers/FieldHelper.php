@@ -44,15 +44,35 @@ class FieldHelper
 
         $flattenedFields = self::flattenFields($elementFields['fields'] ?? []);
 
-        foreach ($flattenedFields as $elementField) {
-            if (in_array($elementField['type'], ['translatableText', 'translatableRichText'])) {
-                $baseKey = str_replace('model.', '', $elementField['name']);
+        $translatableTypes = ['translatableText', 'translatableRichText', 'translatableTextarea'];
 
+        foreach ($flattenedFields as $elementField) {
+            $baseKey = str_replace('model.', '', $elementField['name']);
+
+            if ($elementField['type'] === 'repeater') {
+                $existingItems = $data[$baseKey] ?? [];
+                $subFields = $elementField['fields'] ?? [];
+
+                $model[$baseKey] = [];
+                foreach ($existingItems as $itemData) {
+                    $item = [];
+                    foreach ($subFields as $subField) {
+                        $subKey = $subField['name'];
+                        if (in_array($subField['type'], $translatableTypes)) {
+                            foreach (['de', 'en'] as $lang) {
+                                $item[$subKey][$lang] = $itemData[$subKey][$lang] ?? '';
+                            }
+                        } else {
+                            $item[$subKey] = $itemData[$subKey] ?? $subField['default'] ?? '';
+                        }
+                    }
+                    $model[$baseKey][] = $item;
+                }
+            } elseif (in_array($elementField['type'], $translatableTypes)) {
                 foreach (['de', 'en'] as $lang) {
                     $model[$baseKey][$lang] = $data[$baseKey][$lang] ?? $data[$baseKey] ?? '';
                 }
             } else {
-                $baseKey = str_replace('model.', '', $elementField['name']);
                 $model[$baseKey] = $data[$baseKey] ?? $elementField['default'] ?? '';
             }
         }
@@ -171,7 +191,7 @@ class FieldHelper
      * Flatten nested block fields into a single array of fields.
      * Recursively extracts fields from blocks.
      */
-    private static function flattenFields(array $fields): array
+    public static function flattenFields(array $fields): array
     {
         $flattened = [];
 
@@ -180,6 +200,9 @@ class FieldHelper
                 // Recursively flatten nested fields within the block
                 $nestedFields = self::flattenFields($field['fields'] ?? []);
                 $flattened = array_merge($flattened, $nestedFields);
+            } elseif (($field['type'] ?? '') === 'repeater') {
+                // Include repeater field as-is (with nested fields definition intact)
+                $flattened[] = $field;
             } elseif (isset($field['name'])) {
                 // Only add fields that have a name
                 $flattened[] = $field;

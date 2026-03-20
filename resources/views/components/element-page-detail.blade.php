@@ -95,7 +95,7 @@ new class extends Component {
     {
         foreach ($this->images as $key => $image) {
             $link = $image->storePublicly(path: 'uploads', options: 'public');
-            $this->model[$key] = '/storage/' . $link;
+            data_set($this->model, $key, '/storage/' . $link);
         }
 
         // Notify parent to refresh live preview with updated image paths
@@ -107,7 +107,7 @@ new class extends Component {
 
     public function deleteImage($key)
     {
-        $this->model[$key] = null;
+        data_set($this->model, $key, null);
 
         // Notify parent to refresh live preview after deletion
         $this->dispatch('updateLiveElementData',
@@ -143,10 +143,69 @@ new class extends Component {
         if (!$media) {
             return;
         }
-        $this->model[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
+        data_set($this->model, $fieldName ?? 'image', $this->urlWithoutDomain($media));
         unset($this->model['__mediaToken']);
 
         // Notify parent to refresh live preview after media selection
+        $this->dispatch('updateLiveElementData',
+            elementPageId: $this->modelId,
+            data: $this->model
+        );
+    }
+
+    public function addRepeaterItem(string $repeaterKey): void
+    {
+        $elementFields = FieldHelper::getElementFields($this->elementPage->element_key);
+        $flatFields = FieldHelper::flattenFields($elementFields['fields'] ?? []);
+
+        $repeaterField = collect($flatFields)->firstWhere('name', 'model.' . $repeaterKey);
+        if (! $repeaterField) {
+            return;
+        }
+
+        $translatableTypes = ['translatableText', 'translatableRichText', 'translatableTextarea'];
+        $emptyItem = [];
+        foreach ($repeaterField['fields'] ?? [] as $subField) {
+            if (in_array($subField['type'], $translatableTypes)) {
+                $emptyItem[$subField['name']] = array_fill_keys(['de', 'en'], '');
+            } else {
+                $emptyItem[$subField['name']] = $subField['default'] ?? '';
+            }
+        }
+
+        $this->model[$repeaterKey][] = $emptyItem;
+
+        $this->dispatch('updateLiveElementData',
+            elementPageId: $this->modelId,
+            data: $this->model
+        );
+    }
+
+    public function removeRepeaterItem(string $repeaterKey, int $index): void
+    {
+        if (isset($this->model[$repeaterKey][$index])) {
+            $items = $this->model[$repeaterKey];
+            array_splice($items, $index, 1);
+            $this->model[$repeaterKey] = array_values($items);
+
+            $this->dispatch('updateLiveElementData',
+                elementPageId: $this->modelId,
+                data: $this->model
+            );
+        }
+    }
+
+    public function reorderRepeaterItem(string $repeaterKey, int $fromIndex, int $toIndex): void
+    {
+        $items = $this->model[$repeaterKey] ?? [];
+        if (! isset($items[$fromIndex]) || $toIndex < 0 || $toIndex >= count($items)) {
+            return;
+        }
+
+        $item = array_splice($items, $fromIndex, 1)[0];
+        array_splice($items, $toIndex, 0, [$item]);
+        $this->model[$repeaterKey] = array_values($items);
+
         $this->dispatch('updateLiveElementData',
             elementPageId: $this->modelId,
             data: $this->model
