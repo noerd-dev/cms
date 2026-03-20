@@ -3,4 +3,4 @@ description: 'Displays collection entries as a responsive card grid'
 group: 'Interactive'
 collectionKey: SERVICES
 fields:
-  - { name: model.headline, label: Headline, type: translatableText, colspan: 12 }
+  - { name: detailData.headline, label: Headline, type: translatableText, colspan: 12 }
