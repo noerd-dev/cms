@@ -21,6 +21,7 @@ class Article extends Model
         'slug' => 'array',
         'is_active' => 'boolean',
         'publication_date' => 'date',
+        'additional_fields' => 'array',
     ];
 
     protected $attributes = [

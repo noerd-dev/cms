@@ -17,6 +17,7 @@ class Author extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'additional_fields' => 'array',
     ];
 
     public function articles(): HasMany
