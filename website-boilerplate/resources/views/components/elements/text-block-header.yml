@@ -1,8 +1,8 @@
 title: ''
 description: ''
 fields:
-  - { name: model.title, live: true, label: Text, type: translatableText, colspan: 4 }
-  - { name: model.toppage, label: 'Übergeordnete Seite', type: select,
+  - { name: detailData.title, live: true, label: Text, type: translatableText, colspan: 4 }
+  - { name: detailData.toppage, label: 'Übergeordnete Seite', type: select,
       options: [
         '',
         'Projekte',
@@ -10,4 +10,4 @@ fields:
         'Kontakt',
       ],
       colspan: 4 }
-  - { name: model.description, label: Text, type: translatableRichText, colspan: 8 }
+  - { name: detailData.description, label: Text, type: translatableRichText, colspan: 8 }

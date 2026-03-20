@@ -2,4 +2,4 @@ title: 'Content Slider'
 description: 'Sliding content carousel'
 group: 'Interactive'
 fields:
-  - { name: model.text, label: Text Slider, type: translatableText, colspan: 12 }
+  - { name: detailData.text, label: Text Slider, type: translatableText, colspan: 12 }

@@ -4,6 +4,6 @@ fields:
   - { name: image, label: Bild links, type: image, colspan: 4 }
   - { name: image2, label: Bild mitte, type: image, colspan: 4 }
   - { name: image3, label: Bild rechts, type: image, colspan: 4 }
-  - { name: model.videoUrl, label: YouTube URL links (optional), type: translatableText, colspan: 4 }
-  - { name: model.videoUrl2, label: YouTube URL links (optional), type: translatableText, colspan: 4 }
-  - { name: model.videoUrl3, label: YouTube URL links (optional), type: translatableText, colspan: 4 }
+  - { name: detailData.videoUrl, label: YouTube URL links (optional), type: translatableText, colspan: 4 }
+  - { name: detailData.videoUrl2, label: YouTube URL links (optional), type: translatableText, colspan: 4 }
+  - { name: detailData.videoUrl3, label: YouTube URL links (optional), type: translatableText, colspan: 4 }
