@@ -39,9 +39,6 @@
         - title: noerd_nav_settings
           route: cms.settings
           heroicon: adjustments-horizontal
-        - title: cms_nav_collections
-          route: cms.collections
-          heroicon: adjustments-horizontal
         - title: cms_nav_languages
           route: cms.languages
           heroicon: language
