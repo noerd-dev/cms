@@ -120,7 +120,7 @@ it('allows manual slug editing on saved pages', function (): void {
     expect($updatedPage->slug['de'])->toBe('/manuell-geaendert');
 });
 
-it('does not overwrite non-empty slug on new page when title changes', function (): void {
+it('updates slug live on new page when title changes', function (): void {
     // Start a new page, type a name (slug auto-generates), then change the name
     $component = Livewire::test('page-detail')
         ->set('detailData.name.de', 'Erster Titel');
@@ -129,8 +129,8 @@ it('does not overwrite non-empty slug on new page when title changes', function 
     $detailData = $component->get('detailData');
     expect($detailData['slug']['de'])->toBe('/erster-titel');
 
-    // Change the title — slug should NOT change because it's already filled
+    // Change the title — slug should update because page is not yet saved
     $component->set('detailData.name.de', 'Zweiter Titel');
     $detailData = $component->get('detailData');
-    expect($detailData['slug']['de'])->toBe('/erster-titel');
+    expect($detailData['slug']['de'])->toBe('/zweiter-titel');
 });
