@@ -231,10 +231,8 @@ new class extends Component
                 $this->detailData['slug'] = $this->initializeEmptySlugArray();
             }
 
-            if (empty($this->detailData['slug'][$language] ?? '')) {
-                $generatedSlug = $this->generateSlug($value, $language);
-                $this->detailData['slug'][$language] = $this->ensureUniqueSlug($generatedSlug, $language);
-            }
+            $generatedSlug = $this->generateSlug($value, $language);
+            $this->detailData['slug'][$language] = $this->ensureUniqueSlug($generatedSlug, $language);
         }
     }
 
@@ -278,16 +276,28 @@ new class extends Component
     }
 
     #[On('elementPicked')]
-    public function addElement($elementKey): void
+    public function addElement($elementKey, $token = 'insert-end'): void
     {
-        $sortElement = ElementPage::where('page_id', $this->modelId)
-            ->orderBy('sort', 'desc')
-            ->first();
+        if (str_starts_with($token, 'insert-at-')) {
+            $position = (int) str_replace('insert-at-', '', $token);
+
+            ElementPage::where('page_id', $this->modelId)
+                ->where('sort', '>=', $position)
+                ->increment('sort');
+
+            $sort = $position;
+        } else {
+            $sortElement = ElementPage::where('page_id', $this->modelId)
+                ->orderBy('sort', 'desc')
+                ->first();
+
+            $sort = ($sortElement?->sort ?? 0) + 1;
+        }
 
         ElementPage::create([
             'page_id' => $this->modelId,
             'element_key' => $elementKey,
-            'sort' => ($sortElement?->sort ?? 0) + 1,
+            'sort' => $sort,
             'data' => '{}',
         ]);
 
@@ -554,6 +564,16 @@ new class extends Component
 
             <div class="ml-auto" :class="isModal ? 'mr-22' : ''">
                 <div class="flex items-center gap-4">
+                    @if($this->pageModel?->id && $this->hasPageFeatures)
+                        <button
+                            x-data
+                            x-init="if (!Alpine.store('elements')) Alpine.store('elements', { collapsed: false })"
+                            @click="$store.elements.collapsed = !$store.elements.collapsed"
+                            class="px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                            x-text="$store.elements.collapsed ? '{{ __('Elemente aufklappen') }}' : '{{ __('Elemente zuklappen') }}'"
+                        ></button>
+                    @endif
+
                     <livewire:language-switcher/>
 
                     @if($this->pageModel?->id && $this->hasPageFeatures)

@@ -236,7 +236,13 @@ new class extends Component {
             >
             </x-noerd::buttons.delete>
 
-            <x-noerd::tab-content :layout="$elementLayout" :model="$detailData" />
+            <div x-data x-show="$store.elements?.collapsed" class="py-3 pl-2">
+                <span class="text-sm font-medium text-gray-600">{{ __($elementLayout['title'] ?? $this->elementPage->element_key) }}</span>
+            </div>
+
+            <div x-data x-show="!$store.elements?.collapsed">
+                <x-noerd::tab-content :layout="$elementLayout" :model="$detailData" />
+            </div>
         </div>
     @else
         <div
