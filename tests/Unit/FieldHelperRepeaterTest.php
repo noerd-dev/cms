@@ -31,7 +31,7 @@ it('parseElementToData initializes empty repeater array when no data exists', fu
     expect($result)->toBeArray();
     expect($result['headline'])->toBe(['de' => '', 'en' => '']);
     expect($result['items'])->toBe([]);
-})->skip();
+});
 
 it('parseElementToData initializes repeater items with translatable structure', function (): void {
     $data = [
@@ -53,7 +53,7 @@ it('parseElementToData initializes repeater items with translatable structure', 
     expect($result['items'][0]['name'])->toBe(['de' => 'Karte 1', 'en' => 'Card 1']);
     expect($result['items'][0]['subheader'])->toBe(['de' => 'Sub DE', 'en' => 'Sub EN']);
     expect($result['items'][0]['text'])->toBe(['de' => '<p>Text DE</p>', 'en' => '<p>Text EN</p>']);
-})->skip();
+});
 
 it('parseElementToData fills missing language keys for repeater items', function (): void {
     $data = [
@@ -69,4 +69,4 @@ it('parseElementToData fills missing language keys for repeater items', function
     expect($result['items'][0]['name']['de'])->toBe('Nur Deutsch');
     expect($result['items'][0]['name']['en'])->toBe('');
     expect($result['items'][0]['image'])->toBe('');
-})->skip();
+});

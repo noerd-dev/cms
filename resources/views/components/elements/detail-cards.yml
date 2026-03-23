@@ -1,0 +1,25 @@
+title: 'Detail Cards'
+description: 'Cards with image, name, subheader and text'
+group: 'Interactive'
+fields:
+  - name: model.headline
+    label: Headline
+    type: translatableText
+    colspan: 12
+  - name: model.items
+    label: Items
+    type: repeater
+    colspan: 12
+    fields:
+      - name: image
+        label: Image
+        type: image
+      - name: name
+        label: Name
+        type: translatableText
+      - name: subheader
+        label: Subheader
+        type: translatableText
+      - name: text
+        label: Text
+        type: translatableRichText
