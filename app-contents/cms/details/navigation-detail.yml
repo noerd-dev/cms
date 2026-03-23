@@ -19,6 +19,10 @@ fields:
     label: 'Link (URL)'
     type: text
     colspan: 6
+  - name: detailData.collection_id
+    label: 'Collection as Subpages (optional)'
+    type: select
+    colspan: 6
   - name: detailData.new_tab
     label: 'New Tab'
     type: checkbox
