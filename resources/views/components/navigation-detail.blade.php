@@ -66,10 +66,6 @@ new class extends Component {
             $query->where('id', '!=', $this->modelId);
         }
 
-        if (!empty($this->detailData['navigation_key'])) {
-            $query->where('navigation_key', $this->detailData['navigation_key']);
-        }
-
         $selectedLanguage = session('selectedLanguage', 'de');
         $options = ['' => '-- Kein übergeordneter Punkt --'];
 
