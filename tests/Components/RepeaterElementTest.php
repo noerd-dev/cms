@@ -29,7 +29,7 @@ it('can add a repeater item', function (): void {
         ->assertSet('detailData.items.0.image', '')
         ->assertSet('detailData.items.0.name', ['de' => '', 'en' => ''])
         ->assertHasNoErrors();
-})->skip();
+});
 
 it('can remove a repeater item', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
@@ -58,7 +58,7 @@ it('can remove a repeater item', function (): void {
         ->call('removeRepeaterItem', 'items', 0)
         ->assertSet('detailData.items.0.name.de', 'B')
         ->assertHasNoErrors();
-})->skip();
+});
 
 it('can reorder repeater items', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
@@ -88,7 +88,7 @@ it('can reorder repeater items', function (): void {
         ->assertSet('detailData.items.0.name.de', 'Second')
         ->assertSet('detailData.items.1.name.de', 'First')
         ->assertHasNoErrors();
-})->skip();
+});
 
 it('stores repeater data correctly', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
