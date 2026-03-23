@@ -9,6 +9,11 @@ fields:
     label: Name
     type: translatableText
     colspan: 6
+  - name: detailData.parent_id
+    label: Übergeordneter Punkt
+    type: picklist
+    picklistField: parentOptions
+    colspan: 6
   - name: detailData.page_id
     label: Page
     type: relation
