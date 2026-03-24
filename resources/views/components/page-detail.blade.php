@@ -116,18 +116,20 @@ new class extends Component
             $activeLangCodes = [$this->getDefaultLanguageCode()];
         }
 
-        if (isset($this->detailData['slug'])) {
-            if (! is_array($this->detailData['slug']) || empty($this->detailData['slug'])) {
-                $this->detailData['slug'] = $this->initializeEmptySlugArray();
-            } else {
-                foreach ($activeLangCodes as $lang) {
-                    if (! isset($this->detailData['slug'][$lang]) || ! is_string($this->detailData['slug'][$lang])) {
-                        $this->detailData['slug'][$lang] = '';
+        foreach (['name', 'slug'] as $field) {
+            if (isset($this->detailData[$field])) {
+                if (! is_array($this->detailData[$field]) || empty($this->detailData[$field])) {
+                    $this->detailData[$field] = $this->initializeEmptySlugArray();
+                } else {
+                    foreach ($activeLangCodes as $lang) {
+                        if (! isset($this->detailData[$field][$lang]) || ! is_string($this->detailData[$field][$lang])) {
+                            $this->detailData[$field][$lang] = '';
+                        }
                     }
                 }
+            } else {
+                $this->detailData[$field] = $this->initializeEmptySlugArray();
             }
-        } else {
-            $this->detailData['slug'] = $this->initializeEmptySlugArray();
         }
 
         $this->lastChangeTime = time();
@@ -386,14 +388,22 @@ new class extends Component
             return;
         }
 
-        $this->validate([
-            'detailData.name' => ['required', 'array', 'max:255'],
-            'detailData.slug' => ['required', 'array'],
-        ]);
+        $defaultLang = $this->getDefaultLanguageCode();
 
-        if (! empty($validationErrors)) {
-            $this->addError('detailData.slug', reset($validationErrors));
+        $this->resetValidation();
+        $hasErrors = false;
 
+        if (empty($this->detailData['name'][$defaultLang] ?? '')) {
+            $this->addError('detailData.name', __('validation.required', ['attribute' => __('Title')]));
+            $hasErrors = true;
+        }
+
+        if (empty($this->detailData['slug'][$defaultLang] ?? '')) {
+            $this->addError('detailData.slug', __('validation.required', ['attribute' => __('URL')]));
+            $hasErrors = true;
+        }
+
+        if ($hasErrors) {
             return;
         }
 
@@ -496,6 +506,25 @@ new class extends Component
         $data['layout'] = $this->detailData['layout'] ?? array_key_first($availableLayouts);
 
         if ($hasPageFeatures) {
+            $defaultLang = $this->getDefaultLanguageCode();
+
+            $this->resetValidation();
+            $hasErrors = false;
+
+            if (empty($this->detailData['name'][$defaultLang] ?? '')) {
+                $this->addError('detailData.name', __('validation.required', ['attribute' => __('Title')]));
+                $hasErrors = true;
+            }
+
+            if (empty($this->detailData['slug'][$defaultLang] ?? '')) {
+                $this->addError('detailData.slug', __('validation.required', ['attribute' => __('URL')]));
+                $hasErrors = true;
+            }
+
+            if ($hasErrors) {
+                return;
+            }
+
             $nameData = [];
             if (isset($this->detailData['name']) && is_array($this->detailData['name'])) {
                 foreach ($this->detailData['name'] as $lang => $nameValue) {
@@ -514,12 +543,6 @@ new class extends Component
                         $slugData[$lang] = $this->ensureUniqueSlug($this->generateSlug($nameData[$lang], $lang), $lang);
                     }
                 }
-            }
-
-            if (empty($nameData)) {
-                $defaultLang = $this->getDefaultLanguageCode();
-                $nameData[$defaultLang] = 'Collection Page';
-                $slugData[$defaultLang] = '/collection-page';
             }
 
             $data['name'] = $nameData;
