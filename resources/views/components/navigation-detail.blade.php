@@ -100,12 +100,11 @@ new class extends Component {
 
         $data['collection_id'] = !empty($data['collection_id']) ? (int) $data['collection_id'] : null;
 
-        if ($data['collection_id']) {
+        if (!empty(trim((string) ($data['link'] ?? '')))) {
+            $data['link'] = trim((string) $data['link']);
             $data['page_id'] = null;
+        } else {
             $data['link'] = null;
-        } elseif (isset($data['link'])) {
-            $data['link'] = trim((string) $data['link']) ?: null;
-            $data['page_id'] = null;
         }
         $data['new_tab'] = !empty($data['new_tab']) ? 1 : 0;
         $data['parent_id'] = !empty($data['parent_id']) ? (int) $data['parent_id'] : null;
