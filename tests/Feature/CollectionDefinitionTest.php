@@ -30,7 +30,7 @@ function createContactsFixture(): void
 
 afterEach(function (): void {
     // Clean up test-created YAML files
-    foreach (['test-definition', 'test-definition-2', 'test-store', 'test-duplicate', 'film', 'my-collection', 'contacts'] as $name) {
+    foreach (['test-definition', 'test-definition-2', 'test-store', 'test-duplicate', 'film', 'my-collection', 'contacts', 'contacts2', 'contacts-renamed'] as $name) {
         $path = collectionsPath() . '/' . $name . '.yml';
         if (file_exists($path)) {
             unlink($path);
@@ -89,28 +89,45 @@ it('loads pageLayout with metadata fields from YAML config', function (): void {
     expect($fieldNames)->toContain('detailData.hasPage');
 });
 
-it('sets filename field to readonly when editing', function (): void {
+it('allows renaming the filename of an existing collection definition', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     createContactsFixture();
 
-    $component = Livewire::test('collection-definition-detail', ['modelId' => 'contacts']);
+    Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
+        ->set('detailData.filename', 'contacts-renamed')
+        ->call('store')
+        ->assertHasNoErrors();
 
-    $pageLayout = $component->get('pageLayout');
-    $filenameField = collect($pageLayout['fields'])->firstWhere('name', 'detailData.filename');
-    expect($filenameField['readonly'])->toBeTrue();
+    expect(file_exists(collectionsPath() . '/contacts-renamed.yml'))->toBeTrue();
+    expect(file_exists(collectionsPath() . '/contacts.yml'))->toBeFalse();
+
+    $content = Yaml::parseFile(collectionsPath() . '/contacts-renamed.yml');
+    expect($content['key'])->toBe('CONTACTS_RENAMED');
 });
 
-it('does not set filename field to readonly when creating', function (): void {
+it('prevents renaming to an existing filename', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    $component = Livewire::test('collection-definition-detail');
+    createContactsFixture();
 
-    $pageLayout = $component->get('pageLayout');
-    $filenameField = collect($pageLayout['fields'])->firstWhere('name', 'detailData.filename');
-    expect($filenameField['readonly'] ?? false)->toBeFalse();
+    // Create a second file that we'll try to rename to
+    file_put_contents(collectionsPath() . '/contacts-renamed.yml', Yaml::dump([
+        'title' => 'Existing',
+        'titleList' => 'Existing',
+        'key' => 'CONTACTS_RENAMED',
+        'fields' => [],
+    ]));
+
+    Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
+        ->set('detailData.filename', 'contacts-renamed')
+        ->call('store')
+        ->assertHasErrors('detailData.filename');
+
+    // Original file should still exist
+    expect(file_exists(collectionsPath() . '/contacts.yml'))->toBeTrue();
 });
 
 it('creates a new YAML file with correct structure', function (): void {
@@ -246,6 +263,45 @@ it('stores fields in YAML file', function (): void {
     expect($content['fields'])->toHaveCount(1);
     expect($content['fields'][0]['name'])->toBe('detailData.my_field');
     expect($content['fields'][0]['type'])->toBe('translatableText');
+});
+
+it('copies a collection definition with key suffix 2', function (): void {
+    ['user' => $user] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    createContactsFixture();
+
+    Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
+        ->call('copy')
+        ->assertHasNoErrors();
+
+    $copiedPath = collectionsPath() . '/contacts2.yml';
+    expect(file_exists($copiedPath))->toBeTrue();
+
+    $content = Yaml::parseFile($copiedPath);
+    expect($content['key'])->toBe('CONTACTS2');
+    expect($content['title'])->toBe('Kontakt');
+    expect($content['titleList'])->toBe('Kontakte');
+    expect($content['fields'])->toHaveCount(1);
+});
+
+it('prevents copying when target file already exists', function (): void {
+    ['user' => $user] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    createContactsFixture();
+
+    // Create the target file so copy should fail
+    file_put_contents(collectionsPath() . '/contacts2.yml', Yaml::dump([
+        'title' => 'Existing',
+        'titleList' => 'Existing',
+        'key' => 'CONTACTS2',
+        'fields' => [],
+    ]));
+
+    Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
+        ->call('copy')
+        ->assertHasErrors('detailData.filename');
 });
 
 it('deletes a YAML file', function (): void {

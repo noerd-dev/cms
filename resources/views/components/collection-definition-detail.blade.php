@@ -34,13 +34,6 @@ new class extends Component
         if ($this->modelId) {
             $this->isEditing = true;
 
-            foreach ($this->pageLayout['fields'] as &$field) {
-                if ($field['name'] === 'detailData.filename') {
-                    $field['readonly'] = true;
-                    break;
-                }
-            }
-            unset($field);
             $path = base_path('app-configs/cms/collections/' . $this->modelId . '.yml');
 
             if (file_exists($path)) {
@@ -105,8 +98,9 @@ new class extends Component
         $filename = $this->detailData['filename'];
         $path = base_path('app-configs/cms/collections/' . $filename . '.yml');
 
-        // Prevent duplicate filenames when creating
-        if (! $this->isEditing && file_exists($path)) {
+        // Prevent duplicate filenames (when creating or renaming)
+        $isRenaming = $this->isEditing && $filename !== $this->modelId;
+        if ((! $this->isEditing || $isRenaming) && file_exists($path)) {
             $this->addError('detailData.filename', __('cms_file_already_exists'));
 
             return;
@@ -137,8 +131,41 @@ new class extends Component
         $yamlContent = Yaml::dump($data, 4, 2);
         file_put_contents($path, $yamlContent);
 
+        // Delete old file if renamed
+        if ($isRenaming) {
+            $oldPath = base_path('app-configs/cms/collections/' . $this->modelId . '.yml');
+            if (file_exists($oldPath)) {
+                unlink($oldPath);
+            }
+        }
+
         $this->isEditing = true;
         $this->modelId = $filename;
+
+        $this->dispatch('listRefresh');
+        $this->closeModalProcess('collection-definitions-list');
+    }
+
+    public function copy(): void
+    {
+        $sourcePath = base_path('app-configs/cms/collections/' . $this->modelId . '.yml');
+        if (! file_exists($sourcePath)) {
+            return;
+        }
+
+        $newFilename = $this->modelId . '2';
+        $newPath = base_path('app-configs/cms/collections/' . $newFilename . '.yml');
+
+        if (file_exists($newPath)) {
+            $this->addError('detailData.filename', __('cms_file_already_exists'));
+
+            return;
+        }
+
+        $content = Yaml::parseFile($sourcePath);
+        $content['key'] = $content['key'] . '2';
+
+        file_put_contents($newPath, Yaml::dump($content, 4, 2));
 
         $this->dispatch('listRefresh');
         $this->closeModalProcess('collection-definitions-list');
@@ -232,6 +259,15 @@ new class extends Component
     </div>
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="$isEditing" />
+        <div class="flex items-center w-full gap-2">
+            @if($isEditing)
+                <div class="flex gap-2 mr-auto">
+                    <x-noerd::buttons.secondary wire:click="copy">
+                        {{ __('cms_label_copy') }}
+                    </x-noerd::buttons.secondary>
+                </div>
+            @endif
+            <x-noerd::delete-save-bar :showDelete="$isEditing" />
+        </div>
     </x-slot:footer>
 </x-noerd::page>

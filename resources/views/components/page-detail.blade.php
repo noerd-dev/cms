@@ -73,13 +73,18 @@ new class extends Component
 
         $this->collectionKey = $collectionKey ?? $this->collectionKey;
 
-        if ($this->collectionKey) {
-            $this->collectionLayout = CollectionHelper::getCollectionFields($this->collectionKey);
-        }
-
         $page = new Page;
         if ($this->modelId) {
             $page = Page::find($this->modelId) ?? new Page;
+        }
+
+        // Auto-detect collectionKey from page's collection if not explicitly provided
+        if (! $this->collectionKey && $page->collection_id && $page->collection) {
+            $this->collectionKey = mb_strtolower($page->collection->collection_key);
+        }
+
+        if ($this->collectionKey) {
+            $this->collectionLayout = CollectionHelper::getCollectionFields($this->collectionKey);
         }
 
         $this->mountPageDetail($page);
@@ -317,6 +322,11 @@ new class extends Component
 
     public function elementSort($elementId, $newPosition): void
     {
+        \Log::info('elementSort called', ['elementId' => $elementId, 'newPosition' => $newPosition, 'type_id' => gettype($elementId), 'type_pos' => gettype($newPosition)]);
+
+        $elementId = (int) $elementId;
+        $newPosition = (int) $newPosition;
+
         $elements = ElementPage::where('page_id', $this->modelId)
             ->orderBy('sort')
             ->get();
@@ -325,7 +335,7 @@ new class extends Component
             if ($newPosition === $loop) {
                 $loop++;
             }
-            if ($element['id'] === $elementId) {
+            if ($element->id === $elementId) {
                 $element->sort = $newPosition;
                 $element->save();
             } else {

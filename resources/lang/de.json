@@ -100,6 +100,11 @@
     "cms_label_sort_order": "Sortierung",
     "cms_language_description": "Definiert eine verfügbare Sprache im System.",
 
+    "cms_label_page_type": "Seitentyp",
+    "cms_all_pages": "Alle Seiten",
+    "cms_collection_pages": "Collection-Seiten",
+    "cms_single_pages": "Einzelseiten",
+
     "cms_form_types": "Formulartypen",
     "cms_synced": "Synchronisiert",
     "cms_new_navigation_point": "Neuer Navigationspunkt",
@@ -158,6 +163,7 @@
     "cms_label_field_label": "Bezeichnung",
     "cms_label_field_type": "Typ",
     "cms_label_colspan": "Breite",
+    "cms_label_copy": "Kopieren",
     "cms_label_field_count": "Felder",
     "cms_label_no_fields": "Noch keine Felder definiert.",
     "cms_label_description": "Beschreibung",
