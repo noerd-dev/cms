@@ -62,6 +62,11 @@
     "cms_label_sort_order": "Sort Order",
     "cms_language_description": "Defines an available language in the system.",
 
+    "cms_label_page_type": "Page Type",
+    "cms_all_pages": "All Pages",
+    "cms_collection_pages": "Collection Pages",
+    "cms_single_pages": "Single Pages",
+
     "cms_form_types": "Form Types",
     "cms_synced": "Synced",
     "cms_new_navigation_point": "New Navigation Point",
@@ -114,6 +119,7 @@
     "cms_label_field_label": "Label",
     "cms_label_field_type": "Type",
     "cms_label_colspan": "Width",
+    "cms_label_copy": "Copy",
     "cms_label_field_count": "Fields",
     "cms_label_no_fields": "No fields defined yet.",
     "cms_label_description": "Description",

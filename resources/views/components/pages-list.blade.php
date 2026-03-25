@@ -25,11 +25,24 @@ new class extends Component {
     #[Computed]
     public function tableFilters(): array
     {
-        if (! $this->hasMultipleLanguages()) {
-            return [];
+        $filters = [];
+
+        if ($this->hasMultipleLanguages()) {
+            $filters[] = $this->getLanguageListFilter();
         }
 
-        return [$this->getLanguageListFilter()];
+        $filters[] = [
+            'label' => __('cms_label_page_type'),
+            'column' => 'page_type',
+            'type' => 'Picklist',
+            'options' => [
+                '' => __('cms_all_pages'),
+                'collection' => __('cms_collection_pages'),
+                'single' => __('cms_single_pages'),
+            ],
+        ];
+
+        return $filters;
     }
 
     public function storeActiveListFilters(): void
@@ -66,11 +79,19 @@ new class extends Component {
             ->pluck('id')
             ->toArray();
 
-        $rows = Page::where(function ($query) use ($collectionsWithoutPages) {
+        $rows = Page::with('collection')
+            ->where(function ($query) use ($collectionsWithoutPages) {
                 // Show pages that don't belong to any collection
                 $query->whereNull('collection_id')
                     // OR pages that belong to collections with hasPage: true (exclude hasPage: false collections)
                     ->orWhereNotIn('collection_id', $collectionsWithoutPages);
+            })
+            ->when($this->listFilters['page_type'] ?? null, function ($query, $pageType): void {
+                if ($pageType === 'collection') {
+                    $query->whereNotNull('collection_id');
+                } elseif ($pageType === 'single') {
+                    $query->whereNull('collection_id');
+                }
             })
             ->when($this->search, function ($query): void {
                 $query->where(function ($query): void {
@@ -90,6 +111,7 @@ new class extends Component {
             if (is_array($row->slug)) {
                 $row->slug = $row->slug[$selectedLanguage] ?? array_values($row->slug)[0] ?? '';
             }
+            $row->collection_name = $row->collection?->name ?? '';
         }
 
         return [

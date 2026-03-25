@@ -211,6 +211,25 @@ new class extends Component {
         );
     }
 
+    public function dataCollectionOptions(): array
+    {
+        $collectionsPath = base_path('app-configs/cms/collections');
+        $options = ['' => __('noerd_please_select')];
+
+        foreach (glob($collectionsPath . '/*.yml') as $file) {
+            $config = \Symfony\Component\Yaml\Yaml::parseFile($file);
+            if (($config['hasPage'] ?? true) === false) {
+                $key = $config['key'] ?? '';
+                $title = $config['title'] ?? $key;
+                if ($key) {
+                    $options[$key] = $title;
+                }
+            }
+        }
+
+        return $options;
+    }
+
     private function urlWithoutDomain(Media $media): string
     {
         $url = Storage::disk($media->disk)->url($media->path);
@@ -223,7 +242,7 @@ new class extends Component {
     @if($elementLayout)
         <div class="p-4 pl-10 pt-0 border border-b-gray-200 mb-4 relative overflow-hidden rounded-lg bg-gray-950/[2.5%] after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-gray-950/5 bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-gray-950)]/5
     ">
-            <div x-sort:handle class="absolute left-2 top-4 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 z-10">
+            <div wire:sort:handle class="absolute left-2 top-4 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 z-10">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
                 </svg>
