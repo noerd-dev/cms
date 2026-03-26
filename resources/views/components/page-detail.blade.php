@@ -465,7 +465,7 @@ new class extends Component
         $fieldNames = [];
         foreach ($this->collectionLayout['fields'] as $field) {
             $name = $field['name'] ?? '';
-            $name = str_replace(['detailData.', 'model.'], '', $name);
+            $name = str_replace('detailData.', '', $name);
             if (! empty($name)) {
                 $fieldNames[] = $name;
             }

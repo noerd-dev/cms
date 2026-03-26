@@ -24,7 +24,7 @@ beforeEach(function (): void {
                 'buttonList' => 'New Project',
                 'hasPage' => true,
                 'fields' => [
-                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                     ['name' => 'image', 'label' => 'Image', 'type' => 'image'],
                 ],
             ]);
@@ -38,8 +38,8 @@ beforeEach(function (): void {
                 'buttonList' => 'New Customer',
                 'hasPage' => false,
                 'fields' => [
-                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
-                    ['name' => 'model.description', 'label' => 'Description', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.description', 'label' => 'Description', 'type' => 'translatableText'],
                 ],
             ]);
     });

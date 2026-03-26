@@ -24,7 +24,7 @@ beforeEach(function (): void {
                 'buttonList' => 'Neuer Standort',
                 'hasPage' => true,
                 'fields' => [
-                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
             ]);
 
@@ -36,7 +36,7 @@ beforeEach(function (): void {
                 'buttonList' => 'Neuer Mitarbeiter',
                 'hasPage' => true,
                 'fields' => [
-                    ['name' => 'model.title', 'label' => 'Name', 'type' => 'text'],
+                    ['name' => 'detailData.title', 'label' => 'Name', 'type' => 'text'],
                 ],
             ]);
 

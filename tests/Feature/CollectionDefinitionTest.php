@@ -23,7 +23,7 @@ function createContactsFixture(): void
         'description' => '',
         'hasPage' => true,
         'fields' => [
-            ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText', 'colspan' => 6],
+            ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText', 'colspan' => 6],
         ],
     ]));
 }

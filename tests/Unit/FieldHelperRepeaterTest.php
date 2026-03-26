@@ -6,9 +6,9 @@ uses(Tests\TestCase::class);
 
 it('flattenFields includes repeater fields as-is with nested fields intact', function (): void {
     $fields = [
-        ['name' => 'model.headline', 'type' => 'translatableText'],
+        ['name' => 'detailData.headline', 'type' => 'translatableText'],
         [
-            'name' => 'model.items',
+            'name' => 'detailData.items',
             'type' => 'repeater',
             'fields' => [
                 ['name' => 'image', 'type' => 'image'],
@@ -20,7 +20,7 @@ it('flattenFields includes repeater fields as-is with nested fields intact', fun
     $flattened = FieldHelper::flattenFields($fields);
 
     expect($flattened)->toHaveCount(2);
-    expect($flattened[0]['name'])->toBe('model.headline');
+    expect($flattened[0]['name'])->toBe('detailData.headline');
     expect($flattened[1]['type'])->toBe('repeater');
     expect($flattened[1]['fields'])->toHaveCount(2);
 });

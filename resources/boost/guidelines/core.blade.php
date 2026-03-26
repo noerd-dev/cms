@@ -48,7 +48,7 @@ title: 'Single Column Text'
 description: 'Simple text block with rich text editor'
 group: 'Text'
 fields:
-  - name: model.text
+  - name: detailData.text
     label: Text
     type: translatableRichText
     colspan: 12
