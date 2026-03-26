@@ -31,7 +31,7 @@ title: Text Block (1 Column)
 description: A single column text block
 group: Text
 fields:
-  - name: model.text
+  - name: detailData.text
     label: Text
     type: translatableRichText
     colspan: 12
@@ -117,11 +117,11 @@ title: My Custom Element
 description: A custom content block
 group: Custom
 fields:
-  - name: model.heading
+  - name: detailData.heading
     label: Heading
     type: translatableText
     colspan: 12
-  - name: model.content
+  - name: detailData.content
     label: Content
     type: translatableRichText
     colspan: 12

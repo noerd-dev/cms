@@ -2,11 +2,11 @@ title: 'Detail Cards'
 description: 'Cards with image, name, subheader and text'
 group: 'Interactive'
 fields:
-  - name: model.headline
+  - name: detailData.headline
     label: Headline
     type: translatableText
     colspan: 12
-  - name: model.items
+  - name: detailData.items
     label: Items
     type: repeater
     colspan: 12

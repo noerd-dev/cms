@@ -17,7 +17,7 @@ beforeEach(function (): void {
                 'titleList' => 'Projects',
                 'buttonList' => 'New Project',
                 'fields' => [
-                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
             ]);
 
@@ -28,7 +28,7 @@ beforeEach(function (): void {
                 'titleList' => 'Test Collections',
                 'buttonList' => 'New Entry',
                 'fields' => [
-                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
             ]);
 
@@ -39,7 +39,7 @@ beforeEach(function (): void {
                 'titleList' => 'Test Collections',
                 'buttonList' => 'New Entry',
                 'fields' => [
-                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
             ]);
 
@@ -50,7 +50,7 @@ beforeEach(function (): void {
                 'titleList' => 'Test Collections',
                 'buttonList' => 'New Entry',
                 'fields' => [
-                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
             ]);
 
@@ -61,7 +61,7 @@ beforeEach(function (): void {
                 'titleList' => 'Test Collections',
                 'buttonList' => 'New Entry',
                 'fields' => [
-                    ['name' => 'model.name', 'label' => 'Name', 'type' => 'translatableText'],
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
             ]);
     });

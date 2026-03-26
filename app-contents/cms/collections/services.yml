@@ -5,7 +5,7 @@ buttonList: cms_new_service
 description: ''
 hasPage: true
 fields:
-  - name: model.name
+  - name: detailData.name
     label: Name
     type: translatableText
     colspan: 6

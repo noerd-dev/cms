@@ -48,9 +48,9 @@ describe('FieldTypeConverter', function (): void {
                     'description' => '',
                     'hasPage' => false,
                     'fields' => [
-                        ['name' => 'model.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
-                        ['name' => 'model.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
-                        ['name' => 'model.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
+                        ['name' => 'detailData.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
+                        ['name' => 'detailData.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
+                        ['name' => 'detailData.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
                     ],
                 ]);
 
@@ -64,8 +64,8 @@ describe('FieldTypeConverter', function (): void {
                 ->with('test_text_conversion')
                 ->andReturn([
                     'fields' => [
-                        ['name' => 'model.title', 'label' => 'Title', 'type' => 'text', 'colspan' => 6],
-                        ['name' => 'model.description', 'label' => 'Description', 'type' => 'text', 'colspan' => 6],
+                        ['name' => 'detailData.title', 'label' => 'Title', 'type' => 'text', 'colspan' => 6],
+                        ['name' => 'detailData.description', 'label' => 'Description', 'type' => 'text', 'colspan' => 6],
                     ],
                 ]);
 
@@ -74,9 +74,9 @@ describe('FieldTypeConverter', function (): void {
                 ->with('test_mixed')
                 ->andReturn([
                     'fields' => [
-                        ['name' => 'model.translatable_field', 'label' => 'Translatable', 'type' => 'translatableText', 'colspan' => 6],
-                        ['name' => 'model.text_field', 'label' => 'Text', 'type' => 'text', 'colspan' => 6],
-                        ['name' => 'model.number_field', 'label' => 'Number', 'type' => 'number', 'colspan' => 6],
+                        ['name' => 'detailData.translatable_field', 'label' => 'Translatable', 'type' => 'translatableText', 'colspan' => 6],
+                        ['name' => 'detailData.text_field', 'label' => 'Text', 'type' => 'text', 'colspan' => 6],
+                        ['name' => 'detailData.number_field', 'label' => 'Number', 'type' => 'number', 'colspan' => 6],
                     ],
                 ]);
 
@@ -85,8 +85,8 @@ describe('FieldTypeConverter', function (): void {
                 ->with('test_richtext')
                 ->andReturn([
                     'fields' => [
-                        ['name' => 'model.rich_content', 'label' => 'Rich Content', 'type' => 'translatableRichText', 'colspan' => 12],
-                        ['name' => 'model.textarea_content', 'label' => 'Textarea Content', 'type' => 'translatableTextarea', 'colspan' => 12],
+                        ['name' => 'detailData.rich_content', 'label' => 'Rich Content', 'type' => 'translatableRichText', 'colspan' => 12],
+                        ['name' => 'detailData.textarea_content', 'label' => 'Textarea Content', 'type' => 'translatableTextarea', 'colspan' => 12],
                     ],
                 ]);
 
@@ -201,9 +201,9 @@ describe('FieldTypeConverter', function (): void {
                     'description' => '',
                     'hasPage' => false,
                     'fields' => [
-                        ['name' => 'model.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
-                        ['name' => 'model.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
-                        ['name' => 'model.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
+                        ['name' => 'detailData.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
+                        ['name' => 'detailData.description', 'label' => 'Beschreibung', 'type' => 'translatableText', 'colspan' => 6],
+                        ['name' => 'detailData.content', 'label' => 'Inhalt', 'type' => 'translatableRichText', 'colspan' => 12],
                     ],
                 ]);
 
