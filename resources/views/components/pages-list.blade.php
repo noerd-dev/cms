@@ -98,7 +98,7 @@ new class extends Component {
                     $query->where('name', 'like', '%'.$this->search.'%');
                 });
             })
-            ->paginate(self::PAGINATION);
+            ->paginate($this->perPage);
 
         // Parse JSON attributes to show only current language values
         $selectedLanguage = $this->listFilters['language']

@@ -20,7 +20,7 @@ new class extends Component
 
     public function with()
     {
-        $rows = $this->listQuery(Author::class)->paginate(self::PAGINATION);
+        $rows = $this->listQuery(Author::class)->paginate($this->perPage);
 
         return [
             'listConfig' => $this->buildList($rows),

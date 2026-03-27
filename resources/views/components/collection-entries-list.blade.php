@@ -141,7 +141,7 @@ new class extends Component
             });
         }
 
-        $rows = $query->paginate(self::PAGINATION);
+        $rows = $query->paginate($this->perPage);
 
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage')

@@ -61,7 +61,7 @@ new class extends Component
         usort($items, fn ($a, $b) => strcasecmp($a['titleList'], $b['titleList']));
 
         $page = $this->getPage();
-        $perPage = self::PAGINATION;
+        $perPage = $this->perPage;
         $collection = collect($items);
         $rows = new LengthAwarePaginator(
             $collection->forPage($page, $perPage)->values(),

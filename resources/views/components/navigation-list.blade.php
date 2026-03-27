@@ -43,7 +43,7 @@ new class extends Component
 
     public function with(): array
     {
-        $rows = Navigation::orderBy('parent_id')->orderBy('sort_order')->paginate(self::PAGINATION);
+        $rows = Navigation::orderBy('parent_id')->orderBy('sort_order')->paginate($this->perPage);
 
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage')
