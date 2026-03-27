@@ -19,7 +19,7 @@ new class extends Component {
 
     public function with(): array
     {
-        $rows = $this->listQuery(CmsLanguage::class)->paginate(self::PAGINATION);
+        $rows = $this->listQuery(CmsLanguage::class)->paginate($this->perPage);
 
         return [
             'listConfig' => $this->buildList($rows),

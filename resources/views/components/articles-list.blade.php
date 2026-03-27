@@ -59,7 +59,7 @@ new class extends Component
                     $query->where('title', 'like', '%' . $this->search . '%');
                 });
             })
-            ->paginate(self::PAGINATION);
+            ->paginate($this->perPage);
 
         foreach ($rows->items() as $row) {
             if (is_array($row->title)) {
