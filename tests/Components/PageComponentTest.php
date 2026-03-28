@@ -41,15 +41,15 @@ it('successfully stores the data', function () use ($testSettings): void {
     $this->actingAs($user);
 
     $component = Livewire::test($testSettings['componentName'])
-        ->set('detailData.name.de', 'Test Seite')
         ->set('detailData.name.en', 'Test Page')
+        ->set('detailData.name.de', 'Test Seite')
         ->set('detailData.layout', 'weblayout')
         ->call('store')
         ->assertOk();
 
     $this->assertDatabaseHas('pages', [
         'tenant_id' => $user->selected_tenant_id,
-        'name' => '{"de":"Test Seite","en":"Test Page"}',
+        'name' => '{"en":"Test Page","de":"Test Seite"}',
         'layout' => 'weblayout',
     ]);
 });
@@ -60,8 +60,8 @@ it('successfully deletes a page', function () use ($testSettings): void {
     $this->actingAs($user);
     $model = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
-        'name' => ['de' => 'Test Seite', 'en' => 'Test Page'],
-        'slug' => ['de' => '/test-seite', 'en' => '/test-page'],
+        'name' => ['en' => 'Test Page', 'de' => 'Test Seite'],
+        'slug' => ['en' => '/test-page', 'de' => '/test-seite'],
     ]);
 
     Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
@@ -80,8 +80,8 @@ it('opens page with pageId', function () use ($testSettings): void {
     $this->actingAs($user);
     $model = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
-        'name' => ['de' => 'Test Seite', 'en' => 'Test Page'],
-        'slug' => ['de' => '/test-seite', 'en' => '/test-page'],
+        'name' => ['en' => 'Test Page', 'de' => 'Test Seite'],
+        'slug' => ['en' => '/test-page', 'de' => '/test-seite'],
     ]);
 
     $component = Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
@@ -97,20 +97,20 @@ it('opens and stores existing page', function () use ($testSettings): void {
     $this->actingAs($user);
     $model = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
-        'name' => ['de' => 'Alte Seite', 'en' => 'Old Page'],
-        'slug' => ['de' => '/alte-seite', 'en' => '/old-page'],
+        'name' => ['en' => 'Old Page', 'de' => 'Alte Seite'],
+        'slug' => ['en' => '/old-page', 'de' => '/alte-seite'],
     ]);
 
     Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
         ->test($testSettings['componentName'])
-        ->set('detailData.name.de', 'Neue Seite')
         ->set('detailData.name.en', 'New Page')
+        ->set('detailData.name.de', 'Neue Seite')
         ->call('store')
         ->assertOk();
 
     $this->assertDatabaseHas('pages', [
         'id' => $model->id,
-        'name' => '{"de":"Neue Seite","en":"New Page"}',
+        'name' => '{"en":"New Page","de":"Neue Seite"}',
     ]);
 });
 

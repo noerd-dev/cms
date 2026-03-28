@@ -18,4 +18,14 @@ class CmsLanguageFactory extends Factory
             'name' => $this->faker->word(),
         ];
     }
+
+    public function english(): static
+    {
+        return $this->state(fn () => [
+            'code' => 'en',
+            'name' => 'English',
+            'is_active' => true,
+            'is_default' => true,
+        ]);
+    }
 }
