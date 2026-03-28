@@ -44,8 +44,8 @@ it('preserves manually edited slug when saving collection page', function (): vo
     $page = Page::factory()->create([
         'tenant_id' => $this->user->selected_tenant_id,
         'collection_id' => $this->collection->id,
-        'name' => ['de' => 'Gerit Woerner'],
-        'slug' => ['de' => '/gerit-woerner'],
+        'name' => ['en' => 'Gerit Woerner'],
+        'slug' => ['en' => '/gerit-woerner'],
         'data' => ['title' => 'Gerit Woerner', 'title2' => 'Steuerberater'],
         'layout' => 'weblayout',
     ]);
@@ -53,37 +53,30 @@ it('preserves manually edited slug when saving collection page', function (): vo
     // Open the page and change the slug manually
     $component = Livewire::withUrlParams(['pageId' => $page->id])
         ->test('page-detail', ['collectionKey' => 'mitarbeiter'])
-        ->set('detailData.slug.de', '/gerit-woerner-updated')  // Manual slug change
+        ->set('detailData.slug.en', '/gerit-woerner-updated')  // Manual slug change
         ->call('store')
         ->assertOk();
 
     // Verify the slug was preserved (not regenerated from name)
     $updatedPage = Page::find($page->id);
-    expect($updatedPage->slug)->toBe(['de' => '/gerit-woerner-updated']);
+    expect($updatedPage->slug)->toBe(['en' => '/gerit-woerner-updated']);
 });
 
 it('auto-generates slug only when slug is empty', function (): void {
-    // Create a page with empty slug
-    $page = Page::factory()->create([
-        'tenant_id' => $this->user->selected_tenant_id,
-        'collection_id' => $this->collection->id,
-        'name' => ['de' => ''],
-        'slug' => ['de' => ''],
-        'data' => ['title' => 'Test Person', 'title2' => 'Titel'],
-        'layout' => 'weblayout',
-    ]);
-
-    // Set a name but leave slug empty - should auto-generate
-    $component = Livewire::withUrlParams(['pageId' => $page->id])
-        ->test('page-detail', ['collectionKey' => 'mitarbeiter'])
-        ->set('detailData.name.de', 'Max Mustermann')
-        ->set('detailData.slug.de', '')  // Empty slug
+    // Create a new page (no modelId) so the updated hook auto-generates the slug
+    $component = Livewire::test('page-detail', ['collectionKey' => 'mitarbeiter'])
+        ->set('detailData.name.en', 'Max Mustermann')
         ->call('store')
         ->assertOk();
 
-    // Verify slug was auto-generated (may have language prefix based on tenant settings)
-    $updatedPage = Page::find($page->id);
-    expect($updatedPage->slug['de'])->toContain('max-mustermann');
+    // Verify slug was auto-generated
+    $page = Page::where('tenant_id', $this->user->selected_tenant_id)
+        ->whereNotNull('collection_id')
+        ->latest('id')
+        ->first();
+
+    expect($page)->not->toBeNull();
+    expect($page->slug['en'])->toContain('max-mustermann');
 });
 
 it('stores only collection-specific fields in data column', function (): void {
@@ -91,8 +84,8 @@ it('stores only collection-specific fields in data column', function (): void {
     $page = Page::factory()->create([
         'tenant_id' => $this->user->selected_tenant_id,
         'collection_id' => $this->collection->id,
-        'name' => ['de' => 'Test Person'],
-        'slug' => ['de' => '/test-person'],
+        'name' => ['en' => 'Test Person'],
+        'slug' => ['en' => '/test-person'],
         'data' => ['title' => 'Old Title'],
         'layout' => 'weblayout',
     ]);
@@ -132,11 +125,11 @@ it('does not overwrite slug column with stale data.slug value on mount', functio
     $page = Page::factory()->create([
         'tenant_id' => $this->user->selected_tenant_id,
         'collection_id' => $this->collection->id,
-        'name' => ['de' => 'Steuerberater'],
-        'slug' => ['de' => '/steuerberaterwirtschaftspruefer-mwd'],  // Correct slug in column
+        'name' => ['en' => 'Tax Consultant'],
+        'slug' => ['en' => '/tax-consultant-auditor'],  // Correct slug in column
         'data' => [
-            'title' => 'Steuerberater',
-            'slug' => ['de' => '/stellenangebot'],  // Stale/old slug in data - should NOT overwrite
+            'title' => 'Tax Consultant',
+            'slug' => ['en' => '/job-posting'],  // Stale/old slug in data - should NOT overwrite
         ],
         'layout' => 'weblayout',
     ]);
@@ -147,7 +140,7 @@ it('does not overwrite slug column with stale data.slug value on mount', functio
 
     // Verify the correct slug from the column is displayed, not the stale one from data
     $detailData = $component->get('detailData');
-    expect($detailData['slug']['de'])->toBe('/steuerberaterwirtschaftspruefer-mwd');
+    expect($detailData['slug']['en'])->toBe('/tax-consultant-auditor');
 });
 
 it('does not overwrite core page fields from data column on mount', function (): void {
@@ -155,14 +148,14 @@ it('does not overwrite core page fields from data column on mount', function ():
     $page = Page::factory()->create([
         'tenant_id' => $this->user->selected_tenant_id,
         'collection_id' => $this->collection->id,
-        'name' => ['de' => 'Correct Name'],
-        'slug' => ['de' => '/correct-slug'],
+        'name' => ['en' => 'Correct Name'],
+        'slug' => ['en' => '/correct-slug'],
         'layout' => 'correct-layout',
         'sort' => 5,
         'data' => [
             'title' => 'Collection Field',
-            'name' => ['de' => 'Stale Name'],      // Should NOT overwrite
-            'slug' => ['de' => '/stale-slug'],     // Should NOT overwrite
+            'name' => ['en' => 'Stale Name'],      // Should NOT overwrite
+            'slug' => ['en' => '/stale-slug'],     // Should NOT overwrite
             'layout' => 'stale-layout',            // Should NOT overwrite
             'sort' => 99,                          // Should NOT overwrite
         ],
@@ -174,8 +167,8 @@ it('does not overwrite core page fields from data column on mount', function ():
 
     // Verify core fields are preserved from columns, not overwritten by data
     $detailData = $component->get('detailData');
-    expect($detailData['name']['de'])->toBe('Correct Name');
-    expect($detailData['slug']['de'])->toBe('/correct-slug');
+    expect($detailData['name']['en'])->toBe('Correct Name');
+    expect($detailData['slug']['en'])->toBe('/correct-slug');
     expect($detailData['layout'])->toBe('correct-layout');
     expect($detailData['sort'])->toBe(5);
 

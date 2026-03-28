@@ -23,28 +23,28 @@ it('create a page', function (): void {
         ->assertOk();
 
     Livewire::test('page-detail')
-        ->set('detailData.name.de', 'Test Page')
+        ->set('detailData.name.en', 'Test Page')
         ->call('store')
         ->assertOk();
 
     $this->assertDatabaseHas('pages', [
         'tenant_id' => $tenant->id,
-        'name' => '{"de":"Test Page"}',
+        'name' => '{"en":"Test Page"}',
     ]);
 
     // Open the page-component for a created page and edit it
     $page = Page::where('tenant_id', $tenant->id)
-        ->where('name', '{"de":"Test Page"}')
+        ->where('name', '{"en":"Test Page"}')
         ->first();
 
     Livewire::test('page-detail', ['pageId' => $page->id])
-        ->set('detailData.name.de', 'Test Page')
-        ->set('detailData.name.en', 'Test Page English')
+        ->set('detailData.name.en', 'Test Page')
+        ->set('detailData.name.de', 'Test Page German')
         ->call('store')
         ->assertOk();
 
     $this->assertDatabaseHas('pages', [
         'tenant_id' => $tenant->id,
-        'name' => '{"de":"Test Page","en":"Test Page English"}',
+        'name' => '{"en":"Test Page","de":"Test Page German"}',
     ]);
 });

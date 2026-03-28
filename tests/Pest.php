@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Models\Tenant;
 use Noerd\Models\TenantApp;
@@ -34,6 +35,9 @@ uses(TestCase::class, RefreshDatabase::class)
         );
 
         $tenant->tenantApps()->attach($cmsApp->id);
+
+        // Ensure default English language exists for this tenant
+        CmsLanguage::ensureDefaultLanguageForTenant($tenant->id);
 
         $this->user = NoerdUser::factory()->create();
         $this->user->tenants()->attach($tenant->id);
