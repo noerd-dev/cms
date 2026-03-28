@@ -12,7 +12,10 @@ use Noerd\Cms\Console\Commands\SyncFormTypesCommand;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Middleware\CmsApiAuth;
 use Noerd\Cms\Models\CmsLanguage;
+use Noerd\Cms\Navigation\CollectionsNavigationProvider;
+use Noerd\Cms\Navigation\PageCollectionsNavigationProvider;
 use Noerd\Models\Tenant;
+use Noerd\Services\DynamicNavigationRegistry;
 
 class CmsServiceProvider extends ServiceProvider
 {
@@ -68,6 +71,11 @@ class CmsServiceProvider extends ServiceProvider
                 SyncFormTypesCommand::class,
             ]);
         }
+
+        // Register dynamic navigation providers
+        $registry = $this->app->make(DynamicNavigationRegistry::class);
+        $registry->register(new CollectionsNavigationProvider);
+        $registry->register(new PageCollectionsNavigationProvider);
 
         // Create default English language when a new tenant is created
         Tenant::created(function (Tenant $tenant): void {
