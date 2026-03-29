@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\CmsLanguage;
@@ -74,6 +75,22 @@ new class extends Component
         if (request()->create) {
             $this->listAction();
         }
+    }
+
+    #[On('listRefresh')]
+    public function reloadCollectionLayout(): void
+    {
+        $this->collectionLayout = CollectionHelper::getCollectionFields($this->collectionKey);
+    }
+
+    public function manageCollection(): void
+    {
+        $this->dispatch(
+            event: 'noerdModal',
+            modalComponent: 'collection-definition-detail',
+            source: $this->getComponentName(),
+            arguments: ['modelId' => $this->collectionKey],
+        );
     }
 
     public function listAction(mixed $modelId = null, array $relations = []): void
@@ -188,7 +205,7 @@ new class extends Component
         });
 
         $collectionTitle = $this->collectionLayout['title'] ?? ucfirst($this->collectionKey);
-        $actionLabel = $this->collectionLayout['buttonList'] ?? 'Neuer Eintrag';
+        $actionLabel = __('cms_new_entry');
 
         // Generate dynamic columns from YAML fields
         $columns = [];
@@ -222,7 +239,10 @@ new class extends Component
         return [
             'listConfig' => $this->buildList($rows, [
                 'title' => $collectionTitle,
-                'actions' => [['label' => $actionLabel, 'action' => 'listAction']],
+                'actions' => [
+                    ['label' => 'cms_manage_collection', 'action' => 'manageCollection', 'style' => 'secondary', 'shortcut' => 'c'],
+                    ['label' => $actionLabel, 'action' => 'listAction', 'shortcut' => 'n'],
+                ],
                 'disableSearch' => false,
                 'columns' => $columns,
             ]),

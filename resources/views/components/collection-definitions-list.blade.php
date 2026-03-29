@@ -96,7 +96,6 @@ new class extends Component
                 'title' => $collection->name ?? ucfirst($filename),
                 'titleList' => $collection->name ?? ucfirst($filename),
                 'key' => $collection->collection_key,
-                'buttonList' => 'Neuer Eintrag',
                 'description' => '',
                 'hasPage' => false,
                 'fields' => $fields,

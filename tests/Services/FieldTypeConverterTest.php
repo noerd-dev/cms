@@ -44,7 +44,6 @@ describe('FieldTypeConverter', function (): void {
                     'title' => 'Beratung',
                     'titleList' => 'Beratungseinträge',
                     'key' => 'BERATUNG',
-                    'buttonList' => 'Neuer Eintrag',
                     'description' => '',
                     'hasPage' => false,
                     'fields' => [
@@ -197,7 +196,6 @@ describe('FieldTypeConverter', function (): void {
                     'title' => 'Beratung',
                     'titleList' => 'Beratungseinträge',
                     'key' => $uniqueCollectionKey,
-                    'buttonList' => 'Neuer Eintrag',
                     'description' => '',
                     'hasPage' => false,
                     'fields' => [
