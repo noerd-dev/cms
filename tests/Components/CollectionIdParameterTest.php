@@ -21,7 +21,6 @@ beforeEach(function (): void {
             ->andReturn([
                 'title' => 'Standort',
                 'titleList' => 'Standorte',
-                'buttonList' => 'Neuer Standort',
                 'hasPage' => true,
                 'fields' => [
                     ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
@@ -33,7 +32,6 @@ beforeEach(function (): void {
             ->andReturn([
                 'title' => 'Mitarbeiter',
                 'titleList' => 'Mitarbeiter',
-                'buttonList' => 'Neuer Mitarbeiter',
                 'hasPage' => true,
                 'fields' => [
                     ['name' => 'detailData.title', 'label' => 'Name', 'type' => 'text'],

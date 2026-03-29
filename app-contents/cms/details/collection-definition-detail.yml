@@ -12,10 +12,6 @@ fields:
     label: cms_label_title_plural
     type: text
     colspan: 4
-  - name: detailData.buttonList
-    label: cms_label_button_label
-    type: text
-    colspan: 4
   - name: detailData.description
     label: cms_label_description
     type: text

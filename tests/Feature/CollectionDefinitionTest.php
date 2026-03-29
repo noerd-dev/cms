@@ -21,7 +21,6 @@ function createContactsFixture(): void
         'title' => 'Kontakt',
         'titleList' => 'Kontakte',
         'key' => 'CONTACTS',
-        'buttonList' => 'cms_new_contact',
         'description' => '',
         'hasPage' => true,
         'fields' => [
@@ -140,7 +139,6 @@ it('creates a new YAML file with correct structure', function (): void {
         ->set('detailData.filename', 'test-store')
         ->set('detailData.title', 'Test Store')
         ->set('detailData.titleList', 'Test Stores')
-        ->set('detailData.buttonList', 'New Test')
         ->set('detailData.hasPage', true)
         ->call('store')
         ->assertHasNoErrors();
@@ -367,7 +365,6 @@ it('shows rename confirmation when a field name is changed', function (): void {
         'title' => 'Rename Test',
         'titleList' => 'Rename Tests',
         'key' => 'RENAME_TEST',
-        'buttonList' => '',
         'description' => '',
         'hasPage' => false,
         'fields' => [
@@ -391,7 +388,6 @@ it('renames field keys in database entries when confirmed', function (): void {
         'title' => 'Rename Test',
         'titleList' => 'Rename Tests',
         'key' => 'RENAME_TEST',
-        'buttonList' => '',
         'description' => '',
         'hasPage' => false,
         'fields' => [
@@ -433,7 +429,6 @@ it('skips database rename when user declines', function (): void {
         'title' => 'Rename Test',
         'titleList' => 'Rename Tests',
         'key' => 'RENAME_TEST',
-        'buttonList' => '',
         'description' => '',
         'hasPage' => false,
         'fields' => [

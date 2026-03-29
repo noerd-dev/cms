@@ -21,7 +21,6 @@ beforeEach(function (): void {
             ->andReturn([
                 'title' => 'Project',
                 'titleList' => 'Projects',
-                'buttonList' => 'New Project',
                 'hasPage' => true,
                 'fields' => [
                     ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
@@ -35,7 +34,6 @@ beforeEach(function (): void {
             ->andReturn([
                 'title' => 'Contact',
                 'titleList' => 'Contacts',
-                'buttonList' => 'New Contact',
                 'hasPage' => true,
                 'fields' => [
                     ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
@@ -48,7 +46,6 @@ beforeEach(function (): void {
             ->andReturn([
                 'title' => 'Slider',
                 'titleList' => 'Sliders',
-                'buttonList' => 'New Slider',
                 'hasPage' => false,
                 'fields' => [
                     ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
@@ -61,7 +58,6 @@ beforeEach(function (): void {
             ->andReturn([
                 'title' => 'Customer',
                 'titleList' => 'Customers',
-                'buttonList' => 'New Customer',
                 'hasPage' => false,
                 'fields' => [
                     ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],

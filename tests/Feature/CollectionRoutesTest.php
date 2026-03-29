@@ -15,7 +15,6 @@ beforeEach(function (): void {
             ->andReturn([
                 'title' => 'Project',
                 'titleList' => 'Projects',
-                'buttonList' => 'New Project',
                 'fields' => [
                     ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
@@ -26,7 +25,6 @@ beforeEach(function (): void {
             ->andReturn([
                 'title' => 'Test Collection',
                 'titleList' => 'Test Collections',
-                'buttonList' => 'New Entry',
                 'fields' => [
                     ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
@@ -37,7 +35,6 @@ beforeEach(function (): void {
             ->andReturn([
                 'title' => 'Test Collection',
                 'titleList' => 'Test Collections',
-                'buttonList' => 'New Entry',
                 'fields' => [
                     ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
@@ -48,7 +45,6 @@ beforeEach(function (): void {
             ->andReturn([
                 'title' => 'Test Collection',
                 'titleList' => 'Test Collections',
-                'buttonList' => 'New Entry',
                 'fields' => [
                     ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],
@@ -59,7 +55,6 @@ beforeEach(function (): void {
             ->andReturn([
                 'title' => 'Test Collection',
                 'titleList' => 'Test Collections',
-                'buttonList' => 'New Entry',
                 'fields' => [
                     ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                 ],

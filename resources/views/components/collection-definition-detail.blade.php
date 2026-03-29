@@ -36,7 +36,6 @@ new class extends Component
             'filename' => '',
             'title' => '',
             'titleList' => '',
-            'buttonList' => '',
             'description' => '',
             'hasPage' => false,
         ];
@@ -51,7 +50,6 @@ new class extends Component
                 $this->detailData['filename'] = $this->modelId;
                 $this->detailData['title'] = $content['title'] ?? '';
                 $this->detailData['titleList'] = $content['titleList'] ?? '';
-                $this->detailData['buttonList'] = $content['buttonList'] ?? '';
                 $this->detailData['description'] = $content['description'] ?? '';
                 $this->detailData['hasPage'] = ! empty($content['hasPage']);
 
@@ -134,7 +132,6 @@ new class extends Component
             'title' => $this->detailData['title'],
             'titleList' => $this->detailData['titleList'],
             'key' => $key,
-            'buttonList' => $this->detailData['buttonList'] ?: '',
             'description' => $this->detailData['description'] ?: '',
             'hasPage' => (bool) $this->detailData['hasPage'],
             'fields' => $yamlFields,
@@ -188,7 +185,7 @@ new class extends Component
         $this->modelId = $filename;
 
         $this->dispatch('listRefresh');
-        $this->closeModalProcess('collection-definitions-list');
+        $this->showSuccessIndicator = true;
     }
 
     public function confirmRenameAndSave(): void
@@ -308,54 +305,76 @@ new class extends Component
 
         @if(count($fields) === 0)
             <p class="text-sm text-gray-500 italic">{{ __('cms_label_no_fields') }}</p>
+        @else
+            <table class="min-w-full border-separate border-spacing-0">
+                <thead>
+                    <tr>
+                        <th class="border-r first:pl-6 border-b border-gray-300 bg-brand-navi/75 py-3.5 pr-3 pl-2 text-left text-sm font-semibold text-gray-900 backdrop-blur-sm backdrop-filter">
+                            {{ __('cms_label_field_name') }}
+                        </th>
+                        <th class="border-r border-b border-gray-300 bg-brand-navi/75 py-3.5 pr-3 pl-2 text-left text-sm font-semibold text-gray-900 backdrop-blur-sm backdrop-filter">
+                            {{ __('cms_label_field_label') }}
+                        </th>
+                        <th class="border-r border-b border-gray-300 bg-brand-navi/75 py-3.5 pr-3 pl-2 text-left text-sm font-semibold text-gray-900 backdrop-blur-sm backdrop-filter" style="width: 200px;">
+                            {{ __('cms_label_field_type') }}
+                        </th>
+                        <th class="border-r border-b border-gray-300 bg-brand-navi/75 py-3.5 pr-3 pl-2 text-left text-sm font-semibold text-gray-900 backdrop-blur-sm backdrop-filter" style="width: 80px;">
+                            {{ __('cms_label_colspan') }}
+                        </th>
+                        <th class="last:border-r-0 border-b border-gray-300 bg-brand-navi/75 py-3.5 pr-3 pl-2 text-left text-sm font-semibold text-gray-900 backdrop-blur-sm backdrop-filter" style="width: 50px;">
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($fields as $index => $field)
+                        <tr wire:key="field-{{ $index }}" class="group hover:bg-brand-bg border border-black/10">
+                            <td class="py-1 first:pl-4 border-gray-300 border-r border-b">
+                                <input type="text" wire:model="fields.{{ $index }}.name"
+                                       placeholder="{{ __('cms_label_field_name') }}"
+                                       class="border-transparent! ring-0! border-1! focus:ring-0! focus:border-1! p-0 bg-transparent w-full text-sm py-0.5 px-1.5">
+                                @error("fields.{$index}.name") <span class="text-red-500 text-xs px-1.5">{{ $message }}</span> @enderror
+                            </td>
+                            <td class="py-1 border-gray-300 border-r border-b">
+                                <input type="text" wire:model="fields.{{ $index }}.label"
+                                       placeholder="{{ __('cms_label_field_label') }}"
+                                       class="border-transparent! ring-0! border-1! focus:ring-0! focus:border-1! p-0 bg-transparent w-full text-sm py-0.5 px-1.5">
+                                @error("fields.{$index}.label") <span class="text-red-500 text-xs px-1.5">{{ $message }}</span> @enderror
+                            </td>
+                            <td class="py-1 border-gray-300 border-r border-b">
+                                <select wire:model="fields.{{ $index }}.type"
+                                        class="border-transparent! ring-0! border-1! focus:ring-0! focus:border-1! p-0 bg-transparent w-full text-sm py-0.5 px-1.5">
+                                    <option value="text">Text</option>
+                                    <option value="translatableText">Translatable Text</option>
+                                    <option value="translatableTextarea">Translatable Textarea</option>
+                                    <option value="translatableRichText">Translatable RichText</option>
+                                    <option value="image">Image</option>
+                                    <option value="email">E-Mail</option>
+                                    <option value="tel">Tel</option>
+                                    <option value="checkbox">Checkbox</option>
+                                </select>
+                            </td>
+                            <td class="py-1 border-gray-300 border-r border-b">
+                                <select wire:model="fields.{{ $index }}.colspan"
+                                        class="border-transparent! ring-0! border-1! focus:ring-0! focus:border-1! p-0 bg-transparent w-full text-sm py-0.5 px-1.5">
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="6">6</option>
+                                    <option value="12">12</option>
+                                </select>
+                            </td>
+                            <td class="py-1 last:border-r-0 border-gray-300 border-b text-center">
+                                <button type="button" wire:click="removeField({{ $index }})"
+                                        class="text-red-500 hover:text-red-700 p-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         @endif
-
-        <div class="space-y-2">
-            @foreach($fields as $index => $field)
-                <div wire:key="field-{{ $index }}" class="flex items-center gap-2">
-                    <div class="flex-1">
-                        <input type="text" wire:model="fields.{{ $index }}.name"
-                               placeholder="{{ __('cms_label_field_name') }}"
-                               class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm">
-                        @error("fields.{$index}.name") <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="flex-1">
-                        <input type="text" wire:model="fields.{{ $index }}.label"
-                               placeholder="{{ __('cms_label_field_label') }}"
-                               class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm">
-                        @error("fields.{$index}.label") <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="w-48">
-                        <select wire:model="fields.{{ $index }}.type"
-                                class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm">
-                            <option value="text">Text</option>
-                            <option value="translatableText">Translatable Text</option>
-                            <option value="translatableTextarea">Translatable Textarea</option>
-                            <option value="translatableRichText">Translatable RichText</option>
-                            <option value="image">Image</option>
-                            <option value="email">E-Mail</option>
-                            <option value="tel">Tel</option>
-                            <option value="checkbox">Checkbox</option>
-                        </select>
-                    </div>
-                    <div class="w-20">
-                        <select wire:model="fields.{{ $index }}.colspan"
-                                class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm">
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="6">6</option>
-                            <option value="12">12</option>
-                        </select>
-                    </div>
-                    <button type="button" wire:click="removeField({{ $index }})"
-                            class="text-red-500 hover:text-red-700 p-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </div>
-            @endforeach
-        </div>
 
         <button type="button" wire:click="addField"
                 class="mt-3 inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">

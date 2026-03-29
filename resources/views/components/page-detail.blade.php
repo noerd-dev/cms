@@ -716,7 +716,10 @@ new class extends Component
             </div>
         @endif
 
-        <x-noerd::tab-content :layout="$pageLayout" :showBlock="$this->hasPageFeatures" :model="$detailData">
+        @php
+            $effectiveLayout = $this->hasPageFeatures ? $pageLayout : array_merge($pageLayout, ['tabs' => []]);
+        @endphp
+        <x-noerd::tab-content :layout="$effectiveLayout" :showBlock="$this->hasPageFeatures" :model="$detailData">
             <x-slot:tab1>
                 @include('cms::components._page-elements', ['hasPageFeatures' => $this->hasPageFeatures])
             </x-slot:tab1>
