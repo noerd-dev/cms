@@ -1,6 +1,8 @@
 <?php
 
 use Livewire\Livewire;
+use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Symfony\Component\Yaml\Yaml;
 
@@ -30,7 +32,7 @@ function createContactsFixture(): void
 
 afterEach(function (): void {
     // Clean up test-created YAML files
-    foreach (['test-definition', 'test-definition-2', 'test-store', 'test-duplicate', 'film', 'my-collection', 'contacts', 'contacts2', 'contacts-renamed'] as $name) {
+    foreach (['test-definition', 'test-definition-2', 'test-store', 'test-duplicate', 'film', 'my-collection', 'contacts', 'contacts2', 'contacts-renamed', 'rename-test'] as $name) {
         $path = collectionsPath() . '/' . $name . '.yml';
         if (file_exists($path)) {
             unlink($path);
@@ -323,4 +325,142 @@ it('deletes a YAML file', function (): void {
         ->call('delete');
 
     expect(file_exists($path))->toBeFalse();
+});
+
+it('deletes associated database records when deleting a collection definition', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    $path = collectionsPath() . '/test-definition-2.yml';
+    file_put_contents($path, Yaml::dump([
+        'title' => 'To Delete',
+        'titleList' => 'To Delete',
+        'key' => 'TEST_DEFINITION_2',
+        'fields' => [],
+    ]));
+
+    $collection = Collection::create([
+        'tenant_id' => $tenant->id,
+        'collection_key' => 'TEST_DEFINITION_2',
+        'name' => 'To Delete',
+    ]);
+
+    $page = Page::factory()->create([
+        'tenant_id' => $tenant->id,
+        'collection_id' => $collection->id,
+    ]);
+
+    Livewire::test('collection-definition-detail', ['modelId' => 'test-definition-2'])
+        ->call('delete');
+
+    expect(file_exists($path))->toBeFalse();
+    expect(Collection::find($collection->id))->toBeNull();
+    expect(Page::find($page->id))->toBeNull();
+});
+
+it('shows rename confirmation when a field name is changed', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    $path = collectionsPath() . '/rename-test.yml';
+    file_put_contents($path, Yaml::dump([
+        'title' => 'Rename Test',
+        'titleList' => 'Rename Tests',
+        'key' => 'RENAME_TEST',
+        'buttonList' => '',
+        'description' => '',
+        'hasPage' => false,
+        'fields' => [
+            ['name' => 'detailData.headline1', 'label' => 'Headline', 'type' => 'text', 'colspan' => 6],
+        ],
+    ]));
+
+    Livewire::test('collection-definition-detail', ['modelId' => 'rename-test'])
+        ->set('fields.0.name', 'headline-one')
+        ->call('store')
+        ->assertSet('showRenameConfirmation', true)
+        ->assertSet('pendingRenames', ['headline1' => 'headline-one']);
+});
+
+it('renames field keys in database entries when confirmed', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    $path = collectionsPath() . '/rename-test.yml';
+    file_put_contents($path, Yaml::dump([
+        'title' => 'Rename Test',
+        'titleList' => 'Rename Tests',
+        'key' => 'RENAME_TEST',
+        'buttonList' => '',
+        'description' => '',
+        'hasPage' => false,
+        'fields' => [
+            ['name' => 'detailData.headline1', 'label' => 'Headline', 'type' => 'text', 'colspan' => 6],
+        ],
+    ]));
+
+    $collection = Collection::create([
+        'tenant_id' => $tenant->id,
+        'collection_key' => 'RENAME_TEST',
+        'name' => 'Rename Test',
+    ]);
+
+    $page = Page::factory()->create([
+        'tenant_id' => $tenant->id,
+        'collection_id' => $collection->id,
+        'data' => ['headline1' => 'Hello World', 'other' => 'unchanged'],
+    ]);
+
+    Livewire::test('collection-definition-detail', ['modelId' => 'rename-test'])
+        ->set('fields.0.name', 'headline-one')
+        ->call('store')
+        ->assertSet('showRenameConfirmation', true)
+        ->call('confirmRenameAndSave')
+        ->assertSet('showRenameConfirmation', false);
+
+    $page->refresh();
+    expect($page->data)->toHaveKey('headline-one', 'Hello World');
+    expect($page->data)->not->toHaveKey('headline1');
+    expect($page->data)->toHaveKey('other', 'unchanged');
+});
+
+it('skips database rename when user declines', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    $path = collectionsPath() . '/rename-test.yml';
+    file_put_contents($path, Yaml::dump([
+        'title' => 'Rename Test',
+        'titleList' => 'Rename Tests',
+        'key' => 'RENAME_TEST',
+        'buttonList' => '',
+        'description' => '',
+        'hasPage' => false,
+        'fields' => [
+            ['name' => 'detailData.headline1', 'label' => 'Headline', 'type' => 'text', 'colspan' => 6],
+        ],
+    ]));
+
+    $collection = Collection::create([
+        'tenant_id' => $tenant->id,
+        'collection_key' => 'RENAME_TEST',
+        'name' => 'Rename Test',
+    ]);
+
+    $page = Page::factory()->create([
+        'tenant_id' => $tenant->id,
+        'collection_id' => $collection->id,
+        'data' => ['headline1' => 'Hello World'],
+    ]);
+
+    Livewire::test('collection-definition-detail', ['modelId' => 'rename-test'])
+        ->set('fields.0.name', 'headline-one')
+        ->call('store')
+        ->assertSet('showRenameConfirmation', true)
+        ->call('skipRenameAndSave')
+        ->assertSet('showRenameConfirmation', false);
+
+    $page->refresh();
+    expect($page->data)->toHaveKey('headline1', 'Hello World');
+    expect($page->data)->not->toHaveKey('headline-one');
 });

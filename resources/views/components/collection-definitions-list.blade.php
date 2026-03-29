@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Traits\NoerdList;
 use Symfony\Component\Yaml\Yaml;
@@ -8,6 +11,29 @@ use Symfony\Component\Yaml\Yaml;
 new class extends Component
 {
     use NoerdList;
+
+    public function mount(): void
+    {
+        $this->listId = Str::random();
+        $this->loadListFilters();
+    }
+
+    #[Computed]
+    public function tableFilters(): array
+    {
+        return [
+            [
+                'label' => __('cms_label_type'),
+                'column' => 'has_page',
+                'type' => 'Picklist',
+                'options' => [
+                    '' => __('cms_all_types'),
+                    'page' => __('cms_with_page'),
+                    'data' => __('cms_data_only'),
+                ],
+            ],
+        ];
+    }
 
     public function listAction(mixed $modelId = null, array $relations = []): void
     {
@@ -19,9 +45,88 @@ new class extends Component
         );
     }
 
+    /**
+     * Restore missing YAML files for collections that have entries in the database.
+     */
+    private function restoreMissingCollectionYamlFiles(string $collectionsPath): void
+    {
+        $existingKeys = collect(glob($collectionsPath . '/*.yml'))
+            ->map(function ($file) {
+                $filename = pathinfo($file, PATHINFO_FILENAME);
+
+                return mb_strtoupper(str_replace('-', '_', $filename));
+            })
+            ->toArray();
+
+        $missingCollections = DB::table('collections')
+            ->whereNotIn('collection_key', $existingKeys)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('pages')
+                    ->whereColumn('pages.collection_id', 'collections.id');
+            })
+            ->get(['collection_key', 'name']);
+
+        foreach ($missingCollections as $collection) {
+            $filename = str_replace('_', '-', mb_strtolower($collection->collection_key));
+            $path = $collectionsPath . '/' . $filename . '.yml';
+
+            $dataKeys = DB::table('pages')
+                ->join('collections', 'pages.collection_id', '=', 'collections.id')
+                ->where('collections.collection_key', $collection->collection_key)
+                ->whereNotNull('pages.data')
+                ->value('pages.data');
+
+            $fields = [];
+            if ($dataKeys) {
+                $decoded = json_decode($dataKeys, true);
+                if (is_array($decoded)) {
+                    foreach (array_keys($decoded) as $key) {
+                        $fields[] = [
+                            'name' => 'detailData.' . $key,
+                            'label' => ucfirst($key),
+                            'type' => 'text',
+                            'colspan' => 12,
+                        ];
+                    }
+                }
+            }
+
+            $data = [
+                'title' => $collection->name ?? ucfirst($filename),
+                'titleList' => $collection->name ?? ucfirst($filename),
+                'key' => $collection->collection_key,
+                'buttonList' => 'Neuer Eintrag',
+                'description' => '',
+                'hasPage' => false,
+                'fields' => $fields,
+            ];
+
+            file_put_contents($path, Yaml::dump($data, 4, 2));
+        }
+    }
+
     public function with(): array
     {
         $collectionsPath = base_path('app-configs/cms/collections');
+
+        $this->restoreMissingCollectionYamlFiles($collectionsPath);
+
+        $collectionMeta = DB::table('collections')
+            ->leftJoin('pages', 'pages.collection_id', '=', 'collections.id')
+            ->leftJoin('noerd_users', 'collections.created_by', '=', 'noerd_users.id')
+            ->select(
+                'collections.collection_key',
+                DB::raw('count(pages.id) as entry_count'),
+                'noerd_users.name as creator_name',
+            )
+            ->groupBy('collections.collection_key', 'noerd_users.name')
+            ->get()
+            ->keyBy('collection_key');
+
+        $entryCounts = $collectionMeta->pluck('entry_count', 'collection_key')->toArray();
+        $creatorNames = $collectionMeta->pluck('creator_name', 'collection_key')->toArray();
+
         $files = glob($collectionsPath . '/*.yml');
 
         $items = [];
@@ -34,12 +139,16 @@ new class extends Component
                 continue;
             }
 
+            $collectionKey = mb_strtoupper(str_replace('-', '_', $filename));
+
             $item = [
                 'id' => $filename,
                 'titleList' => $content['titleList'] ?? $filename,
-                'key' => $content['key'] ?? mb_strtoupper(str_replace('-', '_', $filename)),
+                'key' => $content['key'] ?? $collectionKey,
                 'hasPage' => ! empty($content['hasPage']) ? '✓' : '–',
                 'fieldCount' => isset($content['fields']) ? count($content['fields']) : 0,
+                'entryCount' => $entryCounts[$collectionKey] ?? 0,
+                'createdBy' => $creatorNames[$collectionKey] ?? 'System',
             ];
 
             // Apply search filter
@@ -52,6 +161,15 @@ new class extends Component
                 if (! $matchesSearch) {
                     continue;
                 }
+            }
+
+            // Apply type filter
+            $hasPageFilter = $this->listFilters['has_page'] ?? '';
+            if ($hasPageFilter === 'page' && $item['hasPage'] !== '✓') {
+                continue;
+            }
+            if ($hasPageFilter === 'data' && $item['hasPage'] !== '–') {
+                continue;
             }
 
             $items[] = $item;
@@ -80,6 +198,8 @@ new class extends Component
                     ['field' => 'key', 'label' => 'Key'],
                     ['field' => 'hasPage', 'label' => __('cms_label_has_page')],
                     ['field' => 'fieldCount', 'label' => __('cms_label_field_count')],
+                    ['field' => 'entryCount', 'label' => __('cms_label_entry_count')],
+                    ['field' => 'createdBy', 'label' => __('cms_label_created_by')],
                 ],
             ]),
         ];
