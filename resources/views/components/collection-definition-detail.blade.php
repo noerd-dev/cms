@@ -1,7 +1,11 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Models\Page;
 use Noerd\Helpers\StaticConfigHelper;
 use Noerd\Traits\NoerdDetail;
 use Symfony\Component\Yaml\Yaml;
@@ -16,6 +20,12 @@ new class extends Component
     public array $fields = [];
 
     public bool $isEditing = false;
+
+    public array $originalFieldNames = [];
+
+    public bool $showRenameConfirmation = false;
+
+    public array $pendingRenames = [];
 
     public function mount(): void
     {
@@ -46,13 +56,15 @@ new class extends Component
                 $this->detailData['hasPage'] = ! empty($content['hasPage']);
 
                 $this->fields = [];
-                foreach ($content['fields'] ?? [] as $field) {
+                foreach ($content['fields'] ?? [] as $index => $field) {
+                    $name = preg_replace('/^(model\.|detailData\.)/', '', $field['name'] ?? '');
                     $this->fields[] = [
-                        'name' => preg_replace('/^(model\.|detailData\.)/', '', $field['name'] ?? ''),
+                        'name' => $name,
                         'label' => $field['label'] ?? '',
                         'type' => $field['type'] ?? 'text',
                         'colspan' => $field['colspan'] ?? 6,
                     ];
+                    $this->originalFieldNames[$index] = $name;
                 }
             }
         }
@@ -128,6 +140,24 @@ new class extends Component
             'fields' => $yamlFields,
         ];
 
+        // Detect renamed fields
+        $renames = [];
+        if ($this->isEditing) {
+            foreach ($this->originalFieldNames as $index => $oldName) {
+                if (isset($this->fields[$index]) && $this->fields[$index]['name'] !== $oldName && $oldName !== '') {
+                    $renames[$oldName] = $this->fields[$index]['name'];
+                }
+            }
+        }
+
+        // If there are renames and user hasn't confirmed yet, ask
+        if ($renames && ! $this->showRenameConfirmation) {
+            $this->pendingRenames = $renames;
+            $this->showRenameConfirmation = true;
+
+            return;
+        }
+
         $yamlContent = Yaml::dump($data, 4, 2);
         file_put_contents($path, $yamlContent);
 
@@ -137,6 +167,21 @@ new class extends Component
             if (file_exists($oldPath)) {
                 unlink($oldPath);
             }
+
+            Collection::where('tenant_id', Auth::user()->selected_tenant_id)
+                ->where('collection_key', mb_strtoupper(str_replace('-', '_', $this->modelId)))
+                ->update(['collection_key' => $key]);
+        }
+
+        // Ensure collection DB record exists with created_by
+        if (! $this->isEditing) {
+            Collection::firstOrCreate([
+                'tenant_id' => Auth::user()->selected_tenant_id,
+                'collection_key' => $key,
+            ], [
+                'name' => $this->detailData['titleList'],
+                'created_by' => Auth::id(),
+            ]);
         }
 
         $this->isEditing = true;
@@ -144,6 +189,66 @@ new class extends Component
 
         $this->dispatch('listRefresh');
         $this->closeModalProcess('collection-definitions-list');
+    }
+
+    public function confirmRenameAndSave(): void
+    {
+        $this->renameFieldsInDatabase();
+        $this->showRenameConfirmation = false;
+        $this->syncOriginalFieldNames();
+        $this->store();
+    }
+
+    public function skipRenameAndSave(): void
+    {
+        $this->pendingRenames = [];
+        $this->showRenameConfirmation = false;
+        $this->syncOriginalFieldNames();
+        $this->store();
+    }
+
+    private function syncOriginalFieldNames(): void
+    {
+        $this->originalFieldNames = [];
+        foreach ($this->fields as $index => $field) {
+            $this->originalFieldNames[$index] = $field['name'];
+        }
+    }
+
+    private function renameFieldsInDatabase(): void
+    {
+        $collectionKey = mb_strtoupper(str_replace('-', '_', $this->modelId));
+        $collection = Collection::where('tenant_id', Auth::user()->selected_tenant_id)
+            ->where('collection_key', $collectionKey)
+            ->first();
+
+        if (! $collection) {
+            return;
+        }
+
+        $pages = Page::where('collection_id', $collection->id)
+            ->whereNotNull('data')
+            ->get();
+
+        foreach ($pages as $page) {
+            $data = $page->data;
+            $changed = false;
+
+            foreach ($this->pendingRenames as $oldKey => $newKey) {
+                if (array_key_exists($oldKey, $data) && ! array_key_exists($newKey, $data)) {
+                    $data[$newKey] = $data[$oldKey];
+                    unset($data[$oldKey]);
+                    $changed = true;
+                }
+            }
+
+            if ($changed) {
+                $page->data = $data;
+                $page->saveQuietly();
+            }
+        }
+
+        $this->pendingRenames = [];
     }
 
     public function copy(): void
@@ -176,6 +281,9 @@ new class extends Component
         if (! $this->modelId) {
             return;
         }
+
+        $collectionKey = mb_strtoupper(str_replace('-', '_', $this->modelId));
+        Collection::where('collection_key', $collectionKey)->delete();
 
         $path = base_path('app-configs/cms/collections/' . $this->modelId . '.yml');
         if (file_exists($path)) {
@@ -258,16 +366,59 @@ new class extends Component
         </button>
     </div>
 
+    @if($showRenameConfirmation)
+        <div class="fixed inset-0 z-50 flex items-center justify-center" x-data x-on:keydown.escape.window="$wire.skipRenameAndSave()">
+            <div class="fixed inset-0 bg-gray-800/50" wire:click="skipRenameAndSave"></div>
+            <div class="relative bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ __('cms_rename_fields_title') }}</h3>
+                <p class="text-sm text-gray-600 mb-4">{{ __('cms_rename_fields_description') }}</p>
+                <ul class="text-sm text-gray-700 mb-4 space-y-1">
+                    @foreach($pendingRenames as $oldName => $newName)
+                        <li class="flex items-center gap-2">
+                            <span class="font-mono bg-gray-100 px-1.5 py-0.5 rounded">{{ $oldName }}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="font-mono bg-gray-100 px-1.5 py-0.5 rounded">{{ $newName }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+                <div class="flex justify-end gap-2">
+                    <button type="button" wire:click="skipRenameAndSave"
+                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        {{ __('cms_rename_skip') }}
+                    </button>
+                    <button type="button" wire:click="confirmRenameAndSave"
+                            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                        {{ __('cms_rename_confirm') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <x-slot:footer>
         <div class="flex items-center w-full gap-2">
             @if($isEditing)
                 <div class="flex gap-2 mr-auto">
-                    <x-noerd::buttons.secondary wire:click="copy">
+                    <x-noerd::buttons.secondary wire:click="copy" wire:confirm="{{ __('cms_confirm_copy_collection') }}">
                         {{ __('cms_label_copy') }}
                     </x-noerd::buttons.secondary>
                 </div>
             @endif
-            <x-noerd::delete-save-bar :showDelete="$isEditing" />
+            @php
+                $entryCount = 0;
+                if ($isEditing && $modelId) {
+                    $collectionKey = mb_strtoupper(str_replace('-', '_', $modelId));
+                    $collection = Collection::where('tenant_id', Auth::user()->selected_tenant_id)
+                        ->where('collection_key', $collectionKey)
+                        ->first();
+                    if ($collection) {
+                        $entryCount = $collection->rows()->count();
+                    }
+                }
+            @endphp
+            <x-noerd::delete-save-bar :showDelete="$isEditing" deleteMessage="{{ __('cms_confirm_delete_collection', ['count' => $entryCount]) }}" />
         </div>
     </x-slot:footer>
 </x-noerd::page>

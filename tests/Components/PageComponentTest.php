@@ -131,6 +131,72 @@ it('dispatches table action from pages table', function () use ($testSettings): 
         );
 });
 
+it('copies a page with elements', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+
+    $this->actingAs($user);
+    $model = Page::factory()->create([
+        'tenant_id' => $user->selected_tenant_id,
+        'name' => ['en' => 'Original Page', 'de' => 'Original Seite'],
+        'slug' => ['en' => '/original-page', 'de' => '/original-seite'],
+    ]);
+
+    \Noerd\Cms\Models\ElementPage::create([
+        'page_id' => $model->id,
+        'element_key' => 'text_block_1_column',
+        'sort' => 1,
+        'data' => json_encode(['text' => ['en' => 'Hello']]),
+    ]);
+
+    $component = Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
+        ->test($testSettings['componentName'])
+        ->call('copy')
+        ->assertOk()
+        ->assertDispatched('listRefresh');
+
+    $this->assertDatabaseCount('pages', 2);
+
+    $copiedPage = Page::where('id', '!=', $model->id)->first();
+    expect($copiedPage->name['en'])->toBe('Original Page 2');
+    expect($copiedPage->name['de'])->toBe('Original Seite 2');
+    expect($copiedPage->slug['en'])->toContain('/original-page-2');
+    expect($copiedPage->slug['de'])->toContain('/original-seite-2');
+
+    $copiedElements = \Noerd\Cms\Models\ElementPage::where('page_id', $copiedPage->id)->get();
+    expect($copiedElements)->toHaveCount(1);
+    expect($copiedElements->first()->getRawOriginal('element_key'))->toBe('text_block_1_column');
+});
+
+it('copies a collection page and appends 2 to data title', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+
+    $this->actingAs($user);
+
+    $collection = \Noerd\Cms\Models\Collection::create([
+        'tenant_id' => $user->selected_tenant_id,
+        'collection_key' => 'BENEFITS',
+        'name' => 'Benefits',
+    ]);
+
+    $model = Page::factory()->create([
+        'tenant_id' => $user->selected_tenant_id,
+        'collection_id' => $collection->id,
+        'name' => null,
+        'slug' => null,
+        'data' => ['title' => 'Original Benefit', 'description' => 'Some text'],
+    ]);
+
+    $component = Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
+        ->test($testSettings['componentName'])
+        ->call('copy')
+        ->assertOk()
+        ->assertDispatched('listRefresh');
+
+    $copiedPage = Page::where('id', '!=', $model->id)->first();
+    expect($copiedPage->data['title'])->toBe('Original Benefit 2');
+    expect($copiedPage->data['description'])->toBe('Some text');
+});
+
 it('sets a table key for the list', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 

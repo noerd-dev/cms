@@ -453,6 +453,74 @@ new class extends Component
         $this->closeModalProcess($this->getListComponent());
     }
 
+    public function copy(): void
+    {
+        $sourcePage = Page::with('elements')->find($this->modelId);
+        if (! $sourcePage) {
+            return;
+        }
+
+        $newName = [];
+        foreach ($sourcePage->name ?? [] as $lang => $name) {
+            $newName[$lang] = ! empty($name) ? $name.' 2' : $name;
+        }
+
+        $newSlug = [];
+        foreach ($sourcePage->slug ?? [] as $lang => $slug) {
+            if (! empty($slug)) {
+                $newSlug[$lang] = $this->ensureUniqueSlug($slug.'-2', $lang);
+            }
+        }
+
+        $newPage = $sourcePage->replicate(['id']);
+        $newPage->name = $newName;
+        $newPage->slug = $newSlug;
+
+        if ($this->collectionKey && is_array($newPage->data)) {
+            $newData = $newPage->data;
+            if (isset($newData['title'])) {
+                if (is_array($newData['title'])) {
+                    foreach ($newData['title'] as $lang => $value) {
+                        if (! empty($value)) {
+                            $newData['title'][$lang] = $value.' 2';
+                        }
+                    }
+                } elseif (is_string($newData['title']) && ! empty($newData['title'])) {
+                    $newData['title'] = $newData['title'].' 2';
+                }
+            }
+            $newPage->data = $newData;
+        }
+
+        $newPage->save();
+
+        foreach ($sourcePage->elements as $element) {
+            ElementPage::create([
+                'page_id' => $newPage->id,
+                'element_key' => $element->element_key,
+                'sort' => $element->sort,
+                'data' => $element->data,
+            ]);
+        }
+
+        $this->modelId = $newPage->id;
+        $this->mountPageDetail($newPage);
+
+        if ($this->collectionKey && isset($newPage->data) && is_array($newPage->data)) {
+            foreach ($newPage->data as $key => $value) {
+                if (! str_starts_with($key, 'detailData.') && ! in_array($key, ['name', 'slug', 'layout', 'sort'], true)) {
+                    $this->detailData[$key] = $value;
+                }
+            }
+        }
+
+        $this->detailData['sort'] ??= $newPage->sort ?? 0;
+        $this->lastChangeTime = time();
+
+        $this->dispatch('listRefresh');
+        $this->showSuccessIndicator = true;
+    }
+
     /**
      * Get collection field names from the YAML definition (without detailData. prefix).
      */
@@ -656,6 +724,11 @@ new class extends Component
     </div>
 
     <x-slot:footer>
+        @if($modelId)
+            <x-noerd::buttons.secondary wire:click="copy" wire:confirm="{{ __('Seite kopieren?') }}">
+                {{ __('cms_label_copy') }}
+            </x-noerd::buttons.secondary>
+        @endif
         <x-noerd::delete-save-bar :showDelete="isset($modelId)"/>
     </x-slot:footer>
 
