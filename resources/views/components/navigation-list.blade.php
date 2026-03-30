@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Models\CmsLanguage;
@@ -15,11 +16,30 @@ new class extends Component
     #[Computed]
     public function tableFilters(): array
     {
-        if (! $this->hasMultipleLanguages()) {
-            return [];
+        $filters = [];
+
+        if ($this->hasMultipleLanguages()) {
+            $filters[] = $this->getLanguageListFilter();
         }
 
-        return [$this->getLanguageListFilter()];
+        $keys = Navigation::distinct()
+            ->pluck('navigation_key')
+            ->sort()
+            ->values();
+
+        $options = ['' => __('cms_all_navigation_entries')];
+        foreach ($keys as $key) {
+            $options[$key] = $key;
+        }
+
+        $filters[] = [
+            'label' => __('cms_label_navigation_key'),
+            'column' => 'navigation_key',
+            'type' => 'Picklist',
+            'options' => $options,
+        ];
+
+        return $filters;
     }
 
     public function storeActiveListFilters(): void
@@ -43,15 +63,46 @@ new class extends Component
 
     public function with(): array
     {
-        $rows = Navigation::orderBy('parent_id')->orderBy('sort_order')->paginate($this->perPage);
+        $allItems = Navigation::query()
+            ->when($this->listFilters['navigation_key'] ?? null, function ($query, $key): void {
+                $query->where('navigation_key', $key);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        // Build hierarchical flat list: parent followed by its children
+        $topLevel = $allItems->whereNull('parent_id');
+        $childrenGrouped = $allItems->whereNotNull('parent_id')->groupBy('parent_id');
+
+        $sorted = collect();
+        foreach ($topLevel as $parent) {
+            $sorted->push($parent);
+            if ($childrenGrouped->has($parent->id)) {
+                foreach ($childrenGrouped[$parent->id] as $child) {
+                    $sorted->push($child);
+                }
+            }
+        }
+
+        // Append orphaned children (parent not in current result set)
+        foreach ($childrenGrouped as $parentId => $children) {
+            if (! $topLevel->contains('id', $parentId)) {
+                foreach ($children as $child) {
+                    $sorted->push($child);
+                }
+            }
+        }
+
+        // Manual pagination
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $slice = $sorted->slice(($page - 1) * $this->perPage, $this->perPage)->values();
+        $rows = new LengthAwarePaginator($slice, $sorted->count(), $this->perPage, $page, [
+            'path' => LengthAwarePaginator::resolveCurrentPath(),
+        ]);
 
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage')
             ?? $this->getDefaultLanguageCode();
-
-        // Collect parent names for display
-        $parentIds = $rows->pluck('parent_id')->filter()->unique()->toArray();
-        $parents = $parentIds ? Navigation::whereIn('id', $parentIds)->get()->keyBy('id') : collect();
 
         // decode name json for table output per selected language
         foreach ($rows as $row) {
@@ -59,13 +110,8 @@ new class extends Component
             $decoded = is_string($row->name) ? json_decode($row->name, true) : ($row->name ?? []);
             $displayName = $decoded[$selectedLanguage] ?? array_values($decoded)[0] ?? $oldName;
 
-            if ($row->parent_id && $parents->has($row->parent_id)) {
-                $parentDecoded = is_string($parents[$row->parent_id]->name)
-                    ? json_decode($parents[$row->parent_id]->name, true)
-                    : ($parents[$row->parent_id]->name ?? []);
-                $parentName = $parentDecoded[$selectedLanguage] ?? (is_array($parentDecoded) ? array_values($parentDecoded)[0] ?? '' : '');
+            if ($row->parent_id) {
                 $displayName = '↳ ' . $displayName;
-                $row->parent_name = $parentName;
             }
 
             $row->name = $displayName;

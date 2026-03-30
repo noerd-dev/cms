@@ -195,7 +195,10 @@
     "cms_label_body": "Inhalt",
     "cms_label_publication_date": "Veröffentlichungsdatum",
     "cms_label_featured_image": "Titelbild",
-    "cms_manage_collection": "Collection verwalten"
+    "cms_manage_collection": "Collection verwalten",
+
+    "cms_all_navigation_entries": "Alle Einträge",
+    "cms_label_navigation_key": "Navigation Key"
 }
 
 
