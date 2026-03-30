@@ -110,6 +110,7 @@ new class extends Component
         }
 
         $this->detailData = $page->toArray();
+        $this->detailData['additional_fields'] = $this->detailData['additional_fields'] ?? [];
 
         $availableLayouts = $this->layoutOptions();
         if (! isset($this->detailData['layout']) || empty($this->detailData['layout'])) {
@@ -344,6 +345,28 @@ new class extends Component
             }
         }
         $this->lastChangeTime = time();
+    }
+
+    public function duplicateElement(int $elementPageId): void
+    {
+        $element = ElementPage::find($elementPageId);
+        if (! $element || (int) $element->page_id !== (int) $this->modelId) {
+            return;
+        }
+
+        ElementPage::where('page_id', $this->modelId)
+            ->where('sort', '>', $element->sort)
+            ->increment('sort');
+
+        ElementPage::create([
+            'page_id' => $this->modelId,
+            'element_key' => $element->element_key,
+            'sort' => $element->sort + 1,
+            'data' => $element->data,
+        ]);
+
+        $this->lastChangeTime = time();
+        $this->dispatch('reloadPageComponent');
     }
 
     public function deleteElement(int $elementPageId): void
