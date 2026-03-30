@@ -2,6 +2,7 @@
 
 namespace Noerd\Cms\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Database\Factories\NavigationFactory;
@@ -19,6 +20,13 @@ class Navigation extends Model
     protected $guarded = [];
 
     protected $table = 'cms_navigations';
+
+    protected function navigationKey(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => mb_strtoupper($value),
+        );
+    }
 
     public function page()
     {
