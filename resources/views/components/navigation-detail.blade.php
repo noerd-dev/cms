@@ -80,15 +80,13 @@ new class extends Component {
 
     public function store(): void
     {
-        $hasCollection = !empty($this->detailData['collection_id']);
-
         $this->validate([
             'detailData.navigation_key' => ['required', 'string', 'max:255'],
             'detailData.name' => ['required', 'array'],
             'detailData.parent_id' => ['nullable', 'numeric', 'exists:cms_navigations,id'],
             'detailData.sort_order' => ['nullable', 'integer', 'min:0'],
-            'detailData.page_id' => ['nullable', 'numeric', $hasCollection ? '' : 'required_without:detailData.link'],
-            'detailData.link' => ['nullable', 'string', 'max:2048', $hasCollection ? '' : 'required_without:detailData.page_id'],
+            'detailData.page_id' => ['nullable', 'numeric'],
+            'detailData.link' => ['nullable', 'string', 'max:2048'],
             'detailData.collection_id' => ['nullable', 'numeric', 'exists:collections,id'],
             'detailData.new_tab' => ['nullable', 'boolean'],
         ]);
@@ -105,6 +103,7 @@ new class extends Component {
             $data['page_id'] = null;
         } else {
             $data['link'] = null;
+            $data['page_id'] = !empty($data['page_id']) ? (int) $data['page_id'] : null;
         }
         $data['new_tab'] = !empty($data['new_tab']) ? 1 : 0;
         $data['parent_id'] = !empty($data['parent_id']) ? (int) $data['parent_id'] : null;

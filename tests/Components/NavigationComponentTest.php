@@ -16,7 +16,7 @@ it('renders the navigation component', function (): void {
         ->assertOk();
 });
 
-it('validates that either page or link must be present', function (): void {
+it('allows storing a navigation without page or link for parent items', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
@@ -24,7 +24,14 @@ it('validates that either page or link must be present', function (): void {
         ->set('detailData.navigation_key', 'MAIN')
         ->set('detailData.name', ['de' => 'Start', 'en' => 'Start'])
         ->call('store')
-        ->assertHasErrors(['detailData.page_id' => 'required_without', 'detailData.link' => 'required_without']);
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('cms_navigations', [
+        'tenant_id' => $tenant->id,
+        'navigation_key' => 'MAIN',
+        'page_id' => null,
+        'link' => null,
+    ]);
 });
 
 it('stores a navigation with page and clears link', function (): void {
