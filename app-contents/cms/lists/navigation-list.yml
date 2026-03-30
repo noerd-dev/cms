@@ -12,5 +12,8 @@ columns:
     label: Page
   - field: link
     label: Link
+  - field: sort_order
+    label: cms_label_sort_order
+    width: 0.5
   - field: new_tab
     label: 'New Tab'

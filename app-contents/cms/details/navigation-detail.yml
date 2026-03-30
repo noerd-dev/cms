@@ -28,6 +28,10 @@ fields:
     label: 'Collection as Subpages (optional)'
     type: select
     colspan: 6
+  - name: detailData.sort_order
+    label: cms_label_sort_order
+    type: number
+    colspan: 6
   - name: detailData.new_tab
     label: 'New Tab'
     type: checkbox
