@@ -98,6 +98,7 @@
     "cms_label_languages": "Sprachen",
     "cms_label_language": "Sprache",
     "cms_label_new_language": "Neue Sprache",
+    "cms_label_new_subnav": "Neuer Unterpunkt",
     "cms_label_code": "Code",
     "cms_label_code_example": "Code (z. B. de, en)",
     "cms_label_name": "Name",

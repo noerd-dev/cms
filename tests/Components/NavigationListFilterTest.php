@@ -146,5 +146,9 @@ it('prefixes child navigation items with arrow indicator', function (): void {
     $rows = $listConfig['rows'];
 
     expect($rows[0]->name)->toBe('Über uns');
-    expect($rows[1]->name)->toBe('↳ Team');
+    expect($rows[1]->name)->toBe([
+        'prefix' => '↳ ',
+        'prefixClass' => 'opacity-50',
+        'text' => 'Team',
+    ]);
 });

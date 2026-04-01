@@ -60,6 +60,7 @@
     "cms_label_languages": "Languages",
     "cms_label_language": "Language",
     "cms_label_new_language": "New Language",
+    "cms_label_new_subnav": "New Sub-Navigation",
     "cms_label_code": "Code",
     "cms_label_code_example": "Code (e.g. de, en)",
     "cms_label_name": "Name",
