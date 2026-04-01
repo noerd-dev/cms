@@ -61,6 +61,21 @@ new class extends Component
         );
     }
 
+    public function createSubNav(mixed $parentId): void
+    {
+        $parent = Navigation::find($parentId);
+        if (! $parent || $parent->parent_id) {
+            return;
+        }
+
+        $this->dispatch(
+            event: 'noerdModal',
+            modalComponent: 'navigation-detail',
+            source: $this->getComponentName(),
+            arguments: ['modelId' => null, 'relations' => ['parent_id' => $parentId]],
+        );
+    }
+
     public function with(): array
     {
         $allItems = Navigation::query()
@@ -111,10 +126,14 @@ new class extends Component
             $displayName = $decoded[$selectedLanguage] ?? array_values($decoded)[0] ?? $oldName;
 
             if ($row->parent_id) {
-                $displayName = '↳ ' . $displayName;
+                $row->name = [
+                    'prefix' => '↳ ',
+                    'prefixClass' => 'opacity-50',
+                    'text' => $displayName,
+                ];
+            } else {
+                $row->name = $displayName;
             }
-
-            $row->name = $displayName;
         }
 
         return [
