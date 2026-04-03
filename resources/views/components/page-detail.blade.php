@@ -110,7 +110,7 @@ new class extends Component
         }
 
         $this->detailData = $page->toArray();
-        $this->detailData['additional_fields'] = $this->detailData['additional_fields'] ?? [];
+        $this->detailData['custom_attributes'] = $this->detailData['custom_attributes'] ?? [];
 
         $availableLayouts = $this->layoutOptions();
         if (! isset($this->detailData['layout']) || empty($this->detailData['layout'])) {
