@@ -5,6 +5,7 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
+use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
@@ -94,8 +95,17 @@ new class extends Component {
                 }
             })
             ->when($this->search, function ($query): void {
-                $query->where(function ($query): void {
-                    $query->where('name', 'like', '%'.$this->search.'%');
+                $languages = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
+                    ->where('is_active', true)
+                    ->pluck('code');
+
+                $query->where(function ($query) use ($languages): void {
+                    foreach ($languages as $code) {
+                        $query->orWhereRaw(
+                            'JSON_UNQUOTE(JSON_EXTRACT(name, ?)) LIKE ?',
+                            ['$.'.$code, '%'.$this->search.'%']
+                        );
+                    }
                 });
             })
             ->paginate($this->perPage);
