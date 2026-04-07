@@ -52,6 +52,21 @@ class CollectionHelper
     }
 
     /**
+     * Get normalized field names for a collection (without 'detailData.' prefix).
+     */
+    public static function getCollectionFieldNames(string $collectionKey): array
+    {
+        $fields = self::getCollectionFields(strtolower($collectionKey));
+        if (! $fields || empty($fields['fields'])) {
+            return [];
+        }
+
+        return array_map(function ($field) {
+            return str_replace('detailData.', '', $field['name'] ?? '');
+        }, $fields['fields']);
+    }
+
+    /**
      * Instance method: resolve collection table configuration.
      */
     public function resolveCollectionTable(string $collection): array

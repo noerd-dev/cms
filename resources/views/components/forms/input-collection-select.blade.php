@@ -14,7 +14,21 @@
     $live = $field['live'] ?? $live;
     $required = $field['required'] ?? $required;
 
+    $requiredFields = $field['required_fields'] ?? [];
+
     $collections = \Noerd\Cms\Models\Collection::where('tenant_id', auth()->user()->selected_tenant_id)->orderBy('name')->get();
+
+    if (! empty($requiredFields)) {
+        $collections = $collections->filter(function ($collection) use ($requiredFields) {
+            $fieldNames = \Noerd\Cms\Helpers\CollectionHelper::getCollectionFieldNames($collection->collection_key);
+            foreach ($requiredFields as $required) {
+                if (! in_array($required, $fieldNames)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }
 @endphp
 
 <div>
