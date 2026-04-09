@@ -46,6 +46,25 @@ new class extends Component
     }
 
     /**
+     * Remove YAML files for collections that no longer exist in the database.
+     */
+    private function removeOrphanedCollectionYamlFiles(string $collectionsPath): void
+    {
+        $dbKeys = DB::table('collections')
+            ->pluck('collection_key')
+            ->toArray();
+
+        foreach (glob($collectionsPath . '/*.yml') as $file) {
+            $filename = pathinfo($file, PATHINFO_FILENAME);
+            $collectionKey = mb_strtoupper(str_replace('-', '_', $filename));
+
+            if (! in_array($collectionKey, $dbKeys)) {
+                unlink($file);
+            }
+        }
+    }
+
+    /**
      * Restore missing YAML files for collections that have entries in the database.
      */
     private function restoreMissingCollectionYamlFiles(string $collectionsPath): void
@@ -109,6 +128,7 @@ new class extends Component
     {
         $collectionsPath = base_path('app-configs/cms/collections');
 
+        $this->removeOrphanedCollectionYamlFiles($collectionsPath);
         $this->restoreMissingCollectionYamlFiles($collectionsPath);
 
         $collectionMeta = DB::table('collections')
