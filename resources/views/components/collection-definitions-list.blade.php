@@ -5,8 +5,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
+use Noerd\Cms\Support\CollectionDefinitionData;
 use Noerd\Traits\NoerdList;
-use Symfony\Component\Yaml\Yaml;
 
 new class extends Component
 {
@@ -45,91 +46,9 @@ new class extends Component
         );
     }
 
-    /**
-     * Remove YAML files for collections that no longer exist in the database.
-     */
-    private function removeOrphanedCollectionYamlFiles(string $collectionsPath): void
-    {
-        $dbKeys = DB::table('collections')
-            ->pluck('collection_key')
-            ->toArray();
-
-        foreach (glob($collectionsPath . '/*.yml') as $file) {
-            $filename = pathinfo($file, PATHINFO_FILENAME);
-            $collectionKey = mb_strtoupper(str_replace('-', '_', $filename));
-
-            if (! in_array($collectionKey, $dbKeys)) {
-                unlink($file);
-            }
-        }
-    }
-
-    /**
-     * Restore missing YAML files for collections that have entries in the database.
-     */
-    private function restoreMissingCollectionYamlFiles(string $collectionsPath): void
-    {
-        $existingKeys = collect(glob($collectionsPath . '/*.yml'))
-            ->map(function ($file) {
-                $filename = pathinfo($file, PATHINFO_FILENAME);
-
-                return mb_strtoupper(str_replace('-', '_', $filename));
-            })
-            ->toArray();
-
-        $missingCollections = DB::table('collections')
-            ->whereNotIn('collection_key', $existingKeys)
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('pages')
-                    ->whereColumn('pages.collection_id', 'collections.id');
-            })
-            ->get(['collection_key', 'name']);
-
-        foreach ($missingCollections as $collection) {
-            $filename = str_replace('_', '-', mb_strtolower($collection->collection_key));
-            $path = $collectionsPath . '/' . $filename . '.yml';
-
-            $dataKeys = DB::table('pages')
-                ->join('collections', 'pages.collection_id', '=', 'collections.id')
-                ->where('collections.collection_key', $collection->collection_key)
-                ->whereNotNull('pages.data')
-                ->value('pages.data');
-
-            $fields = [];
-            if ($dataKeys) {
-                $decoded = json_decode($dataKeys, true);
-                if (is_array($decoded)) {
-                    foreach (array_keys($decoded) as $key) {
-                        $fields[] = [
-                            'name' => 'detailData.' . $key,
-                            'label' => ucfirst($key),
-                            'type' => 'text',
-                            'colspan' => 12,
-                        ];
-                    }
-                }
-            }
-
-            $data = [
-                'title' => $collection->name ?? ucfirst($filename),
-                'titleList' => $collection->name ?? ucfirst($filename),
-                'key' => $collection->collection_key,
-                'description' => '',
-                'hasPage' => false,
-                'fields' => $fields,
-            ];
-
-            file_put_contents($path, Yaml::dump($data, 4, 2));
-        }
-    }
-
     public function with(): array
     {
-        $collectionsPath = base_path('app-configs/cms/collections');
-
-        $this->removeOrphanedCollectionYamlFiles($collectionsPath);
-        $this->restoreMissingCollectionYamlFiles($collectionsPath);
+        $repository = app(CollectionDefinitionRepositoryContract::class);
 
         $collectionMeta = DB::table('collections')
             ->leftJoin('pages', 'pages.collection_id', '=', 'collections.id')
@@ -146,28 +65,17 @@ new class extends Component
         $entryCounts = $collectionMeta->pluck('entry_count', 'collection_key')->toArray();
         $creatorNames = $collectionMeta->pluck('creator_name', 'collection_key')->toArray();
 
-        $files = glob($collectionsPath . '/*.yml');
-
         $items = [];
-        foreach ($files as $file) {
-            $filename = pathinfo($file, PATHINFO_FILENAME);
-
-            try {
-                $content = Yaml::parseFile($file);
-            } catch (\Exception $e) {
-                continue;
-            }
-
-            $collectionKey = mb_strtoupper(str_replace('-', '_', $filename));
-
+        foreach ($repository->all() as $definition) {
+            /** @var CollectionDefinitionData $definition */
             $item = [
-                'id' => $filename,
-                'titleList' => $content['titleList'] ?? $filename,
-                'key' => $content['key'] ?? $collectionKey,
-                'hasPage' => ! empty($content['hasPage']) ? '✓' : '–',
-                'fieldCount' => isset($content['fields']) ? count($content['fields']) : 0,
-                'entryCount' => $entryCounts[$collectionKey] ?? 0,
-                'createdBy' => $creatorNames[$collectionKey] ?? 'System',
+                'id' => $definition->filename,
+                'titleList' => $definition->titleList,
+                'key' => $definition->key,
+                'hasPage' => $definition->hasPage ? '✓' : '–',
+                'fieldCount' => count($definition->fields),
+                'entryCount' => (int) ($entryCounts[$definition->key] ?? 0),
+                'createdBy' => $creatorNames[$definition->key] ?? 'System',
             ];
 
             // Apply search filter
@@ -175,7 +83,7 @@ new class extends Component
                 $searchLower = mb_strtolower($this->search);
                 $matchesSearch = mb_strpos(mb_strtolower($item['titleList']), $searchLower) !== false
                     || mb_strpos(mb_strtolower($item['key']), $searchLower) !== false
-                    || mb_strpos(mb_strtolower($filename), $searchLower) !== false;
+                    || mb_strpos(mb_strtolower($definition->filename), $searchLower) !== false;
 
                 if (! $matchesSearch) {
                     continue;

@@ -8,12 +8,18 @@ use Livewire\Livewire;
 use Noerd\Cms\Commands\CmsUpdateCommand;
 use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
 use Noerd\Cms\Commands\NoerdCmsInstallCommand;
+use Noerd\Cms\Console\Commands\ExportCollectionDefinitionsCommand;
+use Noerd\Cms\Console\Commands\ImportCollectionDefinitionsCommand;
 use Noerd\Cms\Console\Commands\SyncFormTypesCommand;
+use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Middleware\CmsApiAuth;
+use Noerd\Cms\Middleware\EnsureCollectionDefinitionsEnabled;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Navigation\CollectionsNavigationProvider;
 use Noerd\Cms\Navigation\PageCollectionsNavigationProvider;
+use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
+use Noerd\Cms\Repositories\YamlCollectionDefinitionRepository;
 use Noerd\Models\Tenant;
 use Noerd\Services\DynamicNavigationRegistry;
 
@@ -21,8 +27,25 @@ class CmsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Merge configuration early so container bindings can read it during resolution.
+        $this->mergeConfigFrom(__DIR__ . '/../../config/noerd_cms.php', 'noerd_cms');
+
+        // Bind the collection definition repository based on the configured mode.
+        $this->app->singleton(CollectionDefinitionRepositoryContract::class, function ($app) {
+            $mode = config('noerd_cms.collections.mode', 'yaml');
+
+            return match ($mode) {
+                'database' => new DatabaseCollectionDefinitionRepository(),
+                default => new YamlCollectionDefinitionRepository(
+                    base_path(config('noerd_cms.collections.yaml_path', 'app-configs/cms/collections')),
+                ),
+            };
+        });
+
         // Register CollectionHelper as singleton for mockability in tests
-        $this->app->singleton(CollectionHelper::class);
+        $this->app->singleton(CollectionHelper::class, function ($app) {
+            return new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class));
+        });
 
         // Register CMS PageElementService as fallback for Website namespace
         if (! $this->app->bound(\Noerd\Website\Services\PageElementService::class)) {
@@ -43,11 +66,9 @@ class CmsServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-routes.php');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-api.php');
 
-        // Merge configuration
-        $this->mergeConfigFrom(__DIR__ . '/../../config/noerd_cms.php', 'noerd_cms');
-
         $router = $this->app['router'];
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
+        $router->aliasMiddleware('cms.collections.ui', EnsureCollectionDefinitionsEnabled::class);
 
         // Register gate for CMS access
         Gate::define('canCms', function ($user) {
@@ -69,13 +90,15 @@ class CmsServiceProvider extends ServiceProvider
                 CmsUpdateCommand::class,
                 InstallWebsiteBoilerplateCommand::class,
                 SyncFormTypesCommand::class,
+                ImportCollectionDefinitionsCommand::class,
+                ExportCollectionDefinitionsCommand::class,
             ]);
         }
 
-        // Register dynamic navigation providers
+        // Register dynamic navigation providers (resolved via container for constructor injection)
         $registry = $this->app->make(DynamicNavigationRegistry::class);
-        $registry->register(new CollectionsNavigationProvider);
-        $registry->register(new PageCollectionsNavigationProvider);
+        $registry->register($this->app->make(CollectionsNavigationProvider::class));
+        $registry->register($this->app->make(PageCollectionsNavigationProvider::class));
 
         // Create default English language when a new tenant is created
         Tenant::created(function (Tenant $tenant): void {

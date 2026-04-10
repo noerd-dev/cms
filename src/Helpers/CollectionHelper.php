@@ -2,14 +2,17 @@
 
 namespace Noerd\Cms\Helpers;
 
-use Exception;
-use Symfony\Component\Yaml\Yaml;
+use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 
 class CollectionHelper
 {
+    public function __construct(
+        private readonly CollectionDefinitionRepositoryContract $repository,
+    ) {}
+
     /**
-     * Get collection fields from YAML configuration.
-     * Static method delegates to container-resolved instance for mockability.
+     * Get collection fields from the configured storage backend.
+     * Static method delegates to the container-resolved instance for mockability.
      */
     public static function getCollectionFields(?string $collection): ?array
     {
@@ -18,7 +21,7 @@ class CollectionHelper
 
     /**
      * Get collection table configuration.
-     * Static method delegates to container-resolved instance for mockability.
+     * Static method delegates to the container-resolved instance for mockability.
      */
     public static function getCollectionTable(string $collection): array
     {
@@ -26,7 +29,7 @@ class CollectionHelper
     }
 
     /**
-     * Instance method: resolve collection fields from YAML file.
+     * Instance method: resolve collection fields via the repository.
      */
     public function resolveCollectionFields(?string $collection): ?array
     {
@@ -34,21 +37,7 @@ class CollectionHelper
             return null;
         }
 
-        try {
-            $path = base_path('app-configs/cms/collections/' . $collection . '.yml');
-            $content = file_get_contents($path);
-        } catch (Exception $e) {
-            return null;
-        }
-        $fields = Yaml::parse($content ?: '');
-
-        foreach ($fields['fields'] as $key => $item) {
-            if (isset($item['name']) && $item['name'] === 'collection.page_id') {
-                unset($fields['fields'][$key]);
-            }
-        }
-
-        return $fields;
+        return $this->repository->resolveFields($collection);
     }
 
     /**
@@ -56,7 +45,7 @@ class CollectionHelper
      */
     public static function getCollectionFieldNames(string $collectionKey): array
     {
-        $fields = self::getCollectionFields(strtolower($collectionKey));
+        $fields = self::getCollectionFields(mb_strtolower($collectionKey));
         if (! $fields || empty($fields['fields'])) {
             return [];
         }
@@ -74,7 +63,7 @@ class CollectionHelper
         $table = [];
         $collectionFields = $this->resolveCollectionFields($collection);
 
-        foreach ($collectionFields['fields'] as $collectionField) {
+        foreach ($collectionFields['fields'] ?? [] as $collectionField) {
             $tableColumn = [];
 
             $tableColumn['width'] = $collectionField['width'] ?? 10;

@@ -4,11 +4,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Support\CollectionDefinitionData;
 use Noerd\Helpers\StaticConfigHelper;
 use Noerd\Traits\NoerdDetail;
-use Symfony\Component\Yaml\Yaml;
 
 new class extends Component
 {
@@ -32,6 +33,8 @@ new class extends Component
         $this->initDetail();
         $this->pageLayout = StaticConfigHelper::getComponentFields('collection-definition-detail');
 
+        $repository = app(CollectionDefinitionRepositoryContract::class);
+
         $this->detailData = [
             'filename' => '',
             'title' => '',
@@ -43,26 +46,18 @@ new class extends Component
         if ($this->modelId) {
             $this->isEditing = true;
 
-            $path = base_path('app-configs/cms/collections/' . $this->modelId . '.yml');
+            $definition = $repository->find($this->modelId);
 
-            if (file_exists($path)) {
-                $content = Yaml::parseFile($path);
-                $this->detailData['filename'] = $this->modelId;
-                $this->detailData['title'] = $content['title'] ?? '';
-                $this->detailData['titleList'] = $content['titleList'] ?? '';
-                $this->detailData['description'] = $content['description'] ?? '';
-                $this->detailData['hasPage'] = ! empty($content['hasPage']);
+            if ($definition) {
+                $this->detailData['filename'] = $definition->filename;
+                $this->detailData['title'] = $definition->title;
+                $this->detailData['titleList'] = $definition->titleList;
+                $this->detailData['description'] = $definition->description ?? '';
+                $this->detailData['hasPage'] = $definition->hasPage;
 
-                $this->fields = [];
-                foreach ($content['fields'] ?? [] as $index => $field) {
-                    $name = preg_replace('/^(model\.|detailData\.)/', '', $field['name'] ?? '');
-                    $this->fields[] = [
-                        'name' => $name,
-                        'label' => $field['label'] ?? '',
-                        'type' => $field['type'] ?? 'text',
-                        'colspan' => $field['colspan'] ?? 6,
-                    ];
-                    $this->originalFieldNames[$index] = $name;
+                $this->fields = $definition->fields;
+                foreach ($this->fields as $index => $field) {
+                    $this->originalFieldNames[$index] = $field['name'];
                 }
             }
         }
@@ -105,37 +100,16 @@ new class extends Component
 
         $this->validate($rules);
 
+        $repository = app(CollectionDefinitionRepositoryContract::class);
         $filename = $this->detailData['filename'];
-        $path = base_path('app-configs/cms/collections/' . $filename . '.yml');
 
         // Prevent duplicate filenames (when creating or renaming)
         $isRenaming = $this->isEditing && $filename !== $this->modelId;
-        if ((! $this->isEditing || $isRenaming) && file_exists($path)) {
+        if ((! $this->isEditing || $isRenaming) && $repository->exists($filename)) {
             $this->addError('detailData.filename', __('cms_file_already_exists'));
 
             return;
         }
-
-        // Build YAML structure
-        $key = mb_strtoupper(str_replace('-', '_', $filename));
-        $yamlFields = [];
-        foreach ($this->fields as $field) {
-            $yamlFields[] = [
-                'name' => 'detailData.' . $field['name'],
-                'label' => $field['label'],
-                'type' => $field['type'],
-                'colspan' => (int) $field['colspan'],
-            ];
-        }
-
-        $data = [
-            'title' => $this->detailData['title'],
-            'titleList' => $this->detailData['titleList'],
-            'key' => $key,
-            'description' => $this->detailData['description'] ?: '',
-            'hasPage' => (bool) $this->detailData['hasPage'],
-            'fields' => $yamlFields,
-        ];
 
         // Detect renamed fields
         $renames = [];
@@ -155,16 +129,24 @@ new class extends Component
             return;
         }
 
-        $yamlContent = Yaml::dump($data, 4, 2);
-        file_put_contents($path, $yamlContent);
+        $key = mb_strtoupper(str_replace('-', '_', $filename));
+        $data = new CollectionDefinitionData(
+            filename: $filename,
+            key: $key,
+            title: $this->detailData['title'],
+            titleList: $this->detailData['titleList'],
+            description: $this->detailData['description'] ?: null,
+            hasPage: (bool) $this->detailData['hasPage'],
+            fields: array_values($this->fields),
+        );
 
-        // Delete old file if renamed
+        $repository->save(
+            $data,
+            originalFilename: $this->isEditing ? $this->modelId : null,
+        );
+
+        // Update collections table collection_key on rename (per-tenant scope)
         if ($isRenaming) {
-            $oldPath = base_path('app-configs/cms/collections/' . $this->modelId . '.yml');
-            if (file_exists($oldPath)) {
-                unlink($oldPath);
-            }
-
             Collection::where('tenant_id', Auth::user()->selected_tenant_id)
                 ->where('collection_key', mb_strtoupper(str_replace('-', '_', $this->modelId)))
                 ->update(['collection_key' => $key]);
@@ -250,24 +232,32 @@ new class extends Component
 
     public function copy(): void
     {
-        $sourcePath = base_path('app-configs/cms/collections/' . $this->modelId . '.yml');
-        if (! file_exists($sourcePath)) {
+        if (! $this->modelId) {
             return;
         }
 
-        $newFilename = $this->modelId . '2';
-        $newPath = base_path('app-configs/cms/collections/' . $newFilename . '.yml');
+        $repository = app(CollectionDefinitionRepositoryContract::class);
 
-        if (file_exists($newPath)) {
+        try {
+            $newFilename = $repository->copy($this->modelId);
+        } catch (\RuntimeException $e) {
             $this->addError('detailData.filename', __('cms_file_already_exists'));
 
             return;
         }
 
-        $content = Yaml::parseFile($sourcePath);
-        $content['key'] = $content['key'] . '2';
-
-        file_put_contents($newPath, Yaml::dump($content, 4, 2));
+        // Mirror the new definition into the collections instance table so it
+        // shows up with the correct creator in lists.
+        $newDefinition = $repository->find($newFilename);
+        if ($newDefinition) {
+            Collection::firstOrCreate([
+                'tenant_id' => Auth::user()->selected_tenant_id,
+                'collection_key' => $newDefinition->key,
+            ], [
+                'name' => $newDefinition->titleList,
+                'created_by' => Auth::id(),
+            ]);
+        }
 
         $this->dispatch('listRefresh');
         $this->closeModalProcess('collection-definitions-list');
@@ -279,13 +269,14 @@ new class extends Component
             return;
         }
 
-        $collectionKey = mb_strtoupper(str_replace('-', '_', $this->modelId));
-        Collection::where('collection_key', $collectionKey)->delete();
+        $repository = app(CollectionDefinitionRepositoryContract::class);
 
-        $path = base_path('app-configs/cms/collections/' . $this->modelId . '.yml');
-        if (file_exists($path)) {
-            unlink($path);
-        }
+        $collectionKey = mb_strtoupper(str_replace('-', '_', $this->modelId));
+        Collection::where('tenant_id', Auth::user()->selected_tenant_id)
+            ->where('collection_key', $collectionKey)
+            ->delete();
+
+        $repository->delete($this->modelId);
 
         $this->closeModalProcess('collection-definitions-list');
     }
