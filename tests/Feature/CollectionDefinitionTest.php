@@ -2,44 +2,42 @@
 
 use Livewire\Livewire;
 use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
-use Symfony\Component\Yaml\Yaml;
 
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
-function collectionsPath(): string
-{
-    return base_path('app-configs/cms/collections');
-}
-
-function createContactsFixture(): void
-{
-    $path = collectionsPath() . '/contacts.yml';
-    file_put_contents($path, Yaml::dump([
-        'title' => 'Kontakt',
-        'titleList' => 'Kontakte',
-        'key' => 'CONTACTS',
-        'description' => '',
-        'hasPage' => true,
-        'fields' => [
-            ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText', 'colspan' => 6],
-        ],
-    ]));
-}
-
-afterEach(function (): void {
-    // Clean up test-created YAML files
-    foreach (['test-definition', 'test-definition-2', 'test-store', 'test-duplicate', 'film', 'my-collection', 'contacts', 'contacts2', 'contacts-renamed', 'rename-test'] as $name) {
-        $path = collectionsPath() . '/' . $name . '.yml';
-        if (file_exists($path)) {
-            unlink($path);
-        }
-    }
+beforeEach(function (): void {
+    config(['noerd_cms.collections.mode' => 'database']);
+    config(['noerd_cms.collections.show_definitions_ui' => true]);
+    DatabaseCollectionDefinitionRepository::resetCache();
+    app()->forgetInstance(\Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract::class);
+    app()->forgetInstance(\Noerd\Cms\Helpers\CollectionHelper::class);
 });
 
-it('renders the list component and shows existing YAML files', function (): void {
+/**
+ * Create a "contacts" collection definition in the database for the given tenant.
+ */
+function createContactsDefinition(int $tenantId): CollectionDefinition
+{
+    return CollectionDefinition::create([
+        'tenant_id' => $tenantId,
+        'filename' => 'contacts',
+        'key' => 'CONTACTS',
+        'title' => 'Kontakt',
+        'title_list' => 'Kontakte',
+        'description' => '',
+        'has_page' => true,
+        'fields' => [
+            ['name' => 'name', 'label' => 'Name', 'type' => 'translatableText', 'colspan' => 6],
+        ],
+    ]);
+}
+
+it('renders the list component and shows existing definitions', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
@@ -51,10 +49,10 @@ it('renders the list component and shows existing YAML files', function (): void
 });
 
 it('dispatches modal when listAction is called', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    createContactsFixture();
+    createContactsDefinition($tenant->id);
 
     Livewire::test('collection-definitions-list')
         ->call('listAction', 'contacts')
@@ -62,10 +60,10 @@ it('dispatches modal when listAction is called', function (): void {
 });
 
 it('loads existing collection definition in detail component', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    createContactsFixture();
+    createContactsDefinition($tenant->id);
 
     Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
         ->assertSet('isEditing', true)
@@ -91,48 +89,48 @@ it('loads pageLayout with metadata fields from YAML config', function (): void {
 });
 
 it('allows renaming the filename of an existing collection definition', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    createContactsFixture();
+    createContactsDefinition($tenant->id);
 
     Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
         ->set('detailData.filename', 'contacts-renamed')
         ->call('store')
         ->assertHasNoErrors();
 
-    expect(file_exists(collectionsPath() . '/contacts-renamed.yml'))->toBeTrue();
-    expect(file_exists(collectionsPath() . '/contacts.yml'))->toBeFalse();
-
-    $content = Yaml::parseFile(collectionsPath() . '/contacts-renamed.yml');
-    expect($content['key'])->toBe('CONTACTS_RENAMED');
+    expect(CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'contacts-renamed')->exists())->toBeTrue();
+    expect(CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'contacts')->exists())->toBeFalse();
+    expect(CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'contacts-renamed')->first()->key)->toBe('CONTACTS_RENAMED');
 });
 
 it('prevents renaming to an existing filename', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    createContactsFixture();
+    createContactsDefinition($tenant->id);
 
-    // Create a second file that we'll try to rename to
-    file_put_contents(collectionsPath() . '/contacts-renamed.yml', Yaml::dump([
-        'title' => 'Existing',
-        'titleList' => 'Existing',
+    // Create a second definition that we'll try to rename to
+    CollectionDefinition::create([
+        'tenant_id' => $tenant->id,
+        'filename' => 'contacts-renamed',
         'key' => 'CONTACTS_RENAMED',
+        'title' => 'Existing',
+        'title_list' => 'Existing',
+        'has_page' => false,
         'fields' => [],
-    ]));
+    ]);
 
     Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
         ->set('detailData.filename', 'contacts-renamed')
         ->call('store')
         ->assertHasErrors('detailData.filename');
 
-    // Original file should still exist
-    expect(file_exists(collectionsPath() . '/contacts.yml'))->toBeTrue();
+    expect(CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'contacts')->exists())->toBeTrue();
 });
 
-it('creates a new YAML file with correct structure', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+it('creates a new collection definition with correct structure', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Livewire::test('collection-definition-detail')
@@ -143,27 +141,27 @@ it('creates a new YAML file with correct structure', function (): void {
         ->call('store')
         ->assertHasNoErrors();
 
-    $path = collectionsPath() . '/test-store.yml';
-    expect(file_exists($path))->toBeTrue();
-
-    $content = Yaml::parseFile($path);
-    expect($content['title'])->toBe('Test Store');
-    expect($content['titleList'])->toBe('Test Stores');
-    expect($content['key'])->toBe('TEST_STORE');
-    expect($content['hasPage'])->toBeTrue();
+    $definition = CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'test-store')->first();
+    expect($definition)->not->toBeNull();
+    expect($definition->title)->toBe('Test Store');
+    expect($definition->title_list)->toBe('Test Stores');
+    expect($definition->key)->toBe('TEST_STORE');
+    expect($definition->has_page)->toBeTrue();
 });
 
 it('prevents duplicate filenames', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    // Create an initial file
-    file_put_contents(collectionsPath() . '/test-duplicate.yml', Yaml::dump([
-        'title' => 'Existing',
-        'titleList' => 'Existing',
+    CollectionDefinition::create([
+        'tenant_id' => $tenant->id,
+        'filename' => 'test-duplicate',
         'key' => 'TEST_DUPLICATE',
+        'title' => 'Existing',
+        'title_list' => 'Existing',
+        'has_page' => false,
         'fields' => [],
-    ]));
+    ]);
 
     Livewire::test('collection-definition-detail')
         ->set('detailData.filename', 'test-duplicate')
@@ -202,7 +200,7 @@ it('validates filename format', function (): void {
 });
 
 it('normalizes filename by lowercasing, stripping yml extension, and replacing underscores', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Livewire::test('collection-definition-detail')
@@ -212,11 +210,11 @@ it('normalizes filename by lowercasing, stripping yml extension, and replacing u
         ->call('store')
         ->assertHasNoErrors();
 
-    expect(file_exists(collectionsPath() . '/film.yml'))->toBeTrue();
+    expect(CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'film')->exists())->toBeTrue();
 });
 
 it('normalizes underscores to hyphens in filename', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Livewire::test('collection-definition-detail')
@@ -226,7 +224,7 @@ it('normalizes underscores to hyphens in filename', function (): void {
         ->call('store')
         ->assertHasNoErrors();
 
-    expect(file_exists(collectionsPath() . '/my-collection.yml'))->toBeTrue();
+    expect(CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'my-collection')->exists())->toBeTrue();
 });
 
 it('adds and removes fields', function (): void {
@@ -243,8 +241,8 @@ it('adds and removes fields', function (): void {
         ->assertCount('fields', 1);
 });
 
-it('stores fields in YAML file', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+it('stores fields in the collection definition', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Livewire::test('collection-definition-detail')
@@ -259,83 +257,90 @@ it('stores fields in YAML file', function (): void {
         ->call('store')
         ->assertHasNoErrors();
 
-    $content = Yaml::parseFile(collectionsPath() . '/test-definition.yml');
-    expect($content['fields'])->toHaveCount(1);
-    expect($content['fields'][0]['name'])->toBe('detailData.my_field');
-    expect($content['fields'][0]['type'])->toBe('translatableText');
+    $definition = CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'test-definition')->first();
+    expect($definition->fields)->toHaveCount(1);
+    expect($definition->fields[0]['name'])->toBe('my_field');
+    expect($definition->fields[0]['type'])->toBe('translatableText');
 });
 
-it('copies a collection definition with key suffix 2', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+it('copies a collection definition with key, title and titleList all suffixed with 2', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    createContactsFixture();
+    createContactsDefinition($tenant->id);
 
     Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
         ->call('copy')
         ->assertHasNoErrors();
 
-    $copiedPath = collectionsPath() . '/contacts2.yml';
-    expect(file_exists($copiedPath))->toBeTrue();
+    $copy = CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'contacts2')->first();
+    expect($copy)->not->toBeNull();
+    expect($copy->key)->toBe('CONTACTS2');
+    expect($copy->title)->toBe('Kontakt2');
+    expect($copy->title_list)->toBe('Kontakte2');
+    expect($copy->fields)->toHaveCount(1);
 
-    $content = Yaml::parseFile($copiedPath);
-    expect($content['key'])->toBe('CONTACTS2');
-    expect($content['title'])->toBe('Kontakt');
-    expect($content['titleList'])->toBe('Kontakte');
-    expect($content['fields'])->toHaveCount(1);
+    // Mirrors into the collections instance table with the current user as creator.
+    $instance = Collection::where('tenant_id', $tenant->id)->where('collection_key', 'CONTACTS2')->first();
+    expect($instance)->not->toBeNull();
+    expect($instance->created_by)->toBe($user->id);
+    expect($instance->name)->toBe('Kontakte2');
 });
 
-it('prevents copying when target file already exists', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+it('prevents copying when target definition already exists', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    createContactsFixture();
+    createContactsDefinition($tenant->id);
 
-    // Create the target file so copy should fail
-    file_put_contents(collectionsPath() . '/contacts2.yml', Yaml::dump([
-        'title' => 'Existing',
-        'titleList' => 'Existing',
+    CollectionDefinition::create([
+        'tenant_id' => $tenant->id,
+        'filename' => 'contacts2',
         'key' => 'CONTACTS2',
+        'title' => 'Existing',
+        'title_list' => 'Existing',
+        'has_page' => false,
         'fields' => [],
-    ]));
+    ]);
 
     Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
         ->call('copy')
         ->assertHasErrors('detailData.filename');
 });
 
-it('deletes a YAML file', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+it('deletes a collection definition', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    // Create a test file
-    $path = collectionsPath() . '/test-definition-2.yml';
-    file_put_contents($path, Yaml::dump([
-        'title' => 'To Delete',
-        'titleList' => 'To Delete',
+    $definition = CollectionDefinition::create([
+        'tenant_id' => $tenant->id,
+        'filename' => 'test-definition-2',
         'key' => 'TEST_DEFINITION_2',
+        'title' => 'To Delete',
+        'title_list' => 'To Delete',
+        'has_page' => false,
         'fields' => [],
-    ]));
-
-    expect(file_exists($path))->toBeTrue();
+    ]);
 
     Livewire::test('collection-definition-detail', ['modelId' => 'test-definition-2'])
         ->call('delete');
 
-    expect(file_exists($path))->toBeFalse();
+    expect(CollectionDefinition::find($definition->id))->toBeNull();
 });
 
-it('deletes associated database records when deleting a collection definition', function (): void {
+it('deletes associated collection records when deleting a collection definition', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    $path = collectionsPath() . '/test-definition-2.yml';
-    file_put_contents($path, Yaml::dump([
-        'title' => 'To Delete',
-        'titleList' => 'To Delete',
+    CollectionDefinition::create([
+        'tenant_id' => $tenant->id,
+        'filename' => 'test-definition-2',
         'key' => 'TEST_DEFINITION_2',
+        'title' => 'To Delete',
+        'title_list' => 'To Delete',
+        'has_page' => false,
         'fields' => [],
-    ]));
+    ]);
 
     $collection = Collection::create([
         'tenant_id' => $tenant->id,
@@ -351,7 +356,7 @@ it('deletes associated database records when deleting a collection definition', 
     Livewire::test('collection-definition-detail', ['modelId' => 'test-definition-2'])
         ->call('delete');
 
-    expect(file_exists($path))->toBeFalse();
+    expect(CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'test-definition-2')->exists())->toBeFalse();
     expect(Collection::find($collection->id))->toBeNull();
     expect(Page::find($page->id))->toBeNull();
 });
@@ -360,17 +365,17 @@ it('shows rename confirmation when a field name is changed', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    $path = collectionsPath() . '/rename-test.yml';
-    file_put_contents($path, Yaml::dump([
-        'title' => 'Rename Test',
-        'titleList' => 'Rename Tests',
+    CollectionDefinition::create([
+        'tenant_id' => $tenant->id,
+        'filename' => 'rename-test',
         'key' => 'RENAME_TEST',
-        'description' => '',
-        'hasPage' => false,
+        'title' => 'Rename Test',
+        'title_list' => 'Rename Tests',
+        'has_page' => false,
         'fields' => [
-            ['name' => 'detailData.headline1', 'label' => 'Headline', 'type' => 'text', 'colspan' => 6],
+            ['name' => 'headline1', 'label' => 'Headline', 'type' => 'text', 'colspan' => 6],
         ],
-    ]));
+    ]);
 
     Livewire::test('collection-definition-detail', ['modelId' => 'rename-test'])
         ->set('fields.0.name', 'headline-one')
@@ -383,17 +388,17 @@ it('renames field keys in database entries when confirmed', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    $path = collectionsPath() . '/rename-test.yml';
-    file_put_contents($path, Yaml::dump([
-        'title' => 'Rename Test',
-        'titleList' => 'Rename Tests',
+    CollectionDefinition::create([
+        'tenant_id' => $tenant->id,
+        'filename' => 'rename-test',
         'key' => 'RENAME_TEST',
-        'description' => '',
-        'hasPage' => false,
+        'title' => 'Rename Test',
+        'title_list' => 'Rename Tests',
+        'has_page' => false,
         'fields' => [
-            ['name' => 'detailData.headline1', 'label' => 'Headline', 'type' => 'text', 'colspan' => 6],
+            ['name' => 'headline1', 'label' => 'Headline', 'type' => 'text', 'colspan' => 6],
         ],
-    ]));
+    ]);
 
     $collection = Collection::create([
         'tenant_id' => $tenant->id,
@@ -424,17 +429,17 @@ it('skips database rename when user declines', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    $path = collectionsPath() . '/rename-test.yml';
-    file_put_contents($path, Yaml::dump([
-        'title' => 'Rename Test',
-        'titleList' => 'Rename Tests',
+    CollectionDefinition::create([
+        'tenant_id' => $tenant->id,
+        'filename' => 'rename-test',
         'key' => 'RENAME_TEST',
-        'description' => '',
-        'hasPage' => false,
+        'title' => 'Rename Test',
+        'title_list' => 'Rename Tests',
+        'has_page' => false,
         'fields' => [
-            ['name' => 'detailData.headline1', 'label' => 'Headline', 'type' => 'text', 'colspan' => 6],
+            ['name' => 'headline1', 'label' => 'Headline', 'type' => 'text', 'colspan' => 6],
         ],
-    ]));
+    ]);
 
     $collection = Collection::create([
         'tenant_id' => $tenant->id,

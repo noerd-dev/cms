@@ -3,6 +3,7 @@
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
@@ -116,12 +117,16 @@ new class extends Component
             ];
         }
 
-        // Get or create the parent collection
+        // Get or create the parent collection. Pull the display name from the
+        // definition repository when available so it matches what the user
+        // configured (instead of falling back to ucfirst on the key).
+        $definition = app(CollectionDefinitionRepositoryContract::class)->find($this->collectionKey);
         $parentCollection = Collection::firstOrCreate([
             'tenant_id' => auth()->user()->selected_tenant_id,
             'collection_key' => mb_strtoupper($this->collectionKey),
         ], [
-            'name' => ucfirst($this->collectionKey),
+            'name' => $definition?->titleList ?: ucfirst($this->collectionKey),
+            'created_by' => auth()->id(),
         ]);
 
         // Get collection entries (pages)

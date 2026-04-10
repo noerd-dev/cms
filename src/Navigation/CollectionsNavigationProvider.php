@@ -2,12 +2,16 @@
 
 namespace Noerd\Cms\Navigation;
 
-use Exception;
+use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
+use Noerd\Cms\Support\CollectionDefinitionData;
 use Noerd\Contracts\DynamicNavigationProviderContract;
-use Symfony\Component\Yaml\Yaml;
 
 class CollectionsNavigationProvider implements DynamicNavigationProviderContract
 {
+    public function __construct(
+        protected readonly CollectionDefinitionRepositoryContract $repository,
+    ) {}
+
     public function type(): string
     {
         return 'collections';
@@ -23,38 +27,14 @@ class CollectionsNavigationProvider implements DynamicNavigationProviderContract
      */
     protected function getCollectionsByHasPage(bool $hasPage): array
     {
-        $collectionsPath = base_path('app-configs/cms/collections');
-
-        if (! is_dir($collectionsPath)) {
-            return [];
-        }
-
-        $collectionFiles = glob($collectionsPath . '/*.yml');
-        $dynamicNavigations = [];
-
-        foreach ($collectionFiles as $file) {
-            $collectionKey = basename($file, '.yml');
-
-            try {
-                $content = file_get_contents($file);
-                $collectionData = Yaml::parse($content ?: '');
-
-                if ($collectionData && isset($collectionData['titleList'])) {
-                    $collectionHasPage = $collectionData['hasPage'] ?? false;
-
-                    if ($collectionHasPage === $hasPage) {
-                        $dynamicNavigations[] = [
-                            'title' => $collectionData['titleList'],
-                            'link' => "/cms/collections?key={$collectionKey}",
-                            'icon' => 'icons.list-bullet',
-                        ];
-                    }
-                }
-            } catch (Exception) {
-                continue;
-            }
-        }
-
-        return $dynamicNavigations;
+        return $this->repository->all()
+            ->filter(fn (CollectionDefinitionData $d) => $d->hasPage === $hasPage)
+            ->map(fn (CollectionDefinitionData $d) => [
+                'title' => $d->titleList,
+                'link' => "/cms/collections?key={$d->filename}",
+                'icon' => 'icons.list-bullet',
+            ])
+            ->values()
+            ->toArray();
     }
 }

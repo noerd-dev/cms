@@ -17,6 +17,10 @@
         - title: cms_nav_form_requests
           route: cms.form-requests
           heroicon: list-bullet
+        - title: cms_nav_collection_definitions
+          route: cms.collection-definitions
+          heroicon: rectangle-stack
+          config: noerd_cms.collections.show_definitions_ui
     - title: cms_nav_blog
       navigations:
         - title: cms_nav_articles
@@ -29,11 +33,6 @@
       dynamic: page-collections
     - title: cms_nav_collections
       dynamic: collections
-    - title: cms_nav_collection_definitions
-      navigations:
-        - title: cms_nav_collection_definitions
-          route: cms.collection-definitions
-          heroicon: rectangle-stack
     - title: cms_nav_settings
       navigations:
         - title: noerd_nav_settings
