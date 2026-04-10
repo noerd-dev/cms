@@ -150,6 +150,42 @@ it('returns the YAML-shaped payload from resolveFields', function (): void {
     expect($fields['fields'][0]['name'])->toBe('detailData.name');
 });
 
+it('preserves extra field properties (modalComponent, relationField) through save and resolveFields', function (): void {
+    ['tenant' => $tenant] = $this->createUserWithCmsAccess();
+    TenantHelper::setSelectedTenantId($tenant->id);
+
+    $repo = new DatabaseCollectionDefinitionRepository();
+    $repo->save(new CollectionDefinitionData(
+        filename: 'beratung',
+        key: 'BERATUNG',
+        title: 'Beratung',
+        titleList: 'Beratungspunkte',
+        description: null,
+        hasPage: false,
+        fields: [
+            [
+                'name' => 'page_id',
+                'label' => 'Verlinkte Seite',
+                'type' => 'relation',
+                'colspan' => 6,
+                'modalComponent' => 'pages-list',
+                'relationField' => 'relationTitles.page_id',
+            ],
+        ],
+    ));
+
+    $fields = $repo->resolveFields('beratung');
+
+    expect($fields['fields'])->toHaveCount(1);
+    expect($fields['fields'][0]['name'])->toBe('detailData.page_id');
+    expect($fields['fields'][0]['modalComponent'])->toBe('pages-list');
+    expect($fields['fields'][0]['relationField'])->toBe('relationTitles.page_id');
+
+    $definition = $repo->find('beratung');
+    expect($definition->fields[0]['modalComponent'])->toBe('pages-list');
+    expect($definition->fields[0]['relationField'])->toBe('relationTitles.page_id');
+});
+
 it('scopes queries by tenant_id', function (): void {
     ['tenant' => $tenantA] = $this->createUserWithCmsAccess();
     ['tenant' => $tenantB] = $this->createUserWithCmsAccess();

@@ -60,6 +60,34 @@ it('parses YAML files and strips the detailData prefix from fields', function ()
     expect($definition->fields[0]['name'])->toBe('name');
 });
 
+it('preserves extra field properties like modalComponent and relationField when loading YAML', function (): void {
+    $dir = yamlRepoTmpDir();
+    writeYamlDefinition($dir, 'beratung', [
+        'title' => 'Beratung',
+        'titleList' => 'Beratungspunkte',
+        'key' => 'BERATUNG',
+        'hasPage' => false,
+        'fields' => [
+            [
+                'name' => 'detailData.page_id',
+                'label' => 'Verlinkte Seite',
+                'type' => 'relation',
+                'colspan' => 6,
+                'modalComponent' => 'pages-list',
+                'relationField' => 'relationTitles.page_id',
+            ],
+        ],
+    ]);
+
+    $repo = new YamlCollectionDefinitionRepository($dir);
+    $definition = $repo->find('beratung');
+
+    expect($definition->fields)->toHaveCount(1);
+    expect($definition->fields[0]['name'])->toBe('page_id');
+    expect($definition->fields[0]['modalComponent'])->toBe('pages-list');
+    expect($definition->fields[0]['relationField'])->toBe('relationTitles.page_id');
+});
+
 it('sorts results by titleList case-insensitively', function (): void {
     $dir = yamlRepoTmpDir();
     writeYamlDefinition($dir, 'zebra', ['title' => 'Zebra', 'titleList' => 'zebra', 'key' => 'ZEBRA', 'fields' => []]);
