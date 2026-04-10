@@ -99,6 +99,28 @@ new class extends Component
             }
         }
 
+        // Populate relationTitles for saved page relations defined in the collection layout
+        foreach ($this->collectionLayout['fields'] ?? [] as $field) {
+            if (($field['type'] ?? null) !== 'relation') {
+                continue;
+            }
+            if (($field['modalComponent'] ?? null) !== 'pages-list') {
+                continue;
+            }
+            $fieldName = str_replace('detailData.', '', $field['name'] ?? '');
+            $relatedId = $this->detailData[$fieldName] ?? null;
+            if (empty($relatedId)) {
+                continue;
+            }
+            $relatedPage = Page::find($relatedId);
+            if (! $relatedPage) {
+                continue;
+            }
+            $this->relationTitles[$fieldName] = is_array($relatedPage->name)
+                ? ($relatedPage->name[session('selectedLanguage')] ?? array_values($relatedPage->name)[0] ?? '')
+                : $relatedPage->name;
+        }
+
         // Ensure sort field is available for collections
         $this->detailData['sort'] ??= $page->sort ?? 0;
     }
@@ -316,9 +338,18 @@ new class extends Component
     public function pageSelected($value, $context): void
     {
         $page = Page::find($value);
-        $this->hrefPage = $page['name'][session('selectedLanguage')];
-        $this->relationTitles[$value] = $page['name'][session('selectedLanguage')];
-        $this->detailData[str_replace('detailData.', '', $context)] = $page->id;
+        if (! $page) {
+            return;
+        }
+
+        $fieldName = str_replace('detailData.', '', $context);
+        $name = is_array($page->name)
+            ? ($page->name[session('selectedLanguage')] ?? array_values($page->name)[0] ?? '')
+            : $page->name;
+
+        $this->hrefPage = $name;
+        $this->relationTitles[$fieldName] = $name;
+        $this->detailData[$fieldName] = $page->id;
     }
 
     public function elementSort($elementId, $newPosition): void
