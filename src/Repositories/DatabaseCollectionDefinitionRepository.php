@@ -94,12 +94,12 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
             if ($name === 'collection.page_id' || $name === 'detailData.collection.page_id') {
                 continue;
             }
-            $fields[] = [
+            $fields[] = array_merge($field, [
                 'name' => 'detailData.' . ltrim(preg_replace('/^(model\.|detailData\.)/', '', $name), '.'),
                 'label' => $field['label'] ?? '',
                 'type' => $field['type'] ?? 'text',
                 'colspan' => (int) ($field['colspan'] ?? 6),
-            ];
+            ]);
         }
 
         return [
@@ -205,12 +205,12 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
         $fields = [];
         foreach ($model->fields ?? [] as $field) {
             $name = (string) ($field['name'] ?? '');
-            $fields[] = [
+            $fields[] = array_merge($field, [
                 'name' => preg_replace('/^(model\.|detailData\.)/', '', $name),
                 'label' => $field['label'] ?? '',
                 'type' => $field['type'] ?? 'text',
                 'colspan' => (int) ($field['colspan'] ?? 6),
-            ];
+            ]);
         }
 
         return new CollectionDefinitionData(

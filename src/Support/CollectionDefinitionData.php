@@ -5,7 +5,7 @@ namespace Noerd\Cms\Support;
 final class CollectionDefinitionData
 {
     /**
-     * @param  array<int, array{name: string, label: string, type: string, colspan: int}>  $fields
+     * @param  array<int, array{name: string, label: string, type: string, colspan: int}&array<string, mixed>>  $fields
      */
     public function __construct(
         public string $filename,
@@ -20,6 +20,7 @@ final class CollectionDefinitionData
 
     /**
      * Build from a YAML-shaped array. Fields may use the "detailData." prefix which is stripped.
+     * Any additional field keys (modalComponent, relationField, etc.) are preserved.
      *
      * @param  array<string, mixed>  $data
      */
@@ -31,12 +32,12 @@ final class CollectionDefinitionData
         $fields = [];
         foreach ($data['fields'] ?? [] as $field) {
             $name = (string) ($field['name'] ?? '');
-            $fields[] = [
+            $fields[] = array_merge($field, [
                 'name' => preg_replace('/^(model\.|detailData\.)/', '', $name),
                 'label' => (string) ($field['label'] ?? ''),
                 'type' => (string) ($field['type'] ?? 'text'),
                 'colspan' => (int) ($field['colspan'] ?? 6),
-            ];
+            ]);
         }
 
         return new self(
@@ -70,6 +71,7 @@ final class CollectionDefinitionData
 
     /**
      * Produce the YAML shape (fields prefixed with "detailData.") for writing to disk.
+     * Any additional field keys (modalComponent, relationField, etc.) are preserved.
      *
      * @return array<string, mixed>
      */
@@ -77,12 +79,12 @@ final class CollectionDefinitionData
     {
         $yamlFields = [];
         foreach ($this->fields as $field) {
-            $yamlFields[] = [
+            $yamlFields[] = array_merge($field, [
                 'name' => 'detailData.' . ltrim($field['name'], '.'),
                 'label' => $field['label'],
                 'type' => $field['type'],
                 'colspan' => (int) $field['colspan'],
-            ];
+            ]);
         }
 
         return [
