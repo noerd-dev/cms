@@ -6,8 +6,8 @@ uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
 it('returns 404 for /cms/collection-definitions in yaml mode', function (): void {
-    config(['noerd_cms.collections.mode' => 'yaml']);
-    config(['noerd_cms.collections.show_definitions_ui' => false]);
+    config(['noerd.collections.mode' => 'yaml']);
+    config(['noerd.collections.show_definitions_ui' => false]);
 
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
@@ -17,8 +17,8 @@ it('returns 404 for /cms/collection-definitions in yaml mode', function (): void
 });
 
 it('returns 200 for /cms/collection-definitions in database mode', function (): void {
-    config(['noerd_cms.collections.mode' => 'database']);
-    config(['noerd_cms.collections.show_definitions_ui' => true]);
+    config(['noerd.collections.mode' => 'database']);
+    config(['noerd.collections.show_definitions_ui' => true]);
 
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);

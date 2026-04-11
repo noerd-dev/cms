@@ -31,8 +31,10 @@ class CmsServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../../config/noerd_cms.php', 'noerd_cms');
 
         // Bind the collection definition repository based on the configured mode.
+        // The mode now lives in the shared noerd.collections.* namespace so a
+        // single toggle governs both CMS and Setup collection definitions.
         $this->app->singleton(CollectionDefinitionRepositoryContract::class, function ($app) {
-            $mode = config('noerd_cms.collections.mode', 'yaml');
+            $mode = config('noerd.collections.mode', 'yaml');
 
             return match ($mode) {
                 'database' => new DatabaseCollectionDefinitionRepository(),

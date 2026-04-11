@@ -11,8 +11,8 @@ uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
-    config(['noerd_cms.collections.mode' => 'database']);
-    config(['noerd_cms.collections.show_definitions_ui' => true]);
+    config(['noerd.collections.mode' => 'database']);
+    config(['noerd.collections.show_definitions_ui' => true]);
     DatabaseCollectionDefinitionRepository::resetCache();
     app()->forgetInstance(\Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract::class);
     app()->forgetInstance(\Noerd\Cms\Helpers\CollectionHelper::class);

@@ -7,7 +7,7 @@ use Noerd\Cms\Repositories\YamlCollectionDefinitionRepository;
 uses(Tests\TestCase::class);
 
 it('resolves YamlCollectionDefinitionRepository when mode is yaml', function (): void {
-    config(['noerd_cms.collections.mode' => 'yaml']);
+    config(['noerd.collections.mode' => 'yaml']);
     app()->forgetInstance(CollectionDefinitionRepositoryContract::class);
 
     $repository = app(CollectionDefinitionRepositoryContract::class);
@@ -17,7 +17,7 @@ it('resolves YamlCollectionDefinitionRepository when mode is yaml', function ():
 });
 
 it('resolves DatabaseCollectionDefinitionRepository when mode is database', function (): void {
-    config(['noerd_cms.collections.mode' => 'database']);
+    config(['noerd.collections.mode' => 'database']);
     app()->forgetInstance(CollectionDefinitionRepositoryContract::class);
 
     $repository = app(CollectionDefinitionRepositoryContract::class);
@@ -27,7 +27,7 @@ it('resolves DatabaseCollectionDefinitionRepository when mode is database', func
 });
 
 it('falls back to yaml mode when the config value is unknown', function (): void {
-    config(['noerd_cms.collections.mode' => 'something-invalid']);
+    config(['noerd.collections.mode' => 'something-invalid']);
     app()->forgetInstance(CollectionDefinitionRepositoryContract::class);
 
     $repository = app(CollectionDefinitionRepositoryContract::class);
