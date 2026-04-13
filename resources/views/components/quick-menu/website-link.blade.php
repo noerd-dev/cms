@@ -2,10 +2,10 @@
 
 use Livewire\Component;
 
-new class extends Component {
+new class () extends Component {
     public ?string $websiteUrl = null;
 
-    public function mount()
+    public function mount(): void
     {
         $user = auth()->user();
         $tenant = $user?->selectedTenant();
@@ -24,9 +24,9 @@ new class extends Component {
 <div class="hidden lg:flex">
     @if($websiteUrl)
         <a class="flex" target="_blank" href="{{ $websiteUrl }}">
-            <button class="bg-gray-100 rounded-lg my-auto text-sm px-3 py-1">
+            <x-noerd::button variant="pill" >
                 {{ __('cms_to_website') }}
-            </button>
+            </x-noerd::button>
         </a>
     @endif
 </div>

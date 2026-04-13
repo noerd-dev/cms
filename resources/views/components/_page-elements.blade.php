@@ -23,10 +23,10 @@
 
     <div class="mt-8 mb-8 flex">
         <div class="mt-4 mx-auto">
-            <x-noerd::buttons.primary
+            <x-noerd::button
                 @click="$modal('element-picker-modal', { token: 'insert-end' })">
                 {{ __('Add Element') }}
-            </x-noerd::buttons.primary>
+            </x-noerd::button>
         </div>
     </div>
 

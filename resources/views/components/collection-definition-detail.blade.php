@@ -411,9 +411,9 @@ new class extends Component
         <div class="flex items-center w-full gap-2">
             @if($isEditing)
                 <div class="flex gap-2 mr-auto">
-                    <x-noerd::buttons.secondary wire:click="copy" wire:confirm="{{ __('cms_confirm_copy_collection') }}">
+                    <x-noerd::button variant="secondary" wire:click="copy" wire:confirm="{{ __('cms_confirm_copy_collection') }}">
                         {{ __('cms_label_copy') }}
-                    </x-noerd::buttons.secondary>
+                    </x-noerd::button>
                 </div>
             @endif
             @php

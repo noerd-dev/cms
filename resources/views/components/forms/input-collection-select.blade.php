@@ -50,14 +50,14 @@
             @endforeach
         </select>
 
-        <x-noerd::buttons.primary
+        <x-noerd::button
             x-data="{ collectionKey: $wire.entangle('{{ $name }}') }"
             @click="$modal('collection-entries-list', {collectionKey: collectionKey, context: '{{ $name }}'})"
             class="h-9rounded !mt-0 !ml-1"
             type="button"
         >
             <x-noerd::icons.magnifying-glass></x-noerd::icons.magnifying-glass>
-        </x-noerd::buttons.primary>
+        </x-noerd::button>
     </div>
     <x-noerd::input-error :messages="$errors->get($name)" class="mt-2"/>
 </div>

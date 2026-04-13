@@ -282,8 +282,8 @@ new class extends Component {
                     <p class="text-xs text-red-700 mt-2">{{ __('Please create both the .yml and .blade.php files in the elements folder.') }}</p>
                 </div>
                 <div>
-                    <x-noerd::buttons.delete wire:confirm="{{ __('Really delete element?') }}"
-                                             wire:click="delete"></x-noerd::buttons.delete>
+                    <x-noerd::button variant="danger" wire:confirm="{{ __('Really delete element?') }}"
+                                             wire:click="delete"></x-noerd::button>
                 </div>
             </div>
             <details class="mt-2">
