@@ -211,7 +211,7 @@ new class extends Component {
                             }, 1000);
                         }
                     }">
-                        <x-noerd::buttons.secondary
+                        <x-noerd::button variant="secondary"
                             wire:click="resendNotificationEmail"
                             wire:loading.attr="disabled"
                             wire:target="resendNotificationEmail"
@@ -229,7 +229,7 @@ new class extends Component {
                             <span wire:loading wire:target="resendNotificationEmail">
                                 {{ __('Wird gesendet...') }}
                             </span>
-                        </x-noerd::buttons.secondary>
+                        </x-noerd::button>
                     </div>
                 </div>
             @endif

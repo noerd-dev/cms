@@ -192,9 +192,9 @@ new class () extends Component {
             <div class="flex items-center w-full gap-2">
                 @if($this->canShowPreview)
                     <div class="flex gap-2 mr-auto">
-                        <x-noerd::buttons.secondary wire:click="openPreview">
+                        <x-noerd::button variant="secondary" wire:click="openPreview">
                             {{ __('E-Mail-Vorschau') }}
-                        </x-noerd::buttons.secondary>
+                        </x-noerd::button>
 
                         <div x-data="{
                             cooldown: @js($this->canSendTestEmail ? 0 : $this->testEmailCooldownSeconds),
@@ -214,7 +214,7 @@ new class () extends Component {
                                 }, 1000);
                             }
                         }">
-                            <x-noerd::buttons.secondary
+                            <x-noerd::button variant="secondary"
                                 wire:click="sendTestEmail"
                                 wire:loading.attr="disabled"
                                 wire:target="sendTestEmail"
@@ -231,7 +231,7 @@ new class () extends Component {
                                 <span wire:loading wire:target="sendTestEmail">
                                     {{ __('Wird gesendet...') }}
                                 </span>
-                            </x-noerd::buttons.secondary>
+                            </x-noerd::button>
                         </div>
                     </div>
                 @endif
@@ -241,7 +241,7 @@ new class () extends Component {
         </x-slot:footer>
     </x-noerd::page>
 
-    <x-noerd::email-preview-modal
+    <x-cms::email-preview-modal
         :emailSubject="$detailData['email_subject'] ?? ''"
         :sampleData="$this->getSampleEmailData()"
         :previewHtml="$this->previewEmailHtml"
