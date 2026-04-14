@@ -2,8 +2,8 @@
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Helpers\TenantHelper;
-use Noerd\Models\Tenant;
 use Noerd\Models\NoerdUser;
+use Noerd\Models\Tenant;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 

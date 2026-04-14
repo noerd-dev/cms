@@ -45,9 +45,7 @@ class CmsServiceProvider extends ServiceProvider
         });
 
         // Register CollectionHelper as singleton for mockability in tests
-        $this->app->singleton(CollectionHelper::class, function ($app) {
-            return new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class));
-        });
+        $this->app->singleton(CollectionHelper::class, fn($app) => new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class)));
 
         // Register CMS PageElementService as fallback for Website namespace
         if (! $this->app->bound(\Noerd\Website\Services\PageElementService::class)) {

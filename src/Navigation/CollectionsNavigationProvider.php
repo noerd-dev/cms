@@ -28,8 +28,8 @@ class CollectionsNavigationProvider implements DynamicNavigationProviderContract
     protected function getCollectionsByHasPage(bool $hasPage): array
     {
         return $this->repository->all()
-            ->filter(fn (CollectionDefinitionData $d) => $d->hasPage === $hasPage)
-            ->map(fn (CollectionDefinitionData $d) => [
+            ->filter(fn(CollectionDefinitionData $d) => $d->hasPage === $hasPage)
+            ->map(fn(CollectionDefinitionData $d) => [
                 'title' => $d->titleList,
                 'link' => "/cms/collections?key={$d->filename}",
                 'icon' => 'icons.list-bullet',

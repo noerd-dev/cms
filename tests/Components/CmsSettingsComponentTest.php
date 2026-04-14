@@ -5,10 +5,10 @@ use Livewire\Livewire;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\Page;
 use Noerd\Helpers\TenantHelper;
+use Noerd\Models\NoerdUser;
 use Noerd\Models\Profile;
 use Noerd\Models\Tenant;
 use Noerd\Models\TenantApp;
-use Noerd\Models\NoerdUser;
 
 uses(Tests\TestCase::class);
 uses(RefreshDatabase::class);
