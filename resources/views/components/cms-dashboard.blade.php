@@ -43,7 +43,7 @@ new class () extends Component {
 
     <div class="my-12">
         <div class="font-semibold text-sm border-b border-gray-300 pb-2">
-            {{ __('cms_overview') }}
+            {{ __('Overview') }}
         </div>
         <div class="flex">
             <x-noerd::dashboard-card heroicon="document" title="Seiten" :value="$pagesCount"

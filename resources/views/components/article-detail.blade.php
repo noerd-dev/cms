@@ -172,7 +172,7 @@ new class extends Component
 <x-noerd::page :disableModal="$disableModal">
     <x-slot:header>
         <x-noerd::modal-title class="flex items-center">
-            {{ __('cms_label_article') }}
+            {{ __('Article') }}
 
             <div class="ml-auto" :class="isModal ? 'mr-22' : ''">
                 <div class="flex items-center gap-4">

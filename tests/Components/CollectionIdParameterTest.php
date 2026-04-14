@@ -109,13 +109,13 @@ it('resolves collection key correctly when passed as string', function (): void 
 it('handles null collection key gracefully', function (): void {
     Livewire::test('collection-entries-list', ['collectionKey' => null])
         ->assertSet('collectionKey', null)
-        ->assertSee(__('cms_please_select_collection'))
+        ->assertSee(__('Please select a collection from the navigation.'))
         ->assertStatus(200);
 });
 
 it('handles non-existent collection ID gracefully', function (): void {
     Livewire::test('collection-entries-list', ['collectionKey' => 999999])
         ->assertSet('collectionKey', null)
-        ->assertSee(__('cms_please_select_collection'))
+        ->assertSee(__('Please select a collection from the navigation.'))
         ->assertStatus(200);
 });

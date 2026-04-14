@@ -788,7 +788,7 @@ new class extends Component
     <x-slot:footer>
         @if($modelId)
             <x-noerd::button variant="secondary" wire:click="copy" wire:confirm="{{ __('Seite kopieren?') }}">
-                {{ __('cms_label_copy') }}
+                {{ __('Copy') }}
             </x-noerd::button>
         @endif
         <x-noerd::delete-save-bar :showDelete="isset($modelId)"/>
