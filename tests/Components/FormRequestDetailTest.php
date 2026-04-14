@@ -7,9 +7,9 @@ use Noerd\Cms\Mail\FormConfirmation;
 use Noerd\Cms\Models\FormRequest;
 use Noerd\Cms\Models\FormType;
 use Noerd\Helpers\TenantHelper;
+use Noerd\Models\NoerdUser;
 use Noerd\Models\Tenant;
 use Noerd\Models\TenantApp;
-use Noerd\Models\NoerdUser;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 

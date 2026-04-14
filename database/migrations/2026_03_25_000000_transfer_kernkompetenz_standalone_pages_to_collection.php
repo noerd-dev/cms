@@ -3,11 +3,10 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
-        DB::transaction(function () {
+        DB::transaction(function (): void {
             $collectionPages = DB::table('pages')
                 ->where('collection_id', 4)
                 ->whereNotNull('data')
@@ -63,7 +62,7 @@ return new class extends Migration
             173 => 172,
         ];
 
-        DB::transaction(function () use ($mapping) {
+        DB::transaction(function () use ($mapping): void {
             $now = now();
 
             foreach ($mapping as $collectionPageId => $standalonePageId) {

@@ -139,17 +139,17 @@ it('throws RuntimeException when save is called', function (): void {
     $repo = new YamlCollectionDefinitionRepository(yamlRepoTmpDir());
     $data = new CollectionDefinitionData('test', 'TEST', 'Test', 'Tests', null, false, []);
 
-    expect(fn () => $repo->save($data))->toThrow(\RuntimeException::class);
+    expect(fn() => $repo->save($data))->toThrow(\RuntimeException::class);
 });
 
 it('throws RuntimeException when copy is called', function (): void {
     $repo = new YamlCollectionDefinitionRepository(yamlRepoTmpDir());
 
-    expect(fn () => $repo->copy('whatever'))->toThrow(\RuntimeException::class);
+    expect(fn() => $repo->copy('whatever'))->toThrow(\RuntimeException::class);
 });
 
 it('throws RuntimeException when delete is called', function (): void {
     $repo = new YamlCollectionDefinitionRepository(yamlRepoTmpDir());
 
-    expect(fn () => $repo->delete('whatever'))->toThrow(\RuntimeException::class);
+    expect(fn() => $repo->delete('whatever'))->toThrow(\RuntimeException::class);
 });

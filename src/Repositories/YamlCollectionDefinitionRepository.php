@@ -27,9 +27,9 @@ class YamlCollectionDefinitionRepository implements CollectionDefinitionReposito
         $files = glob($this->basePath . '/*.yml') ?: [];
 
         return collect($files)
-            ->map(fn (string $path) => $this->loadFile($path))
+            ->map(fn(string $path) => $this->loadFile($path))
             ->filter()
-            ->sortBy(fn (CollectionDefinitionData $d) => mb_strtolower($d->titleList))
+            ->sortBy(fn(CollectionDefinitionData $d) => mb_strtolower($d->titleList))
             ->values();
     }
 
@@ -44,7 +44,7 @@ class YamlCollectionDefinitionRepository implements CollectionDefinitionReposito
     {
         $key = mb_strtoupper($key);
 
-        return $this->all()->first(fn (CollectionDefinitionData $d) => $d->key === $key);
+        return $this->all()->first(fn(CollectionDefinitionData $d) => $d->key === $key);
     }
 
     public function exists(string $filename, ?int $tenantId = null): bool
@@ -76,7 +76,7 @@ class YamlCollectionDefinitionRepository implements CollectionDefinitionReposito
 
         $fields['fields'] = array_values(array_filter(
             $fields['fields'] ?? [],
-            fn ($field) => ($field['name'] ?? null) !== 'collection.page_id',
+            fn($field) => ($field['name'] ?? null) !== 'collection.page_id',
         ));
 
         return $fields;

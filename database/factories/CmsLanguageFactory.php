@@ -21,7 +21,7 @@ class CmsLanguageFactory extends Factory
 
     public function english(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn() => [
             'code' => 'en',
             'name' => 'English',
             'is_active' => true,
