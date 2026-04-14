@@ -42,7 +42,7 @@ it('resolves pageRelation props from nested detail data', function (): void {
         'relationType' => 'pageRelation',
         'fieldName' => 'detailData.custom_attributes.page_id',
         'label' => 'booking_label_page',
-        'value' => 17,
+        'value' => '17',
         'required' => true,
         'readonly' => false,
         'modelId' => 99,
