@@ -2,26 +2,19 @@
 
 namespace Noerd\Cms\Models;
 
-use Noerd\Models\NoerdUser;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Noerd\Cms\Database\Factories\CollectionFactory;
+use Noerd\Models\NoerdUser;
 
 class Collection extends Model
 {
     use HasFactory;
 
     protected $guarded = [];
-
-    protected function collectionKey(): Attribute
-    {
-        return Attribute::make(
-            set: fn (string $value) => mb_strtoupper($value),
-        );
-    }
 
     protected $table = 'collections';
 
@@ -38,5 +31,12 @@ class Collection extends Model
     protected static function newFactory()
     {
         return CollectionFactory::new();
+    }
+
+    protected function collectionKey(): Attribute
+    {
+        return Attribute::make(
+            set: fn(string $value) => mb_strtoupper($value),
+        );
     }
 }

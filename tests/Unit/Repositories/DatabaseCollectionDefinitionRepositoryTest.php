@@ -105,7 +105,7 @@ it('throws when copy target already exists', function (): void {
     $repo->save(new CollectionDefinitionData('contacts', 'CONTACTS', 'Kontakt', 'Kontakte', null, false, []));
     $repo->save(new CollectionDefinitionData('contacts2', 'CONTACTS2', 'Kontakt 2', 'Kontakte 2', null, false, []));
 
-    expect(fn () => $repo->copy('contacts'))->toThrow(\RuntimeException::class);
+    expect(fn() => $repo->copy('contacts'))->toThrow(\RuntimeException::class);
 });
 
 it('deletes a definition and invalidates cache', function (): void {
@@ -210,5 +210,5 @@ it('throws when saving without a tenant context', function (): void {
     TenantHelper::clear();
     $data = new CollectionDefinitionData('contacts', 'CONTACTS', 'Kontakt', 'Kontakte', null, false, []);
 
-    expect(fn () => $repo->save($data))->toThrow(\RuntimeException::class);
+    expect(fn() => $repo->save($data))->toThrow(\RuntimeException::class);
 });

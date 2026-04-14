@@ -21,13 +21,6 @@ class Navigation extends Model
 
     protected $table = 'cms_navigations';
 
-    protected function navigationKey(): Attribute
-    {
-        return Attribute::make(
-            set: fn (string $value) => mb_strtoupper($value),
-        );
-    }
-
     public function page()
     {
         return $this->belongsTo(Page::class);
@@ -51,5 +44,12 @@ class Navigation extends Model
     protected static function newFactory()
     {
         return NavigationFactory::new();
+    }
+
+    protected function navigationKey(): Attribute
+    {
+        return Attribute::make(
+            set: fn(string $value) => mb_strtoupper($value),
+        );
     }
 }

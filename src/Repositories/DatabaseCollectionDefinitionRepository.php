@@ -26,13 +26,13 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
 
     public function all(?int $tenantId = null): Collection
     {
-        $tenantId = $tenantId ?? TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::getSelectedTenantId();
 
         return CollectionDefinition::query()
-            ->when($tenantId !== null, fn ($q) => $q->where('tenant_id', $tenantId))
+            ->when($tenantId !== null, fn($q) => $q->where('tenant_id', $tenantId))
             ->orderBy('title_list')
             ->get()
-            ->map(fn (CollectionDefinition $m) => $this->toData($m));
+            ->map(fn(CollectionDefinition $m) => $this->toData($m));
     }
 
     public function find(string $filename, ?int $tenantId = null): ?CollectionDefinitionData
@@ -44,10 +44,10 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
 
     public function findByKey(string $key, ?int $tenantId = null): ?CollectionDefinitionData
     {
-        $tenantId = $tenantId ?? TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::getSelectedTenantId();
 
         $model = CollectionDefinition::query()
-            ->when($tenantId !== null, fn ($q) => $q->where('tenant_id', $tenantId))
+            ->when($tenantId !== null, fn($q) => $q->where('tenant_id', $tenantId))
             ->where('key', mb_strtoupper($key))
             ->first();
 
@@ -71,50 +71,9 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
         return self::$requestCache[$cacheKey] = $this->resolveFieldsUncached($filename, $tenantId);
     }
 
-    private function resolveFieldsUncached(string $filename, ?int $tenantId): ?array
-    {
-        $query = CollectionDefinition::query()
-            ->when($tenantId !== null, fn ($q) => $q->where('tenant_id', $tenantId));
-
-        $model = (clone $query)->where('filename', $filename)->first();
-
-        if (! $model) {
-            $model = $query
-                ->where('key', mb_strtoupper(str_replace('-', '_', $filename)))
-                ->first();
-        }
-
-        if (! $model) {
-            return null;
-        }
-
-        $fields = [];
-        foreach ($model->fields ?? [] as $field) {
-            $name = (string) ($field['name'] ?? '');
-            if ($name === 'collection.page_id' || $name === 'detailData.collection.page_id') {
-                continue;
-            }
-            $fields[] = array_merge($field, [
-                'name' => 'detailData.' . ltrim(preg_replace('/^(model\.|detailData\.)/', '', $name), '.'),
-                'label' => $field['label'] ?? '',
-                'type' => $field['type'] ?? 'text',
-                'colspan' => (int) ($field['colspan'] ?? 6),
-            ]);
-        }
-
-        return [
-            'title' => $model->title,
-            'titleList' => $model->title_list,
-            'key' => $model->key,
-            'description' => $model->description ?? '',
-            'hasPage' => (bool) $model->has_page,
-            'fields' => $fields,
-        ];
-    }
-
     public function save(CollectionDefinitionData $data, ?string $originalFilename = null, ?int $tenantId = null): string
     {
-        $tenantId = $tenantId ?? TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::getSelectedTenantId();
         if ($tenantId === null) {
             throw new RuntimeException('Cannot save a collection definition without a tenant context.');
         }
@@ -149,7 +108,7 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
 
     public function copy(string $filename, ?int $tenantId = null): string
     {
-        $tenantId = $tenantId ?? TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::getSelectedTenantId();
         $source = $this->findModel($filename, $tenantId);
         if (! $source) {
             throw new RuntimeException("Definition '{$filename}' not found.");
@@ -190,12 +149,53 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
         return true;
     }
 
+    private function resolveFieldsUncached(string $filename, ?int $tenantId): ?array
+    {
+        $query = CollectionDefinition::query()
+            ->when($tenantId !== null, fn($q) => $q->where('tenant_id', $tenantId));
+
+        $model = (clone $query)->where('filename', $filename)->first();
+
+        if (! $model) {
+            $model = $query
+                ->where('key', mb_strtoupper(str_replace('-', '_', $filename)))
+                ->first();
+        }
+
+        if (! $model) {
+            return null;
+        }
+
+        $fields = [];
+        foreach ($model->fields ?? [] as $field) {
+            $name = (string) ($field['name'] ?? '');
+            if ($name === 'collection.page_id' || $name === 'detailData.collection.page_id') {
+                continue;
+            }
+            $fields[] = array_merge($field, [
+                'name' => 'detailData.' . mb_ltrim(preg_replace('/^(model\.|detailData\.)/', '', $name), '.'),
+                'label' => $field['label'] ?? '',
+                'type' => $field['type'] ?? 'text',
+                'colspan' => (int) ($field['colspan'] ?? 6),
+            ]);
+        }
+
+        return [
+            'title' => $model->title,
+            'titleList' => $model->title_list,
+            'key' => $model->key,
+            'description' => $model->description ?? '',
+            'hasPage' => (bool) $model->has_page,
+            'fields' => $fields,
+        ];
+    }
+
     private function findModel(string $filename, ?int $tenantId): ?CollectionDefinition
     {
-        $tenantId = $tenantId ?? TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::getSelectedTenantId();
 
         return CollectionDefinition::query()
-            ->when($tenantId !== null, fn ($q) => $q->where('tenant_id', $tenantId))
+            ->when($tenantId !== null, fn($q) => $q->where('tenant_id', $tenantId))
             ->where('filename', $filename)
             ->first();
     }
