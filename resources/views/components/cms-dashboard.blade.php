@@ -3,12 +3,11 @@
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
-use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
-new class () extends Component {
 
+new class () extends Component {
     #[Locked]
     public $clientId = null;
 
@@ -42,7 +41,7 @@ new class () extends Component {
 
 <x-noerd::page>
 
-    <div class="mb-12">
+    <div class="my-12">
         <div class="font-semibold text-sm border-b border-gray-300 pb-2">
             {{ __('cms_overview') }}
         </div>
