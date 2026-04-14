@@ -16,9 +16,7 @@ fields:
     colspan: 6
   - name: detailData.page_id
     label: Page
-    type: relation
-    relationField: relationTitles.page_id
-    modalComponent: pages-list
+    type: pageRelation
     colspan: 6
   - name: detailData.link
     label: 'Link (URL)'

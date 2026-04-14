@@ -39,7 +39,7 @@ Articles are managed at `/cms/articles`. Each article has:
 | `title` | translatableText | Article title in each active language |
 | `slug` | translatableText | URL slug (auto-generated from title) |
 | `is_active` | checkbox | Whether the article is published |
-| `author_id` | relation | Link to an author |
+| `author_id` | authorRelation | Link to an author |
 | `publication_date` | date | Scheduled publication date |
 | `body` | textarea | Article content |
 
@@ -62,9 +62,7 @@ fields:
     colspan: 2
   - name: articleData.author_id
     label: cms_label_author
-    type: relation
-    relationField: relationTitles.author_id
-    modalComponent: authors-list
+    type: authorRelation
     colspan: 6
   - name: articleData.publication_date
     label: cms_label_publication_date
