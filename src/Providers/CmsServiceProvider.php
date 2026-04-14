@@ -22,6 +22,8 @@ use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Repositories\YamlCollectionDefinitionRepository;
 use Noerd\Models\Tenant;
 use Noerd\Services\DynamicNavigationRegistry;
+use Noerd\Services\FieldTypeRegistry;
+use Noerd\Support\FieldTypeDefinition;
 
 class CmsServiceProvider extends ServiceProvider
 {
@@ -99,6 +101,27 @@ class CmsServiceProvider extends ServiceProvider
         $registry = $this->app->make(DynamicNavigationRegistry::class);
         $registry->register($this->app->make(CollectionsNavigationProvider::class));
         $registry->register($this->app->make(PageCollectionsNavigationProvider::class));
+
+        $fieldTypeRegistry = $this->app->make(FieldTypeRegistry::class);
+        $fieldTypeRegistry->register('collection-select', FieldTypeDefinition::include(
+            'cms::components.forms.input-collection-select',
+            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => ['field' => $field],
+        ));
+        $fieldTypeRegistry->register('pageRelation', FieldTypeDefinition::livewire(
+            'cms-page-relation',
+            resolver: function (array $field, mixed $component, mixed $detailData, mixed $modelId): array {
+                $pageFieldKey = str_replace('detailData.', '', $field['name'] ?? '');
+                $pageFieldValue = data_get($component?->detailData ?? $detailData ?? [], $pageFieldKey);
+
+                return [
+                    'fieldName' => $field['name'] ?? '',
+                    'label' => $field['label'] ?? '',
+                    'value' => $pageFieldValue ? (int) $pageFieldValue : null,
+                    'required' => $field['required'] ?? false,
+                ];
+            },
+            keyResolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): string => ($field['name'] ?? 'pageRelation') . '-' . ($modelId ?? 'new'),
+        ));
 
         // Create default English language when a new tenant is created
         Tenant::created(function (Tenant $tenant): void {
