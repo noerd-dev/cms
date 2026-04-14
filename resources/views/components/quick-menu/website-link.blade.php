@@ -25,7 +25,7 @@ new class () extends Component {
     @if($websiteUrl)
         <a class="flex" target="_blank" href="{{ $websiteUrl }}">
             <x-noerd::button variant="pill" >
-                {{ __('cms_to_website') }}
+                {{ __('To Website') }}
             </x-noerd::button>
         </a>
     @endif

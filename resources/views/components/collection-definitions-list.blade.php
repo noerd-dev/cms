@@ -24,13 +24,13 @@ new class extends Component
     {
         return [
             [
-                'label' => __('cms_label_type'),
+                'label' => __('Type'),
                 'column' => 'has_page',
                 'type' => 'Picklist',
                 'options' => [
-                    '' => __('cms_all_types'),
-                    'page' => __('cms_with_page'),
-                    'data' => __('cms_data_only'),
+                    '' => __('All types'),
+                    'page' => __('With page'),
+                    'data' => __('Data only'),
                 ],
             ],
         ];
@@ -117,16 +117,16 @@ new class extends Component
 
         return [
             'listConfig' => $this->buildList($rows, [
-                'title' => 'cms_label_collection_definitions',
-                'actions' => [['label' => 'cms_label_new_collection_definition', 'action' => 'listAction']],
+                'title' => 'Collection Definitions',
+                'actions' => [['label' => 'New Collection', 'action' => 'listAction']],
                 'disableSearch' => false,
                 'columns' => [
-                    ['field' => 'titleList', 'label' => __('cms_label_title_plural')],
+                    ['field' => 'titleList', 'label' => __('Title (Plural)')],
                     ['field' => 'key', 'label' => 'Key'],
-                    ['field' => 'hasPage', 'label' => __('cms_label_has_page')],
-                    ['field' => 'fieldCount', 'label' => __('cms_label_field_count')],
-                    ['field' => 'entryCount', 'label' => __('cms_label_entry_count')],
-                    ['field' => 'createdBy', 'label' => __('cms_label_created_by')],
+                    ['field' => 'hasPage', 'label' => __('Has Page')],
+                    ['field' => 'fieldCount', 'label' => __('Fields')],
+                    ['field' => 'entryCount', 'label' => __('Entries')],
+                    ['field' => 'createdBy', 'label' => __('Created by')],
                 ],
             ]),
         ];

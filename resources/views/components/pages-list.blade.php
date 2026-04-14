@@ -33,13 +33,13 @@ new class extends Component {
         }
 
         $filters[] = [
-            'label' => __('cms_label_page_type'),
+            'label' => __('Page Type'),
             'column' => 'page_type',
             'type' => 'Picklist',
             'options' => [
-                '' => __('cms_all_pages'),
-                'collection' => __('cms_collection_pages'),
-                'single' => __('cms_single_pages'),
+                '' => __('All Pages'),
+                'collection' => __('Collection Pages'),
+                'single' => __('Single Pages'),
             ],
         ];
 

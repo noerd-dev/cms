@@ -210,7 +210,7 @@ new class extends Component
         });
 
         $collectionTitle = $this->collectionLayout['title'] ?? ucfirst($this->collectionKey);
-        $actionLabel = __('cms_new_entry');
+        $actionLabel = __('New Entry');
 
         // Generate dynamic columns from YAML fields
         $columns = [];
@@ -245,7 +245,7 @@ new class extends Component
             'listConfig' => $this->buildList($rows, [
                 'title' => $collectionTitle,
                 'actions' => [
-                    ['label' => 'cms_manage_collection', 'action' => 'manageCollection', 'style' => 'secondary', 'shortcut' => 'c'],
+                    ['label' => 'Manage Collection', 'action' => 'manageCollection', 'style' => 'secondary', 'shortcut' => 'c'],
                     ['label' => $actionLabel, 'action' => 'listAction', 'shortcut' => 'n'],
                 ],
                 'disableSearch' => false,
@@ -285,7 +285,7 @@ new class extends Component
         <x-noerd::list />
     @else
         <div class="text-center py-8">
-            <p class="text-gray-500">{{ __('cms_please_select_collection') }}</p>
+            <p class="text-gray-500">{{ __('Please select a collection from the navigation.') }}</p>
         </div>
     @endif
 </x-noerd::page>

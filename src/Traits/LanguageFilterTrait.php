@@ -43,7 +43,7 @@ trait LanguageFilterTrait
 
     protected function getLanguageListFilter(): array
     {
-        $filter['label'] = __('cms_label_language');
+        $filter['label'] = __('Language');
         $filter['column'] = 'language';
         $filter['type'] = 'Picklist';
         $filter['options'] = [];

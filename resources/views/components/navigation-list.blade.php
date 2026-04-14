@@ -27,13 +27,13 @@ new class extends Component
             ->sort()
             ->values();
 
-        $options = ['' => __('cms_all_navigation_entries')];
+        $options = ['' => __('All entries')];
         foreach ($keys as $key) {
             $options[$key] = $key;
         }
 
         $filters[] = [
-            'label' => __('cms_label_navigation_key'),
+            'label' => __('Navigation Key'),
             'column' => 'navigation_key',
             'type' => 'Picklist',
             'options' => $options,

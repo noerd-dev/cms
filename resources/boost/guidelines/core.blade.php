@@ -224,11 +224,9 @@ curl -X POST https://example.test/api/cms/form-requests \
 
 ### Translations
 
-- Key format: `cms_{key}` (e.g., `cms_dashboard`)
-- Labels: `cms_label_{key}` (e.g., `cms_label_page`)
-- Navigation: `cms_nav_{key}` (e.g., `cms_nav_pages`)
-- Tabs: `cms_tab_{key}` (e.g., `cms_tab_general`)
-- Stored in `app-modules/cms/resources/lang/de.json` and `en.json`
+- Use English text as translation keys (e.g., `__('Pages')`, not `__('cms_label_page')`)
+- Only `de.json` needed: `app-modules/cms/resources/lang/de.json`
+- No `en.json` — English works by fallback (key = English text)
 - Use `loadJsonTranslationsFrom()` in the CMS ServiceProvider
 
 ### YAML File Locations

@@ -45,7 +45,7 @@ new class extends Component {
 
 <x-noerd::page :disableModal="$disableModal">
     <x-slot:header>
-        <x-noerd::modal-title>{{ __('cms_label_language') }}</x-noerd::modal-title>
+        <x-noerd::modal-title>{{ __('Language') }}</x-noerd::modal-title>
     </x-slot:header>
 
     @php($pageLayout = StaticConfigHelper::getComponentFields('cms-language-detail'))

@@ -46,8 +46,8 @@ new class extends Component {
         $this->showSuccessIndicator = true;
 
         $this->dispatch('toast', [
-            'title' => __('cms_saved'),
-            'description' => __('cms_settings_saved'),
+            'title' => __('Saved'),
+            'description' => __('The settings have been saved.'),
         ]);
     }
 
@@ -96,19 +96,19 @@ new class extends Component {
     <div class="pt-4">
         <x-noerd::forms.checkbox
             name="detailData.show_cookie_banner"
-            label="{{ __('cms_show_cookie_banner') }}"
+            label="{{ __('Show Cookie Banner') }}"
             live
         />
-        <p class="text-sm text-gray-500 mt-1">{{ __('cms_cookie_banner_required') }}</p>
+        <p class="text-sm text-gray-500 mt-1">{{ __('Required to use Analytics') }}</p>
     </div>
 
     @if($detailData['show_cookie_banner'] ?? false)
         <div class="pt-4">
             <x-noerd::forms.input
                 name="detailData.google_analytics_id"
-                label="{{ __('cms_google_analytics') }}"
+                label="{{ __('Google Analytics') }}"
             />
-            <p class="text-sm text-gray-500 mt-1">{{ __('cms_google_analytics_hint') }}</p>
+            <p class="text-sm text-gray-500 mt-1">{{ __('Google Analytics Measurement ID (e.g. G-XXXXXXXXXX)') }}</p>
         </div>
     @endif
 
