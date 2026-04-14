@@ -1,8 +1,8 @@
-title: noerd_global_parameter
-description: noerd_global_parameter_description
+title: Global Parameter
+description: Global parameters are values that can be used throughout the application.
 fields:
   - name: detailData.key
-    label: noerd_key
+    label: Key
     type: text
     colspan: 6
   - name: detailData.value

@@ -2,7 +2,7 @@ title: ''
 description: ''
 tabs:
   - number: 1
-    label: noerd_general
+    label: General
   - number: 2
     label: cms_metadata
 fields:
@@ -23,7 +23,7 @@ fields:
         type: checkbox
         colspan: 2
   - type: block
-    title: noerd_layout_settings
+    title: Layout Settings
     tab: 1
     fields:
       - name: detailData.layout

@@ -1,10 +1,10 @@
-title: noerd_global_parameters
+title: Global Parameters
 actions:
-  - label: noerd_new_parameter
+  - label: New Parameter
     action: listAction
 disableSearch: false
 columns:
   - field: key
-    label: noerd_key
+    label: Key
   - field: value
     label: Value
