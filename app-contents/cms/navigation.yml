@@ -35,7 +35,7 @@
       dynamic: collections
     - title: cms_nav_settings
       navigations:
-        - title: noerd_nav_settings
+        - title: Settings
           route: cms.settings
           heroicon: adjustments-horizontal
         - title: cms_nav_languages

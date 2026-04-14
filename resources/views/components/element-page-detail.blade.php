@@ -214,7 +214,7 @@ new class extends Component {
     public function dataCollectionOptions(): array
     {
         $collectionsPath = base_path('app-configs/cms/collections');
-        $options = ['' => __('noerd_please_select')];
+        $options = ['' => __('Please select...')];
 
         foreach (glob($collectionsPath . '/*.yml') as $file) {
             $config = \Symfony\Component\Yaml\Yaml::parseFile($file);

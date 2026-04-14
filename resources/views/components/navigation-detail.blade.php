@@ -48,7 +48,7 @@ new class extends Component {
         $tenantId = auth()->user()->selected_tenant_id;
         $collections = Collection::where('tenant_id', $tenantId)->orderBy('name')->get();
 
-        $options = [['value' => '', 'label' => '-- ' . __('noerd_please_select') . ' --']];
+        $options = [['value' => '', 'label' => '-- ' . __('Please select...') . ' --']];
         foreach ($collections as $collection) {
             $config = CollectionHelper::getCollectionFields(strtolower($collection->collection_key));
             if ($config && !empty($config['hasPage'])) {
