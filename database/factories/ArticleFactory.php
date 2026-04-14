@@ -4,7 +4,6 @@ namespace Noerd\Cms\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Noerd\Cms\Models\Article;
-use Noerd\Cms\Models\Author;
 
 class ArticleFactory extends Factory
 {
@@ -35,7 +34,7 @@ class ArticleFactory extends Factory
 
     public function published(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'is_active' => true,
             'publication_date' => fake()->dateTimeBetween('-1 year', 'now'),
         ]);
@@ -43,14 +42,14 @@ class ArticleFactory extends Factory
 
     public function unpublished(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'is_active' => false,
         ]);
     }
 
     public function future(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'is_active' => true,
             'publication_date' => fake()->dateTimeBetween('+1 day', '+1 year'),
         ]);

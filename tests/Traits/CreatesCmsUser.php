@@ -7,9 +7,9 @@ namespace Noerd\Cms\Tests\Traits;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Helpers\TenantHelper;
+use Noerd\Models\NoerdUser;
 use Noerd\Models\Tenant;
 use Noerd\Models\TenantApp;
-use Noerd\Models\NoerdUser;
 
 trait CreatesCmsUser
 {

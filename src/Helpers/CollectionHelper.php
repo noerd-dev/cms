@@ -29,18 +29,6 @@ class CollectionHelper
     }
 
     /**
-     * Instance method: resolve collection fields via the repository.
-     */
-    public function resolveCollectionFields(?string $collection): ?array
-    {
-        if ($collection === null) {
-            return null;
-        }
-
-        return $this->repository->resolveFields($collection);
-    }
-
-    /**
      * Get normalized field names for a collection (without 'detailData.' prefix).
      */
     public static function getCollectionFieldNames(string $collectionKey): array
@@ -50,9 +38,19 @@ class CollectionHelper
             return [];
         }
 
-        return array_map(function ($field) {
-            return str_replace('detailData.', '', $field['name'] ?? '');
-        }, $fields['fields']);
+        return array_map(fn($field) => str_replace('detailData.', '', $field['name'] ?? ''), $fields['fields']);
+    }
+
+    /**
+     * Instance method: resolve collection fields via the repository.
+     */
+    public function resolveCollectionFields(?string $collection): ?array
+    {
+        if ($collection === null) {
+            return null;
+        }
+
+        return $this->repository->resolveFields($collection);
     }
 
     /**
