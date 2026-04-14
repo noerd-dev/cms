@@ -99,11 +99,12 @@ new class extends Component {
                     ->where('is_active', true)
                     ->pluck('code');
 
-                $query->where(function ($query) use ($languages): void {
+                $search = mb_strtolower($this->search);
+                $query->where(function ($query) use ($languages, $search): void {
                     foreach ($languages as $code) {
                         $query->orWhereRaw(
-                            'JSON_UNQUOTE(JSON_EXTRACT(name, ?)) LIKE ?',
-                            ['$.'.$code, '%'.$this->search.'%']
+                            'LOWER(JSON_UNQUOTE(JSON_EXTRACT(name, ?))) LIKE ?',
+                            ['$.'.$code, '%'.$search.'%']
                         );
                     }
                 });
