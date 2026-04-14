@@ -16,6 +16,8 @@ use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Middleware\CmsApiAuth;
 use Noerd\Cms\Middleware\EnsureCollectionDefinitionsEnabled;
 use Noerd\Cms\Models\CmsLanguage;
+use Noerd\Cms\Models\Page;
+use Noerd\Cms\Models\Author;
 use Noerd\Cms\Navigation\CollectionsNavigationProvider;
 use Noerd\Cms\Navigation\PageCollectionsNavigationProvider;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
@@ -23,7 +25,9 @@ use Noerd\Cms\Repositories\YamlCollectionDefinitionRepository;
 use Noerd\Models\Tenant;
 use Noerd\Services\DynamicNavigationRegistry;
 use Noerd\Services\FieldTypeRegistry;
+use Noerd\Services\RelationFieldRegistry;
 use Noerd\Support\FieldTypeDefinition;
+use Noerd\Support\RelationFieldDefinition;
 
 class CmsServiceProvider extends ServiceProvider
 {
@@ -103,24 +107,23 @@ class CmsServiceProvider extends ServiceProvider
         $registry->register($this->app->make(PageCollectionsNavigationProvider::class));
 
         $fieldTypeRegistry = $this->app->make(FieldTypeRegistry::class);
+        $relationFieldRegistry = $this->app->make(RelationFieldRegistry::class);
         $fieldTypeRegistry->register('collection-select', FieldTypeDefinition::include(
             'cms::components.forms.input-collection-select',
             resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => ['field' => $field],
         ));
-        $fieldTypeRegistry->register('pageRelation', FieldTypeDefinition::livewire(
-            'cms-page-relation',
-            resolver: function (array $field, mixed $component, mixed $detailData, mixed $modelId): array {
-                $pageFieldKey = str_replace('detailData.', '', $field['name'] ?? '');
-                $pageFieldValue = data_get($component?->detailData ?? $detailData ?? [], $pageFieldKey);
 
-                return [
-                    'fieldName' => $field['name'] ?? '',
-                    'label' => $field['label'] ?? '',
-                    'value' => $pageFieldValue ? (int) $pageFieldValue : null,
-                    'required' => $field['required'] ?? false,
-                ];
-            },
-            keyResolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): string => ($field['name'] ?? 'pageRelation') . '-' . ($modelId ?? 'new'),
+        $relationFieldRegistry->register('pageRelation', RelationFieldDefinition::model(
+            listComponent: 'pages-list',
+            detailComponent: 'page-detail',
+            modelClass: Page::class,
+            titleResolver: fn(Page $page): string => RelationFieldDefinition::normalizeDisplayValue($page->name),
+        ));
+        $relationFieldRegistry->register('authorRelation', RelationFieldDefinition::model(
+            listComponent: 'authors-list',
+            detailComponent: 'author-detail',
+            modelClass: Author::class,
+            titleResolver: 'name',
         ));
 
         // Create default English language when a new tenant is created

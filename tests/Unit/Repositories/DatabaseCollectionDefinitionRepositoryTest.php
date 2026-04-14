@@ -150,7 +150,7 @@ it('returns the YAML-shaped payload from resolveFields', function (): void {
     expect($fields['fields'][0]['name'])->toBe('detailData.name');
 });
 
-it('preserves extra field properties (modalComponent, relationField) through save and resolveFields', function (): void {
+it('preserves explicit registered relation field types through save and resolveFields', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
     TenantHelper::setSelectedTenantId($tenant->id);
 
@@ -166,10 +166,8 @@ it('preserves extra field properties (modalComponent, relationField) through sav
             [
                 'name' => 'page_id',
                 'label' => 'Verlinkte Seite',
-                'type' => 'relation',
+                'type' => 'pageRelation',
                 'colspan' => 6,
-                'modalComponent' => 'pages-list',
-                'relationField' => 'relationTitles.page_id',
             ],
         ],
     ));
@@ -178,12 +176,10 @@ it('preserves extra field properties (modalComponent, relationField) through sav
 
     expect($fields['fields'])->toHaveCount(1);
     expect($fields['fields'][0]['name'])->toBe('detailData.page_id');
-    expect($fields['fields'][0]['modalComponent'])->toBe('pages-list');
-    expect($fields['fields'][0]['relationField'])->toBe('relationTitles.page_id');
+    expect($fields['fields'][0]['type'])->toBe('pageRelation');
 
     $definition = $repo->find('beratung');
-    expect($definition->fields[0]['modalComponent'])->toBe('pages-list');
-    expect($definition->fields[0]['relationField'])->toBe('relationTitles.page_id');
+    expect($definition->fields[0]['type'])->toBe('pageRelation');
 });
 
 it('scopes queries by tenant_id', function (): void {

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Noerd\Services\FieldTypeRegistry;
+use Noerd\Services\RelationFieldRegistry;
 
 uses(Tests\TestCase::class);
 
@@ -15,7 +16,7 @@ it('registers cms field types in the shared field type registry', function (): v
 
     expect($registry->has('pageRelation'))->toBeTrue();
     expect($registry->resolve('pageRelation')?->kind)->toBe('livewire');
-    expect($registry->resolve('pageRelation')?->target)->toBe('cms-page-relation');
+    expect($registry->resolve('pageRelation')?->target)->toBe('noerd-relation-field');
 });
 
 it('resolves pageRelation props from nested detail data', function (): void {
@@ -38,13 +39,26 @@ it('resolves pageRelation props from nested detail data', function (): void {
     ], $component, null, 99);
 
     expect($props)->toBe([
+        'relationType' => 'pageRelation',
         'fieldName' => 'detailData.custom_attributes.page_id',
         'label' => 'booking_label_page',
         'value' => 17,
         'required' => true,
+        'readonly' => false,
+        'modelId' => 99,
     ]);
 
     expect($definition?->resolveKey([
         'name' => 'detailData.custom_attributes.page_id',
-    ], $component, null, 99))->toBe('detailData.custom_attributes.page_id-99');
+    ], $component, null, 99))->toBe('pageRelation-detailData.custom_attributes.page_id-99');
+});
+
+it('registers pageRelation metadata in the relation field registry', function (): void {
+    $registry = app(RelationFieldRegistry::class);
+    $definition = $registry->resolve('pageRelation');
+
+    expect($definition)->not->toBeNull();
+    expect($definition?->listComponent)->toBe('pages-list');
+    expect($definition?->getDetailComponent())->toBe('page-detail');
+    expect($definition?->getSelectEvent())->toBe('pageSelected');
 });

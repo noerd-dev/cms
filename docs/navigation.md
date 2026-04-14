@@ -24,7 +24,7 @@ Navigate to `/cms/navigation` to manage navigation items. Each item has the foll
 |-------|------|-------------|
 | `navigation_key` | text | Group key for the menu (e.g., `main`, `footer`) |
 | `name` | translatableText | Display name in each active language |
-| `page_id` | relation | Link to a CMS page |
+| `page_id` | pageRelation | Link to a CMS page |
 | `link` | text | External URL (alternative to page_id) |
 | `new_tab` | checkbox | Open link in a new browser tab |
 
@@ -44,9 +44,7 @@ fields:
     colspan: 6
   - name: navigationData.page_id
     label: Page
-    type: relation
-    relationField: relationTitles.page_id
-    modalComponent: pages-list
+    type: pageRelation
     colspan: 6
   - name: navigationData.link
     label: 'Link (URL)'

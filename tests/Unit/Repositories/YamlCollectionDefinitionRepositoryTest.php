@@ -60,7 +60,7 @@ it('parses YAML files and strips the detailData prefix from fields', function ()
     expect($definition->fields[0]['name'])->toBe('name');
 });
 
-it('preserves extra field properties like modalComponent and relationField when loading YAML', function (): void {
+it('preserves explicit registered relation field types when loading YAML', function (): void {
     $dir = yamlRepoTmpDir();
     writeYamlDefinition($dir, 'beratung', [
         'title' => 'Beratung',
@@ -71,10 +71,8 @@ it('preserves extra field properties like modalComponent and relationField when 
             [
                 'name' => 'detailData.page_id',
                 'label' => 'Verlinkte Seite',
-                'type' => 'relation',
+                'type' => 'pageRelation',
                 'colspan' => 6,
-                'modalComponent' => 'pages-list',
-                'relationField' => 'relationTitles.page_id',
             ],
         ],
     ]);
@@ -84,8 +82,7 @@ it('preserves extra field properties like modalComponent and relationField when 
 
     expect($definition->fields)->toHaveCount(1);
     expect($definition->fields[0]['name'])->toBe('page_id');
-    expect($definition->fields[0]['modalComponent'])->toBe('pages-list');
-    expect($definition->fields[0]['relationField'])->toBe('relationTitles.page_id');
+    expect($definition->fields[0]['type'])->toBe('pageRelation');
 });
 
 it('sorts results by titleList case-insensitively', function (): void {

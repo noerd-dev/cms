@@ -18,9 +18,7 @@ fields:
     colspan: 12
   - name: detailData.author_id
     label: cms_label_author
-    type: relation
-    relationField: relationTitles.author_id
-    modalComponent: authors-list
+    type: authorRelation
     colspan: 6
   - name: detailData.publication_date
     label: cms_label_publication_date
