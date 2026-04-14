@@ -5,7 +5,7 @@
     "version": "v0.1.1",
     "license": "proprietary",
     "require": {
-        "noerd/noerd": "^0.5",
+        "noerd/noerd": "^0.6",
         "noerd/media":  "^0.1"
     },
     "autoload": {
