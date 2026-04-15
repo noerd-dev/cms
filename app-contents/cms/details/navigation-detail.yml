@@ -1,4 +1,4 @@
-title: Navigationspunkt
+title: Navigation Item
 description: ''
 fields:
   - name: detailData.navigation_key
@@ -10,7 +10,7 @@ fields:
     type: translatableText
     colspan: 6
   - name: detailData.parent_id
-    label: Übergeordneter Punkt
+    label: Parent Item
     type: picklist
     picklistField: parentOptions
     colspan: 6
@@ -27,7 +27,7 @@ fields:
     type: select
     colspan: 6
   - name: detailData.sort_order
-    label: cms_label_sort_order
+    label: Sort Order
     type: number
     colspan: 6
   - name: detailData.new_tab

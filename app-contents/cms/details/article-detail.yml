@@ -1,7 +1,7 @@
-title: cms_label_article
+title: Article
 fields:
   - name: detailData.title
-    label: cms_label_title
+    label: Title
     type: translatableText
     colspan: 5
   - name: detailData.slug
@@ -9,22 +9,22 @@ fields:
     type: translatableText
     colspan: 5
   - name: detailData.is_active
-    label: cms_label_is_active
+    label: 'Active?'
     type: checkbox
     colspan: 2
   - name: detailData.featured_image
-    label: cms_label_featured_image
+    label: Featured Image
     type: image
     colspan: 12
   - name: detailData.author_id
-    label: cms_label_author
+    label: Author
     type: authorRelation
     colspan: 6
   - name: detailData.publication_date
-    label: cms_label_publication_date
+    label: Publication Date
     type: date
     colspan: 6
   - name: detailData.body
-    label: cms_label_body
+    label: Content
     type: richText
     colspan: 12

@@ -1,17 +1,17 @@
-title: cms_label_articles
+title: Articles
 searchableColumns:
   - title
 actions:
-  - label: cms_label_new_article
+  - label: New Article
     action: listAction
 columns:
   - field: title
-    label: cms_label_title
+    label: Title
   - field: author_name
-    label: cms_label_author
+    label: Author
   - field: publication_date
-    label: cms_label_publication_date
+    label: Publication Date
     type: date
   - field: is_active
-    label: cms_label_is_active
+    label: 'Active?'
     type: boolean

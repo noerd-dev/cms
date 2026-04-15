@@ -4,10 +4,10 @@ tabs:
   - number: 1
     label: General
   - number: 2
-    label: cms_metadata
+    label: Metadata
 fields:
   - type: block
-    title: cms_page_info
+    title: Page Info
     tab: 1
     fields:
       - name: detailData.name
@@ -19,7 +19,7 @@ fields:
         type: translatableText
         colspan: 5
       - name: detailData.is_active
-        label: cms_label_is_active
+        label: 'Active?'
         type: checkbox
         colspan: 2
   - type: block
@@ -32,14 +32,14 @@ fields:
         picklistField: layoutOptions
         colspan: 12
   - type: block
-    title: cms_seo_metadata
+    title: SEO Metadata
     tab: 2
     fields:
       - name: detailData.meta_title
-        label: cms_meta_title
+        label: Meta Title
         type: translatableText
         colspan: 6
       - name: detailData.meta_description
-        label: cms_meta_description
+        label: Meta Description
         type: translatableText
         colspan: 6

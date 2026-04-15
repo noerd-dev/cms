@@ -1,22 +1,22 @@
-title: cms_label_collection_definition
+title: Collection Definition
 fields:
   - name: detailData.filename
-    label: cms_filename
+    label: Filename
     type: text
     colspan: 4
   - name: detailData.title
-    label: cms_label_title_singular
+    label: 'Title (Singular)'
     type: text
     colspan: 4
   - name: detailData.titleList
-    label: cms_label_title_plural
+    label: 'Title (Plural)'
     type: text
     colspan: 4
   - name: detailData.description
-    label: cms_label_description
+    label: Description
     type: text
     colspan: 4
   - name: detailData.hasPage
-    label: cms_label_has_page
+    label: Has Page
     type: checkbox
     colspan: 4
