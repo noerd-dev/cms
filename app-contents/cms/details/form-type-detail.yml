@@ -1,16 +1,16 @@
-title: cms_form_type
-description: cms_form_type_description
+title: Form Type
+description: ''
 cols: 6
 fields:
   - name: detailData.send_email
-    label: cms_send_email_notification
+    label: Send Email Notification
     type: checkbox
     colspan: 6
   - name: detailData.email_subject
-    label: cms_email_subject
+    label: Email Subject
     type: text
     colspan: 6
   - name: detailData.notification_email
-    label: cms_notification_email
+    label: Notification Email
     type: text
     colspan: 6

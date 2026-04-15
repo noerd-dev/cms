@@ -1,18 +1,18 @@
-title: cms_label_languages
+title: Languages
 actions:
-  - label: cms_label_new_language
+  - label: New Language
     action: listAction
 disableSearch: false
 columns:
   - field: code
-    label: cms_label_code
+    label: Code
   - field: name
-    label: cms_label_name
+    label: Name
   - field: is_active
-    label: cms_label_is_active
+    label: 'Active?'
     type: boolean
   - field: is_default
-    label: cms_label_is_default
+    label: Default
     type: boolean
   - field: sort_order
-    label: cms_label_sort_order
+    label: Sort Order

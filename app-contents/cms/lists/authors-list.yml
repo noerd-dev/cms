@@ -1,12 +1,12 @@
-title: cms_label_authors
+title: Authors
 searchableColumns:
   - name
 actions:
-  - label: cms_label_new_author
+  - label: New Author
     action: listAction
 columns:
   - field: name
-    label: cms_label_name
+    label: Name
   - field: is_active
-    label: cms_label_is_active
+    label: 'Active?'
     type: boolean

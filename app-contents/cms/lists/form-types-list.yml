@@ -1,12 +1,12 @@
-title: Formulartypen
+title: Form Types
 columns:
   - field: key
     label: Key
   - field: title
-    label: Titel
+    label: Title
   - field: send_email
-    label: E-Mail
+    label: Email
     type: bool
   - field: yml_synced_at
-    label: Synchronisiert
+    label: Synced At
     type: datetime

@@ -3,41 +3,41 @@
   hidden: true
   route: cms
   block_menus:
-    - title: cms_nav_cms
+    - title: CMS
       navigations:
-        - title: cms_nav_pages
+        - title: Pages
           route: cms.pages
           heroicon: document
-        - title: cms_nav_navigation
+        - title: Navigation
           route: cms.navigation
           heroicon: list-bullet
-        - title: cms_nav_global_parameters
+        - title: Global Parameters
           route: cms.global-parameters
           heroicon: globe-alt
-        - title: cms_nav_form_requests
+        - title: Form Requests
           route: cms.form-requests
           heroicon: list-bullet
-        - title: cms_nav_collection_definitions
+        - title: Collection Definitions
           route: cms.collection-definitions
           heroicon: rectangle-stack
           config: noerd.collections.show_definitions_ui
-    - title: cms_nav_blog
+    - title: Blog
       navigations:
-        - title: cms_nav_articles
+        - title: Articles
           route: cms.articles
           heroicon: newspaper
-        - title: cms_nav_authors
+        - title: Authors
           route: cms.authors
           heroicon: user-group
-    - title: cms_nav_page_collections
+    - title: Page Collections
       dynamic: page-collections
-    - title: cms_nav_collections
+    - title: Collections
       dynamic: collections
-    - title: cms_nav_settings
+    - title: Settings
       navigations:
         - title: Settings
           route: cms.settings
           heroicon: adjustments-horizontal
-        - title: cms_nav_languages
+        - title: Languages
           route: cms.languages
           heroicon: language

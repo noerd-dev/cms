@@ -34,14 +34,14 @@ it('resolves pageRelation props from nested detail data', function (): void {
 
     $props = $definition?->resolveProps([
         'name' => 'detailData.custom_attributes.page_id',
-        'label' => 'booking_label_page',
+        'label' => 'Page',
         'required' => true,
     ], $component, null, 99);
 
     expect($props)->toBe([
         'relationType' => 'pageRelation',
         'fieldName' => 'detailData.custom_attributes.page_id',
-        'label' => 'booking_label_page',
+        'label' => 'Page',
         'value' => '17',
         'required' => true,
         'readonly' => false,

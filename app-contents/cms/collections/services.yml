@@ -1,7 +1,7 @@
-title: cms_service
-titleList: cms_services
+title: Service
+titleList: Services
 key: SERVICES
-buttonList: cms_new_service
+buttonList: New Service
 description: ''
 hasPage: true
 fields:

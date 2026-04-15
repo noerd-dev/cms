@@ -1,6 +1,6 @@
-title: cms_pages
+title: Pages
 actions:
-  - label: cms_new_page
+  - label: New Page
     action: listAction
 disableSearch: false
 columns:

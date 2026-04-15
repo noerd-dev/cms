@@ -1,14 +1,14 @@
-title: cms_label_author
+title: Author
 fields:
   - name: detailData.name
-    label: cms_label_name
+    label: Name
     type: text
     colspan: 6
   - name: detailData.is_active
-    label: cms_label_is_active
+    label: 'Active?'
     type: checkbox
     colspan: 6
   - name: detailData.bio
-    label: cms_label_bio
+    label: Biography
     type: textarea
     colspan: 12

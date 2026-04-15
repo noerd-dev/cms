@@ -1,6 +1,6 @@
-title: media_title
+title: Media
 actions:
-  - label: media_new_file
+  - label: New Media File
     action: listAction
 disableSearch: false
 columns:
