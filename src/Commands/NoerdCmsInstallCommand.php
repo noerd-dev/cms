@@ -67,11 +67,6 @@ class NoerdCmsInstallCommand extends Command
         return dirname(__DIR__, 2) . '/app-contents/cms';
     }
 
-    protected function getSnippetTitle(): string
-    {
-        return 'CMS';
-    }
-
     /**
      * @return array<string>
      */
