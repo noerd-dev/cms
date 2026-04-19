@@ -94,27 +94,27 @@ it('resolves collection key correctly in livewire component', function (): void 
     ]);
 
     // Test component with integer ID
-    Livewire::test('collection-entries-list', ['collectionKey' => $collection->id])
+    Livewire::test('cms::collection-entries-list', ['collectionKey' => $collection->id])
         ->assertSet('collectionKey', 'standort') // Should be resolved to lowercase string
         ->assertStatus(200);
 });
 
 it('resolves collection key correctly when passed as string', function (): void {
     // Test component with string key
-    Livewire::test('collection-entries-list', ['collectionKey' => 'mitarbeiter'])
+    Livewire::test('cms::collection-entries-list', ['collectionKey' => 'mitarbeiter'])
         ->assertSet('collectionKey', 'mitarbeiter')
         ->assertStatus(200);
 });
 
 it('handles null collection key gracefully', function (): void {
-    Livewire::test('collection-entries-list', ['collectionKey' => null])
+    Livewire::test('cms::collection-entries-list', ['collectionKey' => null])
         ->assertSet('collectionKey', null)
         ->assertSee(__('Please select a collection from the navigation.'))
         ->assertStatus(200);
 });
 
 it('handles non-existent collection ID gracefully', function (): void {
-    Livewire::test('collection-entries-list', ['collectionKey' => 999999])
+    Livewire::test('cms::collection-entries-list', ['collectionKey' => 999999])
         ->assertSet('collectionKey', null)
         ->assertSee(__('Please select a collection from the navigation.'))
         ->assertStatus(200);

@@ -55,7 +55,7 @@ new class extends Component
     {
         $this->dispatch(
             event: 'noerdModal',
-            modalComponent: 'navigation-detail',
+            modalComponent: 'cms::navigation-detail',
             source: $this->getComponentName(),
             arguments: ['modelId' => $modelId, 'relations' => $relations],
         );
@@ -70,7 +70,7 @@ new class extends Component
 
         $this->dispatch(
             event: 'noerdModal',
-            modalComponent: 'navigation-detail',
+            modalComponent: 'cms::navigation-detail',
             source: $this->getComponentName(),
             arguments: ['modelId' => null, 'relations' => ['parent_id' => $parentId]],
         );

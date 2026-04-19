@@ -28,7 +28,7 @@ new class extends Component
 
     public const DETAIL_CLASS = Page::class;
 
-    public const DETAIL_COMPONENT = 'page-detail';
+    public const DETAIL_COMPONENT = 'cms::page-detail';
 
     public ?array $collectionLayout = null;
 
@@ -287,7 +287,7 @@ new class extends Component
         $this->detailData['__mediaToken'] = $token;
         $this->dispatch(
             event: 'noerdModal',
-            modalComponent: 'media-list',
+            modalComponent: 'media::media-list',
             arguments: ['selectMode' => true, 'selectContext' => $fieldName, 'selectToken' => $token],
         );
     }
@@ -427,7 +427,7 @@ new class extends Component
     {
         $this->dispatch(
             event: 'noerdModal',
-            modalComponent: 'element-page-detail',
+            modalComponent: 'cms::element-page-detail',
             source: $this->getComponentName(),
             arguments: ['elementPageId' => $this->modelId],
         );
@@ -734,7 +734,7 @@ new class extends Component
                         ></button>
                     @endif
 
-                    <livewire:language-switcher/>
+                    <livewire:cms::language-switcher/>
 
                     @if($this->pageModel?->id && $this->hasPageFeatures)
                         @php $pageUrl = $this->getPageUrl(); @endphp

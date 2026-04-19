@@ -52,7 +52,7 @@
 
         <x-noerd::button
             x-data="{ collectionKey: $wire.entangle('{{ $name }}') }"
-            @click="$modal('collection-entries-list', {collectionKey: collectionKey, context: '{{ $name }}'})"
+            @click="$modal('cms::collection-entries-list', {collectionKey: collectionKey, context: '{{ $name }}'})"
             class="h-9rounded !mt-0 !ml-1"
             type="button"
         >

@@ -9,8 +9,8 @@ uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
 $testSettings = [
-    'listName' => 'cms-languages-list',
-    'componentName' => 'cms-language-detail',
+    'listName' => 'cms::languages-list',
+    'componentName' => 'cms::language-detail',
 ];
 
 it('resolves cms languages route and renders table', function () use ($testSettings): void {
@@ -43,5 +43,5 @@ it('opens cms-language-detail modal from table', function () use ($testSettings)
 
     Livewire::test($testSettings['listName'])
         ->call('listAction', 5)
-        ->assertDispatched('noerdModal', modalComponent: 'cms-language-detail');
+        ->assertDispatched('noerdModal', modalComponent: 'cms::language-detail');
 });

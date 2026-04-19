@@ -47,9 +47,9 @@ new class () extends Component {
         </div>
         <div class="flex">
             <x-noerd::dashboard-card heroicon="document" title="Seiten" :value="$pagesCount"
-                                     component="pages-list"/>
+                                     component="cms::pages-list"/>
             <x-noerd::dashboard-card heroicon="list-bullet" title="Navigation" :value="$navigationCount"
-                                     component="navigation-list"/>
+                                     component="cms::navigation-list"/>
         </div>
     </div>
 

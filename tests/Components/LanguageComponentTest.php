@@ -8,8 +8,8 @@ uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
 $testSettings = [
-    'componentName' => 'cms-language-detail',
-    'listName' => 'cms-languages-list',
+    'componentName' => 'cms::language-detail',
+    'listName' => 'cms::languages-list',
     'id' => 'modelId',
     'urlParam' => 'cmsLanguageId',
 ];

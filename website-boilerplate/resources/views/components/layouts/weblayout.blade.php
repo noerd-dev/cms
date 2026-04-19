@@ -55,7 +55,7 @@
             </div>
 
             <div class="hidden md:flex items-center space-x-4">
-                <livewire:frontend-language-switcher/>
+                <livewire:website-boilerplate::frontend-language-switcher/>
             </div>
 
             <div class="md:hidden">
@@ -94,7 +94,7 @@
             @endforeach
             <div class="border-t border-gray-200 my-2"></div>
             <div class="px-3 py-2">
-                @livewire('frontend-language-switcher', key('language-switcher-mobile'))
+                @livewire('website-boilerplate::frontend-language-switcher', key('language-switcher-mobile'))
             </div>
         </div>
     </div>
@@ -146,7 +146,7 @@
 
             <!-- Contact Form -->
             <div>
-                @livewire('contact-form')
+                @livewire('website-boilerplate::contact-form')
             </div>
         </div>
 

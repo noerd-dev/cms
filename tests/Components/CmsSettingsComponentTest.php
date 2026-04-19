@@ -48,7 +48,7 @@ it('loads and displays page options with localized names and saves selection', f
 
     // Komponente rendern
     $component = Livewire::actingAs($user)
-        ->test('cms-settings-detail');
+        ->test('cms::settings-detail');
 
     // Erwartet: Lokalisierte Namen werden angezeigt
     $component->assertSee('de: Startseite en: Home Page');

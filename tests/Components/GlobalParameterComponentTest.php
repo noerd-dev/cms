@@ -8,8 +8,8 @@ uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
 $testSettings = [
-    'componentName' => 'global-parameter-detail',
-    'listName' => 'global-parameters-list',
+    'componentName' => 'cms::global-parameter-detail',
+    'listName' => 'cms::global-parameters-list',
     'id' => 'modelId',
     'urlParam' => 'globalParameterId',
 ];

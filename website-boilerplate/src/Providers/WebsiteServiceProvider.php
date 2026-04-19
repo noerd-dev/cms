@@ -31,6 +31,7 @@ class WebsiteServiceProvider extends ServiceProvider
         $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'website');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/website-routes.php');
 
+        Livewire::addNamespace('website-boilerplate', viewPath: __DIR__ . '/../../resources/views/components');
         Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/livewire');
         Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/components');
 

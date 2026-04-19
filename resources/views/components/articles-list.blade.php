@@ -42,7 +42,7 @@ new class extends Component
     {
         $this->dispatch(
             event: 'noerdModal',
-            modalComponent: 'article-detail',
+            modalComponent: 'cms::article-detail',
             source: $this->getComponentName(),
             arguments: ['modelId' => $modelId, 'relations' => $relations],
         );
