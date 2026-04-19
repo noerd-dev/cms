@@ -26,7 +26,7 @@ beforeEach(function (): void {
 });
 
 it('auto-generates slug when typing title on new page', function (): void {
-    $component = Livewire::test('page-detail')
+    $component = Livewire::test('cms::page-detail')
         ->set('detailData.name.de', 'Meine Seite');
 
     $detailData = $component->get('detailData');
@@ -40,7 +40,7 @@ it('appends -2 when slug already exists', function (): void {
         'slug' => ['de' => '/test'],
     ]);
 
-    $component = Livewire::test('page-detail')
+    $component = Livewire::test('cms::page-detail')
         ->set('detailData.name.de', 'Test');
 
     $detailData = $component->get('detailData');
@@ -60,7 +60,7 @@ it('increments to -3 with multiple duplicates', function (): void {
         'slug' => ['de' => '/test-2'],
     ]);
 
-    $component = Livewire::test('page-detail')
+    $component = Livewire::test('cms::page-detail')
         ->set('detailData.name.de', 'Test');
 
     $detailData = $component->get('detailData');
@@ -77,7 +77,7 @@ it('allows same slug for different tenants', function (): void {
     ]);
 
     // New page for current tenant should get /test (no conflict)
-    $component = Livewire::test('page-detail')
+    $component = Livewire::test('cms::page-detail')
         ->set('detailData.name.de', 'Test');
 
     $detailData = $component->get('detailData');
@@ -122,7 +122,7 @@ it('allows manual slug editing on saved pages', function (): void {
 
 it('updates slug live on new page when title changes', function (): void {
     // Start a new page, type a name (slug auto-generates), then change the name
-    $component = Livewire::test('page-detail')
+    $component = Livewire::test('cms::page-detail')
         ->set('detailData.name.de', 'Erster Titel');
 
     // Slug should be auto-generated

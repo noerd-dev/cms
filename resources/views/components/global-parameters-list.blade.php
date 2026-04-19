@@ -35,7 +35,7 @@ new class extends Component
     {
         $this->dispatch(
             event: 'noerdModal',
-            modalComponent: 'global-parameter-detail',
+            modalComponent: 'cms::global-parameter-detail',
             source: $this->getComponentName(),
             arguments: ['modelId' => $modelId, 'relations' => $relations],
         );

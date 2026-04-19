@@ -18,11 +18,11 @@ it('create a page', function (): void {
     $this->actingAs($user);
 
     // Create empty page is possible
-    Livewire::test('page-detail')
+    Livewire::test('cms::page-detail')
         ->call('store')
         ->assertOk();
 
-    Livewire::test('page-detail')
+    Livewire::test('cms::page-detail')
         ->set('detailData.name.en', 'Test Page')
         ->call('store')
         ->assertOk();
@@ -37,7 +37,7 @@ it('create a page', function (): void {
         ->where('name', '{"en":"Test Page"}')
         ->first();
 
-    Livewire::test('page-detail', ['pageId' => $page->id])
+    Livewire::test('cms::page-detail', ['pageId' => $page->id])
         ->set('detailData.name.en', 'Test Page')
         ->set('detailData.name.de', 'Test Page German')
         ->call('store')

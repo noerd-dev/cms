@@ -23,7 +23,7 @@ test('page selection auto-fills empty name field', function (): void {
 
     session(['selectedLanguage' => 'de']);
 
-    Livewire::test('navigation-detail')
+    Livewire::test('cms::navigation-detail')
         ->set('detailData', [
             'navigation_key' => 'test-nav',
             'name' => [], // Empty name field
@@ -56,7 +56,7 @@ test('page selection does not overwrite existing name field', function (): void 
 
     session(['selectedLanguage' => 'de']);
 
-    Livewire::test('navigation-detail')
+    Livewire::test('cms::navigation-detail')
         ->set('detailData', [
             'navigation_key' => 'test-nav',
             'name' => $existingName, // Pre-filled name field
@@ -81,7 +81,7 @@ test('page selection auto-fills when name field has only empty values', function
 
     session(['selectedLanguage' => 'de']);
 
-    Livewire::test('navigation-detail')
+    Livewire::test('cms::navigation-detail')
         ->set('detailData', [
             'navigation_key' => 'test-nav',
             'name' => ['de' => '', 'en' => ''], // Empty string values

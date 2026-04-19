@@ -17,7 +17,7 @@ new class extends Component
 
     public const DETAIL_CLASS = Article::class;
 
-    public const DETAIL_COMPONENT = 'article-detail';
+    public const DETAIL_COMPONENT = 'cms::article-detail';
 
     public function mount(): void
     {
@@ -176,7 +176,7 @@ new class extends Component
 
             <div class="ml-auto" :class="isModal ? 'mr-22' : ''">
                 <div class="flex items-center gap-4">
-                    <livewire:language-switcher />
+                    <livewire:cms::language-switcher />
                 </div>
             </div>
         </x-noerd::modal-title>

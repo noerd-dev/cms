@@ -8,8 +8,8 @@ uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
 $testSettings = [
-    'componentName' => 'page-detail',
-    'listName' => 'pages-list',
+    'componentName' => 'cms::page-detail',
+    'listName' => 'cms::pages-list',
     'id' => 'modelId',
     'urlParam' => 'pageId',
 ];

@@ -12,7 +12,7 @@ it('renders the navigation component', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Livewire::test('navigation-detail')
+    Livewire::test('cms::navigation-detail')
         ->assertOk();
 });
 
@@ -20,7 +20,7 @@ it('allows storing a navigation without page or link for parent items', function
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Livewire::test('navigation-detail')
+    Livewire::test('cms::navigation-detail')
         ->set('detailData.navigation_key', 'MAIN')
         ->set('detailData.name', ['de' => 'Start', 'en' => 'Start'])
         ->call('store')
@@ -40,7 +40,7 @@ it('stores a navigation with page and clears link', function (): void {
 
     $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => json_encode(['de' => 'Seite', 'en' => 'Page'])]);
 
-    Livewire::test('navigation-detail')
+    Livewire::test('cms::navigation-detail')
         ->set('detailData.navigation_key', 'MAIN')
         ->set('detailData.name', ['de' => 'Start', 'en' => 'Start'])
         ->set('detailData.link', 'https://example.com')
@@ -60,7 +60,7 @@ it('stores a navigation with link and clears page', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Livewire::test('navigation-detail')
+    Livewire::test('cms::navigation-detail')
         ->set('detailData.navigation_key', 'MAIN')
         ->set('detailData.name', ['de' => 'Kontakt', 'en' => 'Contact'])
         ->set('detailData.link', 'https://example.com/contact')
@@ -79,7 +79,7 @@ it('normalizes new_tab default and stores 0 when not set', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Livewire::test('navigation-detail')
+    Livewire::test('cms::navigation-detail')
         ->set('detailData.navigation_key', 'MAIN')
         ->set('detailData.name', ['de' => 'Blog', 'en' => 'Blog'])
         ->set('detailData.link', 'https://example.com/blog')
@@ -104,7 +104,7 @@ it('respects language switching behavior for page selection display', function (
     ]);
 
     // default language from session is used internally by component; we ensure action does not error
-    Livewire::test('navigation-detail')
+    Livewire::test('cms::navigation-detail')
         ->call('pageSelected', $page->id)
         ->assertHasNoErrors();
 });

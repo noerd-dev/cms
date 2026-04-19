@@ -24,13 +24,13 @@ beforeEach(function (): void {
 });
 
 it('can set listFilters without error', function (): void {
-    Livewire::test('navigation-list')
+    Livewire::test('cms::navigation-list')
         ->set('listFilters.language', 'de')
         ->assertHasNoErrors();
 });
 
 it('applies language filter without error', function (): void {
-    $component = Livewire::test('navigation-list')
+    $component = Livewire::test('cms::navigation-list')
         ->set('listFilters.language', 'en');
 
     expect($component->get('listFilters')['language'])->toBe('en');
@@ -50,7 +50,7 @@ it('can filter by navigation_key', function (): void {
         'sort_order' => 0,
     ]);
 
-    $component = Livewire::test('navigation-list')
+    $component = Livewire::test('cms::navigation-list')
         ->set('listFilters.navigation_key', 'MAIN')
         ->assertHasNoErrors();
 
@@ -75,7 +75,7 @@ it('shows all entries when navigation_key filter is empty', function (): void {
         'sort_order' => 0,
     ]);
 
-    $component = Livewire::test('navigation-list')
+    $component = Livewire::test('cms::navigation-list')
         ->set('listFilters.navigation_key', '')
         ->assertHasNoErrors();
 
@@ -113,7 +113,7 @@ it('displays children directly after their parent', function (): void {
         'sort_order' => 1,
     ]);
 
-    $component = Livewire::test('navigation-list')
+    $component = Livewire::test('cms::navigation-list')
         ->assertHasNoErrors();
 
     $listConfig = $component->viewData('listConfig');
@@ -139,7 +139,7 @@ it('prefixes child navigation items with arrow indicator', function (): void {
         'sort_order' => 0,
     ]);
 
-    $component = Livewire::test('navigation-list')
+    $component = Livewire::test('cms::navigation-list')
         ->assertHasNoErrors();
 
     $listConfig = $component->viewData('listConfig');

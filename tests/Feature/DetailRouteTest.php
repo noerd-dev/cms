@@ -28,7 +28,7 @@ it('loads page-detail via direct route', function (): void {
 
     $this->get('/cms/page/' . $page->id)
         ->assertSuccessful()
-        ->assertSeeLivewire('page-detail');
+        ->assertSeeLivewire('cms::page-detail');
 });
 
 it('loads navigation-detail via direct route', function (): void {
@@ -38,7 +38,7 @@ it('loads navigation-detail via direct route', function (): void {
 
     $this->get('/cms/navigation/' . $navigation->id)
         ->assertSuccessful()
-        ->assertSeeLivewire('navigation-detail');
+        ->assertSeeLivewire('cms::navigation-detail');
 });
 
 it('loads global-parameter-detail via direct route', function (): void {
@@ -48,7 +48,7 @@ it('loads global-parameter-detail via direct route', function (): void {
 
     $this->get('/cms/global-parameter/' . $globalParameter->id)
         ->assertSuccessful()
-        ->assertSeeLivewire('global-parameter-detail');
+        ->assertSeeLivewire('cms::global-parameter-detail');
 });
 
 it('loads form-request-detail via direct route', function (): void {
@@ -58,7 +58,7 @@ it('loads form-request-detail via direct route', function (): void {
 
     $this->get('/cms/form-request/' . $formRequest->id)
         ->assertSuccessful()
-        ->assertSeeLivewire('form-request-detail');
+        ->assertSeeLivewire('cms::form-request-detail');
 })->skip('form-request-detail.yml config file does not exist yet');
 
 it('loads form-type-detail via direct route', function (): void {
@@ -68,15 +68,15 @@ it('loads form-type-detail via direct route', function (): void {
 
     $this->get('/cms/form-type/' . $formType->id)
         ->assertSuccessful()
-        ->assertSeeLivewire('form-type-detail');
+        ->assertSeeLivewire('cms::form-type-detail');
 });
 
-it('loads cms-language-detail via direct route', function (): void {
+it('loads language-detail via direct route', function (): void {
     $cmsLanguage = CmsLanguage::factory()->create([
         'tenant_id' => $this->tenant->id,
     ]);
 
     $this->get('/cms/language/' . $cmsLanguage->id)
         ->assertSuccessful()
-        ->assertSeeLivewire('cms-language-detail');
+        ->assertSeeLivewire('cms::language-detail');
 });

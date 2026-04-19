@@ -11,7 +11,7 @@ new class extends Component {
     {
         $this->dispatch(
             event: 'noerdModal',
-            modalComponent: 'cms-language-detail',
+            modalComponent: 'cms::language-detail',
             source: $this->getComponentName(),
             arguments: ['modelId' => $modelId, 'relations' => $relations],
         );

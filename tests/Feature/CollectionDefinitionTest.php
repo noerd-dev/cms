@@ -44,7 +44,7 @@ it('renders the list component and shows existing definitions', function (): voi
     $response = $this->get('/cms/collection-definitions');
     $response->assertStatus(200);
 
-    Livewire::test('collection-definitions-list')
+    Livewire::test('cms::collection-definitions-list')
         ->assertNotSet('listId', '');
 });
 
@@ -54,9 +54,9 @@ it('dispatches modal when listAction is called', function (): void {
 
     createContactsDefinition($tenant->id);
 
-    Livewire::test('collection-definitions-list')
+    Livewire::test('cms::collection-definitions-list')
         ->call('listAction', 'contacts')
-        ->assertDispatched('noerdModal', modalComponent: 'collection-definition-detail');
+        ->assertDispatched('noerdModal', modalComponent: 'cms::collection-definition-detail');
 });
 
 it('loads existing collection definition in detail component', function (): void {
@@ -65,7 +65,7 @@ it('loads existing collection definition in detail component', function (): void
 
     createContactsDefinition($tenant->id);
 
-    Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
+    Livewire::test('cms::collection-definition-detail', ['modelId' => 'contacts'])
         ->assertSet('isEditing', true)
         ->assertSet('detailData.filename', 'contacts')
         ->assertSet('detailData.title', 'Kontakt');
@@ -75,7 +75,7 @@ it('loads pageLayout with metadata fields from YAML config', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    $component = Livewire::test('collection-definition-detail');
+    $component = Livewire::test('cms::collection-definition-detail');
 
     $pageLayout = $component->get('pageLayout');
     expect($pageLayout)->not->toBeEmpty();
@@ -94,7 +94,7 @@ it('allows renaming the filename of an existing collection definition', function
 
     createContactsDefinition($tenant->id);
 
-    Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
+    Livewire::test('cms::collection-definition-detail', ['modelId' => 'contacts'])
         ->set('detailData.filename', 'contacts-renamed')
         ->call('store')
         ->assertHasNoErrors();
@@ -121,7 +121,7 @@ it('prevents renaming to an existing filename', function (): void {
         'fields' => [],
     ]);
 
-    Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
+    Livewire::test('cms::collection-definition-detail', ['modelId' => 'contacts'])
         ->set('detailData.filename', 'contacts-renamed')
         ->call('store')
         ->assertHasErrors('detailData.filename');
@@ -133,7 +133,7 @@ it('creates a new collection definition with correct structure', function (): vo
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Livewire::test('collection-definition-detail')
+    Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', 'test-store')
         ->set('detailData.title', 'Test Store')
         ->set('detailData.titleList', 'Test Stores')
@@ -163,7 +163,7 @@ it('prevents duplicate filenames', function (): void {
         'fields' => [],
     ]);
 
-    Livewire::test('collection-definition-detail')
+    Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', 'test-duplicate')
         ->set('detailData.title', 'Duplicate')
         ->set('detailData.titleList', 'Duplicates')
@@ -175,7 +175,7 @@ it('validates required fields', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Livewire::test('collection-definition-detail')
+    Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', '')
         ->set('detailData.title', '')
         ->set('detailData.titleList', '')
@@ -191,7 +191,7 @@ it('validates filename format', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Livewire::test('collection-definition-detail')
+    Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', 'Invalid Name!')
         ->set('detailData.title', 'Test')
         ->set('detailData.titleList', 'Tests')
@@ -203,7 +203,7 @@ it('normalizes filename by lowercasing, stripping yml extension, and replacing u
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Livewire::test('collection-definition-detail')
+    Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', 'FILM.YML')
         ->set('detailData.title', 'Film')
         ->set('detailData.titleList', 'Films')
@@ -217,7 +217,7 @@ it('normalizes underscores to hyphens in filename', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Livewire::test('collection-definition-detail')
+    Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', 'My_Collection')
         ->set('detailData.title', 'My Collection')
         ->set('detailData.titleList', 'My Collections')
@@ -231,7 +231,7 @@ it('adds and removes fields', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Livewire::test('collection-definition-detail')
+    Livewire::test('cms::collection-definition-detail')
         ->assertSet('fields', [])
         ->call('addField')
         ->assertCount('fields', 1)
@@ -245,7 +245,7 @@ it('stores fields in the collection definition', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    Livewire::test('collection-definition-detail')
+    Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', 'test-definition')
         ->set('detailData.title', 'Test Def')
         ->set('detailData.titleList', 'Test Defs')
@@ -269,7 +269,7 @@ it('copies a collection definition with key, title and titleList all suffixed wi
 
     createContactsDefinition($tenant->id);
 
-    Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
+    Livewire::test('cms::collection-definition-detail', ['modelId' => 'contacts'])
         ->call('copy')
         ->assertHasNoErrors();
 
@@ -303,7 +303,7 @@ it('prevents copying when target definition already exists', function (): void {
         'fields' => [],
     ]);
 
-    Livewire::test('collection-definition-detail', ['modelId' => 'contacts'])
+    Livewire::test('cms::collection-definition-detail', ['modelId' => 'contacts'])
         ->call('copy')
         ->assertHasErrors('detailData.filename');
 });
@@ -322,7 +322,7 @@ it('deletes a collection definition', function (): void {
         'fields' => [],
     ]);
 
-    Livewire::test('collection-definition-detail', ['modelId' => 'test-definition-2'])
+    Livewire::test('cms::collection-definition-detail', ['modelId' => 'test-definition-2'])
         ->call('delete');
 
     expect(CollectionDefinition::find($definition->id))->toBeNull();
@@ -353,7 +353,7 @@ it('deletes associated collection records when deleting a collection definition'
         'collection_id' => $collection->id,
     ]);
 
-    Livewire::test('collection-definition-detail', ['modelId' => 'test-definition-2'])
+    Livewire::test('cms::collection-definition-detail', ['modelId' => 'test-definition-2'])
         ->call('delete');
 
     expect(CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'test-definition-2')->exists())->toBeFalse();
@@ -377,7 +377,7 @@ it('shows rename confirmation when a field name is changed', function (): void {
         ],
     ]);
 
-    Livewire::test('collection-definition-detail', ['modelId' => 'rename-test'])
+    Livewire::test('cms::collection-definition-detail', ['modelId' => 'rename-test'])
         ->set('fields.0.name', 'headline-one')
         ->call('store')
         ->assertSet('showRenameConfirmation', true)
@@ -412,7 +412,7 @@ it('renames field keys in database entries when confirmed', function (): void {
         'data' => ['headline1' => 'Hello World', 'other' => 'unchanged'],
     ]);
 
-    Livewire::test('collection-definition-detail', ['modelId' => 'rename-test'])
+    Livewire::test('cms::collection-definition-detail', ['modelId' => 'rename-test'])
         ->set('fields.0.name', 'headline-one')
         ->call('store')
         ->assertSet('showRenameConfirmation', true)
@@ -453,7 +453,7 @@ it('skips database rename when user declines', function (): void {
         'data' => ['headline1' => 'Hello World'],
     ]);
 
-    Livewire::test('collection-definition-detail', ['modelId' => 'rename-test'])
+    Livewire::test('cms::collection-definition-detail', ['modelId' => 'rename-test'])
         ->set('fields.0.name', 'headline-one')
         ->call('store')
         ->assertSet('showRenameConfirmation', true)

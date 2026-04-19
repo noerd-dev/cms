@@ -67,7 +67,7 @@ new class extends Component
         if ($this->value) {
             $this->dispatch(
                 event: 'noerdModal',
-                modalComponent: 'page-detail',
+                modalComponent: 'cms::page-detail',
                 arguments: ['modelId' => $this->value],
             );
         }
@@ -94,7 +94,7 @@ new class extends Component
             type="text"
             readonly
             id="{{ $fieldName }}"
-            @click="@if($displayTitle) $wire.openDetail() @else $modal('pages-list', {id: null, context: '{{ $fieldName }}', listActionMethod: 'selectAction'}) @endif"
+            @click="@if($displayTitle) $wire.openDetail() @else $modal('cms::pages-list', {id: null, context: '{{ $fieldName }}', listActionMethod: 'selectAction'}) @endif"
             value="{{ $displayTitle }}"
         >
 
@@ -109,7 +109,7 @@ new class extends Component
         @endif
 
         <x-noerd::button
-            @click="$modal('pages-list', {id: null, context: '{{ $fieldName }}', listActionMethod: 'selectAction'})"
+            @click="$modal('cms::pages-list', {id: null, context: '{{ $fieldName }}', listActionMethod: 'selectAction'})"
             class="h-8 rounded !mt-0 !ml-1"
             type="button"
         >

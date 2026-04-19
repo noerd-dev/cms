@@ -24,7 +24,7 @@ it('can add a repeater item', function (): void {
         'sort' => 1,
     ]);
 
-    Livewire::test('element-page-detail', ['modelId' => $elementPage->id])
+    Livewire::test('cms::element-page-detail', ['modelId' => $elementPage->id])
         ->call('addRepeaterItem', 'items')
         ->assertSet('detailData.items.0.image', '')
         ->assertSet('detailData.items.0.name', ['de' => '', 'en' => ''])
@@ -54,7 +54,7 @@ it('can remove a repeater item', function (): void {
         'sort' => 1,
     ]);
 
-    Livewire::test('element-page-detail', ['modelId' => $elementPage->id])
+    Livewire::test('cms::element-page-detail', ['modelId' => $elementPage->id])
         ->call('removeRepeaterItem', 'items', 0)
         ->assertSet('detailData.items.0.name.de', 'B')
         ->assertHasNoErrors();
@@ -83,7 +83,7 @@ it('can reorder repeater items', function (): void {
         'sort' => 1,
     ]);
 
-    Livewire::test('element-page-detail', ['modelId' => $elementPage->id])
+    Livewire::test('cms::element-page-detail', ['modelId' => $elementPage->id])
         ->call('reorderRepeaterItem', 'items', 0, 1)
         ->assertSet('detailData.items.0.name.de', 'Second')
         ->assertSet('detailData.items.1.name.de', 'First')
@@ -107,7 +107,7 @@ it('stores repeater data correctly', function (): void {
         'sort' => 1,
     ]);
 
-    Livewire::test('element-page-detail', ['modelId' => $elementPage->id])
+    Livewire::test('cms::element-page-detail', ['modelId' => $elementPage->id])
         ->call('addRepeaterItem', 'items')
         ->set('detailData.items.0.name.de', 'Test Karte')
         ->call('store')

@@ -12,7 +12,7 @@ new class extends Component
     {
         $this->dispatch(
             event: 'noerdModal',
-            modalComponent: 'author-detail',
+            modalComponent: 'cms::author-detail',
             source: $this->getComponentName(),
             arguments: ['modelId' => $modelId, 'relations' => $relations],
         );

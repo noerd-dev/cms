@@ -23,8 +23,7 @@ it('resolves pageRelation props from nested detail data', function (): void {
     $registry = app(FieldTypeRegistry::class);
     $definition = $registry->resolve('pageRelation');
 
-    $component = new class
-    {
+    $component = new class () {
         public array $detailData = [
             'custom_attributes' => [
                 'page_id' => '17',
@@ -58,7 +57,7 @@ it('registers pageRelation metadata in the relation field registry', function ()
     $definition = $registry->resolve('pageRelation');
 
     expect($definition)->not->toBeNull();
-    expect($definition?->listComponent)->toBe('pages-list');
-    expect($definition?->getDetailComponent())->toBe('page-detail');
+    expect($definition?->listComponent)->toBe('cms::pages-list');
+    expect($definition?->getDetailComponent())->toBe('cms::page-detail');
     expect($definition?->getSelectEvent())->toBe('pageSelected');
 });

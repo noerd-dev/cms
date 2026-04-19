@@ -21,13 +21,13 @@ beforeEach(function (): void {
 });
 
 it('can set listFilters without error', function (): void {
-    Livewire::test('pages-list')
+    Livewire::test('cms::pages-list')
         ->set('listFilters.language', 'de')
         ->assertHasNoErrors();
 });
 
 it('applies language filter without error', function (): void {
-    $component = Livewire::test('pages-list')
+    $component = Livewire::test('cms::pages-list')
         ->set('listFilters.language', 'en');
 
     expect($component->get('listFilters')['language'])->toBe('en');

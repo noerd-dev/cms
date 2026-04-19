@@ -23,13 +23,13 @@ beforeEach(function (): void {
 });
 
 it('can set listFilters without error', function (): void {
-    Livewire::test('collection-entries-list', ['collectionKey' => 'contacts'])
+    Livewire::test('cms::collection-entries-list', ['collectionKey' => 'contacts'])
         ->set('listFilters.language', 'de')
         ->assertHasNoErrors();
 });
 
 it('applies language filter without error', function (): void {
-    $component = Livewire::test('collection-entries-list', ['collectionKey' => 'contacts'])
+    $component = Livewire::test('cms::collection-entries-list', ['collectionKey' => 'contacts'])
         ->set('listFilters.language', 'en');
 
     expect($component->get('listFilters')['language'])->toBe('en');

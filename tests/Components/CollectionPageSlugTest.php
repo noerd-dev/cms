@@ -64,7 +64,7 @@ it('preserves manually edited slug when saving collection page', function (): vo
 
 it('auto-generates slug only when slug is empty', function (): void {
     // Create a new page (no modelId) so the updated hook auto-generates the slug
-    $component = Livewire::test('page-detail', ['collectionKey' => 'mitarbeiter'])
+    $component = Livewire::test('cms::page-detail', ['collectionKey' => 'mitarbeiter'])
         ->set('detailData.name.en', 'Max Mustermann')
         ->call('store')
         ->assertOk();

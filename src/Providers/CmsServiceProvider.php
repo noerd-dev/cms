@@ -15,9 +15,9 @@ use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Middleware\CmsApiAuth;
 use Noerd\Cms\Middleware\EnsureCollectionDefinitionsEnabled;
+use Noerd\Cms\Models\Author;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Page;
-use Noerd\Cms\Models\Author;
 use Noerd\Cms\Navigation\CollectionsNavigationProvider;
 use Noerd\Cms\Navigation\PageCollectionsNavigationProvider;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
@@ -66,6 +66,7 @@ class CmsServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cms');
+        Livewire::addNamespace('cms', viewPath: __DIR__ . '/../../resources/views/components');
         Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/components');
         $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'cms');
         $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
@@ -114,14 +115,14 @@ class CmsServiceProvider extends ServiceProvider
         ));
 
         $relationFieldRegistry->register('pageRelation', RelationFieldDefinition::model(
-            listComponent: 'pages-list',
-            detailComponent: 'page-detail',
+            listComponent: 'cms::pages-list',
+            detailComponent: 'cms::page-detail',
             modelClass: Page::class,
             titleResolver: fn(Page $page): string => RelationFieldDefinition::normalizeDisplayValue($page->name),
         ));
         $relationFieldRegistry->register('authorRelation', RelationFieldDefinition::model(
-            listComponent: 'authors-list',
-            detailComponent: 'author-detail',
+            listComponent: 'cms::authors-list',
+            detailComponent: 'cms::author-detail',
             modelClass: Author::class,
             titleResolver: 'name',
         ));
