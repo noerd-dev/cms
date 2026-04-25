@@ -56,7 +56,7 @@ it('renders the form-request-detail component', function (): void {
 
     Livewire::actingAs($this->user)
         ->test('form-request-detail', ['modelId' => $formRequest->id])
-        ->assertSee('Form Request')
+        ->assertSee(__('Form Request'))
         ->assertSee('Test User')
         ->assertSee('test@example.com');
 });
