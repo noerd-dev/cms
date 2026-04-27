@@ -691,7 +691,13 @@ new class extends Component
             $data['is_active'] = true;
         }
 
-        $page = Page::updateOrCreate(['id' => $this->modelId], $data);
+        $modelId = $this->modelId ?: null;
+        if ($modelId) {
+            $page = Page::updateOrCreate(['id' => $modelId], $data);
+        } else {
+            $page = Page::create($data);
+            $this->modelId = $page->id;
+        }
 
         $this->storeProcess($page);
 
