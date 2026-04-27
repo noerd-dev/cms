@@ -49,26 +49,7 @@ class FieldHelper
         foreach ($flattenedFields as $elementField) {
             $baseKey = preg_replace('/^\w+\./', '', $elementField['name']);
 
-            if ($elementField['type'] === 'repeater') {
-                $existingItems = $data[$baseKey] ?? [];
-                $subFields = $elementField['fields'] ?? [];
-
-                $model[$baseKey] = [];
-                foreach ($existingItems as $itemData) {
-                    $item = [];
-                    foreach ($subFields as $subField) {
-                        $subKey = $subField['name'];
-                        if (in_array($subField['type'], $translatableTypes)) {
-                            foreach (['de', 'en'] as $lang) {
-                                $item[$subKey][$lang] = $itemData[$subKey][$lang] ?? '';
-                            }
-                        } else {
-                            $item[$subKey] = $itemData[$subKey] ?? $subField['default'] ?? '';
-                        }
-                    }
-                    $model[$baseKey][] = $item;
-                }
-            } elseif (in_array($elementField['type'], $translatableTypes)) {
+            if (in_array($elementField['type'], $translatableTypes)) {
                 foreach (['de', 'en'] as $lang) {
                     $model[$baseKey][$lang] = $data[$baseKey][$lang] ?? $data[$baseKey] ?? '';
                 }
@@ -200,9 +181,6 @@ class FieldHelper
                 // Recursively flatten nested fields within the block
                 $nestedFields = self::flattenFields($field['fields'] ?? []);
                 $flattened = array_merge($flattened, $nestedFields);
-            } elseif (($field['type'] ?? '') === 'repeater') {
-                // Include repeater field as-is (with nested fields definition intact)
-                $flattened[] = $field;
             } elseif (isset($field['name'])) {
                 // Only add fields that have a name
                 $flattened[] = $field;
