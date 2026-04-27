@@ -152,65 +152,6 @@ new class extends Component {
         );
     }
 
-    public function addRepeaterItem(string $repeaterKey): void
-    {
-        $elementFields = FieldHelper::getElementFields($this->elementPage->element_key);
-        $flatFields = FieldHelper::flattenFields($elementFields['fields'] ?? []);
-
-        $repeaterField = collect($flatFields)->first(fn ($f) => preg_replace('/^\w+\./', '', $f['name'] ?? '') === $repeaterKey);
-        if (! $repeaterField) {
-            return;
-        }
-
-        $translatableTypes = ['translatableText', 'translatableRichText', 'translatableTextarea'];
-        $emptyItem = [];
-        foreach ($repeaterField['fields'] ?? [] as $subField) {
-            if (in_array($subField['type'], $translatableTypes)) {
-                $emptyItem[$subField['name']] = array_fill_keys(['de', 'en'], '');
-            } else {
-                $emptyItem[$subField['name']] = $subField['default'] ?? '';
-            }
-        }
-
-        $this->detailData[$repeaterKey][] = $emptyItem;
-
-        $this->dispatch('updateLiveElementData',
-            elementPageId: $this->modelId,
-            data: $this->detailData
-        );
-    }
-
-    public function removeRepeaterItem(string $repeaterKey, int $index): void
-    {
-        if (isset($this->detailData[$repeaterKey][$index])) {
-            $items = $this->detailData[$repeaterKey];
-            array_splice($items, $index, 1);
-            $this->detailData[$repeaterKey] = array_values($items);
-
-            $this->dispatch('updateLiveElementData',
-                elementPageId: $this->modelId,
-                data: $this->detailData
-            );
-        }
-    }
-
-    public function reorderRepeaterItem(string $repeaterKey, int $fromIndex, int $toIndex): void
-    {
-        $items = $this->detailData[$repeaterKey] ?? [];
-        if (! isset($items[$fromIndex]) || $toIndex < 0 || $toIndex >= count($items)) {
-            return;
-        }
-
-        $item = array_splice($items, $fromIndex, 1)[0];
-        array_splice($items, $toIndex, 0, [$item]);
-        $this->detailData[$repeaterKey] = array_values($items);
-
-        $this->dispatch('updateLiveElementData',
-            elementPageId: $this->modelId,
-            data: $this->detailData
-        );
-    }
-
     public function dataCollectionOptions(): array
     {
         $collectionsPath = base_path('app-configs/cms/collections');
