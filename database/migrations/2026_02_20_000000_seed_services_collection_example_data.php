@@ -5,20 +5,18 @@ use Illuminate\Support\Facades\DB;
 
 return new class () extends Migration {
     /**
-     * Seed a SERVICES collection with three example entries and add
-     * a collection-cards element to each tenant's homepage.
+     * Seed a SERVICES collection with three example entries for each tenant.
      */
     public function up(): void
     {
         $tenantsWithHomepage = DB::table('cms_settings')
             ->whereNotNull('homepage_page_id')
-            ->get(['tenant_id', 'homepage_page_id']);
+            ->get(['tenant_id']);
 
         $now = now();
 
         foreach ($tenantsWithHomepage as $setting) {
             $tenantId = $setting->tenant_id;
-            $homepagePageId = $setting->homepage_page_id;
 
             // 1. Create SERVICES collection (skip if already exists)
             $existingCollection = DB::table('collections')
@@ -64,32 +62,6 @@ return new class () extends Migration {
                         'updated_at' => $now,
                     ]);
                 }
-            }
-
-            // 3. Add collection-cards element to homepage
-            $hasElement = DB::table('element_page')
-                ->where('page_id', $homepagePageId)
-                ->where('element_key', 'collection_cards')
-                ->exists();
-
-            if (! $hasElement) {
-                $maxSort = DB::table('element_page')
-                    ->where('page_id', $homepagePageId)
-                    ->max('sort') ?? 0;
-
-                DB::table('element_page')->insert([
-                    'page_id' => $homepagePageId,
-                    'element_key' => 'collection_cards',
-                    'sort' => $maxSort + 1,
-                    'data' => json_encode([
-                        'headline' => [
-                            'de' => 'Unsere Services',
-                            'en' => 'Our Services',
-                        ],
-                    ]),
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
             }
         }
     }

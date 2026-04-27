@@ -86,25 +86,7 @@ The website boilerplate includes these default elements:
 | `text-block-2-column` | Two column text | `model.text_left`, `model.text_right` (translatableRichText) |
 | `text-block-2-column-2-3` | Asymmetric 2/3 column | `model.text_left`, `model.text_right` (translatableRichText) |
 | `text-block-3-column` | Three column text | `model.text_1`, `model.text_2`, `model.text_3` (translatableRichText) |
-| `text-block-header` | Header text block | `model.text` (translatableRichText) |
 | `text-block-home-page` | Homepage text block | `model.text` (translatableRichText) |
-| `headline-text-block-2-column` | Headline with 2 columns | `model.headline`, `model.text` (translatableRichText) |
-
-### Image Elements
-
-| Element | Description | Fields |
-|---------|-------------|--------|
-| `image-block-1-column` | Single image with optional video | `image` (image), `model.videoUrl` (translatableText) |
-| `images-block-2-column` | Two images side by side | `image_1`, `image_2` (image) |
-| `images-block-3-column` | Three images | `image_1`, `image_2`, `image_3` (image) |
-
-### Interactive Elements
-
-| Element | Description | Fields |
-|---------|-------------|--------|
-| `button-link` | CTA button | `model.text`, `model.link` (translatableText), `model.external` (checkbox) |
-| `slider` | Content carousel | `model.text` (translatableText) |
-| `google-map` | Google Maps embed | `model.text` (translatableText) |
 
 ## Creating Custom Elements
 
