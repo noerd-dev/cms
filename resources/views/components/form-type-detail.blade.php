@@ -240,10 +240,4 @@ new class () extends Component {
             </div>
         </x-slot:footer>
     </x-noerd::page>
-
-    <x-cms::email-preview-modal
-        :emailSubject="$detailData['email_subject'] ?? ''"
-        :sampleData="$this->getSampleEmailData()"
-        :previewHtml="$this->previewEmailHtml"
-    />
 </div>
