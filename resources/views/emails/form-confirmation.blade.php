@@ -30,7 +30,7 @@
 </head>
 <body>
     <div class="container">
-        {!! Str::markdown($emailBody) !!}
+        {!! $emailBody !!}
     </div>
 </body>
 </html>
