@@ -8,11 +8,7 @@ beforeEach(function (): void {
     $this->skillsDir = base_path('.claude/skills');
     $this->target = $this->skillsDir . '/cms-website-import';
 
-    if (is_link($this->target) || file_exists($this->target)) {
-        $this->preExisting = true;
-    } else {
-        $this->preExisting = false;
-    }
+    $this->preExisting = is_link($this->target) || file_exists($this->target);
 });
 
 afterEach(function (): void {
@@ -41,11 +37,8 @@ function removeDirectory(string $path): void
     @rmdir($path);
 }
 
-it('publishes the cms-website-import skill into .claude/skills', function (): void {
-    if ($this->preExisting) {
-        $this->markTestSkipped('Skill already published in this project; skipping side-effect test.');
-    }
-
+function invokePublishSkills(bool $refreshCopies): void
+{
     $command = app(NoerdCmsInstallCommand::class);
     $command->setLaravel(app());
     $command->setOutput(new \Illuminate\Console\OutputStyle(
@@ -53,41 +46,54 @@ it('publishes the cms-website-import skill into .claude/skills', function (): vo
         new \Symfony\Component\Console\Output\NullOutput(),
     ));
 
-    $reflection = new ReflectionMethod($command, 'publishSkill');
+    $reflection = new ReflectionMethod($command, 'publishSkills');
     $reflection->setAccessible(true);
-    $reflection->invoke($command);
+    $reflection->invoke($command, $refreshCopies);
+}
+
+it('auto-discovers and publishes the cms-website-import skill', function (): void {
+    if ($this->preExisting) {
+        $this->markTestSkipped('Skill already published in this project; skipping side-effect test.');
+    }
+
+    invokePublishSkills(refreshCopies: false);
 
     expect(is_link($this->target) || is_dir($this->target))->toBeTrue();
     expect(file_exists($this->target . '/SKILL.md'))->toBeTrue();
 });
 
-it('skips publishing when the skill already exists', function (): void {
+it('leaves an existing symlink alone on update', function (): void {
     if (! $this->preExisting) {
-        $command = app(NoerdCmsInstallCommand::class);
-        $command->setLaravel(app());
-        $command->setOutput(new \Illuminate\Console\OutputStyle(
-        new \Symfony\Component\Console\Input\ArrayInput([]),
-        new \Symfony\Component\Console\Output\NullOutput(),
-    ));
-
-        $reflection = new ReflectionMethod($command, 'publishSkill');
-        $reflection->setAccessible(true);
-        $reflection->invoke($command);
+        invokePublishSkills(refreshCopies: false);
     }
 
-    $beforeMtime = filemtime($this->target);
-    clearstatcache();
+    if (! is_link($this->target)) {
+        $this->markTestSkipped('Skill is not a symlink in this environment; refresh-symlink behavior cannot be asserted.');
+    }
 
-    $command = app(NoerdCmsInstallCommand::class);
-    $command->setLaravel(app());
-    $command->setOutput(new \Illuminate\Console\OutputStyle(
-        new \Symfony\Component\Console\Input\ArrayInput([]),
-        new \Symfony\Component\Console\Output\NullOutput(),
-    ));
+    $linkTargetBefore = readlink($this->target);
 
-    $reflection = new ReflectionMethod($command, 'publishSkill');
-    $reflection->setAccessible(true);
-    $reflection->invoke($command);
+    invokePublishSkills(refreshCopies: true);
 
-    expect(filemtime($this->target))->toEqual($beforeMtime);
+    expect(is_link($this->target))->toBeTrue();
+    expect(readlink($this->target))->toEqual($linkTargetBefore);
+});
+
+it('refreshes a stale copied skill on update', function (): void {
+    if ($this->preExisting) {
+        $this->markTestSkipped('Skill pre-existing; cannot safely overwrite for refresh test.');
+    }
+
+    if (! is_dir($this->skillsDir) && ! mkdir($this->skillsDir, 0755, true)) {
+        $this->markTestSkipped('Could not create .claude/skills directory.');
+    }
+
+    mkdir($this->target, 0755, true);
+    file_put_contents($this->target . '/SKILL.md', 'STALE');
+
+    invokePublishSkills(refreshCopies: true);
+
+    expect(is_link($this->target) || is_dir($this->target))->toBeTrue();
+    expect(file_exists($this->target . '/SKILL.md'))->toBeTrue();
+    expect(file_get_contents($this->target . '/SKILL.md'))->not->toEqual('STALE');
 });
