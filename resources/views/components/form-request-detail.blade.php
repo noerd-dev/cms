@@ -98,10 +98,9 @@ new class extends Component {
         try {
             $formType = FormType::find($this->detailData['form_type_id']);
 
-            // Load the Website FormRequest model (has data cast as array for replacePlaceholders)
-            $websiteFormRequest = \Noerd\Website\Models\FormRequest::find($this->modelId);
+            $formRequest = FormRequest::find($this->modelId);
 
-            if (! $formType || ! $websiteFormRequest) {
+            if (! $formType || ! $formRequest) {
                 $this->js("alert('" . __('Fehler: FormType oder FormRequest nicht gefunden.') . "')");
 
                 return;
@@ -109,12 +108,12 @@ new class extends Component {
 
             RateLimiter::hit($key, 30);
 
-            $emailSubject = $formType->replacePlaceholders($websiteFormRequest, $formType->email_subject);
-            $emailBody = $formType->replacePlaceholders($websiteFormRequest, $formType->email_body);
+            $emailSubject = $formType->replacePlaceholders($formRequest, $formType->email_subject);
+            $emailBody = $formType->replacePlaceholders($formRequest, $formType->email_body);
 
             Mail::to($formType->notification_email)
                 ->send(new FormConfirmation(
-                    $websiteFormRequest,
+                    $formRequest,
                     $emailSubject,
                     $emailBody,
                 ));

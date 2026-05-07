@@ -15,6 +15,10 @@ class FormRequest extends Model
 
     protected $table = 'form_requests';
 
+    protected $casts = [
+        'data' => 'array',
+    ];
+
     public function formType(): BelongsTo
     {
         return $this->belongsTo(FormType::class, 'form_type_id', 'id');

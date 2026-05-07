@@ -6,7 +6,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Mail;
 use Noerd\Cms\Mail\FormConfirmation;
-use Noerd\Website\Models\FormRequest;
+use Noerd\Cms\Models\FormRequest;
 
 class SendFormConfirmationEmail implements ShouldQueue
 {
