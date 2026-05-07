@@ -1,0 +1,27 @@
+<?php
+
+use Livewire\Component;
+use Noerd\Website\Traits\NoerdElement;
+
+new class extends Component {
+    use NoerdElement;
+}; ?>
+
+{{-- {{ ELEMENT_NAME }} --}}
+{{-- File name (kebab-case) must match the snake_case element key used in element_page.element_key. --}}
+{{-- Translatable fields are already localized by HandlesPageElements::localizeArray() --}}
+{{-- and reach this view as plain strings on $element. Non-translatable fields stay flat. --}}
+
+<div class="py-4 pt-2">
+    @if(! empty($element->title))
+        <h2 class="text-2xl font-semibold mb-4">{{ $element->title }}</h2>
+    @endif
+
+    @if(! empty($element->text))
+        <div class="rich-text">{!! $element->text !!}</div>
+    @endif
+
+    @if(! empty($element->image))
+        <img src="{{ $element->image }}" alt="{{ $element->title ?? '' }}" class="mt-4 rounded">
+    @endif
+</div>

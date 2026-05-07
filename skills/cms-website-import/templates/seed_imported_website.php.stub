@@ -1,0 +1,293 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Seeds the imported website content into the CMS for every tenant.
+ *
+ * Replace placeholders ({{ … }}) with values produced during Phase 3 of the
+ * cms-website-import skill. The structure mirrors
+ *   app-modules/cms/database/migrations/2026_02_17_000000_seed_demo_website_data.php
+ * which is the canonical reference.
+ *
+ * Rules enforced by this stub:
+ *   - Every translatable field is JSON-encoded as ['de' => …, 'en' => …].
+ *   - Every insert is wrapped in an existence check so the migration is idempotent.
+ *   - down() is intentionally empty — imported content is never deleted on rollback.
+ *   - Uses DB::table() so the migration does not depend on Eloquent boot order.
+ */
+return new class () extends Migration {
+    public function up(): void
+    {
+        // Iterate every tenant that already has a homepage configured.
+        // Fall back to all tenants if cms_settings hasn't been seeded yet.
+        $tenants = DB::table('cms_settings')
+            ->whereNotNull('homepage_page_id')
+            ->get(['tenant_id', 'homepage_page_id']);
+
+        if ($tenants->isEmpty()) {
+            $tenants = DB::table('tenants')
+                ->select(['id as tenant_id'])
+                ->get()
+                ->map(fn ($t) => (object) [
+                    'tenant_id' => $t->tenant_id,
+                    'homepage_page_id' => null,
+                ]);
+        }
+
+        $now = now();
+
+        foreach ($tenants as $setting) {
+            $tenantId = $setting->tenant_id;
+            $homepagePageId = $setting->homepage_page_id;
+
+            // ─────────────────────────────────────────────────────────────
+            // 1. Pages
+            // ─────────────────────────────────────────────────────────────
+            // {{ FOR EACH IMPORTED PAGE — repeat this block }}
+            $pageId = $this->upsertPage(
+                tenantId: $tenantId,
+                slug: '{{ /slug-de }}',
+                names: ['de' => '{{ Page Name DE }}'],
+                slugs: ['de' => '{{ /slug-de }}'],
+                metaTitle: ['de' => '{{ Meta Title DE }}'],
+                metaDescription: ['de' => '{{ Meta Description DE }}'],
+                layout: null,                  // null = weblayout
+                collectionId: null,            // set when this page is a collection item
+                now: $now,
+            );
+
+            // Promote to homepage if this is the imported home page.
+            if ('{{ /slug-de }}' === '{{ HOMEPAGE_SLUG }}') {
+                DB::table('cms_settings')->updateOrInsert(
+                    ['tenant_id' => $tenantId],
+                    ['homepage_page_id' => $pageId, 'updated_at' => $now],
+                );
+                $homepagePageId = $pageId;
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 2. Element rows for this page
+            // ─────────────────────────────────────────────────────────────
+            $this->upsertElement($pageId, sort: 1, key: 'text_block_header', data: [
+                'title' => ['de' => '{{ Hero headline DE }}'],
+                'text'  => ['de' => '{{ Hero intro DE }}'],
+            ]);
+
+            $this->upsertElement($pageId, sort: 2, key: 'text_block_2_column', data: [
+                'text1' => ['de' => '{{ Column 1 markup DE }}'],
+                'text2' => ['de' => '{{ Column 2 markup DE }}'],
+            ]);
+
+            // {{ END FOR EACH PAGE }}
+
+            // ─────────────────────────────────────────────────────────────
+            // 3. Navigation (main + footer)
+            // ─────────────────────────────────────────────────────────────
+            $navEntries = [
+                // {{ FOR EACH NAV LINK — page link }}
+                [
+                    'navigation_key' => 'main',
+                    'page_id' => $homepagePageId,
+                    'link' => null,
+                    'name' => ['de' => '{{ Startseite }}'],
+                    'sort_order' => 1,
+                    'parent_id' => null,
+                    'new_tab' => false,
+                ],
+                // {{ external link example }}
+                [
+                    'navigation_key' => 'footer',
+                    'page_id' => null,
+                    'link' => '{{ https://example.com }}',
+                    'name' => ['de' => '{{ External Link DE }}'],
+                    'sort_order' => 1,
+                    'parent_id' => null,
+                    'new_tab' => true,
+                ],
+            ];
+
+            foreach ($navEntries as $entry) {
+                $exists = DB::table('cms_navigations')
+                    ->where('tenant_id', $tenantId)
+                    ->where('navigation_key', $entry['navigation_key'])
+                    ->where('page_id', $entry['page_id'])
+                    ->where('link', $entry['link'])
+                    ->exists();
+
+                if (! $exists) {
+                    DB::table('cms_navigations')->insert([
+                        'tenant_id' => $tenantId,
+                        'navigation_key' => $entry['navigation_key'],
+                        'page_id' => $entry['page_id'],
+                        'link' => $entry['link'],
+                        'name' => json_encode($entry['name']),
+                        'sort_order' => $entry['sort_order'],
+                        'parent_id' => $entry['parent_id'],
+                        'new_tab' => $entry['new_tab'],
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 4. Global parameters
+            // ─────────────────────────────────────────────────────────────
+            $globals = [
+                'siteTitle' => ['de' => '{{ Site Title DE }}'],
+                'phone'     => ['de' => '{{ +49 … }}'],
+                'email'     => ['de' => '{{ info@example.com }}'],
+            ];
+
+            foreach ($globals as $key => $value) {
+                DB::table('global_parameters')->updateOrInsert(
+                    ['tenant_id' => $tenantId, 'key' => $key],
+                    [
+                        'value' => json_encode($value),
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ],
+                );
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 5. Collection definitions (only when noerd.collections.mode = database)
+            //    YAML-mode projects can skip this block entirely.
+            // ─────────────────────────────────────────────────────────────
+            if (config('noerd.collections.mode') === 'database') {
+                $this->upsertCollectionDefinition(
+                    tenantId: $tenantId,
+                    key: '{{ SERVICES }}',
+                    fields: [
+                        ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText', 'colspan' => 6],
+                        ['name' => 'image', 'label' => 'Image', 'type' => 'image', 'colspan' => 6],
+                    ],
+                    hasPage: true,
+                    now: $now,
+                );
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 6. Collection rows (each item is a Page with collection_id set)
+            // ─────────────────────────────────────────────────────────────
+            $servicesCollectionId = DB::table('collections')
+                ->where('tenant_id', $tenantId)
+                ->where('collection_key', '{{ SERVICES }}')
+                ->value('id');
+
+            if ($servicesCollectionId === null) {
+                $servicesCollectionId = DB::table('collections')->insertGetId([
+                    'tenant_id' => $tenantId,
+                    'collection_key' => '{{ SERVICES }}',
+                    'name' => '{{ Services }}',
+                    'sort' => 0,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
+
+            // {{ FOR EACH COLLECTION ITEM }}
+            $this->upsertPage(
+                tenantId: $tenantId,
+                slug: '{{ /services/item-slug }}',
+                names: ['de' => '{{ Item name DE }}'],
+                slugs: ['de' => '{{ /services/item-slug }}'],
+                metaTitle: null,
+                metaDescription: null,
+                layout: null,
+                collectionId: $servicesCollectionId,
+                now: $now,
+            );
+            // {{ END FOR EACH COLLECTION ITEM }}
+        }
+    }
+
+    public function down(): void
+    {
+        // Imported website content is never deleted on rollback.
+    }
+
+    /**
+     * Insert a page if it doesn't already exist (matched by tenant + de slug).
+     * Returns the page id.
+     */
+    private function upsertPage(
+        int $tenantId,
+        string $slug,
+        array $names,
+        array $slugs,
+        ?array $metaTitle,
+        ?array $metaDescription,
+        ?string $layout,
+        ?int $collectionId,
+        \Carbon\Carbon $now,
+    ): int {
+        $existing = DB::table('pages')
+            ->where('tenant_id', $tenantId)
+            ->whereJsonContains('slug->de', $slug)
+            ->first();
+
+        if ($existing) {
+            return $existing->id;
+        }
+
+        return DB::table('pages')->insertGetId([
+            'tenant_id' => $tenantId,
+            'collection_id' => $collectionId,
+            'name' => json_encode($names),
+            'slug' => json_encode($slugs),
+            'meta_title' => $metaTitle ? json_encode($metaTitle) : null,
+            'meta_description' => $metaDescription ? json_encode($metaDescription) : null,
+            'is_active' => true,
+            'layout' => $layout,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+    }
+
+    /**
+     * Insert an element_page row if no row with this (page_id, sort) already exists.
+     * Translatable fields must be wrapped per-language inside $data.
+     */
+    private function upsertElement(int $pageId, int $sort, string $key, array $data): void
+    {
+        $exists = DB::table('element_page')
+            ->where('page_id', $pageId)
+            ->where('sort', $sort)
+            ->exists();
+
+        if ($exists) {
+            return;
+        }
+
+        DB::table('element_page')->insert([
+            'page_id' => $pageId,
+            'element_key' => $key,
+            'sort' => $sort,
+            'data' => json_encode($data),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    private function upsertCollectionDefinition(
+        int $tenantId,
+        string $key,
+        array $fields,
+        bool $hasPage,
+        \Carbon\Carbon $now,
+    ): void {
+        DB::table('collection_definitions')->updateOrInsert(
+            ['tenant_id' => $tenantId, 'key' => mb_strtoupper($key)],
+            [
+                'fields' => json_encode($fields),
+                'has_page' => $hasPage,
+                'filename' => mb_strtolower($key) . '.yml',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+        );
+    }
+};
