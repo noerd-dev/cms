@@ -2,7 +2,7 @@
 
 use Livewire\Component;
 use Noerd\Traits\NoerdList;
-use Noerd\Website\Models\FormRequest;
+use Noerd\Cms\Models\FormRequest;
 
 new class extends Component {
     use NoerdList;

@@ -51,7 +51,7 @@ it('renders the form-request-detail component', function (): void {
     $formRequest = FormRequest::create([
         'tenant_id' => $this->tenant->id,
         'form' => 'contact',
-        'data' => json_encode(['name' => 'Test User', 'email' => 'test@example.com']),
+        'data' => ['name' => 'Test User', 'email' => 'test@example.com'],
     ]);
 
     Livewire::actingAs($this->user)
@@ -68,7 +68,7 @@ it('shows resend button when form type has notification email configured', funct
         'tenant_id' => $this->tenant->id,
         'form_type_id' => $formType->id,
         'form' => 'contact',
-        'data' => json_encode(['name' => 'Test']),
+        'data' => ['name' => 'Test'],
     ]);
 
     Livewire::actingAs($this->user)
@@ -81,7 +81,7 @@ it('hides resend button when no form type is assigned', function (): void {
         'tenant_id' => $this->tenant->id,
         'form_type_id' => null,
         'form' => 'contact',
-        'data' => json_encode(['name' => 'Test']),
+        'data' => ['name' => 'Test'],
     ]);
 
     Livewire::actingAs($this->user)
@@ -96,7 +96,7 @@ it('hides resend button when notification email is empty', function (): void {
         'tenant_id' => $this->tenant->id,
         'form_type_id' => $formType->id,
         'form' => 'contact',
-        'data' => json_encode(['name' => 'Test']),
+        'data' => ['name' => 'Test'],
     ]);
 
     Livewire::actingAs($this->user)
@@ -111,7 +111,7 @@ it('hides resend button when send_email is disabled', function (): void {
         'tenant_id' => $this->tenant->id,
         'form_type_id' => $formType->id,
         'form' => 'contact',
-        'data' => json_encode(['name' => 'Test']),
+        'data' => ['name' => 'Test'],
     ]);
 
     Livewire::actingAs($this->user)
@@ -131,7 +131,7 @@ it('sends notification email only to the notification address', function (): voi
         'tenant_id' => $this->tenant->id,
         'form_type_id' => $formType->id,
         'form' => 'contact',
-        'data' => json_encode(['name' => 'Max Mustermann', 'email' => 'customer@example.com']),
+        'data' => ['name' => 'Max Mustermann', 'email' => 'customer@example.com'],
     ]);
 
     Livewire::actingAs($this->user)
@@ -153,7 +153,7 @@ it('prevents rapid resending via rate limiting', function (): void {
         'tenant_id' => $this->tenant->id,
         'form_type_id' => $formType->id,
         'form' => 'contact',
-        'data' => json_encode(['name' => 'Test']),
+        'data' => ['name' => 'Test'],
     ]);
 
     $component = Livewire::actingAs($this->user)
@@ -175,7 +175,7 @@ it('includes form_type_id in detailData', function (): void {
         'tenant_id' => $this->tenant->id,
         'form_type_id' => $formType->id,
         'form' => 'contact',
-        'data' => json_encode(['name' => 'Test']),
+        'data' => ['name' => 'Test'],
     ]);
 
     $component = Livewire::actingAs($this->user)

@@ -7,7 +7,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Noerd\Website\Models\FormRequest;
+use Noerd\Cms\Models\FormRequest;
 
 class FormConfirmation extends Mailable
 {
