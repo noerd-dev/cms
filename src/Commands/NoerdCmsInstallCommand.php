@@ -30,6 +30,9 @@ class NoerdCmsInstallCommand extends Command
             // Register the CMS module
             $this->registerModule();
 
+            // Publish the Claude Code skill so it is discoverable in .claude/skills
+            $this->publishSkill();
+
             // Install website module if it doesn't exist
             $this->installWebsiteIfNeeded();
         }
@@ -98,6 +101,83 @@ class NoerdCmsInstallCommand extends Command
 
         copy($source, $destination);
         $this->line('<info>Published config file:</info> config/noerd_cms.php');
+    }
+
+    /**
+     * Symlink the bundled Claude Code skill into the project's .claude/skills directory
+     * so the harness picks it up. The source of truth stays in the cms module so the
+     * skill is updated automatically when the module is upgraded.
+     */
+    private function publishSkill(): void
+    {
+        $source = realpath(__DIR__ . '/../../skills/cms-website-import');
+
+        if ($source === false || ! is_dir($source)) {
+            return;
+        }
+
+        $skillsDir = base_path('.claude/skills');
+        $target = $skillsDir . '/cms-website-import';
+
+        if (! is_dir($skillsDir) && ! mkdir($skillsDir, 0755, true) && ! is_dir($skillsDir)) {
+            $this->warn('Could not create .claude/skills directory; skill not published.');
+
+            return;
+        }
+
+        if (file_exists($target) || is_link($target)) {
+            $this->line('<comment>Claude skill cms-website-import already published.</comment>');
+
+            return;
+        }
+
+        $relativeSource = $this->relativePath(from: $skillsDir, to: $source);
+
+        if (@symlink($relativeSource, $target)) {
+            $this->line('<info>Published Claude skill:</info> .claude/skills/cms-website-import → ' . $relativeSource);
+
+            return;
+        }
+
+        $this->warn('Symlink failed; copying skill files instead.');
+        $this->copyDirectory($source, $target);
+        $this->line('<info>Published Claude skill (copied):</info> .claude/skills/cms-website-import');
+    }
+
+    private function relativePath(string $from, string $to): string
+    {
+        $fromParts = explode('/', rtrim($from, '/'));
+        $toParts = explode('/', rtrim($to, '/'));
+
+        while ($fromParts && $toParts && $fromParts[0] === $toParts[0]) {
+            array_shift($fromParts);
+            array_shift($toParts);
+        }
+
+        return str_repeat('../', count($fromParts)) . implode('/', $toParts);
+    }
+
+    private function copyDirectory(string $source, string $destination): void
+    {
+        if (! is_dir($destination)) {
+            mkdir($destination, 0755, true);
+        }
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($source, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST,
+        );
+
+        foreach ($iterator as $item) {
+            $target = $destination . '/' . $iterator->getSubPathname();
+            if ($item->isDir()) {
+                if (! is_dir($target)) {
+                    mkdir($target, 0755, true);
+                }
+            } else {
+                copy($item->getPathname(), $target);
+            }
+        }
     }
 
     /**

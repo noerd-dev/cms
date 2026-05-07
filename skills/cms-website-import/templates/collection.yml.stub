@@ -1,0 +1,37 @@
+title: '{{ Singular item title shown in admin UI }}'
+titleList: '{{ Plural list title }}'
+key: '{{ COLLECTION_KEY_UPPERCASE }}'
+buttonList: '{{ "New <item>" button label }}'
+description: ''
+
+# hasPage: true  → each item gets its own URL/page (e.g. services, projects, articles).
+# hasPage: false → items are embedded data only (e.g. sliders, testimonials, team grid).
+hasPage: '{{ true|false }}'   # replace with the literal boolean (true / false), no quotes
+
+# Field types in use across the project:
+#   translatableText        — single-line text per language
+#   translatableRichText    — HTML rich text per language
+#   text                    — plain non-translatable string
+#   image                   — file uploader
+#   url                     — external link
+#   select                  — dropdown (requires `options:`)
+#   relation                — link to another collection
+#
+# Field name MUST start with `detailData.` for inputs bound via wire:model.
+# colspan: 1–12 (12-grid layout).
+
+fields:
+  - name: detailData.name
+    label: Name
+    type: translatableText
+    colspan: 12
+
+  - name: detailData.description
+    label: Description
+    type: translatableRichText
+    colspan: 12
+
+  - name: image
+    label: Image
+    type: image
+    colspan: 6
