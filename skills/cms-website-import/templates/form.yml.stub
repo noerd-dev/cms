@@ -1,0 +1,63 @@
+key: '{{ form_key_lowercase_snake }}'
+title: '{{ Form title shown in admin UI }}'
+description: '{{ One-line description }}'
+
+# Email behavior — set send_email: true to dispatch a notification on submit.
+# Placeholders inside email_subject / email_body:
+#   {{form_title}}        — value of `title` above
+#   {{submission_date}}   — formatted submission date
+#   {{field:<name>}}      — value of any submitted field
+send_email: true
+notification_email: '{{ recipient@example.com }}'
+email_subject: '{{ Email subject — supports {{form_title}} and {{field:name}} }}'
+email_body: |
+  <h2>{{form_title}}</h2>
+  <p><strong>Name:</strong> {{field:name}}</p>
+  <p><strong>Email:</strong> {{field:email}}</p>
+  <p><strong>Message:</strong></p>
+  <p>{{field:message}}</p>
+  <hr>
+  <p><small>Submitted on {{submission_date}}</small></p>
+
+# Field types: text, email, tel, textarea, select, checkbox, radio, date, file
+# Validation array uses Laravel validation rules.
+fields:
+  - name: name
+    label: Name
+    type: text
+    required: true
+    validation:
+      - required
+      - string
+      - 'max:255'
+    error_messages:
+      required: 'Name is required.'
+    placeholder: 'Your full name'
+
+  - name: email
+    label: Email
+    type: email
+    required: true
+    validation:
+      - required
+      - email
+      - 'max:255'
+    error_messages:
+      required: 'Email address is required.'
+      email: 'Please enter a valid email address.'
+    placeholder: 'you@example.com'
+
+  - name: message
+    label: Message
+    type: textarea
+    required: true
+    rows: 4
+    validation:
+      - required
+      - string
+      - 'max:2000'
+    error_messages:
+      required: 'A message is required.'
+
+success_message: 'Thank you! Your message has been sent.'
+submit_button_text: 'Send message'
