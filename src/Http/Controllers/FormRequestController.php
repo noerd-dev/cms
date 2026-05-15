@@ -32,7 +32,7 @@ class FormRequestController extends Controller
         $model = FormRequestModel::create([
             'form' => $request->string('form'),
             'tenant_id' => $tenantId,
-            'data' => json_encode($request->input('data', [])),
+            'data' => $request->input('data', []),
         ]);
 
         return response()->json([

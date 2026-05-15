@@ -1,0 +1,32 @@
+title: '{{ Element title shown in admin UI }}'
+description: '{{ One-line description of the element }}'
+group: '{{ Text | Image | Interactive | Layout | Custom }}'
+
+# Field types in use across the boilerplate elements:
+#   translatableText        — single-line text, wrapped per language at storage time
+#   translatableRichText    — HTML-rich text editor, wrapped per language
+#   text                    — plain non-translatable string
+#   image                   — file uploader, stores URL string
+#   url                     — link input
+#   select                  — dropdown (requires `options:`)
+#
+# Field name MUST start with `detailData.` — the form binds via wire:model on detailData.<name>
+# and the saving boot of Page maps detailData.<name> → element_page.data.<name>.
+#
+# colspan: 1–12 (Bootstrap-style 12-grid)
+
+fields:
+  - name: detailData.title
+    label: Title
+    type: translatableText
+    colspan: 12
+
+  - name: detailData.text
+    label: Text
+    type: translatableRichText
+    colspan: 12
+
+  - name: detailData.image
+    label: Image
+    type: image
+    colspan: 6
