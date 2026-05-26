@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -9,6 +8,7 @@ use Livewire\Component;
 use Noerd\Cms\Mail\FormConfirmation;
 use Noerd\Cms\Models\FormRequest;
 use Noerd\Cms\Models\FormType;
+use Noerd\Marketing\Services\Communicator;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
@@ -111,12 +111,14 @@ new class extends Component {
             $emailSubject = $formType->replacePlaceholders($formRequest, $formType->email_subject);
             $emailBody = $formType->replacePlaceholders($formRequest, $formType->email_body);
 
-            Mail::to($formType->notification_email)
-                ->send(new FormConfirmation(
+            app(Communicator::class)->send(
+                mailable: new FormConfirmation(
                     $formRequest,
                     $emailSubject,
                     $emailBody,
-                ));
+                ),
+                to: $formType->notification_email,
+            );
 
             logger()->info('Notification email resent for form request', [
                 'form_request_id' => $this->modelId,
