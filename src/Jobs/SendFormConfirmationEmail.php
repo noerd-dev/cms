@@ -4,9 +4,9 @@ namespace Noerd\Cms\Jobs;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Mail;
 use Noerd\Cms\Mail\FormConfirmation;
 use Noerd\Cms\Models\FormRequest;
+use Noerd\Marketing\Services\Communicator;
 
 class SendFormConfirmationEmail implements ShouldQueue
 {
@@ -16,7 +16,7 @@ class SendFormConfirmationEmail implements ShouldQueue
         public FormRequest $formRequest,
     ) {}
 
-    public function handle(): void
+    public function handle(Communicator $communicator): void
     {
         // Load form type relationship
         $this->formRequest->loadMissing('formType');
@@ -53,12 +53,14 @@ class SendFormConfirmationEmail implements ShouldQueue
         if (isset($this->formRequest->data['email']) && filter_var($this->formRequest->data['email'], FILTER_VALIDATE_EMAIL)) {
             $customerEmail = $this->formRequest->data['email'];
 
-            Mail::to($customerEmail)
-                ->send(new FormConfirmation(
+            $communicator->send(
+                mailable: new FormConfirmation(
                     $this->formRequest,
                     $emailSubject,
                     $emailBody,
-                ));
+                ),
+                to: $customerEmail,
+            );
 
             logger()->info('Form confirmation email sent to customer', [
                 'form_request_id' => $this->formRequest->id,
@@ -70,12 +72,14 @@ class SendFormConfirmationEmail implements ShouldQueue
         // Send second email to notification address if configured
         $notificationEmail = $formType->notification_email;
         if ($notificationEmail) {
-            Mail::to($notificationEmail)
-                ->send(new FormConfirmation(
+            $communicator->send(
+                mailable: new FormConfirmation(
                     $this->formRequest,
                     $emailSubject,
                     $emailBody,
-                ));
+                ),
+                to: $notificationEmail,
+            );
 
             logger()->info('Form confirmation email sent to admin', [
                 'form_request_id' => $this->formRequest->id,

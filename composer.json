@@ -6,7 +6,8 @@
     "license": "proprietary",
     "require": {
         "noerd/noerd": "^0.6",
-        "noerd/media":  "^0.1"
+        "noerd/media":  "^0.1",
+        "noerd/marketing": "^0.1"
     },
     "autoload": {
         "psr-4": {
