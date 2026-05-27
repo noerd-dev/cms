@@ -14,6 +14,7 @@ use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\FieldTypeConverter;
+use Noerd\Facades\Noerd;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Services\MediaUploadService;
 use Noerd\Traits\NoerdDetail;
@@ -285,11 +286,7 @@ new class extends Component
     {
         $token = uniqid('media_', true);
         $this->detailData['__mediaToken'] = $token;
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'media::media-list',
-            arguments: ['selectMode' => true, 'selectContext' => $fieldName, 'selectToken' => $token],
-        );
+        Noerd::modal('media::media-list', ['selectMode' => true, 'selectContext' => $fieldName, 'selectToken' => $token]);
     }
 
     #[On('mediaSelected')]
@@ -425,12 +422,7 @@ new class extends Component
 
     public function openElements(): void
     {
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'cms::element-page-detail',
-            source: $this->getComponentName(),
-            arguments: ['elementPageId' => $this->modelId],
-        );
+        Noerd::modal('cms::element-page-detail', ['elementPageId' => $this->modelId]);
     }
 
     public function getPageUrl(): ?string

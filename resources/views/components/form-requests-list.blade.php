@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Component;
+use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 use Noerd\Cms\Models\FormRequest;
 
@@ -9,12 +10,7 @@ new class extends Component {
 
     public function listAction(mixed $modelId = null, array $relations = []): void
     {
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'cms::form-request-detail',
-            source: $this->getComponentName(),
-            arguments: ['modelId' => $modelId, 'relations' => $relations],
-        );
+        Noerd::modal('cms::form-request-detail', ['modelId' => $modelId, 'relations' => $relations]);
     }
 
     public function with(): array

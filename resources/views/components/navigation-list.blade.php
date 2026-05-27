@@ -6,6 +6,7 @@ use Livewire\Component;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Traits\LanguageFilterTrait;
+use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
@@ -53,12 +54,7 @@ new class extends Component
 
     public function listAction(mixed $modelId = null, array $relations = []): void
     {
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'cms::navigation-detail',
-            source: $this->getComponentName(),
-            arguments: ['modelId' => $modelId, 'relations' => $relations],
-        );
+        Noerd::modal('cms::navigation-detail', ['modelId' => $modelId, 'relations' => $relations]);
     }
 
     public function createSubNav(mixed $parentId): void
@@ -68,12 +64,7 @@ new class extends Component
             return;
         }
 
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'cms::navigation-detail',
-            source: $this->getComponentName(),
-            arguments: ['modelId' => null, 'relations' => ['parent_id' => $parentId]],
-        );
+        Noerd::modal('cms::navigation-detail', ['modelId' => null, 'relations' => ['parent_id' => $parentId]]);
     }
 
     public function with(): array

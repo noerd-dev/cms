@@ -9,6 +9,7 @@ use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
+use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
@@ -86,22 +87,12 @@ new class extends Component
 
     public function manageCollection(): void
     {
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'cms::collection-definition-detail',
-            source: $this->getComponentName(),
-            arguments: ['modelId' => $this->collectionKey],
-        );
+        Noerd::modal('cms::collection-definition-detail', ['modelId' => $this->collectionKey]);
     }
 
     public function listAction(mixed $modelId = null, array $relations = []): void
     {
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'cms::page-detail',
-            source: $this->getComponentName(),
-            arguments: ['modelId' => $modelId, 'collectionKey' => $this->collectionKey, 'relations' => $relations],
-        );
+        Noerd::modal('cms::page-detail', ['modelId' => $modelId, 'collectionKey' => $this->collectionKey, 'relations' => $relations]);
     }
 
     public function with(): array

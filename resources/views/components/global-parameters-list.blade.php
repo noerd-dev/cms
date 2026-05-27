@@ -5,6 +5,7 @@ use Livewire\Component;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Traits\LanguageFilterTrait;
+use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
@@ -33,15 +34,10 @@ new class extends Component
 
     public function listAction(mixed $modelId = null, array $relations = []): void
     {
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'cms::global-parameter-detail',
-            source: $this->getComponentName(),
-            arguments: ['modelId' => $modelId, 'relations' => $relations],
-        );
+        Noerd::modal('cms::global-parameter-detail', ['modelId' => $modelId, 'relations' => $relations]);
     }
 
-    public function with()
+    public function with(): array
     {
         $rows = $this->listQuery(GlobalParameter::class)->paginate($this->perPage);
 

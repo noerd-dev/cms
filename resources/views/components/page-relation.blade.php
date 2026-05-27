@@ -3,6 +3,7 @@
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Models\Page;
+use Noerd\Facades\Noerd;
 
 new class extends Component
 {
@@ -65,11 +66,7 @@ new class extends Component
     public function openDetail(): void
     {
         if ($this->value) {
-            $this->dispatch(
-                event: 'noerdModal',
-                modalComponent: 'cms::page-detail',
-                arguments: ['modelId' => $this->value],
-            );
+            Noerd::modal('cms::page-detail', ['modelId' => $this->value]);
         }
     }
 

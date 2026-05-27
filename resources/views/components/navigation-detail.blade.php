@@ -8,6 +8,7 @@ use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
+use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
@@ -143,12 +144,7 @@ new class extends Component {
 
     public function openPageSelect(): void
     {
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'cms::pages-list',
-            source: $this->getComponentName(),
-            arguments: ['listActionMethod' => 'selectAction'],
-        );
+        Noerd::modal('cms::pages-list', ['listActionMethod' => 'selectAction']);
     }
 
     #[On('pageSelected')]
