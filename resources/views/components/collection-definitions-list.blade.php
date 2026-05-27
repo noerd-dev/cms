@@ -7,6 +7,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Support\CollectionDefinitionData;
+use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
@@ -38,12 +39,7 @@ new class extends Component
 
     public function listAction(mixed $modelId = null, array $relations = []): void
     {
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'cms::collection-definition-detail',
-            source: $this->getComponentName(),
-            arguments: ['modelId' => $modelId, 'relations' => $relations],
-        );
+        Noerd::modal('cms::collection-definition-detail', ['modelId' => $modelId, 'relations' => $relations]);
     }
 
     public function with(): array

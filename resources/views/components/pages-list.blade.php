@@ -9,6 +9,7 @@ use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
+use Noerd\Facades\Noerd;
 use Noerd\Scopes\TenantScope;
 use Noerd\Traits\NoerdList;
 
@@ -58,15 +59,10 @@ new class extends Component {
 
     public function listAction(mixed $modelId = null, array $relations = []): void
     {
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'cms::page-detail',
-            source: $this->getComponentName(),
-            arguments: ['modelId' => $modelId, 'relations' => $relations],
-        );
+        Noerd::modal('cms::page-detail', ['modelId' => $modelId, 'relations' => $relations]);
     }
 
-    public function with()
+    public function with(): array
     {
         // Get all collections with hasPage: false to exclude their pages
         $collectionsWithoutPages = Collection::withoutGlobalScope(TenantScope::class)

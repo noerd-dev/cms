@@ -5,6 +5,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Models\Article;
 use Noerd\Cms\Traits\LanguageFilterTrait;
+use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
@@ -40,15 +41,10 @@ new class extends Component
 
     public function listAction(mixed $modelId = null, array $relations = []): void
     {
-        $this->dispatch(
-            event: 'noerdModal',
-            modalComponent: 'cms::article-detail',
-            source: $this->getComponentName(),
-            arguments: ['modelId' => $modelId, 'relations' => $relations],
-        );
+        Noerd::modal('cms::article-detail', ['modelId' => $modelId, 'relations' => $relations]);
     }
 
-    public function with()
+    public function with(): array
     {
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage');

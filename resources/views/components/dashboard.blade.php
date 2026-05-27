@@ -11,7 +11,7 @@ new class () extends Component {
     #[Locked]
     public $clientId = null;
 
-    public function with()
+    public function with(): array
     {
         $tenantId = Auth::user()->selected_tenant_id;
 
