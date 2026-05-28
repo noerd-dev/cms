@@ -13,6 +13,13 @@ class GlobalParameter extends Model
 
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'is_translatable' => 'boolean',
+        ];
+    }
+
     protected static function newFactory()
     {
         return \Noerd\Cms\Database\Factories\GlobalParameterFactory::new();
