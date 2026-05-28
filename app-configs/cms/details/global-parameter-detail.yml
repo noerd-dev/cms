@@ -5,7 +5,8 @@ fields:
     label: Key
     type: text
     colspan: 6
-  - name: detailData.value
-    label: Value
-    type: translatableText
+  - name: detailData.is_translatable
+    label: 'Translatable?'
+    type: checkbox
     colspan: 6
+    live: true

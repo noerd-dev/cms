@@ -4,6 +4,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Helpers\FieldHelper;
+use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Helpers\StaticConfigHelper;
 use Noerd\Traits\NoerdDetail;
@@ -26,14 +27,34 @@ new class extends Component {
         }
 
         $this->detailData = $globalParameter->toArray();
+        $this->detailData['is_translatable'] = (bool) ($this->detailData['is_translatable'] ?? false);
 
-        // Normalize value for editing: decode JSON into PHP value (string or array)
         if (isset($this->detailData['value']) && is_string($this->detailData['value'])) {
             $decoded = json_decode($this->detailData['value'], true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 $this->detailData['value'] = $decoded;
             }
         }
+
+        $this->detailData['value'] = $this->normalizeValueForEditing(
+            $this->detailData['value'] ?? null,
+            $this->detailData['is_translatable'],
+        );
+
+        $this->injectValueField();
+    }
+
+    public function updatedDetailDataIsTranslatable($value): void
+    {
+        $isTranslatable = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        $this->detailData['is_translatable'] = $isTranslatable;
+
+        $this->detailData['value'] = $this->normalizeValueForEditing(
+            $this->detailData['value'] ?? null,
+            $isTranslatable,
+        );
+
+        $this->injectValueField();
     }
 
     public function store(): void
@@ -45,14 +66,19 @@ new class extends Component {
 
         $data = $this->detailData;
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
-        // auto detect if value is an array and convert it to JSON; if string, encode plain string
+        $data['is_translatable'] = (bool) ($data['is_translatable'] ?? false);
+
         $value = $this->detailData['value'];
-        // If array with languages, keep as is; else wrap in current language if available
-        if (is_array($value)) {
-            $data['value'] = json_encode($value);
+
+        if ($data['is_translatable']) {
+            $data['value'] = json_encode(is_array($value) ? $value : [$this->defaultLanguageCode() => (string) $value]);
         } else {
+            if (is_array($value)) {
+                $value = $this->normalizeValueForEditing($value, false);
+            }
             $data['value'] = json_encode((string) $value);
         }
+
         $globalParameter = GlobalParameter::updateOrCreate(['id' => $this->modelId], $data);
 
         $this->dispatch('storeElements');
@@ -70,6 +96,82 @@ new class extends Component {
     public function refresh()
     {
         $this->dispatch('$refresh');
+    }
+
+    private function injectValueField(): void
+    {
+        $fields = array_values(array_filter(
+            $this->pageLayout['fields'] ?? [],
+            fn ($field) => ($field['name'] ?? null) !== 'detailData.value',
+        ));
+
+        $fields[] = [
+            'name' => 'detailData.value',
+            'label' => 'Value',
+            'type' => $this->detailData['is_translatable'] ? 'translatableText' : 'text',
+            'colspan' => 12,
+        ];
+
+        $this->pageLayout['fields'] = $fields;
+    }
+
+    private function normalizeValueForEditing(mixed $value, bool $isTranslatable): mixed
+    {
+        if ($isTranslatable) {
+            $languageCodes = $this->activeTenantLanguageCodes();
+            $defaultCode = $this->defaultLanguageCode();
+
+            if (! is_array($value)) {
+                $scalar = is_scalar($value) ? (string) $value : '';
+                $normalized = array_fill_keys($languageCodes ?: [$defaultCode], '');
+                $normalized[$defaultCode] = $scalar;
+
+                return $normalized;
+            }
+
+            foreach ($languageCodes as $code) {
+                if (! array_key_exists($code, $value)) {
+                    $value[$code] = '';
+                }
+            }
+
+            return $value;
+        }
+
+        if (is_array($value)) {
+            $code = $this->defaultLanguageCode();
+            if (isset($value[$code]) && $value[$code] !== '') {
+                return (string) $value[$code];
+            }
+
+            foreach ($value as $entry) {
+                if ($entry !== '' && $entry !== null) {
+                    return (string) $entry;
+                }
+            }
+
+            return '';
+        }
+
+        return is_scalar($value) ? (string) $value : '';
+    }
+
+    private function activeTenantLanguageCodes(): array
+    {
+        return CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
+            ->where('is_active', true)
+            ->orderBy('is_default', 'desc')
+            ->pluck('code')
+            ->all();
+    }
+
+    private function defaultLanguageCode(): string
+    {
+        return session('selectedLanguage')
+            ?? CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
+                ->where('is_default', true)
+                ->value('code')
+            ?? 'de';
     }
 } ?>
 

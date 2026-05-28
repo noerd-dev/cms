@@ -46,12 +46,17 @@ new class extends Component
             ?? $this->getDefaultLanguageCode();
 
         foreach ($rows as $row) {
-            $oldName = $row->value;
-            $row->value = json_decode($row->value, true);
-            if (is_array($row->value)) {
-                $row->value = $row->value[$selectedLanguage] ?? array_values($row->value)[0] ?? $oldName;
+            $raw = $row->value;
+            $decoded = json_decode($raw, true);
+
+            if ($row->is_translatable && is_array($decoded)) {
+                $row->value = $decoded[$selectedLanguage] ?? array_values($decoded)[0] ?? '';
+            } elseif (is_string($decoded) || is_numeric($decoded)) {
+                $row->value = (string) $decoded;
+            } elseif (is_array($decoded)) {
+                $row->value = $decoded[$selectedLanguage] ?? array_values($decoded)[0] ?? '';
             } else {
-                $row->value = $oldName;
+                $row->value = (string) $raw;
             }
         }
 

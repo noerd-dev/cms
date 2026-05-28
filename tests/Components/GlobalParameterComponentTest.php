@@ -167,11 +167,61 @@ it('loads existing array value into component model for editing', function () us
     $existingParameter = GlobalParameter::create([
         'key' => 'test_key_array',
         'value' => json_encode(['de' => 'Hallo', 'en' => 'Hello']),
+        'is_translatable' => true,
         'tenant_id' => $tenant->id,
     ]);
 
     Livewire::withUrlParams([$testSettings['urlParam'] => $existingParameter->id])
         ->test($testSettings['componentName'])
         ->assertSet('detailData.key', 'test_key_array')
-        ->assertSet('detailData.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+        ->assertSet('detailData.value', fn ($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+});
+
+it('saves a translatable parameter as a language-keyed JSON object', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    Livewire::test($testSettings['componentName'])
+        ->set('detailData.key', 'opening_hours')
+        ->set('detailData.is_translatable', true)
+        ->set('detailData.value', ['de' => 'Mo–Fr 9–17', 'en' => 'Mon–Fri 9am–5pm'])
+        ->call('store')
+        ->assertHasNoErrors();
+
+    $row = GlobalParameter::where('key', 'opening_hours')->firstOrFail();
+    expect($row->is_translatable)->toBeTrue()
+        ->and(json_decode($row->value, true))->toBe(['de' => 'Mo–Fr 9–17', 'en' => 'Mon–Fri 9am–5pm']);
+});
+
+it('saves a non-translatable parameter as a scalar JSON string', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    Livewire::test($testSettings['componentName'])
+        ->set('detailData.key', 'INSTAGRAM_ACCESS_TOKEN')
+        ->set('detailData.is_translatable', false)
+        ->set('detailData.value', 'EAA-token')
+        ->call('store')
+        ->assertHasNoErrors();
+
+    $row = GlobalParameter::where('key', 'INSTAGRAM_ACCESS_TOKEN')->firstOrFail();
+    expect($row->is_translatable)->toBeFalse()
+        ->and($row->value)->toBe(json_encode('EAA-token'));
+});
+
+it('switches a translatable value to scalar when the toggle is turned off', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    $existingParameter = GlobalParameter::create([
+        'key' => 'INSTAGRAM_ACCESS_TOKEN',
+        'value' => json_encode(['de' => 'EAA-de']),
+        'is_translatable' => true,
+        'tenant_id' => $tenant->id,
+    ]);
+
+    Livewire::withUrlParams([$testSettings['urlParam'] => $existingParameter->id])
+        ->test($testSettings['componentName'])
+        ->set('detailData.is_translatable', false)
+        ->assertSet('detailData.value', 'EAA-de');
 });
