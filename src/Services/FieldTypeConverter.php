@@ -83,12 +83,17 @@ class FieldTypeConverter
      */
     private static function convertFromTranslatableField($value)
     {
-        // If it's a translatable array, extract the German value as default
         if (is_array($value)) {
-            return $value['de'] ?? $value['en'] ?? '';
+            // Only collapse arrays that actually look like translatable values.
+            // Lists/repeater values must be preserved as-is, otherwise saving a
+            // collection page would wipe the structured data.
+            if (array_key_exists('de', $value) || array_key_exists('en', $value)) {
+                return $value['de'] ?? $value['en'] ?? '';
+            }
+
+            return $value;
         }
 
-        // If it's not an array, return the original value with its original type
         return $value;
     }
 }

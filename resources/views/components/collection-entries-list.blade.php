@@ -140,8 +140,8 @@ new class extends Component
                         // Remove 'detailData.' prefix
                         $fieldKey = str_replace('detailData.', '', $fieldName);
 
-                        // Skip image fields for search
-                        if (($field['type'] ?? '') === 'image') {
+                        // Skip non-text fields for search
+                        if (in_array($field['type'] ?? '', ['image', 'repeater'], true)) {
                             continue;
                         }
 
@@ -175,25 +175,43 @@ new class extends Component
                     $fieldName = $field['name'] ?? '';
                     // Remove 'detailData.' prefix
                     $fieldKey = str_replace('detailData.', '', $fieldName);
+                    $fieldType = $field['type'] ?? '';
 
                     $value = '';
                     if (isset($data[$fieldKey])) {
                         $fieldData = $data[$fieldKey];
 
-                        // Handle translatable fields
-                        if (is_array($fieldData)) {
-                            $value = $fieldData[$selectedLanguage] ?? array_values($fieldData)[0] ?? '';
+                        if ($fieldType === 'repeater') {
+                            $count = is_array($fieldData) ? count($fieldData) : 0;
+                            $value = $count > 0 ? $count.' '.($count === 1 ? 'Eintrag' : 'Einträge') : '';
+                        } elseif (is_array($fieldData)) {
+                            // Translatable field: pick selected language, then any string value
+                            $translated = $fieldData[$selectedLanguage] ?? null;
+                            if (! is_string($translated)) {
+                                $translated = null;
+                                foreach ($fieldData as $candidate) {
+                                    if (is_string($candidate)) {
+                                        $translated = $candidate;
+                                        break;
+                                    }
+                                }
+                            }
+                            $value = $translated ?? '';
                         } else {
                             $value = $fieldData;
                         }
                     }
 
                     // Handle special field types
-                    if (($field['type'] ?? '') === 'image' && $value) {
+                    if ($fieldType === 'image' && $value) {
                         $value = '✓ Bild vorhanden';
                     }
 
-                    $transformedData[$fieldKey] = $value ?: '-';
+                    if (! is_scalar($value)) {
+                        $value = '';
+                    }
+
+                    $transformedData[$fieldKey] = $value !== '' && $value !== null ? $value : '-';
                 }
             }
 

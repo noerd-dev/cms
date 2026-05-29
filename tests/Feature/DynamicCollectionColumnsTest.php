@@ -5,8 +5,9 @@ use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class);
+uses(TestCase::class);
 uses(CreatesCmsUser::class);
 
 // Mock CollectionHelper via Laravel's container
@@ -38,6 +39,26 @@ beforeEach(function (): void {
                 'fields' => [
                     ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText'],
                     ['name' => 'detailData.description', 'label' => 'Description', 'type' => 'translatableText'],
+                ],
+            ]);
+
+        // Mock resolveCollectionFields for services (with repeater)
+        $mock->shouldReceive('resolveCollectionFields')
+            ->with('services')
+            ->andReturn([
+                'title' => 'Service',
+                'titleList' => 'Services',
+                'hasPage' => true,
+                'fields' => [
+                    ['name' => 'detailData.title', 'label' => 'Titel', 'type' => 'translatableText'],
+                    [
+                        'name' => 'detailData.activities_items',
+                        'label' => 'Activities',
+                        'type' => 'repeater',
+                        'fields' => [
+                            ['name' => 'text', 'label' => 'Text', 'type' => 'translatableTextarea'],
+                        ],
+                    ],
                 ],
             ]);
     });
@@ -136,6 +157,66 @@ it('handles empty collection entries gracefully', function (): void {
     $response->assertStatus(200);
     $response->assertSee('Name');
     $response->assertSee('Image');
+});
+
+it('renders collections that contain repeater fields without crashing', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    CmsLanguage::where('tenant_id', $tenant->id)->delete();
+    CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_default' => true, 'is_active' => true]);
+
+    $parentCollection = Collection::create([
+        'tenant_id' => $tenant->id,
+        'collection_key' => 'SERVICES',
+        'name' => 'Services',
+    ]);
+
+    Page::create([
+        'tenant_id' => $tenant->id,
+        'collection_id' => $parentCollection->id,
+        'data' => [
+            'title' => ['de' => 'Beratung', 'en' => 'Consulting'],
+            'activities_items' => [
+                ['text' => ['de' => 'Analyse', 'en' => 'Analysis']],
+                ['text' => ['de' => 'Konzeption', 'en' => 'Concept']],
+            ],
+        ],
+        'sort' => 1,
+    ]);
+
+    $response = $this->get('/cms/collections?key=services');
+    $response->assertStatus(200);
+    $response->assertSee('Beratung');
+    $response->assertSee('2 Einträge');
+});
+
+it('preserves repeater data when saving a collection page', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    $parentCollection = Collection::create([
+        'tenant_id' => $tenant->id,
+        'collection_key' => 'SERVICES',
+        'name' => 'Services',
+    ]);
+
+    $items = [
+        ['text' => ['de' => 'Analyse', 'en' => 'Analysis']],
+        ['text' => ['de' => 'Konzeption', 'en' => 'Concept']],
+    ];
+
+    $page = Page::create([
+        'tenant_id' => $tenant->id,
+        'collection_id' => $parentCollection->id,
+        'data' => [
+            'title' => ['de' => 'Beratung', 'en' => 'Consulting'],
+            'activities_items' => $items,
+        ],
+        'sort' => 1,
+    ]);
+
+    expect($page->fresh()->data['activities_items'])->toEqual($items);
 });
 
 it('displays multiple entries correctly', function (): void {
