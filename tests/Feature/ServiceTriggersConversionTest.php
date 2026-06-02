@@ -1,9 +1,9 @@
 <?php
 
-use App\Services\PageElementService;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
+use Noerd\Cms\Services\PageElementService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Tests\TestCase;
 
