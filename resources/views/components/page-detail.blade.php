@@ -717,35 +717,32 @@ new class extends Component
 <x-noerd::page :disableModal="$disableModal">
 
     <x-slot:header>
-        <x-noerd::modal-title class="flex items-center">
+        <x-noerd::modal-title>
             {{ $collectionLayout['title'] ?? __('Page') }}
 
-            <div class="ml-auto" :class="isModal ? 'mr-22' : ''">
-                <div class="flex items-center gap-4">
-                    @if($this->pageModel?->id && $this->hasPageFeatures)
-                        <button
-                            x-data
-                            x-init="if (!Alpine.store('elements')) Alpine.store('elements', { collapsed: false })"
-                            @click="$store.elements.collapsed = !$store.elements.collapsed"
-                            class="px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-                            x-text="$store.elements.collapsed ? '{{ __('Elemente aufklappen') }}' : '{{ __('Elemente zuklappen') }}'"
-                        ></button>
+            <x-slot:actions>
+                @if($this->pageModel?->id && $this->hasPageFeatures)
+                    <button
+                        x-data
+                        x-init="if (!Alpine.store('elements')) Alpine.store('elements', { collapsed: false })"
+                        @click="$store.elements.collapsed = !$store.elements.collapsed"
+                        class="px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                        x-text="$store.elements.collapsed ? '{{ __('Elemente aufklappen') }}' : '{{ __('Elemente zuklappen') }}'"
+                    ></button>
+                @endif
+
+                <livewire:cms::language-switcher/>
+
+                @if($this->pageModel?->id && $this->hasPageFeatures)
+                    @php $pageUrl = $this->getPageUrl(); @endphp
+                    @if($pageUrl)
+                        <a href="{{ $pageUrl }}" target="_blank"
+                           class="px-4 py-2 rounded-md text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors">
+                            {{ __('Zur Seite') }}
+                        </a>
                     @endif
-
-                    <livewire:cms::language-switcher/>
-
-                    @if($this->pageModel?->id && $this->hasPageFeatures)
-                        @php $pageUrl = $this->getPageUrl(); @endphp
-                        @if($pageUrl)
-                            <a href="{{ $pageUrl }}" target="_blank"
-                               class="px-4 py-2 rounded-md text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors">
-                                {{ __('Zur Seite') }}
-                            </a>
-                        @endif
-                    @endif
-                </div>
-            </div>
-
+                @endif
+            </x-slot:actions>
         </x-noerd::modal-title>
     </x-slot:header>
     <div>
