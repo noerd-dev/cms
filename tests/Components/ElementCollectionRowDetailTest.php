@@ -54,19 +54,21 @@ it('does not bind modelId to a URL parameter (avoids nested-modal clobbering)', 
     expect($urlAttributes)->toBeEmpty();
 });
 
-it('persists changes to the row', function (): void {
+it('persists changes to the row and keeps the modal open', function (): void {
     Livewire::test('element-collection-row-detail', [
         'modelId' => $this->row->id,
         'collectionKey' => $this->elementCollection->collection_key,
     ])
         ->set('detailData.text.de', 'Geänderter Text')
         ->call('store')
-        ->assertDispatched('closeTopModal');
+        ->assertDispatched('refreshList-collection-entries-list')
+        ->assertDispatched('refreshList-element-collection-field')
+        ->assertNotDispatched('closeTopModal');
 
     expect($this->row->fresh()->data['text']['de'])->toBe('Geänderter Text');
 });
 
-it('creates a new row when opened without a modelId', function (): void {
+it('creates a new row when opened without a modelId and keeps the modal open', function (): void {
     $before = $this->elementCollection->rows()->count();
 
     Livewire::test('element-collection-row-detail', [
@@ -75,7 +77,9 @@ it('creates a new row when opened without a modelId', function (): void {
     ])
         ->set('detailData.text.de', 'Neuer Eintrag')
         ->call('store')
-        ->assertDispatched('closeTopModal');
+        ->assertDispatched('refreshList-collection-entries-list')
+        ->assertDispatched('refreshList-element-collection-field')
+        ->assertNotDispatched('closeTopModal');
 
     expect($this->elementCollection->rows()->count())->toBe($before + 1);
 });
