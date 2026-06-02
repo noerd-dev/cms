@@ -76,7 +76,8 @@ new class extends Component
         }
 
         $this->storeProcess($page);
-        $this->dispatch('closeTopModal');
+        $this->dispatch('refreshList-collection-entries-list');
+        $this->dispatch('refreshList-element-collection-field');
     }
 
     public function delete(): void
@@ -85,7 +86,8 @@ new class extends Component
             Page::find($this->modelId)?->delete();
         }
 
-        $this->dispatch('closeTopModal');
+        $this->dispatch('refreshList-element-collection-field');
+        $this->closeModalProcess('collection-entries-list');
     }
 
     private function elementCollection(): ?Collection
