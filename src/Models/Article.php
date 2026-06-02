@@ -37,7 +37,7 @@ class Article extends Model
     {
         return $query->where('is_active', true)
             ->whereNotNull('publication_date')
-            ->where('publication_date', '<=', now()->toDateString());
+            ->whereDate('publication_date', '<=', now()->toDateString());
     }
 
     protected static function newFactory(): ArticleFactory
