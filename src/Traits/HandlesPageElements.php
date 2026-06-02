@@ -2,6 +2,8 @@
 
 namespace Noerd\Cms\Traits;
 
+use Noerd\Cms\Models\Collection;
+
 trait HandlesPageElements
 {
     /**
@@ -19,6 +21,15 @@ trait HandlesPageElements
 
         $pageElements = $page->elements;
 
+        // Preload element collections owned by these elements, grouped by owner,
+        // so their rows can be merged back into each element's data (one query).
+        $elementCollectionsByOwner = Collection::query()
+            ->where('is_element_collection', true)
+            ->whereIn('element_page_id', $pageElements->pluck('id'))
+            ->with('rows')
+            ->get()
+            ->groupBy('element_page_id');
+
         foreach ($pageElements as $pageElement) {
             $elementKey = $pageElement->element_key ?? 'text_block_1_column';
 
@@ -26,12 +37,20 @@ trait HandlesPageElements
                 $elementKey = 'text_block_1_column';
             }
 
+            $rawData = json_decode($pageElement->data, true) ?? [];
+
+            foreach ($elementCollectionsByOwner->get($pageElement->id, collect()) as $elementCollection) {
+                if (! $elementCollection->owner_field) {
+                    continue;
+                }
+                $rawData[$elementCollection->owner_field] = $elementCollection->rows
+                    ->map(fn ($row) => is_array($row->data) ? $row->data : [])
+                    ->all();
+            }
+
             $element['id'] = $pageElement->id;
             $element['key'] = $elementKey;
-            $element['data'] = (object) $this->localizeElementData(
-                json_decode($pageElement->data, true) ?? [],
-                $selectedLanguage,
-            );
+            $element['data'] = (object) $this->localizeElementData($rawData, $selectedLanguage);
             $elements[] = $element;
         }
 
@@ -49,7 +68,7 @@ trait HandlesPageElements
         $bladeFiles = [];
 
         if (! empty($customElementsPath) && is_dir(base_path($customElementsPath))) {
-            $customFiles = glob(base_path($customElementsPath . '/*.blade.php')) ?: [];
+            $customFiles = glob(base_path($customElementsPath.'/*.blade.php')) ?: [];
             $bladeFiles = array_merge($bladeFiles, $customFiles);
         }
 
@@ -66,7 +85,7 @@ trait HandlesPageElements
 
         foreach ($uniqueFiles as $fileName => $filePath) {
             $elementKey = str_replace('-', '_', $fileName);
-            $mapping[$elementKey] = 'elements.' . $fileName;
+            $mapping[$elementKey] = 'elements.'.$fileName;
         }
 
         return $mapping;
@@ -81,12 +100,12 @@ trait HandlesPageElements
         $fileBase = end($parts) ?: $componentName;
 
         $bladeMatches = array_merge(
-            glob(base_path('app-modules/*/resources/views/components/elements/' . $fileBase . '.blade.php')) ?: [],
-            glob(base_path('resources/views/components/elements/' . $fileBase . '.blade.php')) ?: [],
+            glob(base_path('app-modules/*/resources/views/components/elements/'.$fileBase.'.blade.php')) ?: [],
+            glob(base_path('resources/views/components/elements/'.$fileBase.'.blade.php')) ?: [],
         );
         $ymlMatches = array_merge(
-            glob(base_path('app-modules/*/resources/views/components/elements/' . $fileBase . '.yml')) ?: [],
-            glob(base_path('resources/views/components/elements/' . $fileBase . '.yml')) ?: [],
+            glob(base_path('app-modules/*/resources/views/components/elements/'.$fileBase.'.yml')) ?: [],
+            glob(base_path('resources/views/components/elements/'.$fileBase.'.yml')) ?: [],
         );
 
         return ! empty($bladeMatches) && ! empty($ymlMatches);

@@ -16,7 +16,10 @@
 
     $requiredFields = $field['required_fields'] ?? [];
 
-    $collections = \Noerd\Cms\Models\Collection::where('tenant_id', auth()->user()->selected_tenant_id)->orderBy('name')->get();
+    $collections = \Noerd\Cms\Models\Collection::where('tenant_id', auth()->user()->selected_tenant_id)
+        ->where('is_element_collection', false)
+        ->orderBy('name')
+        ->get();
 
     if (! empty($requiredFields)) {
         $collections = $collections->filter(function ($collection) use ($requiredFields) {

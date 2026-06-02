@@ -2,9 +2,11 @@
 
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
+use Noerd\Cms\Repositories\ElementAwareCollectionDefinitionRepository;
 use Noerd\Cms\Repositories\YamlCollectionDefinitionRepository;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class);
+uses(TestCase::class);
 
 it('resolves YamlCollectionDefinitionRepository when mode is yaml', function (): void {
     config(['noerd.collections.mode' => 'yaml']);
@@ -12,8 +14,9 @@ it('resolves YamlCollectionDefinitionRepository when mode is yaml', function ():
 
     $repository = app(CollectionDefinitionRepositoryContract::class);
 
-    expect($repository)->toBeInstanceOf(YamlCollectionDefinitionRepository::class);
-    expect($repository->isWritable())->toBeFalse();
+    expect($repository)->toBeInstanceOf(ElementAwareCollectionDefinitionRepository::class)
+        ->and($repository->inner())->toBeInstanceOf(YamlCollectionDefinitionRepository::class)
+        ->and($repository->isWritable())->toBeFalse();
 });
 
 it('resolves DatabaseCollectionDefinitionRepository when mode is database', function (): void {
@@ -22,8 +25,9 @@ it('resolves DatabaseCollectionDefinitionRepository when mode is database', func
 
     $repository = app(CollectionDefinitionRepositoryContract::class);
 
-    expect($repository)->toBeInstanceOf(DatabaseCollectionDefinitionRepository::class);
-    expect($repository->isWritable())->toBeTrue();
+    expect($repository)->toBeInstanceOf(ElementAwareCollectionDefinitionRepository::class)
+        ->and($repository->inner())->toBeInstanceOf(DatabaseCollectionDefinitionRepository::class)
+        ->and($repository->isWritable())->toBeTrue();
 });
 
 it('falls back to yaml mode when the config value is unknown', function (): void {
@@ -32,5 +36,6 @@ it('falls back to yaml mode when the config value is unknown', function (): void
 
     $repository = app(CollectionDefinitionRepositoryContract::class);
 
-    expect($repository)->toBeInstanceOf(YamlCollectionDefinitionRepository::class);
+    expect($repository)->toBeInstanceOf(ElementAwareCollectionDefinitionRepository::class)
+        ->and($repository->inner())->toBeInstanceOf(YamlCollectionDefinitionRepository::class);
 });

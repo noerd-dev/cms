@@ -8,6 +8,7 @@ use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
@@ -20,6 +21,12 @@ new class extends Component
     public string|int|null $collectionKey = null;
 
     public ?array $collectionLayout = null;
+
+    /**
+     * When true, this list edits an element collection bound to a single
+     * entry+field. The collection-definition management action is hidden.
+     */
+    public bool $elementCollection = false;
 
     #[Computed]
     public function tableFilters(): array
@@ -92,6 +99,15 @@ new class extends Component
 
     public function listAction(mixed $modelId = null, array $relations = []): void
     {
+        // Element collections use a dedicated row editor without the ?pageId URL
+        // binding, so opening a row inside the (already modal) entry editor does not
+        // clobber its id on first open.
+        if ($this->elementCollection) {
+            Noerd::modal('cms::element-collection-row-detail', ['modelId' => $modelId, 'collectionKey' => $this->collectionKey]);
+
+            return;
+        }
+
         Noerd::modal('cms::page-detail', ['modelId' => $modelId, 'collectionKey' => $this->collectionKey, 'relations' => $relations]);
     }
 
@@ -141,7 +157,7 @@ new class extends Component
                         $fieldKey = str_replace('detailData.', '', $fieldName);
 
                         // Skip non-text fields for search
-                        if (in_array($field['type'] ?? '', ['image', 'repeater'], true)) {
+                        if (in_array($field['type'] ?? '', ['image', 'element-collection'], true)) {
                             continue;
                         }
 
@@ -178,13 +194,19 @@ new class extends Component
                     $fieldType = $field['type'] ?? '';
 
                     $value = '';
-                    if (isset($data[$fieldKey])) {
+                    if ($fieldType === 'element-collection') {
+                        // Element-collection data lives in a separate hidden collection
+                        // owned by this entry; show its row count.
+                        $elementCollection = Collection::query()
+                            ->where('collection_key', app(ElementCollectionService::class)->keyFor(ElementCollectionService::OWNER_PAGE, $page->id, $fieldKey))
+                            ->where('is_element_collection', true)
+                            ->first();
+                        $count = $elementCollection ? $elementCollection->rows()->count() : 0;
+                        $value = $count > 0 ? $count.' '.trans_choice('Eintrag|Einträge', $count) : '';
+                    } elseif (isset($data[$fieldKey])) {
                         $fieldData = $data[$fieldKey];
 
-                        if ($fieldType === 'repeater') {
-                            $count = is_array($fieldData) ? count($fieldData) : 0;
-                            $value = $count > 0 ? $count.' '.($count === 1 ? 'Eintrag' : 'Einträge') : '';
-                        } elseif (is_array($fieldData)) {
+                        if (is_array($fieldData)) {
                             // Translatable field: pick selected language, then any string value
                             $translated = $fieldData[$selectedLanguage] ?? null;
                             if (! is_string($translated)) {
@@ -221,6 +243,14 @@ new class extends Component
         $collectionTitle = $this->collectionLayout['title'] ?? ucfirst($this->collectionKey);
         $actionLabel = __('New Entry');
 
+        // Element collections are not user-defined, so the "Manage Collection"
+        // (definition) action is suppressed; only the "New Entry" action remains.
+        $actions = [];
+        if (! $this->elementCollection) {
+            $actions[] = ['label' => 'Manage Collection', 'action' => 'manageCollection', 'style' => 'secondary', 'shortcut' => 'c'];
+        }
+        $actions[] = ['label' => $actionLabel, 'action' => 'listAction', 'shortcut' => 'n'];
+
         // Generate dynamic columns from YAML fields
         $columns = [];
         if ($this->collectionLayout && isset($this->collectionLayout['fields'])) {
@@ -253,10 +283,7 @@ new class extends Component
         return [
             'listConfig' => $this->buildList($rows, [
                 'title' => $collectionTitle,
-                'actions' => [
-                    ['label' => 'Manage Collection', 'action' => 'manageCollection', 'style' => 'secondary', 'shortcut' => 'c'],
-                    ['label' => $actionLabel, 'action' => 'listAction', 'shortcut' => 'n'],
-                ],
+                'actions' => $actions,
                 'disableSearch' => false,
                 'columns' => $columns,
             ]),

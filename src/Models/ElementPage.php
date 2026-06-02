@@ -13,6 +13,25 @@ class ElementPage extends Model
 
     protected $table = 'element_page';
 
+    /**
+     * Boot method to add model event listeners.
+     */
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        // Remove element collections owned by this element instance. Their row
+        // pages cascade away via the pages.collection_id foreign key.
+        static::deleting(function ($elementPage): void {
+            Collection::query()
+                ->where('is_element_collection', true)
+                ->where('element_page_id', $elementPage->id)
+                ->get()
+                ->each
+                ->delete();
+        });
+    }
+
     public function page()
     {
         return $this->belongsTo(Page::class);
