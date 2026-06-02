@@ -3,8 +3,10 @@
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Repositories\ElementAwareCollectionDefinitionRepository;
+use Noerd\Cms\Repositories\YamlCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Symfony\Component\Yaml\Yaml;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -44,7 +46,27 @@ it('synthesizes a definition via find and findByKey for element keys', function 
 });
 
 it('delegates non-element keys to the underlying YAML repository', function (): void {
-    $fields = $this->repo->resolveFields('services');
+    $dir = sys_get_temp_dir() . '/cms-element-repo-test-' . uniqid();
+    mkdir($dir, 0755, true);
+    file_put_contents($dir . '/services.yml', Yaml::dump([
+        'title' => 'Service',
+        'titleList' => 'Services',
+        'key' => 'SERVICES',
+        'hasPage' => true,
+        'fields' => [
+            ['name' => 'detailData.title', 'label' => 'Title', 'type' => 'translatableText', 'colspan' => 6],
+        ],
+    ], 4, 2));
+
+    $repo = new ElementAwareCollectionDefinitionRepository(
+        new YamlCollectionDefinitionRepository($dir),
+        app(ElementCollectionService::class),
+    );
+
+    $fields = $repo->resolveFields('services');
+
+    @unlink($dir . '/services.yml');
+    @rmdir($dir);
 
     expect($fields)->not->toBeNull()
         ->and(collect($fields['fields'])->pluck('name'))->toContain('detailData.title');
