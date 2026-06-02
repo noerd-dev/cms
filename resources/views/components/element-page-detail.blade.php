@@ -208,7 +208,7 @@ new class extends Component {
             </div>
 
             <div x-data x-show="!$store.elements?.collapsed">
-                <x-noerd::tab-content :layout="$elementLayout" :model="$detailData" />
+                <x-noerd::tab-content :layout="$elementLayout" :model="$detailData" :modelId="$modelId" />
             </div>
         </div>
     @else
