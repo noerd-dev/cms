@@ -720,7 +720,7 @@ new class extends Component
         <x-noerd::modal-title class="flex items-center">
             {{ $collectionLayout['title'] ?? __('Page') }}
 
-            <div class="ml-auto" :class="isModal ? 'mr-22' : ''">
+            <div class="ml-auto">
                 <div class="flex items-center gap-4">
                     @if($this->pageModel?->id && $this->hasPageFeatures)
                         <button

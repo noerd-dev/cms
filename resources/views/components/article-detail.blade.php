@@ -174,7 +174,7 @@ new class extends Component
         <x-noerd::modal-title class="flex items-center">
             {{ __('Article') }}
 
-            <div class="ml-auto" :class="isModal ? 'mr-22' : ''">
+            <div class="ml-auto">
                 <div class="flex items-center gap-4">
                     <livewire:cms::language-switcher />
                 </div>
