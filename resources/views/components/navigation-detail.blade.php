@@ -188,7 +188,7 @@ new class extends Component {
         <x-noerd::modal-title class="flex items-center">
             {{ __('Navigation Point') }}
 
-            <div class="ml-auto" :class="isModal ? 'mr-22' : ''">
+            <div class="ml-auto">
                 <div class="flex bg-white p-1 rounded-lg w-fit border border-gray-200">
                     <livewire:cms::language-switcher/>
                 </div>
