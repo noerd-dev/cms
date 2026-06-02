@@ -1,9 +1,11 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Tests\TestCase;
 
@@ -42,7 +44,7 @@ beforeEach(function (): void {
                 ],
             ]);
 
-        // Mock resolveCollectionFields for services (with repeater)
+        // Mock resolveCollectionFields for services (with an element-collection field)
         $mock->shouldReceive('resolveCollectionFields')
             ->with('services')
             ->andReturn([
@@ -54,7 +56,7 @@ beforeEach(function (): void {
                     [
                         'name' => 'detailData.activities_items',
                         'label' => 'Activities',
-                        'type' => 'repeater',
+                        'type' => 'element-collection',
                         'fields' => [
                             ['name' => 'text', 'label' => 'Text', 'type' => 'translatableTextarea'],
                         ],
@@ -159,7 +161,7 @@ it('handles empty collection entries gracefully', function (): void {
     $response->assertSee('Image');
 });
 
-it('renders collections that contain repeater fields without crashing', function (): void {
+it('renders element-collection fields in the list with their row count', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
@@ -172,18 +174,36 @@ it('renders collections that contain repeater fields without crashing', function
         'name' => 'Services',
     ]);
 
-    Page::create([
+    $entry = Page::create([
         'tenant_id' => $tenant->id,
         'collection_id' => $parentCollection->id,
-        'data' => [
-            'title' => ['de' => 'Beratung', 'en' => 'Consulting'],
-            'activities_items' => [
-                ['text' => ['de' => 'Analyse', 'en' => 'Analysis']],
-                ['text' => ['de' => 'Konzeption', 'en' => 'Concept']],
-            ],
-        ],
+        'data' => ['title' => ['de' => 'Beratung', 'en' => 'Consulting']],
         'sort' => 1,
     ]);
+
+    // The activities live in a dedicated element collection owned by the entry.
+    $service = app(ElementCollectionService::class);
+    $elementCollection = Collection::create([
+        'tenant_id' => $tenant->id,
+        'collection_key' => $service->keyFor(ElementCollectionService::OWNER_PAGE, $entry->id, 'activities_items'),
+        'page_id' => $entry->id,
+        'is_element_collection' => true,
+        'owner_field' => 'activities_items',
+        'element_fields' => [['name' => 'detailData.text', 'label' => 'Text', 'type' => 'translatableTextarea', 'colspan' => 12]],
+        'name' => 'Activities Beratung',
+    ]);
+    foreach ([['de' => 'Analyse'], ['de' => 'Konzeption']] as $sort => $text) {
+        // Direct insert to bypass the mocked CollectionHelper in the save hook.
+        DB::table('pages')->insert([
+            'tenant_id' => $tenant->id,
+            'collection_id' => $elementCollection->id,
+            'data' => json_encode(['text' => $text]),
+            'sort' => $sort,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
 
     $response = $this->get('/cms/collections?key=services');
     $response->assertStatus(200);
@@ -191,7 +211,7 @@ it('renders collections that contain repeater fields without crashing', function
     $response->assertSee('2 Einträge');
 });
 
-it('preserves repeater data when saving a collection page', function (): void {
+it('preserves element-collection array data when saving a collection page', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 

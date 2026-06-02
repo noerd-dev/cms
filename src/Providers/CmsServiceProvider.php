@@ -21,20 +21,23 @@ use Noerd\Cms\Models\Page;
 use Noerd\Cms\Navigation\CollectionsNavigationProvider;
 use Noerd\Cms\Navigation\PageCollectionsNavigationProvider;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
+use Noerd\Cms\Repositories\ElementAwareCollectionDefinitionRepository;
 use Noerd\Cms\Repositories\YamlCollectionDefinitionRepository;
+use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Models\Tenant;
 use Noerd\Services\DynamicNavigationRegistry;
 use Noerd\Services\FieldTypeRegistry;
 use Noerd\Services\RelationFieldRegistry;
 use Noerd\Support\FieldTypeDefinition;
 use Noerd\Support\RelationFieldDefinition;
+use Noerd\Website\Services\PageElementService;
 
 class CmsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         // Merge configuration early so container bindings can read it during resolution.
-        $this->mergeConfigFrom(__DIR__ . '/../../config/noerd_cms.php', 'noerd_cms');
+        $this->mergeConfigFrom(__DIR__.'/../../config/noerd_cms.php', 'noerd_cms');
 
         // Bind the collection definition repository based on the configured mode.
         // The mode now lives in the shared noerd.collections.* namespace so a
@@ -42,36 +45,41 @@ class CmsServiceProvider extends ServiceProvider
         $this->app->singleton(CollectionDefinitionRepositoryContract::class, function ($app) {
             $mode = config('noerd.collections.mode', 'yaml');
 
-            return match ($mode) {
-                'database' => new DatabaseCollectionDefinitionRepository(),
+            $inner = match ($mode) {
+                'database' => new DatabaseCollectionDefinitionRepository,
                 default => new YamlCollectionDefinitionRepository(
                     base_path(config('noerd_cms.collections.yaml_path', 'app-configs/cms/collections')),
                 ),
             };
+
+            return new ElementAwareCollectionDefinitionRepository(
+                $inner,
+                $app->make(ElementCollectionService::class),
+            );
         });
 
         // Register CollectionHelper as singleton for mockability in tests
-        $this->app->singleton(CollectionHelper::class, fn($app) => new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class)));
+        $this->app->singleton(CollectionHelper::class, fn ($app) => new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class)));
 
         // Register CMS PageElementService as fallback for Website namespace
-        if (! $this->app->bound(\Noerd\Website\Services\PageElementService::class)) {
+        if (! $this->app->bound(PageElementService::class)) {
             $this->app->singleton(
-                \Noerd\Website\Services\PageElementService::class,
-                fn() => new \Noerd\Cms\Services\PageElementService(),
+                PageElementService::class,
+                fn () => new \Noerd\Cms\Services\PageElementService,
             );
         }
     }
 
     public function boot(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
-        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cms');
-        Livewire::addNamespace('cms', viewPath: __DIR__ . '/../../resources/views/components');
-        Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/components');
-        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'cms');
-        $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
-        $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-routes.php');
-        $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-api.php');
+        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
+        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'cms');
+        Livewire::addNamespace('cms', viewPath: __DIR__.'/../../resources/views/components');
+        Livewire::addLocation(viewPath: __DIR__.'/../../resources/views/components');
+        $this->loadTranslationsFrom(__DIR__.'/../../resources/lang', 'cms');
+        $this->loadJsonTranslationsFrom(__DIR__.'/../../resources/lang');
+        $this->loadRoutesFrom(__DIR__.'/../../routes/cms-routes.php');
+        $this->loadRoutesFrom(__DIR__.'/../../routes/cms-api.php');
 
         $router = $this->app['router'];
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
@@ -111,14 +119,28 @@ class CmsServiceProvider extends ServiceProvider
         $relationFieldRegistry = $this->app->make(RelationFieldRegistry::class);
         $fieldTypeRegistry->register('collection-select', FieldTypeDefinition::include(
             'cms::components.forms.input-collection-select',
-            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => ['field' => $field],
+            resolver: fn (array $field, mixed $component, mixed $detailData, mixed $modelId): array => ['field' => $field],
+        ));
+
+        $fieldTypeRegistry->register('element-collection', FieldTypeDefinition::livewire(
+            'cms::element-collection-field',
+            resolver: fn (array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
+                // A page-element editor exposes an `elementPage` property; a collection
+                // entry editor (page-detail) does not.
+                'ownerType' => (is_object($component) && property_exists($component, 'elementPage')) ? 'element_page' : 'page',
+                'ownerId' => $modelId,
+                'fieldName' => str_replace('detailData.', '', (string) ($field['name'] ?? '')),
+                'label' => (string) ($field['label'] ?? ''),
+                'rowFields' => $field['fields'] ?? [],
+            ],
+            keyResolver: fn (array $field, mixed $component, mixed $detailData, mixed $modelId): string => 'element-'.str_replace('detailData.', '', (string) ($field['name'] ?? '')).'-'.($modelId ?? 'new'),
         ));
 
         $relationFieldRegistry->register('pageRelation', RelationFieldDefinition::model(
             listComponent: 'cms::pages-list',
             detailComponent: 'cms::page-detail',
             modelClass: Page::class,
-            titleResolver: fn(Page $page): string => RelationFieldDefinition::normalizeDisplayValue($page->name),
+            titleResolver: fn (Page $page): string => RelationFieldDefinition::normalizeDisplayValue($page->name),
         ));
         $relationFieldRegistry->register('authorRelation', RelationFieldDefinition::model(
             listComponent: 'cms::authors-list',

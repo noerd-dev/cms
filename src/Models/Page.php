@@ -62,5 +62,21 @@ class Page extends Model
                 }
             }
         });
+
+        // Remove element collections owned by this entry or by any of its page
+        // elements. Their row pages cascade away via the pages.collection_id FK.
+        static::deleting(function ($page): void {
+            $elementPageIds = $page->elements()->pluck('id')->all();
+
+            Collection::query()
+                ->where('is_element_collection', true)
+                ->where(function ($query) use ($page, $elementPageIds): void {
+                    $query->where('page_id', $page->id)
+                        ->orWhereIn('element_page_id', $elementPageIds);
+                })
+                ->get()
+                ->each
+                ->delete();
+        });
     }
 }

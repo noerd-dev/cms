@@ -28,6 +28,22 @@ class Collection extends Model
         return $this->belongsTo(NoerdUser::class, 'created_by');
     }
 
+    /**
+     * The collection entry (page) that owns this element collection.
+     */
+    public function ownerPage(): BelongsTo
+    {
+        return $this->belongsTo(Page::class, 'page_id');
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'is_element_collection' => 'boolean',
+            'element_fields' => 'array',
+        ];
+    }
+
     protected static function newFactory()
     {
         return CollectionFactory::new();
@@ -36,7 +52,7 @@ class Collection extends Model
     protected function collectionKey(): Attribute
     {
         return Attribute::make(
-            set: fn(string $value) => mb_strtoupper($value),
+            set: fn (string $value) => mb_strtoupper($value),
         );
     }
 }
