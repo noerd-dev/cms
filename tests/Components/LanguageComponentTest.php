@@ -19,9 +19,11 @@ it('validates the language data', function () use ($testSettings): void {
 
     $this->actingAs($admin);
 
-    Livewire::test($testSettings['componentName'])
-        ->call('store')
-        ->assertHasErrors(['detailData.code', 'detailData.name']);
+    $component = Livewire::test($testSettings['componentName'])
+        ->set('detailData', [])
+        ->call('store');
+
+    $component->assertHasErrors(requiredLayoutFields($component));
 });
 
 it('creates a new language and stores tenant_id', function () use ($testSettings): void {
@@ -30,9 +32,12 @@ it('creates a new language and stores tenant_id', function () use ($testSettings
     $this->actingAs($admin);
 
     Livewire::test($testSettings['componentName'])
-        ->set('detailData.code', 'de')
-        ->set('detailData.name', 'Deutsch')
-        ->set('detailData.is_default', true)
+        ->set('detailData', validDetailPayload(CmsLanguage::class, [
+            'tenant_id' => $tenant->id,
+            'code' => 'de',
+            'name' => 'Deutsch',
+            'is_default' => true,
+        ]))
         ->call('store')
         ->assertOk();
 
@@ -63,9 +68,12 @@ it('ensures only one default language per tenant', function () use ($testSetting
 
     // Create German as new default via component
     Livewire::test($testSettings['componentName'])
-        ->set('detailData.code', 'de')
-        ->set('detailData.name', 'Deutsch')
-        ->set('detailData.is_default', true)
+        ->set('detailData', validDetailPayload(CmsLanguage::class, [
+            'tenant_id' => $tenant->id,
+            'code' => 'de',
+            'name' => 'Deutsch',
+            'is_default' => true,
+        ]))
         ->call('store');
 
     // German should now be default, English should not
