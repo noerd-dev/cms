@@ -32,11 +32,9 @@ new class extends Component {
         }
 
         $this->detailData = FieldHelper::parseComponentToData($this->getComponentName(), $navigation->toArray());
-        $this->detailData['navigation_type'] = $navigation->parent_id ? 'sub' : 'main';
 
         if (! $this->modelId && ! empty($this->relations['parent_id'])) {
             $this->detailData['parent_id'] = $this->relations['parent_id'];
-            $this->detailData['navigation_type'] = 'sub';
         }
 
         if ($navigation['page_id']) {
@@ -89,11 +87,14 @@ new class extends Component {
 
     public function store(): void
     {
-        $isSub = ($this->detailData['navigation_type'] ?? 'main') === 'sub';
+        $parentId = ! empty($this->detailData['parent_id']) ? (int) $this->detailData['parent_id'] : null;
+        $this->detailData['parent_id'] = $parentId;
+        $isSub = $parentId !== null;
+
         $this->validate([
             'detailData.navigation_key' => [$isSub ? 'nullable' : 'required', 'string', 'max:255'],
             'detailData.name' => ['required', 'array'],
-            'detailData.parent_id' => [$isSub ? 'required' : 'nullable', 'numeric', 'exists:cms_navigations,id'],
+            'detailData.parent_id' => ['nullable', 'numeric', 'exists:cms_navigations,id'],
             'detailData.sort_order' => ['nullable', 'integer', 'min:0'],
             'detailData.page_id' => ['nullable', 'numeric'],
             'detailData.link' => ['nullable', 'string', 'max:2048'],
@@ -101,16 +102,13 @@ new class extends Component {
             'detailData.new_tab' => ['nullable', 'boolean'],
         ]);
 
-        $navigationType = $this->detailData['navigation_type'] ?? 'main';
         $data = $this->detailData;
         unset($data['navigation_type']);
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
 
-        if ($navigationType === 'sub') {
-            $parent = Navigation::find($data['parent_id'] ?? null);
+        if ($isSub) {
+            $parent = Navigation::find($parentId);
             $data['navigation_key'] = $parent?->navigation_key ?? $data['navigation_key'];
-        } else {
-            $data['parent_id'] = null;
         }
         // TODO auto detect if value is an array and convert it to JSON
         $data['name'] = json_encode($data['name']);
