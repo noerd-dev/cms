@@ -34,6 +34,59 @@ it('allows storing a navigation without page or link for parent items', function
     ]);
 });
 
+it('persists parent_id when assigning a parent to an existing navigation', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    $parent = Navigation::factory()->create([
+        'tenant_id' => $tenant->id,
+        'navigation_key' => 'MAIN',
+        'name' => json_encode(['de' => 'Hauptmenü', 'en' => 'Main']),
+        'parent_id' => null,
+    ]);
+
+    $item = Navigation::factory()->create([
+        'tenant_id' => $tenant->id,
+        'navigation_key' => 'ITEM',
+        'name' => json_encode(['de' => 'Punkt', 'en' => 'Item']),
+        'parent_id' => null,
+    ]);
+
+    Livewire::test('cms::navigation-detail', ['modelId' => $item->id])
+        ->set('detailData.parent_id', $parent->id)
+        ->call('store')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('cms_navigations', [
+        'id' => $item->id,
+        'parent_id' => $parent->id,
+    ]);
+});
+
+it('stores a new sub navigation and inherits the parent navigation_key', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    $parent = Navigation::factory()->create([
+        'tenant_id' => $tenant->id,
+        'navigation_key' => 'MAIN',
+        'name' => json_encode(['de' => 'Hauptmenü', 'en' => 'Main']),
+        'parent_id' => null,
+    ]);
+
+    Livewire::test('cms::navigation-detail')
+        ->set('detailData.name', ['de' => 'Unterpunkt', 'en' => 'Subitem'])
+        ->set('detailData.parent_id', $parent->id)
+        ->call('store')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('cms_navigations', [
+        'tenant_id' => $tenant->id,
+        'parent_id' => $parent->id,
+        'navigation_key' => 'MAIN',
+    ]);
+});
+
 it('stores a navigation with page and clears link', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
