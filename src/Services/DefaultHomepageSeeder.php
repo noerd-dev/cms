@@ -1,15 +1,17 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+namespace Noerd\Cms\Services;
+
 use Illuminate\Support\Facades\DB;
 
-return new class () extends Migration {
+class DefaultHomepageSeeder
+{
     /**
-     * Run the migrations.
-     * Creates a default homepage page and cms_settings entry for all tenants
-     * that don't have a homepage configured yet.
+     * Create a default homepage page and cms_settings entry for every tenant that
+     * does not yet have a homepage configured. Idempotent: tenants that already
+     * have a homepage_page_id are skipped, so it is safe to run on every install.
      */
-    public function up(): void
+    public function seedMissingHomepages(): void
     {
         $tenantsWithoutHomepage = DB::table('tenants')
             ->whereNotIn('id', function ($query): void {
@@ -42,12 +44,4 @@ return new class () extends Migration {
             );
         }
     }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        // Don't delete pages on rollback - they may contain user data
-    }
-};
+}
