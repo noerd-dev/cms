@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Services\DefaultHomepageSeeder;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
 uses(Tests\TestCase::class);
@@ -12,8 +13,7 @@ uses(RefreshDatabase::class);
 it('creates a default homepage for tenants without one', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
 
-    $migration = include base_path('app-modules/cms/database/migrations/2026_01_30_080256_seed_default_homepage.php');
-    $migration->up();
+    (new DefaultHomepageSeeder())->seedMissingHomepages();
 
     $this->assertDatabaseHas('pages', [
         'tenant_id' => $tenant->id,
@@ -44,8 +44,7 @@ it('does not overwrite an existing homepage', function (): void {
         'homepage_page_id' => $existingPage->id,
     ]);
 
-    $migration = include base_path('app-modules/cms/database/migrations/2026_01_30_080256_seed_default_homepage.php');
-    $migration->up();
+    (new DefaultHomepageSeeder())->seedMissingHomepages();
 
     $setting = CmsSetting::where('tenant_id', $tenant->id)->first();
     expect($setting->homepage_page_id)->toBe($existingPage->id);
@@ -62,8 +61,7 @@ it('creates homepage for tenant with cms_settings but no homepage_page_id', func
         'homepage_page_id' => null,
     ]);
 
-    $migration = include base_path('app-modules/cms/database/migrations/2026_01_30_080256_seed_default_homepage.php');
-    $migration->up();
+    (new DefaultHomepageSeeder())->seedMissingHomepages();
 
     $setting = CmsSetting::where('tenant_id', $tenant->id)->first();
     expect($setting->homepage_page_id)->not->toBeNull();

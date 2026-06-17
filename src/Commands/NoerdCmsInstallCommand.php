@@ -5,6 +5,7 @@ namespace Noerd\Cms\Commands;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Noerd\Cms\Services\DefaultHomepageSeeder;
 use Noerd\Traits\HasModuleInstallation;
 use Noerd\Traits\RequiresNoerdInstallation;
 
@@ -29,6 +30,9 @@ class NoerdCmsInstallCommand extends Command
 
             // Register the CMS module
             $this->registerModule();
+
+            // Seed a starter homepage for tenants that don't have one yet
+            $this->seedDefaultHomepage();
 
             // Install website module if it doesn't exist
             $this->installWebsiteIfNeeded();
@@ -134,6 +138,21 @@ class NoerdCmsInstallCommand extends Command
             $this->line('<info>CMS module registered successfully.</info>');
         } catch (Exception $e) {
             $this->warn('Module registration failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Seed a default homepage (page + cms_settings) for every tenant that does
+     * not have one yet. Runs at install time, once tenants have been assigned,
+     * so a fresh installation starts with a usable starter page.
+     */
+    private function seedDefaultHomepage(): void
+    {
+        try {
+            (new DefaultHomepageSeeder())->seedMissingHomepages();
+            $this->line('<info>Default homepage ensured for all tenants.</info>');
+        } catch (Exception $e) {
+            $this->warn('Could not seed default homepage: ' . $e->getMessage());
         }
     }
 
