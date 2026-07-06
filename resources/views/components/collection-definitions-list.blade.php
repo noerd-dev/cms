@@ -49,6 +49,7 @@ new class extends Component
         $collectionMeta = DB::table('collections')
             ->leftJoin('pages', 'pages.collection_id', '=', 'collections.id')
             ->leftJoin('noerd_users', 'collections.created_by', '=', 'noerd_users.id')
+            ->where('collections.tenant_id', auth()->user()->selected_tenant_id)
             ->select(
                 'collections.collection_key',
                 DB::raw('count(pages.id) as entry_count'),

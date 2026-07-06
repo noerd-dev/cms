@@ -1,7 +1,7 @@
 # noerd/cms
 
 Multi-tenant, multi-language CMS module for Laravel. Provides pages with a
-visual element builder, YAML-driven collections, hierarchical navigation,
+visual element builder, database-backed collections, hierarchical navigation,
 forms with email notifications, articles, and a REST API for form
 submissions.
 
@@ -52,7 +52,7 @@ Set `CMS_WEBSITE_URL` in `.env` for live-preview links.
 |---|---|---|
 | Pages | Website pages with a drag-and-drop element builder. | [docs/pages.md](docs/pages.md) |
 | Elements | Reusable content blocks (`.blade.php` + `.yml` pair). | [docs/elements.md](docs/elements.md) |
-| Collections | YAML-defined content types (services, projects, sliders). | [docs/collections.md](docs/collections.md) |
+| Collections | Database-defined content types (services, projects, sliders). | [docs/collections.md](docs/collections.md) |
 | Element Collections | Per-element row lists owned by a page entry or element instance. | see below |
 | Navigation | Hierarchical, multi-language site navigation. | [docs/navigation.md](docs/navigation.md) |
 | Forms | YAML-defined forms with email notifications. | [docs/forms.md](docs/forms.md) |
@@ -151,7 +151,6 @@ YAML configurations (project-level):
 ```
 app-configs/cms/lists/          # *-list.yml
 app-configs/cms/details/        # *-detail.yml
-app-configs/cms/collections/    # collection definitions
 app-configs/cms/forms/          # form definitions
 app-configs/cms/navigation.yml  # CMS admin navigation
 ```

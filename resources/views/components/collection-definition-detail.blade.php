@@ -81,9 +81,8 @@ new class extends Component
 
     public function store(): void
     {
-        // Normalize filename: lowercase, strip .yml extension, replace underscores with hyphens
+        // Normalize filename: lowercase, replace underscores with hyphens
         $this->detailData['filename'] = mb_strtolower($this->detailData['filename']);
-        $this->detailData['filename'] = preg_replace('/\.ya?ml$/i', '', $this->detailData['filename']);
         $this->detailData['filename'] = str_replace('_', '-', $this->detailData['filename']);
 
         $rules = [

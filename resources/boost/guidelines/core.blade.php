@@ -57,44 +57,28 @@ fields:
 
 ### Collections
 
-- YAML definitions in `app-configs/cms/collections/` (e.g., `services.yml`, `sliders.yml`)
+- Definitions are per-tenant rows in the `collection_definitions` table (**model:** `Noerd\Cms\Models\CollectionDefinition`), managed via the `/cms/collection-definitions` UI
+- Resolved at runtime through `CollectionDefinitionRepositoryContract` (database-backed, decorated by `ElementAwareCollectionDefinitionRepository` for element collections)
 - `hasPage: true` — entries are full pages with URL, layout, and element builder
 - `hasPage: false` — entries are data-only records without dedicated pages
 - Data is stored in the `Page.data` JSON column
 - `FieldTypeConverter` auto-converts between translatable/non-translatable formats based on field type (called in Page model's `saving` boot)
-- `CollectionHelper` (singleton) loads and parses collection YAML configs
+- `CollectionHelper` (singleton) resolves collection definitions via the repository
 
 @verbatim
-<code-snippet name="Collection YAML with hasPage: true" lang="yaml">
-title: cms_service
-titleList: cms_services
-key: SERVICES
-buttonList: cms_new_service
-description: ''
-hasPage: true
-fields:
-  - name: pageData.name
-    label: Name
-    type: translatableText
-    colspan: 6
-  - name: image
-    label: Image
-    type: image
-    colspan: 6
-</code-snippet>
-
-<code-snippet name="Collection YAML with hasPage: false" lang="yaml">
-title: cms_slider
-titleList: cms_sliders
-key: SLIDERS
-buttonList: cms_new_slider
-description: ''
-hasPage: false
-fields:
-  - name: image
-    label: Image
-    type: image
-    colspan: 6
+<code-snippet name="Collection Definition Row" lang="php">
+CollectionDefinition::create([
+    'tenant_id' => $tenantId,
+    'filename' => 'services',          // lowercase, hyphenated identifier (used in URLs)
+    'key' => 'SERVICES',               // stable uppercase key referenced by templates
+    'title' => 'cms_service',
+    'title_list' => 'cms_services',
+    'has_page' => true,                // entries become full pages
+    'fields' => [
+        ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText', 'colspan' => 6],
+        ['name' => 'detailData.image', 'label' => 'Image', 'type' => 'image', 'colspan' => 6],
+    ],
+]);
 </code-snippet>
 @endverbatim
 
@@ -233,7 +217,6 @@ curl -X POST https://example.test/api/cms/form-requests \
 
 - Lists: `app-configs/cms/lists/` (e.g., `pages-list.yml`, `articles-list.yml`)
 - Details: `app-configs/cms/details/` (e.g., `page-detail.yml`, `article-detail.yml`)
-- Collections: `app-configs/cms/collections/` (e.g., `services.yml`, `sliders.yml`)
 - Forms: `app-configs/cms/forms/` (e.g., `contact.yml`)
 - Navigation: `app-configs/cms/navigation.yml`
 - When modifying YAML files, sync both `app-configs/cms/` and `app-modules/cms/app-configs/cms/`

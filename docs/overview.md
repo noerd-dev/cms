@@ -16,7 +16,7 @@ This command sets up the required database tables and initial configuration.
 |---------|-------------|
 | [Pages](pages.md) | Create and manage website pages with drag-and-drop elements |
 | [Elements](elements.md) | Reusable content blocks (text, images, buttons, maps) added to pages |
-| [Collections](collections.md) | Dynamic content types defined via YAML (e.g., services, projects) |
+| [Collections](collections.md) | Dynamic content types stored in the database (e.g., services, projects) |
 | [Navigation](navigation.md) | Hierarchical site navigation with multi-language support |
 | [Forms](forms.md) | YAML-defined forms with email notifications and API submissions |
 | [Articles](articles.md) | Blog/news articles with authors and publication scheduling |
@@ -49,7 +49,6 @@ YAML Configurations:
 ```
 app-configs/cms/lists/          # List view configurations
 app-configs/cms/details/        # Detail view configurations
-app-configs/cms/collections/    # Collection definitions
 app-configs/cms/forms/          # Form definitions
 app-configs/cms/navigation.yml  # CMS navigation menu
 ```

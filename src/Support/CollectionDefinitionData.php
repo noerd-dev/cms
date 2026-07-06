@@ -19,7 +19,7 @@ final class CollectionDefinitionData
     ) {}
 
     /**
-     * Build from a YAML-shaped array. Fields may use the "detailData." prefix which is stripped.
+     * Build from a definition array. Fields may use the "detailData." prefix which is stripped.
      * Any additional field keys (modalComponent, relationField, etc.) are preserved.
      *
      * @param  array<string, mixed>  $data
@@ -69,31 +69,4 @@ final class CollectionDefinitionData
         ];
     }
 
-    /**
-     * Produce the YAML shape (fields prefixed with "detailData.") for writing to disk.
-     * Any additional field keys (modalComponent, relationField, etc.) are preserved.
-     *
-     * @return array<string, mixed>
-     */
-    public function toYamlArray(): array
-    {
-        $yamlFields = [];
-        foreach ($this->fields as $field) {
-            $yamlFields[] = array_merge($field, [
-                'name' => 'detailData.' . mb_ltrim($field['name'], '.'),
-                'label' => $field['label'],
-                'type' => $field['type'],
-                'colspan' => (int) $field['colspan'],
-            ]);
-        }
-
-        return [
-            'title' => $this->title,
-            'titleList' => $this->titleList,
-            'key' => $this->key,
-            'description' => $this->description ?? '',
-            'hasPage' => $this->hasPage,
-            'fields' => $yamlFields,
-        ];
-    }
 }

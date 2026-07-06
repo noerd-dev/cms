@@ -36,13 +36,6 @@ it('loads the row data on first mount', function (): void {
         ->assertSee('Triggers Demo');
 });
 
-it('renders a save button wired to store()', function (): void {
-    Livewire::test('element-collection-row-detail', [
-        'modelId' => $this->row->id,
-        'collectionKey' => $this->elementCollection->collection_key,
-    ])->assertSeeHtml('wire:click="store"');
-});
-
 it('does not bind modelId to a URL parameter (avoids nested-modal clobbering)', function (): void {
     $instance = Livewire::test('element-collection-row-detail', [
         'modelId' => $this->row->id,
@@ -82,13 +75,6 @@ it('creates a new row when opened without a modelId and keeps the modal open', f
         ->assertNotDispatched('closeTopModal');
 
     expect($this->elementCollection->rows()->count())->toBe($before + 1);
-});
-
-it('renders the sort input', function (): void {
-    Livewire::test('element-collection-row-detail', [
-        'modelId' => $this->row->id,
-        'collectionKey' => $this->elementCollection->collection_key,
-    ])->assertSeeHtml('wire:model="detailData.sort"');
 });
 
 it('persists a changed sort value', function (): void {

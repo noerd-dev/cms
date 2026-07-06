@@ -11,6 +11,7 @@ use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
+use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
@@ -152,7 +153,7 @@ new class extends Component
                 $q->whereRaw('JSON_EXTRACT(name, "$.de") LIKE ?', ['%'.$this->search.'%'])
                     ->orWhereRaw('JSON_EXTRACT(name, "$.en") LIKE ?', ['%'.$this->search.'%']);
 
-                // Search in dynamic fields from YAML configuration
+                // Search in dynamic fields from the collection definition
                 if ($this->collectionLayout && isset($this->collectionLayout['fields'])) {
                     foreach ($this->collectionLayout['fields'] as $field) {
                         $fieldName = $field['name'] ?? '';
@@ -179,8 +180,26 @@ new class extends Component
             ?? session('selectedLanguage')
             ?? $this->getDefaultLanguageCode();
 
+        // Resolve linked page names for pageRelation fields in one query.
+        $pageRelationKeys = collect($this->collectionLayout['fields'] ?? [])
+            ->filter(fn ($field) => ($field['type'] ?? '') === 'pageRelation')
+            ->map(fn ($field) => str_replace('detailData.', '', $field['name'] ?? ''))
+            ->filter()
+            ->values();
+
+        $linkedPageNames = [];
+        if ($pageRelationKeys->isNotEmpty()) {
+            $linkedPageIds = $rows->getCollection()
+                ->flatMap(fn ($page) => $pageRelationKeys->map(fn ($key) => data_get($page->data, $key)))
+                ->filter(fn ($id) => is_numeric($id))
+                ->unique();
+            $linkedPageNames = Page::whereIn('id', $linkedPageIds)->pluck('name', 'id')
+                ->map(fn ($name) => RelationFieldDefinition::normalizeDisplayValue($name))
+                ->all();
+        }
+
         // Transform data for display
-        $rows->getCollection()->transform(function ($page) use ($selectedLanguage) {
+        $rows->getCollection()->transform(function ($page) use ($selectedLanguage, $linkedPageNames) {
             $data = is_array($page->data) ? $page->data : [];
             $transformedData = [
                 'id' => $page->id,
@@ -188,7 +207,7 @@ new class extends Component
                 'updated_at' => $page->updated_at->format('d.m.Y H:i'),
             ];
 
-            // Add dynamic fields from YAML configuration
+            // Add dynamic fields from the collection definition
             if ($this->collectionLayout && isset($this->collectionLayout['fields'])) {
                 foreach ($this->collectionLayout['fields'] as $field) {
                     $fieldName = $field['name'] ?? '';
@@ -232,6 +251,13 @@ new class extends Component
                         $value = '✓ Bild vorhanden';
                     }
 
+                    if ($fieldType === 'pageRelation') {
+                        // Empty string keeps the badge cell empty instead of rendering a "-" pill.
+                        $transformedData[$fieldKey] = is_numeric($value) ? ($linkedPageNames[(int) $value] ?? '') : '';
+
+                        continue;
+                    }
+
                     if (! is_scalar($value)) {
                         $value = '';
                     }
@@ -254,7 +280,7 @@ new class extends Component
         }
         $actions[] = ['label' => $actionLabel, 'action' => 'listAction', 'shortcut' => 'n'];
 
-        // Generate dynamic columns from YAML fields
+        // Generate dynamic columns from the collection definition fields
         $columns = [];
         if ($this->collectionLayout && isset($this->collectionLayout['fields'])) {
             foreach ($this->collectionLayout['fields'] as $field) {
@@ -271,11 +297,17 @@ new class extends Component
                     default => 1,
                 };
 
-                $columns[] = [
+                $column = [
                     'field' => $fieldKey,
                     'label' => $label,
                     'width' => $width,
                 ];
+
+                if (($field['type'] ?? '') === 'pageRelation') {
+                    $column['type'] = 'badge';
+                }
+
+                $columns[] = $column;
             }
         }
 
