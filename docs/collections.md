@@ -1,15 +1,10 @@
 # Collections
 
-Collections are dynamic content types defined via YAML. They allow you to create custom data structures (e.g., services, projects, customers, sliders) without writing code.
+Collections are dynamic content types stored in the database. They allow you to create custom data structures (e.g., services, projects, customers, sliders) without writing code.
 
 ## File Locations
 
-Collection definitions:
-```
-app-configs/cms/collections/{collection-key}.yml
-```
-
-YAML Configurations:
+YAML Configurations (management UI):
 ```
 app-configs/cms/lists/collection-definitions-list.yml
 app-configs/cms/details/collection-definition-detail.yml
@@ -22,57 +17,37 @@ app-modules/cms/resources/views/components/collection-definition-detail.blade.ph
 app-modules/cms/resources/views/components/collection-entries-list.blade.php
 ```
 
-## Collection Definition YAML
+## Collection Definitions
 
-Each collection is defined by a YAML file in `app-configs/cms/collections/`:
+Each collection is defined by a per-tenant row in the `collection_definitions` table (model: `Noerd\Cms\Models\CollectionDefinition`) and resolved at runtime through the `CollectionDefinitionRepositoryContract`.
 
-Example: `app-configs/cms/collections/sliders.yml`
-
-```yaml
-title: cms_slider
-titleList: cms_sliders
-key: SLIDERS
-buttonList: cms_new_slider
-description: ''
-hasPage: false
-fields:
-  - name: image
-    label: Image
-    type: image
-    colspan: 6
-```
-
-Example: `app-configs/cms/collections/pages.yml`
-
-```yaml
-title: Page
-titleList: Pages
-key: PAGES
-buttonList: 'Neue Seite'
-description: ''
-hasPage: true
-fields:
-  - name: pageData.name
-    label: Name
-    type: translatableText
-    colspan: 6
-  - name: image
-    label: Bild
-    type: image
-    colspan: 6
-```
-
-## Collection Properties
-
-| Property | Description |
-|----------|-------------|
+| Column | Description |
+|--------|-------------|
+| `tenant_id` | Owning tenant |
+| `filename` | Lowercase, hyphenated identifier (used in URLs, e.g. `/cms/collections?key=services`) |
+| `key` | Unique identifier for the collection (uppercase, referenced by templates) |
 | `title` | Display title for a single entry (translation key) |
-| `titleList` | Display title for the list view (translation key) |
-| `key` | Unique identifier for the collection (uppercase) |
-| `buttonList` | Label for the "New Entry" button (translation key) |
+| `title_list` | Display title for the list view (translation key) |
 | `description` | Optional description |
-| `hasPage` | Whether each entry generates a page (see below) |
-| `fields` | Array of field definitions |
+| `has_page` | Whether each entry generates a page (see below) |
+| `fields` | JSON array of field definitions (names prefixed with `detailData.`) |
+
+Example:
+
+```php
+CollectionDefinition::create([
+    'tenant_id' => $tenantId,
+    'filename' => 'sliders',
+    'key' => 'SLIDERS',
+    'title' => 'cms_slider',
+    'title_list' => 'cms_sliders',
+    'description' => '',
+    'has_page' => false,
+    'fields' => [
+        ['name' => 'detailData.image', 'label' => 'Image', 'type' => 'image', 'colspan' => 6],
+    ],
+]);
+```
 
 ## `hasPage: true` vs `hasPage: false`
 
@@ -94,32 +69,15 @@ Entries are simple data records without a dedicated page. The data is stored in 
 | `text` | Simple text input |
 | `image` | Image upload field |
 
-## Built-in Collections
-
-| Collection | Key | hasPage | Description |
-|------------|-----|---------|-------------|
-| Pages | `PAGES` | true | General website pages |
-| Services | `SERVICES` | true | Service pages |
-| Projects | `PROJECTS` | true | Project/portfolio pages |
-| Customers | `CUSTOMERS` | false | Customer logos/data |
-| Sliders | `SLIDERS` | false | Homepage slider images |
-
 ## Creating Collection Definitions
-
-Collection definitions can be managed in two ways:
-
-### 1. YAML Files (Recommended)
-
-Create a YAML file in `app-configs/cms/collections/` following the structure above. The CMS automatically discovers these files.
-
-### 2. Admin UI
 
 Navigate to `/cms/collection-definitions` to manage collections through the UI. The collection definition detail view allows you to:
 
 - Set the collection key, title, and description
 - Define fields with name, label, and type
 - Toggle `hasPage` to enable page generation
-- Save generates/updates the corresponding YAML file
+
+Definitions can also be seeded programmatically via the `CollectionDefinition` model or the repository's `save()` method.
 
 ## Collection Entries
 
@@ -147,9 +105,9 @@ This conversion runs automatically in the `Page` model's boot method.
 
 ## CollectionHelper
 
-The `CollectionHelper` class provides methods for working with collection YAML configs:
+The `CollectionHelper` class provides methods for working with collection definitions:
 
-- `getCollectionFields(collection)` — Loads field definitions from the YAML file
+- `getCollectionFields(collection)` — Resolves field definitions via the repository
 - `getCollectionTable(collection)` — Builds table column configuration for list views
 
 It is registered as a singleton in the service container for mockability in tests.

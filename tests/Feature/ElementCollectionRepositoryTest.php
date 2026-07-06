@@ -1,12 +1,12 @@
 <?php
 
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
+use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Repositories\ElementAwareCollectionDefinitionRepository;
-use Noerd\Cms\Repositories\YamlCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
-use Symfony\Component\Yaml\Yaml;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -45,28 +45,21 @@ it('synthesizes a definition via find and findByKey for element keys', function 
         ->and($this->repo->findByKey($this->elementCollection->collection_key)?->titleList)->toBe('Triggers Demo');
 });
 
-it('delegates non-element keys to the underlying YAML repository', function (): void {
-    $dir = sys_get_temp_dir() . '/cms-element-repo-test-' . uniqid();
-    mkdir($dir, 0755, true);
-    file_put_contents($dir . '/services.yml', Yaml::dump([
-        'title' => 'Service',
-        'titleList' => 'Services',
+it('delegates non-element keys to the underlying repository', function (): void {
+    CollectionDefinition::create([
+        'tenant_id' => $this->tenant->id,
+        'filename' => 'services',
         'key' => 'SERVICES',
-        'hasPage' => true,
+        'title' => 'Service',
+        'title_list' => 'Services',
+        'has_page' => true,
         'fields' => [
             ['name' => 'detailData.title', 'label' => 'Title', 'type' => 'translatableText', 'colspan' => 6],
         ],
-    ], 4, 2));
+    ]);
+    DatabaseCollectionDefinitionRepository::resetCache();
 
-    $repo = new ElementAwareCollectionDefinitionRepository(
-        new YamlCollectionDefinitionRepository($dir),
-        app(ElementCollectionService::class),
-    );
-
-    $fields = $repo->resolveFields('services');
-
-    @unlink($dir . '/services.yml');
-    @rmdir($dir);
+    $fields = $this->repo->resolveFields('services');
 
     expect($fields)->not->toBeNull()
         ->and(collect($fields['fields'])->pluck('name'))->toContain('detailData.title');

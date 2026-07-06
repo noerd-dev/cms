@@ -53,7 +53,6 @@ class CollectionDefinition extends Model
         return Attribute::make(
             set: function (string $value): string {
                 $value = mb_strtolower($value);
-                $value = preg_replace('/\.ya?ml$/i', '', $value);
                 $value = str_replace('_', '-', $value);
 
                 return preg_replace('/[^a-z0-9\-]/', '', $value);

@@ -144,11 +144,6 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
         self::resetCache();
     }
 
-    public function isWritable(): bool
-    {
-        return true;
-    }
-
     private function resolveFieldsUncached(string $filename, ?int $tenantId): ?array
     {
         $query = CollectionDefinition::query()

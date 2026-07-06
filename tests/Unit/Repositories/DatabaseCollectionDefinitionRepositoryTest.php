@@ -123,7 +123,19 @@ it('deletes a definition and invalidates cache', function (): void {
     expect(CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'contacts')->exists())->toBeFalse();
 });
 
-it('returns the YAML-shaped payload from resolveFields', function (): void {
+it('treats deleting a nonexistent definition as a no-op', function (): void {
+    ['tenant' => $tenant] = $this->createUserWithCmsAccess();
+    TenantHelper::setSelectedTenantId($tenant->id);
+
+    $repo = new DatabaseCollectionDefinitionRepository();
+    $repo->save(new CollectionDefinitionData('contacts', 'CONTACTS', 'Kontakt', 'Kontakte', null, false, []));
+
+    $repo->delete('does-not-exist');
+
+    expect(CollectionDefinition::where('tenant_id', $tenant->id)->count())->toBe(1);
+});
+
+it('returns the resolved definition payload from resolveFields', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
     TenantHelper::setSelectedTenantId($tenant->id);
 
@@ -194,11 +206,6 @@ it('scopes queries by tenant_id', function (): void {
 
     expect($repo->all($tenantA->id))->toHaveCount(1);
     expect($repo->all($tenantB->id))->toHaveCount(0);
-});
-
-it('reports isWritable as true', function (): void {
-    $repo = new DatabaseCollectionDefinitionRepository();
-    expect($repo->isWritable())->toBeTrue();
 });
 
 it('throws when saving without a tenant context', function (): void {

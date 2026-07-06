@@ -10,9 +10,9 @@ use Noerd\Cms\Support\CollectionDefinitionData;
 use Noerd\Helpers\TenantHelper;
 
 /**
- * Decorates the configured (YAML or database) collection definition repository so
- * that element collections — which have no YAML file or definition row — resolve
- * their schema from the owning DB collection's stored `element_fields`.
+ * Decorates the collection definition repository so that element collections —
+ * which have no definition row of their own — resolve their schema from the
+ * owning DB collection's stored `element_fields`.
  *
  * Element collections are intentionally excluded from `all()` so they never appear
  * in navigation or the collection-definitions list.
@@ -25,7 +25,7 @@ class ElementAwareCollectionDefinitionRepository implements CollectionDefinition
     ) {}
 
     /**
-     * The wrapped, mode-selected repository (YAML or database).
+     * The wrapped repository.
      */
     public function inner(): CollectionDefinitionRepositoryContract
     {
@@ -89,11 +89,6 @@ class ElementAwareCollectionDefinitionRepository implements CollectionDefinition
     public function delete(string $filename, ?int $tenantId = null): void
     {
         $this->inner->delete($filename, $tenantId);
-    }
-
-    public function isWritable(): bool
-    {
-        return $this->inner->isWritable();
     }
 
     private function toData(Collection $elementCollection): CollectionDefinitionData

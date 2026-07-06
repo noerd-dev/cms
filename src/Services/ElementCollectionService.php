@@ -86,7 +86,7 @@ class ElementCollectionService
     }
 
     /**
-     * Build the YAML-shaped definition array (as CollectionHelper consumers expect)
+     * Build the resolved definition array (as CollectionHelper consumers expect)
      * from an element collection's stored row schema.
      *
      * @return array{title: string, titleList: string, key: string, description: string, hasPage: bool, fields: array<int, array<string, mixed>>}
@@ -115,7 +115,7 @@ class ElementCollectionService
     }
 
     /**
-     * Strip the "detailData." prefix that field paths carry in YAML definitions.
+     * Strip the "detailData." prefix that field paths carry in stored definitions.
      */
     private function normalizeFieldName(string $field): string
     {
@@ -123,7 +123,7 @@ class ElementCollectionService
     }
 
     /**
-     * Normalize row field definitions to the YAML-resolved shape: names carry the
+     * Normalize row field definitions to the resolved definition shape: names carry the
      * "detailData." prefix (consumers strip it themselves), with label/type/colspan defaults.
      *
      * @param  array<int, array<string, mixed>>  $rowFields

@@ -17,7 +17,6 @@ A successful run produces:
 
 - One timestamped Laravel migration in `database/migrations/` that seeds **Pages**, **ElementPage** rows, **Navigation**, **GlobalParameters**, **CollectionDefinitions** and **Collection** rows for every tenant. Idempotent. Empty `down()`.
 - New element `*.blade.php` + `*.yml` pairs in `resources/views/components/elements/` for any section that has no matching CMS element.
-- New collection YAMLs in `app-configs/cms/collections/`.
 - New form YAMLs in `app-configs/cms/forms/`, synced via `php artisan forms:sync`.
 - A verification checklist proving every migrated URL renders with no browser errors.
 
@@ -67,7 +66,7 @@ If no existing element matches, generate a new pair from `templates/element.blad
 Produce a written seed plan (table form) before generating SQL. Rules:
 
 - **Pages** — one `pages` row per inventory page. Translatable fields are JSON arrays even with a single language: `name => json_encode(['de' => 'Startseite'])`, `slug => json_encode(['de' => '/startseite'])`. Slugs always start with `/`. `layout` defaults to `null` (resolves to `weblayout` at render). Update `cms_settings.homepage_page_id` for the homepage.
-- **Collections** — for each repeated structure, generate a YAML in `app-configs/cms/collections/` from `templates/collection.yml.stub`. Use `hasPage: true` if items get their own URL (services, projects); `hasPage: false` for embedded data (sliders, testimonials, team members). When `config('noerd.collections.mode') === 'database'`, also `DB::table('collection_definitions')->insert(...)`. Each collection item is a `pages` row with `collection_id` set.
+- **Collections** — for each repeated structure, seed a `collection_definitions` row via the migration's `upsertCollectionDefinition(...)` helper (see `templates/seed_imported_website.php.stub`). Use `hasPage: true` if items get their own URL (services, projects); `hasPage: false` for embedded data (sliders, testimonials, team members). Each collection item is a `pages` row with `collection_id` set.
 - **Navigation** — insert into `cms_navigations` with `navigation_key` `main` or `footer` (lowercase, matching the demo seeder). Set `page_id` for internal links, `link` for external. Use `parent_id` + `sort_order` for nested menus.
 - **Globals** — site-wide values (phone, email, site title) go in `global_parameters` as translatable JSON values keyed by name.
 
@@ -169,7 +168,6 @@ Run all of these and report results:
 | `app-modules/cms/website-boilerplate/resources/views/page.blade.php` | element render loop |
 | `app-modules/cms/website-boilerplate/resources/views/components/layouts/weblayout.blade.php` | layout slot + nav |
 | `app-modules/cms/website-boilerplate/resources/views/components/elements/*.{blade.php,yml}` | element pair reference |
-| `app-modules/cms/app-configs/cms/collections/services.yml` | collection YAML reference |
 | `app-modules/cms/app-configs/cms/forms/contact.yml` | form YAML reference |
 
 ## Templates
@@ -179,7 +177,6 @@ Stubs for generated files live next to this skill:
 - `templates/seed_imported_website.php.stub` — migration boilerplate
 - `templates/element.blade.php.stub` — anonymous Livewire element
 - `templates/element.yml.stub` — element field schema
-- `templates/collection.yml.stub` — collection definition
 - `templates/form.yml.stub` — form definition
 
 Copy a stub, fill in the placeholders (`{{ … }}`), then write to the destination path.

@@ -20,7 +20,6 @@
         - title: Collection Definitions
           route: cms.collection-definitions
           heroicon: rectangle-stack
-          config: noerd.collections.show_definitions_ui
     - title: Blog
       navigations:
         - title: Articles

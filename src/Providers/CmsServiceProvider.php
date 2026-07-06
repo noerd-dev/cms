@@ -8,13 +8,10 @@ use Livewire\Livewire;
 use Noerd\Cms\Commands\CmsUpdateCommand;
 use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
 use Noerd\Cms\Commands\NoerdCmsInstallCommand;
-use Noerd\Cms\Console\Commands\ExportCollectionDefinitionsCommand;
-use Noerd\Cms\Console\Commands\ImportCollectionDefinitionsCommand;
 use Noerd\Cms\Console\Commands\SyncFormTypesCommand;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Middleware\CmsApiAuth;
-use Noerd\Cms\Middleware\EnsureCollectionDefinitionsEnabled;
 use Noerd\Cms\Models\Author;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Page;
@@ -22,7 +19,6 @@ use Noerd\Cms\Navigation\CollectionsNavigationProvider;
 use Noerd\Cms\Navigation\PageCollectionsNavigationProvider;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Repositories\ElementAwareCollectionDefinitionRepository;
-use Noerd\Cms\Repositories\YamlCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Models\Tenant;
 use Noerd\Services\DynamicNavigationRegistry;
@@ -39,24 +35,12 @@ class CmsServiceProvider extends ServiceProvider
         // Merge configuration early so container bindings can read it during resolution.
         $this->mergeConfigFrom(__DIR__.'/../../config/noerd_cms.php', 'noerd_cms');
 
-        // Bind the collection definition repository based on the configured mode.
-        // The mode now lives in the shared noerd.collections.* namespace so a
-        // single toggle governs both CMS and Setup collection definitions.
-        $this->app->singleton(CollectionDefinitionRepositoryContract::class, function ($app) {
-            $mode = config('noerd.collections.mode', 'yaml');
-
-            $inner = match ($mode) {
-                'database' => new DatabaseCollectionDefinitionRepository,
-                default => new YamlCollectionDefinitionRepository(
-                    base_path(config('noerd_cms.collections.yaml_path', 'app-configs/cms/collections')),
-                ),
-            };
-
-            return new ElementAwareCollectionDefinitionRepository(
-                $inner,
-                $app->make(ElementCollectionService::class),
-            );
-        });
+        // Decorated so element collections resolve their schema from the owning
+        // DB collection's stored element_fields.
+        $this->app->singleton(CollectionDefinitionRepositoryContract::class, fn ($app) => new ElementAwareCollectionDefinitionRepository(
+            new DatabaseCollectionDefinitionRepository,
+            $app->make(ElementCollectionService::class),
+        ));
 
         // Register CollectionHelper as singleton for mockability in tests
         $this->app->singleton(CollectionHelper::class, fn ($app) => new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class)));
@@ -83,7 +67,6 @@ class CmsServiceProvider extends ServiceProvider
 
         $router = $this->app['router'];
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
-        $router->aliasMiddleware('cms.collections.ui', EnsureCollectionDefinitionsEnabled::class);
 
         // Register gate for CMS access
         Gate::define('canCms', function ($user) {
@@ -105,8 +88,6 @@ class CmsServiceProvider extends ServiceProvider
                 CmsUpdateCommand::class,
                 InstallWebsiteBoilerplateCommand::class,
                 SyncFormTypesCommand::class,
-                ImportCollectionDefinitionsCommand::class,
-                ExportCollectionDefinitionsCommand::class,
             ]);
         }
 

@@ -153,21 +153,18 @@ return new class () extends Migration {
             }
 
             // ─────────────────────────────────────────────────────────────
-            // 5. Collection definitions (only when noerd.collections.mode = database)
-            //    YAML-mode projects can skip this block entirely.
+            // 5. Collection definitions
             // ─────────────────────────────────────────────────────────────
-            if (config('noerd.collections.mode') === 'database') {
-                $this->upsertCollectionDefinition(
-                    tenantId: $tenantId,
-                    key: '{{ SERVICES }}',
-                    fields: [
-                        ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText', 'colspan' => 6],
-                        ['name' => 'image', 'label' => 'Image', 'type' => 'image', 'colspan' => 6],
-                    ],
-                    hasPage: true,
-                    now: $now,
-                );
-            }
+            $this->upsertCollectionDefinition(
+                tenantId: $tenantId,
+                key: '{{ SERVICES }}',
+                fields: [
+                    ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText', 'colspan' => 6],
+                    ['name' => 'image', 'label' => 'Image', 'type' => 'image', 'colspan' => 6],
+                ],
+                hasPage: true,
+                now: $now,
+            );
 
             // ─────────────────────────────────────────────────────────────
             // 6. Collection rows (each item is a Page with collection_id set)

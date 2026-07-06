@@ -81,7 +81,7 @@ class NoerdCmsInstallCommand extends Command
      */
     protected function getAdditionalSubdirectories(): array
     {
-        return ['collections', 'forms'];
+        return ['forms'];
     }
 
     /**

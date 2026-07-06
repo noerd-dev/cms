@@ -4,6 +4,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\ElementPage;
@@ -151,17 +152,11 @@ new class extends Component {
 
     public function dataCollectionOptions(): array
     {
-        $collectionsPath = base_path('app-configs/cms/collections');
         $options = ['' => __('Please select...')];
 
-        foreach (glob($collectionsPath . '/*.yml') as $file) {
-            $config = \Symfony\Component\Yaml\Yaml::parseFile($file);
-            if (($config['hasPage'] ?? true) === false) {
-                $key = $config['key'] ?? '';
-                $title = $config['title'] ?? $key;
-                if ($key) {
-                    $options[$key] = $title;
-                }
+        foreach (app(CollectionDefinitionRepositoryContract::class)->all() as $definition) {
+            if (! $definition->hasPage && $definition->key) {
+                $options[$definition->key] = $definition->title ?: $definition->key;
             }
         }
 

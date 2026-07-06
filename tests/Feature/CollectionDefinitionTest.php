@@ -11,10 +11,7 @@ uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
-    config(['noerd.collections.mode' => 'database']);
-    config(['noerd.collections.show_definitions_ui' => true]);
     DatabaseCollectionDefinitionRepository::resetCache();
-    app()->forgetInstance(\Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract::class);
     app()->forgetInstance(\Noerd\Cms\Helpers\CollectionHelper::class);
 });
 
@@ -48,6 +45,87 @@ it('renders the list component and shows existing definitions', function (): voi
         ->assertNotSet('listId', '');
 });
 
+it('scopes entry counts to the current tenant', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    createContactsDefinition($tenant->id);
+    $ownCollection = Collection::create([
+        'tenant_id' => $tenant->id,
+        'collection_key' => 'CONTACTS',
+        'name' => 'Kontakte',
+    ]);
+    Page::factory()->create(['tenant_id' => $tenant->id, 'collection_id' => $ownCollection->id]);
+
+    $otherTenant = \Noerd\Models\Tenant::factory()->create();
+    $foreignCollection = Collection::create([
+        'tenant_id' => $otherTenant->id,
+        'collection_key' => 'CONTACTS',
+        'name' => 'Kontakte',
+    ]);
+    Page::factory()->count(3)->create(['tenant_id' => $otherTenant->id, 'collection_id' => $foreignCollection->id]);
+
+    $component = Livewire::test('cms::collection-definitions-list');
+    $row = collect($component->viewData('listConfig')['rows']->items())->firstWhere('key', 'CONTACTS');
+
+    expect($row['entryCount'])->toBe(1);
+});
+
+it('searches definitions by titleList, key, and filename case-insensitively', function (string $term): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    createContactsDefinition($tenant->id);
+    CollectionDefinition::create([
+        'tenant_id' => $tenant->id,
+        'filename' => 'sliders',
+        'key' => 'SLIDERS',
+        'title' => 'Slider',
+        'title_list' => 'Sliders',
+        'has_page' => false,
+        'fields' => [],
+    ]);
+
+    $component = Livewire::test('cms::collection-definitions-list')
+        ->set('search', $term);
+
+    $rows = collect($component->viewData('listConfig')['rows']->items());
+
+    expect($rows)->toHaveCount(1)
+        ->and($rows->first()['key'])->toBe('CONTACTS');
+})->with([
+    'titleList' => 'kontakte',
+    'key' => 'conta',
+    'filename' => 'CONTACTS',
+]);
+
+it('filters definitions by has_page', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    createContactsDefinition($tenant->id);
+    CollectionDefinition::create([
+        'tenant_id' => $tenant->id,
+        'filename' => 'sliders',
+        'key' => 'SLIDERS',
+        'title' => 'Slider',
+        'title_list' => 'Sliders',
+        'has_page' => false,
+        'fields' => [],
+    ]);
+
+    $pageRows = collect(Livewire::test('cms::collection-definitions-list')
+        ->set('listFilters.has_page', 'page')
+        ->viewData('listConfig')['rows']->items());
+
+    $dataRows = collect(Livewire::test('cms::collection-definitions-list')
+        ->set('listFilters.has_page', 'data')
+        ->viewData('listConfig')['rows']->items());
+
+    expect($pageRows->pluck('key')->all())->toBe(['CONTACTS'])
+        ->and($dataRows->pluck('key')->all())->toBe(['SLIDERS']);
+});
+
 it('dispatches modal when listAction is called', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
@@ -71,7 +149,7 @@ it('loads existing collection definition in detail component', function (): void
         ->assertSet('detailData.title', 'Kontakt');
 });
 
-it('loads pageLayout with metadata fields from YAML config', function (): void {
+it('loads pageLayout with metadata fields from the detail config', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
@@ -199,12 +277,12 @@ it('validates filename format', function (): void {
         ->assertHasErrors('detailData.filename');
 });
 
-it('normalizes filename by lowercasing, stripping yml extension, and replacing underscores', function (): void {
+it('normalizes filename by lowercasing', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
     Livewire::test('cms::collection-definition-detail')
-        ->set('detailData.filename', 'FILM.YML')
+        ->set('detailData.filename', 'FILM')
         ->set('detailData.title', 'Film')
         ->set('detailData.titleList', 'Films')
         ->call('store')
