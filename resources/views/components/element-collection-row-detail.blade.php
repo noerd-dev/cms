@@ -80,6 +80,29 @@ new class extends Component
         $this->dispatch('refreshList-element-collection-field');
     }
 
+    public function copy(): void
+    {
+        $sourceRow = Page::find($this->modelId);
+        if (! $sourceRow) {
+            return;
+        }
+
+        Page::where('collection_id', $sourceRow->collection_id)
+            ->where('sort', '>', $sourceRow->sort ?? 0)
+            ->increment('sort');
+
+        $newRow = $sourceRow->replicate(['id']);
+        $newRow->sort = ($sourceRow->sort ?? 0) + 1;
+        $newRow->save();
+
+        $this->modelId = $newRow->id;
+        $this->detailData['sort'] = $newRow->sort;
+
+        $this->dispatch('refreshList-collection-entries-list');
+        $this->dispatch('refreshList-element-collection-field');
+        $this->showSuccessIndicator = true;
+    }
+
     public function delete(): void
     {
         if ($this->modelId) {
@@ -151,10 +174,31 @@ new class extends Component
     </x-slot:header>
 
     <div class="py-4">
+        <div class="flex">
+            <div class="flex ml-auto items-center mb-6 space-x-4">
+                <div class="flex ml-auto items-center space-x-2">
+                    <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
+                    <input
+                        wire:model="detailData.sort"
+                        id="sort"
+                        type="number"
+                        min="0"
+                        step="1"
+                        class="w-16 rounded-md border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                    />
+                </div>
+            </div>
+        </div>
+
         @include('noerd::components.detail.block', array_merge($collectionLayout ?? ['fields' => []], ['model' => $detailData, 'modelId' => $modelId]))
     </div>
 
     <x-slot:footer>
+        @if($modelId)
+            <x-noerd::button variant="secondary" wire:click="copy" wire:confirm="{{ __('Eintrag kopieren?') }}">
+                {{ __('Copy') }}
+            </x-noerd::button>
+        @endif
         <x-noerd::delete-save-bar :showDelete="(bool) $modelId"/>
     </x-slot:footer>
 </x-noerd::page>

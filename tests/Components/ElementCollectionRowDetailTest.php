@@ -84,6 +84,67 @@ it('creates a new row when opened without a modelId and keeps the modal open', f
     expect($this->elementCollection->rows()->count())->toBe($before + 1);
 });
 
+it('renders the sort input', function (): void {
+    Livewire::test('element-collection-row-detail', [
+        'modelId' => $this->row->id,
+        'collectionKey' => $this->elementCollection->collection_key,
+    ])->assertSeeHtml('wire:model="detailData.sort"');
+});
+
+it('persists a changed sort value', function (): void {
+    Livewire::test('element-collection-row-detail', [
+        'modelId' => $this->row->id,
+        'collectionKey' => $this->elementCollection->collection_key,
+    ])
+        ->set('detailData.sort', 5)
+        ->call('store');
+
+    expect($this->row->fresh()->sort)->toBe(5);
+});
+
+it('renders the copy button only for existing rows', function (): void {
+    Livewire::test('element-collection-row-detail', [
+        'modelId' => $this->row->id,
+        'collectionKey' => $this->elementCollection->collection_key,
+    ])->assertSeeHtml('wire:click="copy"');
+
+    Livewire::test('element-collection-row-detail', [
+        'modelId' => null,
+        'collectionKey' => $this->elementCollection->collection_key,
+    ])->assertDontSeeHtml('wire:click="copy"');
+});
+
+it('copies the row, inserts it after the original and switches to the copy', function (): void {
+    $secondRow = Page::create([
+        'tenant_id' => $this->elementCollection->tenant_id,
+        'collection_id' => $this->elementCollection->id,
+        'data' => ['text' => ['de' => 'Zweiter Trigger']],
+        'sort' => ($this->row->sort ?? 0) + 1,
+        'is_active' => true,
+    ]);
+
+    $before = $this->elementCollection->rows()->count();
+
+    $component = Livewire::test('element-collection-row-detail', [
+        'modelId' => $this->row->id,
+        'collectionKey' => $this->elementCollection->collection_key,
+    ])
+        ->call('copy')
+        ->assertDispatched('refreshList-collection-entries-list')
+        ->assertDispatched('refreshList-element-collection-field')
+        ->assertNotDispatched('closeTopModal');
+
+    expect($this->elementCollection->rows()->count())->toBe($before + 1);
+
+    $copyId = $component->get('modelId');
+    $copy = Page::find($copyId);
+
+    expect($copyId)->not->toBe($this->row->id)
+        ->and($copy->data)->toBe($this->row->fresh()->data)
+        ->and($copy->sort)->toBe(($this->row->fresh()->sort ?? 0) + 1)
+        ->and($secondRow->fresh()->sort)->toBe($copy->sort + 1);
+});
+
 it('deletes the row', function (): void {
     $rowId = $this->row->id;
 
