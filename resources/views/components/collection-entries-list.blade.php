@@ -127,10 +127,13 @@ new class extends Component
         // Get or create the parent collection. Pull the display name from the
         // definition repository when available so it matches what the user
         // configured (instead of falling back to ucfirst on the key).
+        // The definition's key is authoritative: URL keys are filenames
+        // (hyphenated), while definition keys may use underscores — uppercasing
+        // the filename would create an empty duplicate row next to the real one.
         $definition = app(CollectionDefinitionRepositoryContract::class)->find($this->collectionKey);
         $parentCollection = Collection::firstOrCreate([
             'tenant_id' => auth()->user()->selected_tenant_id,
-            'collection_key' => mb_strtoupper($this->collectionKey),
+            'collection_key' => $definition?->key ?: mb_strtoupper($this->collectionKey),
         ], [
             'name' => $definition?->titleList ?: ucfirst($this->collectionKey),
             'created_by' => auth()->id(),
