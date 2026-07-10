@@ -44,7 +44,7 @@
                 wire:model="{{ $name }}"
             @endif
             {{ $readonly ? 'disabled' : '' }}
-            class="w-full border rounded-lg block disabled:shadow-none appearance-none text-base sm:text-sm py-2 h-10 leading-[1.375rem] ps-3 pe-3 bg-white text-zinc-700 disabled:text-zinc-500 placeholder-zinc-400 disabled:placeholder-zinc-400/70 shadow-xs border-zinc-200 border-b-zinc-300/80 disabled:border-b-zinc-200 focus:outline-none focus:ring-2 focus:ring-brand-border focus:ring-offset-2"
+            class="w-full border rounded-lg block disabled:shadow-none appearance-none text-base sm:text-sm py-1 h-8 leading-[1.375rem] ps-3 pe-3 bg-white text-zinc-700 disabled:text-zinc-500 placeholder-zinc-400 disabled:placeholder-zinc-400/70 shadow-xs border-zinc-200 border-b-zinc-300/80 disabled:border-b-zinc-200 focus:outline-none focus:ring-2 focus:ring-brand-border focus:ring-offset-2"
             id="{{ $name }}"
         >
             <option value="">{{ __('Please select...') }}</option>
@@ -56,7 +56,7 @@
         <x-noerd::button
             x-data="{ collectionKey: $wire.entangle('{{ $name }}') }"
             @click="$modal('cms::collection-entries-list', {collectionKey: collectionKey, context: '{{ $name }}'})"
-            class="h-9rounded !mt-0 !ml-1"
+            class="h-8 rounded !mt-0 !ml-1"
             type="button"
         >
             <x-noerd::icons.magnifying-glass></x-noerd::icons.magnifying-glass>

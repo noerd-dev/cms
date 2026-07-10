@@ -8,7 +8,7 @@ use Livewire\Component;
 use Noerd\Cms\Mail\FormConfirmation;
 use Noerd\Cms\Models\FormRequest;
 use Noerd\Cms\Models\FormType;
-use Noerd\Marketing\Services\Communicator;
+use Noerd\Communication\Services\Communicator;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
