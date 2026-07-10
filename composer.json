@@ -7,7 +7,7 @@
     "require": {
         "noerd/noerd": "^0.6",
         "noerd/media":  "^0.1",
-        "noerd/marketing": "^0.1",
+        "noerd/communication": "^0.1",
         "symfony/yaml": "^7.1"
     },
     "autoload": {
