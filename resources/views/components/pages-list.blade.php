@@ -139,6 +139,28 @@ new class extends Component {
             $this->listAction(request()->pageId);
         }
 
+        $collectionParam = (string) request()->collection;
+        if ($collectionParam !== '') {
+            $collection = is_numeric($collectionParam)
+                ? Collection::query()->find((int) $collectionParam)
+                : Collection::query()->where('collection_key', mb_strtoupper($collectionParam))->first();
+
+            if ($collection !== null) {
+                Noerd::modal('cms::collection-entries-list', [
+                    'collectionKey' => $collection->id,
+                    'elementCollection' => (bool) $collection->is_element_collection,
+                ]);
+
+                $entryId = (int) request()->entry;
+                if ($entryId && $collection->is_element_collection && Page::query()->where('collection_id', $collection->id)->whereKey($entryId)->exists()) {
+                    Noerd::modal('cms::element-collection-row-detail', [
+                        'modelId' => $entryId,
+                        'collectionKey' => strtolower($collection->collection_key),
+                    ]);
+                }
+            }
+        }
+
         if (request()->create) {
             $this->listAction();
         }

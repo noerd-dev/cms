@@ -2,6 +2,7 @@
 
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\CollectionHelper;
@@ -20,6 +21,13 @@ new class extends Component
     use NoerdList;
 
     public string|int|null $collectionKey = null;
+
+    /**
+     * Numeric id of the backing collection row, mirrored to the URL so the
+     * open overlay can be deep-linked (?collection=8). Kept in sync in with().
+     */
+    #[Url(as: 'collection', keep: false, except: '')]
+    public string|int|null $collectionId = null;
 
     public ?array $collectionLayout = null;
 
@@ -73,7 +81,7 @@ new class extends Component
     public function mount(): void
     {
         if (! $this->collectionKey) {
-            $this->collectionKey = request()->get('key');
+            $this->collectionKey = $this->collectionId ?? request()->get('key');
         }
 
         // Resolve collection key (supports both string and ID)
@@ -139,6 +147,8 @@ new class extends Component
             'name' => $definition?->titleList ?: ucfirst($this->collectionKey),
             'created_by' => auth()->id(),
         ]);
+
+        $this->collectionId = $parentCollection->id;
 
         // Get collection entries (pages)
         $query = Page::where('tenant_id', auth()->user()->selected_tenant_id)

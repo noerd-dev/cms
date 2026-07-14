@@ -36,7 +36,7 @@ it('loads the row data on first mount', function (): void {
         ->assertSee('Triggers Demo');
 });
 
-it('does not bind modelId to a URL parameter (avoids nested-modal clobbering)', function (): void {
+it('binds modelId to a dedicated entry URL parameter (avoids nested-modal clobbering)', function (): void {
     $instance = Livewire::test('element-collection-row-detail', [
         'modelId' => $this->row->id,
         'collectionKey' => $this->elementCollection->collection_key,
@@ -44,7 +44,17 @@ it('does not bind modelId to a URL parameter (avoids nested-modal clobbering)', 
 
     $urlAttributes = (new ReflectionProperty($instance, 'modelId'))->getAttributes(Url::class);
 
-    expect($urlAttributes)->toBeEmpty();
+    expect($urlAttributes)->toHaveCount(1)
+        ->and($urlAttributes[0]->newInstance()->as)->toBe('entry');
+});
+
+it('initializes the row from the entry query parameter', function (): void {
+    Livewire::withQueryParams(['entry' => $this->row->id])
+        ->test('element-collection-row-detail', [
+            'collectionKey' => $this->elementCollection->collection_key,
+        ])
+        ->assertSet('modelId', $this->row->id)
+        ->assertSet('detailData.text.de', 'Erster Trigger');
 });
 
 it('persists changes to the row and keeps the modal open', function (): void {

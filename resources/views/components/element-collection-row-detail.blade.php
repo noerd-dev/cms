@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\CmsLanguage;
@@ -14,10 +15,12 @@ new class extends Component
     use NoerdDetail;
 
     /**
-     * Override the trait's URL-bound modelId. This editor is opened as a modal
-     * nested inside the entry editor (which already binds ?pageId), so a shared
-     * URL param would clobber the id on first open. No #[Url] here.
+     * Override the trait's URL-bound modelId with a dedicated alias. This editor
+     * is opened as a modal nested inside the entry editor (which already binds
+     * ?pageId), so a shared URL param would clobber the id on first open. The
+     * dedicated ?entry param deep-links the open row without that conflict.
      */
+    #[Url(as: 'entry', keep: false, except: '')]
     public $modelId = null;
 
     public ?string $collectionKey = null;
