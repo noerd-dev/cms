@@ -83,6 +83,38 @@ it('does not resolve a numeric id belonging to another tenant', function (): voi
         ->assertSee(__('Please select a collection from the navigation.'));
 });
 
+it('initializes the collection from the id in the collection query parameter', function (): void {
+    $collection = entriesListDefinition($this->tenant->id, 'standort', [
+        ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'text', 'colspan' => 6],
+    ]);
+
+    Livewire::withQueryParams(['collection' => $collection->id])
+        ->test('cms::collection-entries-list')
+        ->assertSet('collectionKey', 'standort')
+        ->assertSet('collectionId', $collection->id)
+        ->assertStatus(200);
+});
+
+it('mirrors the collection row id into collectionId when opened with an element key', function (): void {
+    $owner = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Demo']]);
+
+    $elementCollection = app(ElementCollectionService::class)->importItems(
+        ElementCollectionService::OWNER_PAGE,
+        $owner->id,
+        $owner->tenant_id,
+        'triggers_items',
+        [['text' => ['de' => 'Zeile']]],
+        [['name' => 'text', 'label' => 'Text', 'type' => 'translatableTextarea', 'colspan' => 12]],
+        'Triggers Demo',
+    );
+
+    Livewire::test('cms::collection-entries-list', [
+        'collectionKey' => $elementCollection->collection_key,
+        'elementCollection' => true,
+    ])
+        ->assertSet('collectionId', $elementCollection->id);
+});
+
 it('handles null and non-existent collection keys gracefully', function (mixed $input): void {
     Livewire::test('cms::collection-entries-list', ['collectionKey' => $input])
         ->assertSet('collectionKey', null)
