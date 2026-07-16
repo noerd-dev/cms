@@ -8,7 +8,7 @@
         "noerd/noerd": "^0.6",
         "noerd/media":  "^0.1",
         "noerd/communication": "^0.1",
-        "symfony/yaml": "^7.1"
+        "symfony/yaml": "^7.1 || ^8.0"
     },
     "autoload": {
         "psr-4": {
