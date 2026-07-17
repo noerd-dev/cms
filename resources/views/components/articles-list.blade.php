@@ -49,12 +49,8 @@ new class extends Component
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage');
 
-        $rows = Article::with('author')
-            ->when($this->search, function ($query): void {
-                $query->where(function ($query): void {
-                    $query->where('title', 'like', '%' . $this->search . '%');
-                });
-            })
+        $rows = $this->listQuery(Article::class)
+            ->with('author')
             ->paginate($this->perPage);
 
         foreach ($rows->items() as $row) {
