@@ -1,4 +1,5 @@
 {
+    ":email is not a valid email address.": ":email ist keine gültige E-Mail-Adresse.",
     "A file with this name already exists.": "Eine Datei mit diesem Namen existiert bereits.",
     "Active": "Aktiv",
     "Active?": "Aktiv?",
@@ -52,6 +53,7 @@
     "Form Confirmation": "Formularbestätigung",
     "Form Request": "Formularanfrage",
     "Form Requests": "Formularanfragen",
+    "Form Recipients": "Formular-Empfänger",
     "Form Type": "Formulartyp",
     "Form Types": "Formulartypen",
     "Form fields are managed via YML files. Email texts can be edited directly here.": "Formularfelder werden über YML-Dateien verwaltet. E-Mail-Texte können hier direkt bearbeitet werden.",
@@ -111,6 +113,7 @@
     "Projects": "Projekte",
     "Publication Date": "Veröffentlichungsdatum",
     "Really delete element?": "Element wirklich löschen?",
+    "Recipients of all form submissions. Separate multiple email addresses with commas.": "Empfänger aller Formular-Nachrichten. Mehrere E-Mail-Adressen durch Komma trennen.",
     "Remove collection from page?": "Collection von Seite entfernen?",
     "Rename fields in entries?": "Felder in Einträgen umbenennen?",
     "Required to use Analytics": "Notwendig, um Analytics zu verwenden",

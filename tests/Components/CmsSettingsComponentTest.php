@@ -71,3 +71,49 @@ it('loads and displays page options with localized names and saves selection', f
     expect($setting)->not->toBeNull();
     expect($setting->homepage_page_id)->toBe($page2->id);
 });
+
+it('saves comma separated form recipients and rejects invalid email addresses', function (): void {
+    $tenant = Tenant::factory()->create();
+
+    $cmsApp = TenantApp::create([
+        'name' => 'CMS',
+        'title' => 'CMS',
+        'is_active' => true,
+        'icon' => 'cms::icons.app',
+        'route' => 'cms.index',
+    ]);
+    $tenant->tenantApps()->attach($cmsApp->id);
+
+    $profile = Profile::create([
+        'key' => 'ADMIN',
+        'name' => 'Administrator',
+        'tenant_id' => $tenant->id,
+    ]);
+
+    $user = NoerdUser::factory()->create();
+    $user->tenants()->attach($tenant->id, ['profile_id' => $profile->id]);
+    TenantHelper::setSelectedTenantId($tenant->id);
+
+    $component = Livewire::actingAs($user)
+        ->test('cms::settings-detail');
+
+    $component
+        ->set('detailData.form_recipients', 'one@example.com, two@example.com')
+        ->call('store')
+        ->assertHasNoErrors();
+
+    expect(CmsSetting::formRecipientsForTenant($tenant->id))
+        ->toBe(['one@example.com', 'two@example.com']);
+
+    $component
+        ->set('detailData.form_recipients', 'one@example.com, not-an-email')
+        ->call('store')
+        ->assertHasErrors('detailData.form_recipients');
+
+    $component
+        ->set('detailData.form_recipients', '')
+        ->call('store')
+        ->assertHasNoErrors();
+
+    expect(CmsSetting::formRecipientsForTenant($tenant->id))->toBe([]);
+});
