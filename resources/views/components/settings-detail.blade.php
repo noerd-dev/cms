@@ -11,6 +11,7 @@ new class extends Component {
         'homepage_page_id' => null,
         'google_analytics_id' => null,
         'show_cookie_banner' => false,
+        'form_recipients' => null,
     ];
 
     public function mount(): void
@@ -20,6 +21,7 @@ new class extends Component {
         $this->detailData['homepage_page_id'] = $settings->homepage_page_id;
         $this->detailData['google_analytics_id'] = $settings->google_analytics_id;
         $this->detailData['show_cookie_banner'] = $settings->show_cookie_banner ?? false;
+        $this->detailData['form_recipients'] = $settings->form_recipients;
     }
 
     public function store(): void
@@ -28,6 +30,13 @@ new class extends Component {
             'detailData.homepage_page_id' => ['nullable', 'exists:pages,id'],
             'detailData.google_analytics_id' => ['nullable', 'string', 'max:50'],
             'detailData.show_cookie_banner' => ['boolean'],
+            'detailData.form_recipients' => ['nullable', 'string', 'max:255', function (string $attribute, mixed $value, \Closure $fail): void {
+                foreach (array_filter(array_map('trim', explode(',', (string) $value))) as $email) {
+                    if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        $fail(__(':email is not a valid email address.', ['email' => $email]));
+                    }
+                }
+            }],
         ]);
 
         $tenantId = auth()->user()->selected_tenant_id;
@@ -40,6 +49,7 @@ new class extends Component {
                 'homepage_page_id' => $this->detailData['homepage_page_id'],
                 'google_analytics_id' => $this->detailData['google_analytics_id'],
                 'show_cookie_banner' => $this->detailData['show_cookie_banner'],
+                'form_recipients' => $this->detailData['form_recipients'] ?: null,
             ]
         );
 
@@ -91,6 +101,14 @@ new class extends Component {
                 Page::where('collection_id', null)->orderBy('name')->get()->map(fn($p) => ['value' => $p->id, 'label' => $this->formatName($p->name)])->toArray()
             )"
         />
+    </div>
+
+    <div class="pt-4">
+        <x-noerd::forms.input
+            name="detailData.form_recipients"
+            label="{{ __('Form Recipients') }}"
+        />
+        <p class="text-sm text-gray-500 mt-1">{{ __('Recipients of all form submissions. Separate multiple email addresses with commas.') }}</p>
     </div>
 
     <div class="pt-4">

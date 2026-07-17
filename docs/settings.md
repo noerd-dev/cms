@@ -21,6 +21,7 @@ Navigate to `/cms/settings` to configure:
 | Setting | Description |
 |---------|-------------|
 | Homepage | Select which CMS page serves as the website homepage |
+| Form Recipients | Email addresses receiving all form submissions (comma-separated for multiple recipients) |
 | Google Analytics ID | Google Analytics tracking ID (e.g., `UA-XXXXXXXX-X` or `G-XXXXXXXXXX`) |
 | Cookie Banner | Toggle the cookie consent banner on the website |
 
@@ -33,6 +34,7 @@ The `CmsSetting` model (`cms_settings` table):
 | `tenant_id` | integer | Tenant scope |
 | `homepage_page_id` | integer | Reference to the homepage Page record |
 | `google_analytics_id` | string | Analytics tracking ID |
+| `form_recipients` | string | Comma-separated email addresses receiving form submissions (`CmsSetting::formRecipientsForTenant()` returns the parsed list) |
 | `show_cookie_banner` | boolean | Whether to show the cookie banner |
 
 ## Configuration File
