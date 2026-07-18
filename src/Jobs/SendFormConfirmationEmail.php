@@ -5,6 +5,7 @@ namespace Noerd\Cms\Jobs;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Noerd\Cms\Mail\FormConfirmation;
+use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\FormRequest;
 use Noerd\Communication\Services\Communicator;
 
@@ -69,22 +70,28 @@ class SendFormConfirmationEmail implements ShouldQueue
             ]);
         }
 
-        // Send second email to notification address if configured
-        $notificationEmail = $formType->notification_email;
-        if ($notificationEmail) {
+        // Notify the recipients maintained in the CMS settings, falling back to
+        // the form type's own notification address when none are configured.
+        $notificationRecipients = CmsSetting::formRecipientsForTenant((int) $this->formRequest->tenant_id);
+
+        if ($notificationRecipients === [] && $formType->notification_email) {
+            $notificationRecipients = [$formType->notification_email];
+        }
+
+        if ($notificationRecipients !== []) {
             $communicator->send(
                 mailable: new FormConfirmation(
                     $this->formRequest,
                     $emailSubject,
                     $emailBody,
                 ),
-                to: $notificationEmail,
+                to: $notificationRecipients,
             );
 
             logger()->info('Form confirmation email sent to admin', [
                 'form_request_id' => $this->formRequest->id,
                 'form_type_id' => $formType->id,
-                'notification_email' => $notificationEmail,
+                'notification_recipients' => $notificationRecipients,
             ]);
         }
     }
