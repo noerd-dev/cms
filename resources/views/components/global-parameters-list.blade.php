@@ -5,13 +5,16 @@ use Livewire\Component;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Traits\LanguageFilterTrait;
-use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
 {
     use LanguageFilterTrait;
     use NoerdList;
+
+    public $listModel = GlobalParameter::class;
+
+    public $detailComponent = 'cms::global-parameter-detail';
 
     #[Computed]
     public function tableFilters(): array
@@ -32,14 +35,9 @@ new class extends Component
         }
     }
 
-    public function listAction(mixed $modelId = null, array $relations = []): void
+    public function listData(): array
     {
-        Noerd::modal('cms::global-parameter-detail', ['modelId' => $modelId, 'relations' => $relations]);
-    }
-
-    public function with(): array
-    {
-        $rows = $this->listQuery(GlobalParameter::class)->paginate($this->perPage);
+        $rows = $this->listQuery($this->listModel)->paginate($this->perPage);
 
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage')
@@ -60,9 +58,7 @@ new class extends Component
             }
         }
 
-        return [
-            'listConfig' => $this->buildList($rows),
-        ];
+        return $this->buildList($rows);
     }
 
     public function rendering()

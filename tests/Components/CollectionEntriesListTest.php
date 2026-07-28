@@ -257,8 +257,9 @@ it('shows the linked page name for pageRelation fields and marks the column as b
     $component = Livewire::test('cms::collection-entries-list', ['collectionKey' => 'beratung'])
         ->assertSee('Kontaktseite');
 
-    $row = $component->viewData('listConfig')['rows']->first();
-    $columns = collect($component->viewData('listConfig')['listSettings']['columns']);
+    $listConfig = $component->instance()->listData();
+    $row = $listConfig['rows']->first();
+    $columns = collect($listConfig['listSettings']['columns']);
 
     expect($row['page_id'])->toBe('Kontaktseite')
         ->and($columns->firstWhere('field', 'page_id')['type'] ?? null)->toBe('badge')
@@ -283,7 +284,7 @@ it('renders an empty cell when the linked page no longer exists', function (): v
         ->assertHasNoErrors()
         ->assertDontSee('999999');
 
-    expect($component->viewData('listConfig')['rows']->first()['page_id'])->toBe('');
+    expect($component->instance()->listData()['rows']->first()['page_id'])->toBe('');
 });
 
 it('lists element collection rows and hides the manage-collection action', function (): void {

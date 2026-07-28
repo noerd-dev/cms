@@ -20,6 +20,8 @@ new class extends Component
     use LanguageFilterTrait;
     use NoerdList;
 
+    public $listModel = Page::class;
+
     public string|int|null $collectionKey = null;
 
     /**
@@ -120,17 +122,15 @@ new class extends Component
         Noerd::modal('cms::page-detail', ['modelId' => $modelId, 'collectionKey' => $this->collectionKey, 'relations' => $relations]);
     }
 
-    public function with(): array
+    public function listData(): array
     {
         if (! $this->collectionKey) {
-            return [
-                'listConfig' => $this->buildList(collect([]), [
-                    'title' => 'Collections',
-                    'actions' => [['label' => 'Neuer Eintrag', 'action' => 'listAction']],
-                    'disableSearch' => false,
-                    'columns' => [],
-                ]),
-            ];
+            return $this->buildList(collect([]), [
+                'title' => 'Collections',
+                'actions' => [['label' => 'Neuer Eintrag', 'action' => 'listAction']],
+                'disableSearch' => false,
+                'columns' => [],
+            ]);
         }
 
         // Get or create the parent collection. Pull the display name from the
@@ -325,14 +325,12 @@ new class extends Component
         $columns[] = ['field' => 'sort', 'label' => 'Sortierung', 'width' => 0.5];
         $columns[] = ['field' => 'updated_at', 'label' => __('Last Modified')];
 
-        return [
-            'listConfig' => $this->buildList($rows, [
-                'title' => $collectionTitle,
-                'actions' => $actions,
-                'disableSearch' => false,
-                'columns' => $columns,
-            ]),
-        ];
+        return $this->buildList($rows, [
+            'title' => $collectionTitle,
+            'actions' => $actions,
+            'disableSearch' => false,
+            'columns' => $columns,
+        ]);
     }
 
     public function rendering(): void

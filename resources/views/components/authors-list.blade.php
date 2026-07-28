@@ -2,26 +2,15 @@
 
 use Livewire\Component;
 use Noerd\Cms\Models\Author;
-use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
 {
     use NoerdList;
 
-    public function listAction(mixed $modelId = null, array $relations = []): void
-    {
-        Noerd::modal('cms::author-detail', ['modelId' => $modelId, 'relations' => $relations]);
-    }
+    public $listModel = Author::class;
 
-    public function with(): array
-    {
-        $rows = $this->listQuery(Author::class)->paginate($this->perPage);
-
-        return [
-            'listConfig' => $this->buildList($rows),
-        ];
-    }
+    public $detailComponent = 'cms::author-detail';
 
     public function rendering()
     {

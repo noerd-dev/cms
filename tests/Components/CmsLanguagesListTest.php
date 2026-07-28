@@ -33,7 +33,7 @@ it('lists languages for tenant in table with sorting and search', function () us
 
     Livewire::test($testSettings['listName'])
         ->set('search', 'Eng')
-        ->call('with')
+        ->call('listData')
         ->assertSet('search', 'Eng');
 });
 

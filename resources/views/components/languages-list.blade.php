@@ -2,25 +2,14 @@
 
 use Livewire\Component;
 use Noerd\Cms\Models\CmsLanguage;
-use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 
 new class extends Component {
     use NoerdList;
 
-    public function listAction(mixed $modelId = null, array $relations = []): void
-    {
-        Noerd::modal('cms::language-detail', ['modelId' => $modelId, 'relations' => $relations]);
-    }
+    public $listModel = CmsLanguage::class;
 
-    public function with(): array
-    {
-        $rows = $this->listQuery(CmsLanguage::class)->paginate($this->perPage);
-
-        return [
-            'listConfig' => $this->buildList($rows),
-        ];
-    }
+    public $detailComponent = 'cms::language-detail';
 
     public function rendering()
     {

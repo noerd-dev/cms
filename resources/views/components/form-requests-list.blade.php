@@ -1,26 +1,15 @@
 <?php
 
 use Livewire\Component;
-use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 use Noerd\Cms\Models\FormRequest;
 
 new class extends Component {
     use NoerdList;
 
-    public function listAction(mixed $modelId = null, array $relations = []): void
-    {
-        Noerd::modal('cms::form-request-detail', ['modelId' => $modelId, 'relations' => $relations]);
-    }
+    public $listModel = FormRequest::class;
 
-    public function with(): array
-    {
-        $rows = $this->listQuery(FormRequest::class)->paginate($this->perPage);
-
-        return [
-            'listConfig' => $this->buildList($rows),
-        ];
-    }
+    public $detailComponent = 'cms::form-request-detail';
 
     public function rendering()
     {

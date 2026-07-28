@@ -14,6 +14,10 @@ new class extends Component
     use LanguageFilterTrait;
     use NoerdList;
 
+    public $listModel = Navigation::class;
+
+    public $detailComponent = 'cms::navigation-detail';
+
     #[Computed]
     public function tableFilters(): array
     {
@@ -52,11 +56,6 @@ new class extends Component
         }
     }
 
-    public function listAction(mixed $modelId = null, array $relations = []): void
-    {
-        Noerd::modal('cms::navigation-detail', ['modelId' => $modelId, 'relations' => $relations]);
-    }
-
     public function createSubNav(mixed $parentId): void
     {
         $parent = Navigation::find($parentId);
@@ -67,7 +66,7 @@ new class extends Component
         Noerd::modal('cms::navigation-detail', ['modelId' => null, 'relations' => ['parent_id' => $parentId]]);
     }
 
-    public function with(): array
+    public function listData(): array
     {
         $allItems = Navigation::query()
             ->when($this->listFilters['navigation_key'] ?? null, function ($query, $key): void {
@@ -127,9 +126,7 @@ new class extends Component
             }
         }
 
-        return [
-            'listConfig' => $this->buildList($rows),
-        ];
+        return $this->buildList($rows);
     }
 
     public function rendering()
