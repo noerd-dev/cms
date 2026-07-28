@@ -17,7 +17,7 @@ new class extends Component {
     #[Url(as: 'navigationId', keep: false, except: '')]
     public $modelId = null;
 
-    public const DETAIL_CLASS = Navigation::class;
+    public $detailModel = Navigation::class;
 
     public array $relations = [];
 

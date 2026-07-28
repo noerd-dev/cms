@@ -12,19 +12,7 @@ new class extends Component
     #[Url(as: 'authorId', keep: false, except: '')]
     public $modelId = null;
 
-    public const DETAIL_CLASS = Author::class;
-
-    public function mount(): void
-    {
-        $this->initDetail();
-
-        $author = new Author;
-        if ($this->modelId) {
-            $author = Author::find($this->modelId) ?? new Author;
-        }
-
-        $this->detailData = $author->toArray();
-    }
+    public $detailModel = Author::class;
 
     public function store(): void
     {
@@ -41,13 +29,6 @@ new class extends Component
         );
 
         $this->storeProcess($author);
-    }
-
-    public function delete(): void
-    {
-        $author = Author::find($this->modelId);
-        $author->delete();
-        $this->closeModalProcess($this->getListComponent());
     }
 } ?>
 

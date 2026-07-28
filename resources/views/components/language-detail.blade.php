@@ -12,7 +12,7 @@ new class extends Component {
     #[Url(as: 'cmsLanguageId', keep: false, except: '')]
     public $modelId = null;
 
-    public const DETAIL_CLASS = CmsLanguage::class;
+    public $detailModel = CmsLanguage::class;
 
     public function mount(): void
     {

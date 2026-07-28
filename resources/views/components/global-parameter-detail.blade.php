@@ -15,7 +15,7 @@ new class extends Component {
     #[Url(as: 'globalParameterId', keep: false, except: '')]
     public $modelId = null;
 
-    public const DETAIL_CLASS = GlobalParameter::class;
+    public $detailModel = GlobalParameter::class;
 
     public function mount(): void
     {
@@ -83,13 +83,6 @@ new class extends Component {
 
         $this->dispatch('storeElements');
         $this->storeProcess($globalParameter);
-    }
-
-    public function delete(): void
-    {
-        $globalParameter = GlobalParameter::find($this->modelId);
-        $globalParameter->delete();
-        $this->closeModalProcess($this->getListComponent());
     }
 
     #[On('languageChanged')]
