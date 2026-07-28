@@ -5,13 +5,16 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Models\Article;
 use Noerd\Cms\Traits\LanguageFilterTrait;
-use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
 {
     use LanguageFilterTrait;
     use NoerdList;
+
+    public $listModel = Article::class;
+
+    public $detailComponent = 'cms::article-detail';
 
     public function mount(): void
     {
@@ -39,17 +42,12 @@ new class extends Component
         }
     }
 
-    public function listAction(mixed $modelId = null, array $relations = []): void
-    {
-        Noerd::modal('cms::article-detail', ['modelId' => $modelId, 'relations' => $relations]);
-    }
-
-    public function with(): array
+    public function listData(): array
     {
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage');
 
-        $rows = $this->listQuery(Article::class)
+        $rows = $this->listQuery($this->listModel)
             ->with('author')
             ->paginate($this->perPage);
 
@@ -60,9 +58,7 @@ new class extends Component
             $row->author_name = $row->author?->name ?? '';
         }
 
-        return [
-            'listConfig' => $this->buildList($rows),
-        ];
+        return $this->buildList($rows);
     }
 
     public function rendering()

@@ -50,11 +50,12 @@ it('can filter by navigation_key', function (): void {
         'sort_order' => 0,
     ]);
 
+    session(['listFilters' => ['navigation_key' => 'MAIN']]);
+
     $component = Livewire::test('cms::navigation-list')
-        ->set('listFilters.navigation_key', 'MAIN')
         ->assertHasNoErrors();
 
-    $listConfig = $component->viewData('listConfig');
+    $listConfig = $component->instance()->listData();
     $rows = $listConfig['rows'];
 
     expect($rows)->toHaveCount(1);
@@ -75,11 +76,12 @@ it('shows all entries when navigation_key filter is empty', function (): void {
         'sort_order' => 0,
     ]);
 
+    session(['listFilters' => ['navigation_key' => '']]);
+
     $component = Livewire::test('cms::navigation-list')
-        ->set('listFilters.navigation_key', '')
         ->assertHasNoErrors();
 
-    $listConfig = $component->viewData('listConfig');
+    $listConfig = $component->instance()->listData();
     $rows = $listConfig['rows'];
 
     expect($rows)->toHaveCount(2);
@@ -116,7 +118,7 @@ it('displays children directly after their parent', function (): void {
     $component = Livewire::test('cms::navigation-list')
         ->assertHasNoErrors();
 
-    $listConfig = $component->viewData('listConfig');
+    $listConfig = $component->instance()->listData();
     $rows = $listConfig['rows'];
     $ids = $rows->pluck('id')->toArray();
 
@@ -142,7 +144,7 @@ it('prefixes child navigation items with arrow indicator', function (): void {
     $component = Livewire::test('cms::navigation-list')
         ->assertHasNoErrors();
 
-    $listConfig = $component->viewData('listConfig');
+    $listConfig = $component->instance()->listData();
     $rows = $listConfig['rows'];
 
     expect($rows[0]->name)->toBe('Über uns');

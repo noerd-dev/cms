@@ -17,6 +17,10 @@ new class extends Component {
     use LanguageFilterTrait;
     use NoerdList;
 
+    public $listModel = Page::class;
+
+    public $detailComponent = 'cms::page-detail';
+
     public function mount(): void
     {
         $this->listId = Str::random();
@@ -57,12 +61,7 @@ new class extends Component {
         }
     }
 
-    public function listAction(mixed $modelId = null, array $relations = []): void
-    {
-        Noerd::modal('cms::page-detail', ['modelId' => $modelId, 'relations' => $relations]);
-    }
-
-    public function with(): array
+    public function listData(): array
     {
         // Get all collections with hasPage: false to exclude their pages
         $collectionsWithoutPages = Collection::withoutGlobalScope(TenantScope::class)
@@ -121,9 +120,7 @@ new class extends Component {
             $row->collection_name = $row->collection?->name ?? '';
         }
 
-        return [
-            'listConfig' => $this->buildList($rows),
-        ];
+        return $this->buildList($rows);
     }
 
     public function rendering()
