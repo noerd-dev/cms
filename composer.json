@@ -5,7 +5,7 @@
     "version": "v0.1.1",
     "license": "proprietary",
     "require": {
-        "noerd/noerd": "^0.6",
+        "noerd/noerd": "^0.6 || ^0.7",
         "noerd/media":  "^0.1",
         "noerd/communication": "^0.1",
         "symfony/yaml": "^7.1 || ^8.0"
