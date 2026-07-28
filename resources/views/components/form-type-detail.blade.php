@@ -112,7 +112,7 @@ new class () extends Component {
 } ?>
 
 <div>
-    <x-noerd::page :disableModal="$disableModal">
+    <x-noerd::page>
         <x-slot:header>
             <x-noerd::modal-title>{{ __('Formulartyp') }}</x-noerd::modal-title>
         </x-slot:header>
