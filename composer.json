@@ -5,9 +5,9 @@
     "version": "v1.1.0",
     "license": "proprietary",
     "require": {
-        "noerd/noerd": "^0.7.2",
-        "noerd/media":  "^0.1",
-        "noerd/communication": "^0.1 || ^0.2",
+        "noerd/noerd": "^0.8",
+        "noerd/media":  "^0.1 || ^0.2",
+        "noerd/communication": "^0.1 || ^0.2 || ^0.3",
         "symfony/yaml": "^7.1 || ^8.0"
     },
     "autoload": {

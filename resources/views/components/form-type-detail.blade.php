@@ -14,7 +14,7 @@ new class () extends Component {
     #[Url(as: 'formTypeId', keep: false, except: '')]
     public $modelId = null;
 
-    public const DETAIL_CLASS = FormType::class;
+    public $detailModel = FormType::class;
 
     public ?array $ymlConfig = null;
 

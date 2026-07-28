@@ -17,7 +17,7 @@ new class extends Component {
     #[Url(as: 'formRequestId', keep: false, except: '')]
     public $modelId = null;
 
-    public const DETAIL_CLASS = FormRequest::class;
+    public $detailModel = FormRequest::class;
 
     public function mount(): void
     {
@@ -136,15 +136,6 @@ new class extends Component {
 
             $this->js("alert('" . __('Fehler beim Senden der Benachrichtigung.') . "')");
         }
-    }
-
-    public function delete(): void
-    {
-        $fr = FormRequest::find($this->modelId);
-        if ($fr) {
-            $fr->delete();
-        }
-        $this->closeModalProcess($this->getListComponent());
     }
 
     #[On('languageChanged')]

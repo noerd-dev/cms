@@ -27,7 +27,7 @@ new class extends Component
     #[Url(as: 'pageId', keep: false, except: '')]
     public $modelId = null;
 
-    public const DETAIL_CLASS = Page::class;
+    public $detailModel = Page::class;
 
     public const DETAIL_COMPONENT = 'cms::page-detail';
 

@@ -15,7 +15,7 @@ new class extends Component
     #[Url(as: 'articleId', keep: false, except: '')]
     public $modelId = null;
 
-    public const DETAIL_CLASS = Article::class;
+    public $detailModel = Article::class;
 
     public const DETAIL_COMPONENT = 'cms::article-detail';
 
@@ -159,13 +159,6 @@ new class extends Component
         );
 
         $this->storeProcess($article);
-    }
-
-    public function delete(): void
-    {
-        $article = Article::find($this->modelId);
-        $article->delete();
-        $this->closeModalProcess($this->getListComponent());
     }
 } ?>
 
