@@ -57,7 +57,7 @@ it('excludes element collections from the collection-select field options', func
 
     $html = view('cms::components.forms.input-collection-select', [
         'field' => ['name' => 'rel', 'label' => 'Relation', 'type' => 'collection-select'],
-        'errors' => new ViewErrorBag,
+        'errors' => new ViewErrorBag(),
     ])->render();
 
     expect($html)->toContain('Sichtbare Collection')

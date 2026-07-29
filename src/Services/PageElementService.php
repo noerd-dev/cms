@@ -30,38 +30,6 @@ class PageElementService
     }
 
     /**
-     * Merge the rows of any element collections owned by this entry back into its
-     * data under their `owner_field` key, so frontend templates that used to read an
-     * inline repeater (e.g. `triggers_items`) keep working unchanged.
-     *
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
-    private function injectElementCollections(Model $page, array $data): array
-    {
-        if (! $page->getKey()) {
-            return $data;
-        }
-
-        Collection::query()
-            ->where('page_id', $page->getKey())
-            ->where('is_element_collection', true)
-            ->with('rows')
-            ->get()
-            ->each(function (Collection $elementCollection) use (&$data): void {
-                if (! $elementCollection->owner_field) {
-                    return;
-                }
-
-                $data[$elementCollection->owner_field] = $elementCollection->rows
-                    ->map(fn ($row) => is_array($row->data) ? $row->data : [])
-                    ->all();
-            });
-
-        return $data;
-    }
-
-    /**
      * Resolve all project Pages whose `services_slugs` contains the given
      * service Page's slug. Returns an array of normalized project tiles
      * ready for rendering on a service detail page.
@@ -90,7 +58,7 @@ class PageElementService
             $slugs = $data['services_slugs'] ?? [];
 
             $matchedSlugs = array_map(
-                static fn ($entry) => is_array($entry) ? ($entry['slug'] ?? '') : (string) $entry,
+                static fn($entry) => is_array($entry) ? ($entry['slug'] ?? '') : (string) $entry,
                 is_array($slugs) ? $slugs : [],
             );
 
@@ -111,6 +79,38 @@ class PageElementService
         }
 
         return $tiles;
+    }
+
+    /**
+     * Merge the rows of any element collections owned by this entry back into its
+     * data under their `owner_field` key, so frontend templates that used to read an
+     * inline repeater (e.g. `triggers_items`) keep working unchanged.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function injectElementCollections(Model $page, array $data): array
+    {
+        if (! $page->getKey()) {
+            return $data;
+        }
+
+        Collection::query()
+            ->where('page_id', $page->getKey())
+            ->where('is_element_collection', true)
+            ->with('rows')
+            ->get()
+            ->each(function (Collection $elementCollection) use (&$data): void {
+                if (! $elementCollection->owner_field) {
+                    return;
+                }
+
+                $data[$elementCollection->owner_field] = $elementCollection->rows
+                    ->map(fn($row) => is_array($row->data) ? $row->data : [])
+                    ->all();
+            });
+
+        return $data;
     }
 
     /**

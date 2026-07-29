@@ -44,7 +44,7 @@ trait HandlesPageElements
                     continue;
                 }
                 $rawData[$elementCollection->owner_field] = $elementCollection->rows
-                    ->map(fn ($row) => is_array($row->data) ? $row->data : [])
+                    ->map(fn($row) => is_array($row->data) ? $row->data : [])
                     ->all();
             }
 
@@ -68,7 +68,7 @@ trait HandlesPageElements
         $bladeFiles = [];
 
         if (! empty($customElementsPath) && is_dir(base_path($customElementsPath))) {
-            $customFiles = glob(base_path($customElementsPath.'/*.blade.php')) ?: [];
+            $customFiles = glob(base_path($customElementsPath . '/*.blade.php')) ?: [];
             $bladeFiles = array_merge($bladeFiles, $customFiles);
         }
 
@@ -85,7 +85,7 @@ trait HandlesPageElements
 
         foreach ($uniqueFiles as $fileName => $filePath) {
             $elementKey = str_replace('-', '_', $fileName);
-            $mapping[$elementKey] = 'elements.'.$fileName;
+            $mapping[$elementKey] = 'elements.' . $fileName;
         }
 
         return $mapping;
@@ -100,12 +100,12 @@ trait HandlesPageElements
         $fileBase = end($parts) ?: $componentName;
 
         $bladeMatches = array_merge(
-            glob(base_path('app-modules/*/resources/views/components/elements/'.$fileBase.'.blade.php')) ?: [],
-            glob(base_path('resources/views/components/elements/'.$fileBase.'.blade.php')) ?: [],
+            glob(base_path('app-modules/*/resources/views/components/elements/' . $fileBase . '.blade.php')) ?: [],
+            glob(base_path('resources/views/components/elements/' . $fileBase . '.blade.php')) ?: [],
         );
         $ymlMatches = array_merge(
-            glob(base_path('app-modules/*/resources/views/components/elements/'.$fileBase.'.yml')) ?: [],
-            glob(base_path('resources/views/components/elements/'.$fileBase.'.yml')) ?: [],
+            glob(base_path('app-modules/*/resources/views/components/elements/' . $fileBase . '.yml')) ?: [],
+            glob(base_path('resources/views/components/elements/' . $fileBase . '.yml')) ?: [],
         );
 
         return ! empty($bladeMatches) && ! empty($ymlMatches);

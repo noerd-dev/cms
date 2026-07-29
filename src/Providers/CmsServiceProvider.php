@@ -33,37 +33,37 @@ class CmsServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Merge configuration early so container bindings can read it during resolution.
-        $this->mergeConfigFrom(__DIR__.'/../../config/noerd_cms.php', 'noerd_cms');
+        $this->mergeConfigFrom(__DIR__ . '/../../config/noerd_cms.php', 'noerd_cms');
 
         // Decorated so element collections resolve their schema from the owning
         // DB collection's stored element_fields.
-        $this->app->singleton(CollectionDefinitionRepositoryContract::class, fn ($app) => new ElementAwareCollectionDefinitionRepository(
-            new DatabaseCollectionDefinitionRepository,
+        $this->app->singleton(CollectionDefinitionRepositoryContract::class, fn($app) => new ElementAwareCollectionDefinitionRepository(
+            new DatabaseCollectionDefinitionRepository(),
             $app->make(ElementCollectionService::class),
         ));
 
         // Register CollectionHelper as singleton for mockability in tests
-        $this->app->singleton(CollectionHelper::class, fn ($app) => new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class)));
+        $this->app->singleton(CollectionHelper::class, fn($app) => new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class)));
 
         // Register CMS PageElementService as fallback for Website namespace
         if (! $this->app->bound(PageElementService::class)) {
             $this->app->singleton(
                 PageElementService::class,
-                fn () => new \Noerd\Cms\Services\PageElementService,
+                fn() => new \Noerd\Cms\Services\PageElementService(),
             );
         }
     }
 
     public function boot(): void
     {
-        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
-        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'cms');
-        Livewire::addNamespace('cms', viewPath: __DIR__.'/../../resources/views/components');
-        Livewire::addLocation(viewPath: __DIR__.'/../../resources/views/components');
-        $this->loadTranslationsFrom(__DIR__.'/../../resources/lang', 'cms');
-        $this->loadJsonTranslationsFrom(__DIR__.'/../../resources/lang');
-        $this->loadRoutesFrom(__DIR__.'/../../routes/cms-routes.php');
-        $this->loadRoutesFrom(__DIR__.'/../../routes/cms-api.php');
+        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cms');
+        Livewire::addNamespace('cms', viewPath: __DIR__ . '/../../resources/views/components');
+        Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/components');
+        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'cms');
+        $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
+        $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-routes.php');
+        $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-api.php');
 
         $router = $this->app['router'];
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
@@ -100,12 +100,12 @@ class CmsServiceProvider extends ServiceProvider
         $relationFieldRegistry = $this->app->make(RelationFieldRegistry::class);
         $fieldTypeRegistry->register('collection-select', FieldTypeDefinition::include(
             'cms::components.forms.input-collection-select',
-            resolver: fn (array $field, mixed $component, mixed $detailData, mixed $modelId): array => ['field' => $field],
+            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => ['field' => $field],
         ));
 
         $fieldTypeRegistry->register('element-collection', FieldTypeDefinition::livewire(
             'cms::element-collection-field',
-            resolver: fn (array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
+            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
                 // A page-element editor exposes an `elementPage` property; a collection
                 // entry editor (page-detail) does not.
                 'ownerType' => (is_object($component) && property_exists($component, 'elementPage')) ? 'element_page' : 'page',
@@ -114,14 +114,14 @@ class CmsServiceProvider extends ServiceProvider
                 'label' => (string) ($field['label'] ?? ''),
                 'rowFields' => $field['fields'] ?? [],
             ],
-            keyResolver: fn (array $field, mixed $component, mixed $detailData, mixed $modelId): string => 'element-'.str_replace('detailData.', '', (string) ($field['name'] ?? '')).'-'.($modelId ?? 'new'),
+            keyResolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): string => 'element-' . str_replace('detailData.', '', (string) ($field['name'] ?? '')) . '-' . ($modelId ?? 'new'),
         ));
 
         $relationFieldRegistry->register('pageRelation', RelationFieldDefinition::model(
             listComponent: 'cms::pages-list',
             detailComponent: 'cms::page-detail',
             modelClass: Page::class,
-            titleResolver: fn (Page $page): string => RelationFieldDefinition::normalizeDisplayValue($page->name),
+            titleResolver: fn(Page $page): string => RelationFieldDefinition::normalizeDisplayValue($page->name),
         ));
         $relationFieldRegistry->register('authorRelation', RelationFieldDefinition::model(
             listComponent: 'cms::authors-list',
