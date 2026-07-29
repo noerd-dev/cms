@@ -18,6 +18,7 @@ new class extends Component {
     public $modelId = null;
 
     public $detailModel = FormRequest::class;
+    public const LIST_COMPONENT = 'cms::form-requests-list';
 
     public function mount(): void
     {

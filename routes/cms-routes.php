@@ -17,7 +17,7 @@ Route::prefix('cms')
         Route::livewire('/collections', 'cms::collection-entries-list')->name('collections');
         Route::livewire('/collection-definitions', 'cms::collection-definitions-list')->name('collection-definitions');
         Route::livewire('/form-requests', 'cms::form-requests-list')->name('form-requests');
-        Route::livewire('/form-request/{modelId}', 'cms::form-request-detail')->name('form-request.detail');
+        Route::livewire('/form-request/{modelId}', 'cms::form-request-page')->name('form-request.detail');
         Route::livewire('/form-types', 'cms::form-types-list')->name('form-types');
         Route::livewire('/form-type/{modelId}', 'cms::form-type-detail')->name('form-type.detail');
 

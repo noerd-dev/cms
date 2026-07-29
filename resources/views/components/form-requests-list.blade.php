@@ -9,7 +9,7 @@ new class extends Component {
 
     public $listModel = FormRequest::class;
 
-    public $detailComponent = 'cms::form-request-detail';
+    public $detailComponent = 'cms::form-request-page';
 
     public function rendering()
     {
