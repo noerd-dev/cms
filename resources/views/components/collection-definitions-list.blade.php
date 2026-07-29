@@ -7,12 +7,13 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Support\CollectionDefinitionData;
-use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
 {
     use NoerdList;
+
+    public $detailComponent = 'cms::collection-definition-detail';
 
     public function mount(): void
     {
@@ -35,11 +36,6 @@ new class extends Component
                 ],
             ],
         ];
-    }
-
-    public function listAction(mixed $modelId = null, array $relations = []): void
-    {
-        Noerd::modal('cms::collection-definition-detail', ['modelId' => $modelId, 'relations' => $relations]);
     }
 
     public function with(): array
