@@ -18,7 +18,7 @@ it('has direct route for global-parameter-detail', function (): void {
     expect(Route::has('cms.global-parameter.detail'))->toBeTrue();
 });
 
-it('has direct route for form-request-detail', function (): void {
+it('has direct route for form-request-page', function (): void {
     expect(Route::has('cms.form-request.detail'))->toBeTrue();
 });
 

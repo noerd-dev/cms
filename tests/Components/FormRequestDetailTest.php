@@ -47,7 +47,7 @@ function createFormType(object $context, array $overrides = []): FormType
     ], $overrides));
 }
 
-it('renders the form-request-detail component', function (): void {
+it('renders the form-request-page component', function (): void {
     $formRequest = FormRequest::create([
         'tenant_id' => $this->tenant->id,
         'form' => 'contact',
@@ -55,7 +55,7 @@ it('renders the form-request-detail component', function (): void {
     ]);
 
     Livewire::actingAs($this->user)
-        ->test('form-request-detail', ['modelId' => $formRequest->id])
+        ->test('form-request-page', ['modelId' => $formRequest->id])
         ->assertSee(__('Form Request'))
         ->assertSee('Test User')
         ->assertSee('test@example.com');
@@ -72,7 +72,7 @@ it('shows resend button when form type has notification email configured', funct
     ]);
 
     Livewire::actingAs($this->user)
-        ->test('form-request-detail', ['modelId' => $formRequest->id])
+        ->test('form-request-page', ['modelId' => $formRequest->id])
         ->assertSee('Benachrichtigung erneut senden');
 });
 
@@ -85,7 +85,7 @@ it('hides resend button when no form type is assigned', function (): void {
     ]);
 
     Livewire::actingAs($this->user)
-        ->test('form-request-detail', ['modelId' => $formRequest->id])
+        ->test('form-request-page', ['modelId' => $formRequest->id])
         ->assertDontSee('Benachrichtigung erneut senden');
 });
 
@@ -100,7 +100,7 @@ it('hides resend button when notification email is empty', function (): void {
     ]);
 
     Livewire::actingAs($this->user)
-        ->test('form-request-detail', ['modelId' => $formRequest->id])
+        ->test('form-request-page', ['modelId' => $formRequest->id])
         ->assertDontSee('Benachrichtigung erneut senden');
 });
 
@@ -115,7 +115,7 @@ it('hides resend button when send_email is disabled', function (): void {
     ]);
 
     Livewire::actingAs($this->user)
-        ->test('form-request-detail', ['modelId' => $formRequest->id])
+        ->test('form-request-page', ['modelId' => $formRequest->id])
         ->assertDontSee('Benachrichtigung erneut senden');
 });
 
@@ -135,7 +135,7 @@ it('sends notification email only to the notification address', function (): voi
     ]);
 
     Livewire::actingAs($this->user)
-        ->test('form-request-detail', ['modelId' => $formRequest->id])
+        ->test('form-request-page', ['modelId' => $formRequest->id])
         ->call('resendNotificationEmail');
 
     Mail::assertSent(FormConfirmation::class, fn(FormConfirmation $mail) => $mail->hasTo('admin@example.com')
@@ -157,7 +157,7 @@ it('prevents rapid resending via rate limiting', function (): void {
     ]);
 
     $component = Livewire::actingAs($this->user)
-        ->test('form-request-detail', ['modelId' => $formRequest->id]);
+        ->test('form-request-page', ['modelId' => $formRequest->id]);
 
     // First call should succeed
     $component->call('resendNotificationEmail');
@@ -179,7 +179,7 @@ it('includes form_type_id in detailData', function (): void {
     ]);
 
     $component = Livewire::actingAs($this->user)
-        ->test('form-request-detail', ['modelId' => $formRequest->id]);
+        ->test('form-request-page', ['modelId' => $formRequest->id]);
 
     expect($component->get('detailData.form_type_id'))->toBe($formType->id);
 });

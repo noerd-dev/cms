@@ -51,15 +51,15 @@ it('loads global-parameter-detail via direct route', function (): void {
         ->assertSeeLivewire('cms::global-parameter-detail');
 });
 
-it('loads form-request-detail via direct route', function (): void {
+it('loads form-request-page via direct route', function (): void {
     $formRequest = FormRequest::factory()->create([
         'tenant_id' => $this->tenant->id,
     ]);
 
     $this->get('/cms/form-request/' . $formRequest->id)
         ->assertSuccessful()
-        ->assertSeeLivewire('cms::form-request-detail');
-})->skip('form-request-detail.yml config file does not exist yet');
+        ->assertSeeLivewire('cms::form-request-page');
+});
 
 it('loads form-type-detail via direct route', function (): void {
     $formType = FormType::factory()->create([
