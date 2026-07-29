@@ -36,6 +36,11 @@ class Collection extends Model
         return $this->belongsTo(Page::class, 'page_id');
     }
 
+    protected static function newFactory()
+    {
+        return CollectionFactory::new();
+    }
+
     protected function casts(): array
     {
         return [
@@ -44,15 +49,10 @@ class Collection extends Model
         ];
     }
 
-    protected static function newFactory()
-    {
-        return CollectionFactory::new();
-    }
-
     protected function collectionKey(): Attribute
     {
         return Attribute::make(
-            set: fn (string $value) => mb_strtoupper($value),
+            set: fn(string $value) => mb_strtoupper($value),
         );
     }
 }

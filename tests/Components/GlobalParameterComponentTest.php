@@ -174,7 +174,7 @@ it('loads existing array value into component model for editing', function () us
     Livewire::withUrlParams([$testSettings['urlParam'] => $existingParameter->id])
         ->test($testSettings['componentName'])
         ->assertSet('detailData.key', 'test_key_array')
-        ->assertSet('detailData.value', fn ($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+        ->assertSet('detailData.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
 });
 
 it('saves a translatable parameter as a language-keyed JSON object', function () use ($testSettings): void {

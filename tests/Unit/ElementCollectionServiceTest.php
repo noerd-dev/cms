@@ -43,7 +43,7 @@ it('ensures a page-owned element collection with flags and a detailData-prefixed
         ->and($elementCollection->page_id)->toBe($owner->id)
         ->and($elementCollection->element_page_id)->toBeNull()
         ->and($elementCollection->owner_field)->toBe('triggers_items')
-        ->and($elementCollection->collection_key)->toBe('ELEMENT_'.$owner->id.'_TRIGGERS_ITEMS')
+        ->and($elementCollection->collection_key)->toBe('ELEMENT_' . $owner->id . '_TRIGGERS_ITEMS')
         ->and($elementCollection->name)->toBe('Triggers Strategie & Konzept')
         ->and($elementCollection->element_fields)->toBe([
             ['name' => 'detailData.text', 'label' => 'Text', 'type' => 'translatableTextarea', 'colspan' => 12],

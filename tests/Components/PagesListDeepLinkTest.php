@@ -83,7 +83,7 @@ it('reopens page detail, collection overlay and the row editor from the URL', fu
         ->assertDispatched(
             'noerdModal',
             modalComponent: 'cms::element-collection-row-detail',
-            arguments: ['modelId' => $row->id, 'collectionKey' => strtolower($collection->collection_key)],
+            arguments: ['modelId' => $row->id, 'collectionKey' => mb_strtolower($collection->collection_key)],
         );
 });
 

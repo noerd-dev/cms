@@ -142,7 +142,7 @@ it('resolves the existing collection row via the definition key instead of creat
         ],
     ]);
 
-    $this->get(route('cms.collections').'?key=stellenangebote-permanent')->assertOk();
+    $this->get(route('cms.collections') . '?key=stellenangebote-permanent')->assertOk();
 
     expect(Collection::query()->where('collection_key', 'STELLENANGEBOTE-PERMANENT')->exists())->toBeFalse()
         ->and(Collection::query()->where('collection_key', 'STELLENANGEBOTE_PERMANENT')->count())->toBe(1)
@@ -150,7 +150,7 @@ it('resolves the existing collection row via the definition key instead of creat
 });
 
 it('still creates a collection row from the uppercased key when no definition exists', function (): void {
-    $this->get(route('cms.collections').'?key=adhoc-things')->assertOk();
+    $this->get(route('cms.collections') . '?key=adhoc-things')->assertOk();
 
     expect(Collection::query()->where('collection_key', 'ADHOC-THINGS')->count())->toBe(1);
 });

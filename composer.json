@@ -2,7 +2,7 @@
     "name": "noerd/cms",
     "description": "",
     "type": "library",
-    "version": "v1.2.0",
+    "version": "v1.2.1",
     "license": "proprietary",
     "require": {
         "noerd/noerd": "^0.8",

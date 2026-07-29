@@ -27,7 +27,7 @@ class ElementCollectionService
     {
         $prefix = $ownerType === self::OWNER_ELEMENT_PAGE ? 'ELEMENT_EP_' : 'ELEMENT_';
 
-        return $prefix.$ownerId.'_'.mb_strtoupper($this->normalizeFieldName($ownerField));
+        return $prefix . $ownerId . '_' . mb_strtoupper($this->normalizeFieldName($ownerField));
     }
 
     /**
@@ -111,7 +111,7 @@ class ElementCollectionService
     {
         $label = mb_trim((string) (preg_split('/[—–-]/u', $fieldLabel)[0] ?? $fieldLabel));
 
-        return mb_trim($label.' '.$ownerName);
+        return mb_trim($label . ' ' . $ownerName);
     }
 
     /**
@@ -135,7 +135,7 @@ class ElementCollectionService
             $name = $this->normalizeFieldName((string) ($field['name'] ?? ''));
 
             return array_merge($field, [
-                'name' => 'detailData.'.$name,
+                'name' => 'detailData.' . $name,
                 'label' => (string) ($field['label'] ?? ''),
                 'type' => (string) ($field['type'] ?? 'text'),
                 'colspan' => (int) ($field['colspan'] ?? 12),

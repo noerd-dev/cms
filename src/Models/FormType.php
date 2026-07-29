@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\File;
 use Noerd\Cms\Database\Factories\FormTypeFactory;
 use Noerd\Models\Tenant;
 use Noerd\Traits\BelongsToTenant;
-use Noerd\Cms\Models\FormRequest;
 use Symfony\Component\Yaml\Yaml;
 
 class FormType extends Model

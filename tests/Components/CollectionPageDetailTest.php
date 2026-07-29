@@ -64,7 +64,7 @@ it('uploads an image via images.field binding and stores path into model', funct
 
     Livewire::test('page-detail', ['pageId' => $entry->id, 'collectionKey' => 'projects'])
         ->set('images.image', UploadedFile::fake()->image('photo.jpg', 1200, 800))
-        ->assertSet('detailData.image', fn ($value) => is_string($value) && $value !== '');
+        ->assertSet('detailData.image', fn($value) => is_string($value) && $value !== '');
 
     expect(MediaModel::count())->toBe($before + 1);
 
@@ -108,7 +108,7 @@ it('does not update image on mediaSelected when token mismatches; updates when t
         'sort' => 0,
     ]);
 
-    $path = $this->tenant->id.'/test-select.jpg';
+    $path = $this->tenant->id . '/test-select.jpg';
     Storage::disk('media')->put($path, 'x');
     $media = MediaModel::create([
         'tenant_id' => $this->tenant->id,
@@ -128,7 +128,7 @@ it('does not update image on mediaSelected when token mismatches; updates when t
         ->assertSet('detailData.image', 'UNCHANGED');
 
     $component->call('mediaSelected', $media->id, 'image', 'token-abc')
-        ->assertSet('detailData.image', fn ($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED');
+        ->assertSet('detailData.image', fn($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED');
 });
 
 it('handles collections without page features (hasPage: false)', function (): void {

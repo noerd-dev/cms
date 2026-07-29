@@ -63,9 +63,9 @@ it('sends a copy to the sender and to the recipients maintained in the cms setti
 
     SendFormConfirmationEmail::dispatchSync(submitContactForm($this));
 
-    Mail::assertSent(FormConfirmation::class, fn ($mail): bool => $mail->hasTo('absender@example.com'));
-    Mail::assertSent(FormConfirmation::class, fn ($mail): bool => $mail->hasTo('empfaenger@example.com'));
-    Mail::assertNotSent(FormConfirmation::class, fn ($mail): bool => $mail->hasTo('fallback@example.com'));
+    Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('absender@example.com'));
+    Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('empfaenger@example.com'));
+    Mail::assertNotSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('fallback@example.com'));
 });
 
 it('sends to every recipient of a comma separated settings list', function (): void {
@@ -76,14 +76,14 @@ it('sends to every recipient of a comma separated settings list', function (): v
 
     SendFormConfirmationEmail::dispatchSync(submitContactForm($this));
 
-    Mail::assertSent(FormConfirmation::class, fn ($mail): bool => $mail->hasTo('eins@example.com') && $mail->hasTo('zwei@example.com'));
+    Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('eins@example.com') && $mail->hasTo('zwei@example.com'));
 });
 
 it('falls back to the form type notification email when no recipients are maintained', function (): void {
     SendFormConfirmationEmail::dispatchSync(submitContactForm($this));
 
-    Mail::assertSent(FormConfirmation::class, fn ($mail): bool => $mail->hasTo('fallback@example.com'));
-    Mail::assertSent(FormConfirmation::class, fn ($mail): bool => $mail->hasTo('absender@example.com'));
+    Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('fallback@example.com'));
+    Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('absender@example.com'));
 });
 
 it('only notifies the recipients of the submitting tenant', function (): void {
@@ -94,8 +94,8 @@ it('only notifies the recipients of the submitting tenant', function (): void {
 
     SendFormConfirmationEmail::dispatchSync(submitContactForm($this));
 
-    Mail::assertSent(FormConfirmation::class, fn ($mail): bool => $mail->hasTo('richtig@example.com'));
-    Mail::assertNotSent(FormConfirmation::class, fn ($mail): bool => $mail->hasTo('falsch@example.com'));
+    Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('richtig@example.com'));
+    Mail::assertNotSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('falsch@example.com'));
 });
 
 it('skips the sender copy when no valid email was submitted', function (): void {
@@ -107,5 +107,5 @@ it('skips the sender copy when no valid email was submitted', function (): void 
     SendFormConfirmationEmail::dispatchSync(submitContactForm($this, ['email' => 'keine-mail']));
 
     Mail::assertSent(FormConfirmation::class, 1);
-    Mail::assertSent(FormConfirmation::class, fn ($mail): bool => $mail->hasTo('empfaenger@example.com'));
+    Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('empfaenger@example.com'));
 });
