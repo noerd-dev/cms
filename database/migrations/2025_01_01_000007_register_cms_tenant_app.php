@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class () extends Migration {
+return new class extends Migration {
     /**
      * Register the CMS app in tenant_apps so a plain `php artisan migrate` also
      * makes it available. Idempotent and complementary to the install command's

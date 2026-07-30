@@ -23,7 +23,7 @@ it('resolves pageRelation props from nested detail data', function (): void {
     $registry = app(FieldTypeRegistry::class);
     $definition = $registry->resolve('pageRelation');
 
-    $component = new class () {
+    $component = new class {
         public array $detailData = [
             'custom_attributes' => [
                 'page_id' => '17',

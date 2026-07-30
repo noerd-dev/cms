@@ -35,20 +35,20 @@
 @endphp
 
 <div>
-    <x-noerd::input-label for="{{ $name }}" :value="__($label)" :required="$required"/>
+    <x-noerd::input-label for="{{ $name }}" :value="__($label)" :required="$required" />
     <div class="flex">
         <select
-            @if($live)
+            @if ($live)
                 wire:model.live.debounce="{{ $name }}"
             @else
                 wire:model="{{ $name }}"
             @endif
             {{ $readonly ? 'disabled' : '' }}
-            class="w-full border rounded-lg block disabled:shadow-none appearance-none text-base sm:text-sm py-1 h-8 leading-[1.375rem] ps-3 pe-3 bg-white text-zinc-700 disabled:text-zinc-500 placeholder-zinc-400 disabled:placeholder-zinc-400/70 shadow-xs border-zinc-200 border-b-zinc-300/80 disabled:border-b-zinc-200 focus:outline-none focus:ring-2 focus:ring-brand-border focus:ring-offset-2"
+            class="focus:ring-brand-border block h-8 w-full appearance-none rounded-lg border border-zinc-200 border-b-zinc-300/80 bg-white py-1 ps-3 pe-3 text-base leading-[1.375rem] text-zinc-700 placeholder-zinc-400 shadow-xs focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:border-b-zinc-200 disabled:text-zinc-500 disabled:placeholder-zinc-400/70 disabled:shadow-none sm:text-sm"
             id="{{ $name }}"
         >
             <option value="">{{ __('Please select...') }}</option>
-            @foreach($collections as $collection)
+            @foreach ($collections as $collection)
                 <option value="{{ $collection->id }}">{{ $collection->name }}</option>
             @endforeach
         </select>
@@ -56,11 +56,11 @@
         <x-noerd::button
             x-data="{ collectionKey: $wire.entangle('{{ $name }}') }"
             @click="$modal('cms::collection-entries-list', {collectionKey: collectionKey, context: '{{ $name }}'})"
-            class="h-8 rounded !mt-0 !ml-1"
+            class="!mt-0 !ml-1 h-8 rounded"
             type="button"
         >
             <x-noerd::icons.magnifying-glass></x-noerd::icons.magnifying-glass>
         </x-noerd::button>
     </div>
-    <x-noerd::input-error :messages="$errors->get($name)" class="mt-2"/>
+    <x-noerd::input-error :messages="$errors->get($name)" class="mt-2" />
 </div>
