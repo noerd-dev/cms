@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
@@ -24,8 +23,7 @@ new class extends Component
     use NoerdDetail;
     use WithFileUploads;
 
-    #[Url(as: 'pageId', keep: false, except: '')]
-    public $modelId = null;
+    public ?string $detailPrimary = 'pageId';
 
     public $detailModel = Page::class;
 

@@ -1,7 +1,6 @@
 <?php
 
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\CmsLanguage;
@@ -12,8 +11,7 @@ use Noerd\Traits\NoerdDetail;
 new class extends Component {
     use NoerdDetail;
 
-    #[Url(as: 'globalParameterId', keep: false, except: '')]
-    public $modelId = null;
+    public ?string $detailPrimary = 'globalParameterId';
 
     public $detailModel = GlobalParameter::class;
 

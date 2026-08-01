@@ -18,8 +18,6 @@ new class extends Component {
     use WithFileUploads;
     use NoerdDetail;
 
-    public $modelId = null; // Override trait's #[Url] - child receives ID from parent
-
     public array $elementLayout;
     public ElementPage $elementPage;
     public Page $page;
