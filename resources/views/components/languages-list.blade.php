@@ -9,7 +9,8 @@ new class extends Component {
 
     public $listModel = CmsLanguage::class;
 
-    public $detailComponent = 'cms::language-detail';
+    public ?string $detailRoute = 'cms.language.detail';
+
 
     public function rendering()
     {

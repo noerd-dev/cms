@@ -14,7 +14,8 @@ new class extends Component
 
     public $listModel = Article::class;
 
-    public $detailComponent = 'cms::article-detail';
+    public ?string $detailRoute = 'cms.article.detail';
+
 
     public function mount(): void
     {

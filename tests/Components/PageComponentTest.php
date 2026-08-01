@@ -1,10 +1,12 @@
 <?php
 
-
+use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class);
+uses(TestCase::class);
 uses(CreatesCmsUser::class);
 
 $testSettings = [
@@ -125,9 +127,9 @@ it('dispatches table action from pages table', function () use ($testSettings): 
     $component->call('listAction', 123)
         ->assertDispatched(
             'noerdModal',
-            modalComponent: $testSettings['componentName'],
-            source: $testSettings['listName'],
-            arguments: ['modelId' => 123, 'relations' => []],
+            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.page.detail'
+                && ($params['source'] ?? null) === $testSettings['listName']
+                && ($params['arguments'] ?? null) === ['modelId' => 123, 'relations' => []],
         );
 });
 
@@ -141,7 +143,7 @@ it('copies a page with elements', function () use ($testSettings): void {
         'slug' => ['en' => '/original-page', 'de' => '/original-seite'],
     ]);
 
-    \Noerd\Cms\Models\ElementPage::create([
+    ElementPage::create([
         'page_id' => $model->id,
         'element_key' => 'text_block_1_column',
         'sort' => 1,
@@ -162,7 +164,7 @@ it('copies a page with elements', function () use ($testSettings): void {
     expect($copiedPage->slug['en'])->toContain('/original-page-2');
     expect($copiedPage->slug['de'])->toContain('/original-seite-2');
 
-    $copiedElements = \Noerd\Cms\Models\ElementPage::where('page_id', $copiedPage->id)->get();
+    $copiedElements = ElementPage::where('page_id', $copiedPage->id)->get();
     expect($copiedElements)->toHaveCount(1);
     expect($copiedElements->first()->getRawOriginal('element_key'))->toBe('text_block_1_column');
 });
@@ -172,7 +174,7 @@ it('copies a collection page and appends 2 to data title', function () use ($tes
 
     $this->actingAs($user);
 
-    $collection = \Noerd\Cms\Models\Collection::create([
+    $collection = Collection::create([
         'tenant_id' => $user->selected_tenant_id,
         'collection_key' => 'BENEFITS',
         'name' => 'Benefits',

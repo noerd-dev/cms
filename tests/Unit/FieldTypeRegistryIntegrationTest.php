@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 use Noerd\Services\FieldTypeRegistry;
 use Noerd\Services\RelationFieldRegistry;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class);
+uses(TestCase::class);
 
 it('registers cms field types in the shared field type registry', function (): void {
     $registry = app(FieldTypeRegistry::class);
@@ -23,7 +24,8 @@ it('resolves pageRelation props from nested detail data', function (): void {
     $registry = app(FieldTypeRegistry::class);
     $definition = $registry->resolve('pageRelation');
 
-    $component = new class {
+    $component = new class
+    {
         public array $detailData = [
             'custom_attributes' => [
                 'page_id' => '17',
@@ -45,6 +47,7 @@ it('resolves pageRelation props from nested detail data', function (): void {
         'required' => true,
         'readonly' => false,
         'modelId' => 99,
+        'theme' => 'default',
     ]);
 
     expect($definition?->resolveKey([

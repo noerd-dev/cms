@@ -1,11 +1,11 @@
 <?php
 
-
 use Livewire\Livewire;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class);
+uses(TestCase::class);
 uses(CreatesCmsUser::class);
 
 $testSettings = [
@@ -43,5 +43,9 @@ it('opens cms-language-detail modal from table', function () use ($testSettings)
 
     Livewire::test($testSettings['listName'])
         ->call('listAction', 5)
-        ->assertDispatched('noerdModal', modalComponent: 'cms::language-detail');
+        ->assertDispatched(
+            'noerdModal',
+            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.language.detail'
+                && ($params['arguments']['modelId'] ?? null) === 5,
+        );
 });

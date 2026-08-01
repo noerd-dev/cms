@@ -13,7 +13,8 @@ new class extends Component
 {
     use NoerdList;
 
-    public $detailComponent = 'cms::collection-definition-detail';
+    public ?string $detailRoute = 'cms.collection-definition.detail';
+
 
     public function mount(): void
     {

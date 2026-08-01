@@ -10,7 +10,8 @@ new class extends Component
 
     public $listModel = Author::class;
 
-    public $detailComponent = 'cms::author-detail';
+    public ?string $detailRoute = 'cms.author.detail';
+
 
     public function rendering()
     {

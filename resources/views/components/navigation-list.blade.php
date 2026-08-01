@@ -16,7 +16,8 @@ new class extends Component
 
     public $listModel = Navigation::class;
 
-    public $detailComponent = 'cms::navigation-detail';
+    public ?string $detailRoute = 'cms.navigation.detail';
+
 
     #[Computed]
     public function tableFilters(): array
@@ -63,7 +64,7 @@ new class extends Component
             return;
         }
 
-        Noerd::modal('cms::navigation-detail', ['modelId' => null, 'relations' => ['parent_id' => $parentId]]);
+        Noerd::modalFor('cms.navigation.detail', 'cms::navigation-detail', ['modelId' => null, 'relations' => ['parent_id' => $parentId]]);
     }
 
     public function listData(): array

@@ -66,7 +66,7 @@ new class extends Component
     public function openDetail(): void
     {
         if ($this->value) {
-            Noerd::modal('cms::page-detail', ['modelId' => $this->value]);
+            Noerd::modalFor('cms.page.detail', 'cms::page-detail', ['modelId' => $this->value]);
         }
     }
 

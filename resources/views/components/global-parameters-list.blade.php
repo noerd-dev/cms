@@ -14,7 +14,8 @@ new class extends Component
 
     public $listModel = GlobalParameter::class;
 
-    public $detailComponent = 'cms::global-parameter-detail';
+    public ?string $detailRoute = 'cms.global-parameter.detail';
+
 
     #[Computed]
     public function tableFilters(): array

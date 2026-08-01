@@ -9,7 +9,8 @@ new class extends Component {
 
     public $listModel = FormType::class;
 
-    public $detailComponent = 'cms::form-type-detail';
+    public ?string $detailRoute = 'cms.form-type.detail';
+
 
     public function rendering()
     {
