@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Models\Collection;
@@ -15,8 +14,7 @@ new class extends Component
 {
     use NoerdDetail;
 
-    #[Url(as: 'collectionDefinitionId', keep: false, except: '')]
-    public $modelId = null;
+    public ?string $detailPrimary = 'collectionDefinitionId';
 
     public array $fields = [];
 

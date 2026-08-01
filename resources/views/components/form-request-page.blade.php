@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Mail\FormConfirmation;
 use Noerd\Cms\Models\FormRequest;
@@ -14,8 +13,7 @@ use Noerd\Traits\NoerdDetail;
 new class extends Component {
     use NoerdDetail;
 
-    #[Url(as: 'formRequestId', keep: false, except: '')]
-    public $modelId = null;
+    public ?string $detailPrimary = 'formRequestId';
 
     public $detailModel = FormRequest::class;
     public const LIST_COMPONENT = 'cms::form-requests-list';

@@ -12,7 +12,6 @@ $testSettings = [
     'componentName' => 'element-page-detail',
     'listName' => 'element-pages-list',
     'id' => 'modelId',
-    'urlParam' => 'id',
 ];
 
 it('successfully mounts with element page', function () use ($testSettings): void {

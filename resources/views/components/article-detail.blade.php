@@ -1,7 +1,6 @@
 <?php
 
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Models\Article;
 use Noerd\Cms\Models\Author;
@@ -12,8 +11,7 @@ new class extends Component
 {
     use NoerdDetail;
 
-    #[Url(as: 'articleId', keep: false, except: '')]
-    public $modelId = null;
+    public ?string $detailPrimary = 'articleId';
 
     public $detailModel = Article::class;
 

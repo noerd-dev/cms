@@ -1,6 +1,5 @@
 <?php
 
-use Livewire\Attributes\Url;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -42,10 +41,10 @@ it('binds modelId to a dedicated entry URL parameter (avoids nested-modal clobbe
         'collectionKey' => $this->elementCollection->collection_key,
     ])->instance();
 
-    $urlAttributes = (new ReflectionProperty($instance, 'modelId'))->getAttributes(Url::class);
-
-    expect($urlAttributes)->toHaveCount(1)
-        ->and($urlAttributes[0]->newInstance()->as)->toBe('entry');
+    expect($instance->detailPrimary)->toBe('entry')
+        ->and($instance->queryStringNoerdPage())->toBe([
+            'modelId' => ['as' => 'entry', 'keep' => false, 'except' => ''],
+        ]);
 });
 
 it('initializes the row from the entry query parameter', function (): void {
