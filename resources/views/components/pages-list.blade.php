@@ -19,7 +19,8 @@ new class extends Component {
 
     public $listModel = Page::class;
 
-    public $detailComponent = 'cms::page-detail';
+    public ?string $detailRoute = 'cms.page.detail';
+
 
     public function mount(): void
     {

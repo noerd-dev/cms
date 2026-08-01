@@ -105,7 +105,7 @@ new class extends Component
 
     public function manageCollection(): void
     {
-        Noerd::modal('cms::collection-definition-detail', ['modelId' => $this->collectionKey]);
+        Noerd::modalFor('cms.collection-definition.detail', 'cms::collection-definition-detail', ['modelId' => $this->collectionKey]);
     }
 
     public function listAction(mixed $modelId = null, array $relations = []): void
@@ -119,7 +119,7 @@ new class extends Component
             return;
         }
 
-        Noerd::modal('cms::page-detail', ['modelId' => $modelId, 'collectionKey' => $this->collectionKey, 'relations' => $relations]);
+        Noerd::modalFor('cms.page.detail', 'cms::page-detail', ['modelId' => $modelId, 'collectionKey' => $this->collectionKey, 'relations' => $relations]);
     }
 
     public function listData(): array

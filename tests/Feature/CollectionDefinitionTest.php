@@ -1,18 +1,21 @@
 <?php
 
 use Livewire\Livewire;
+use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Models\Tenant;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class);
+uses(TestCase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
     DatabaseCollectionDefinitionRepository::resetCache();
-    app()->forgetInstance(\Noerd\Cms\Helpers\CollectionHelper::class);
+    app()->forgetInstance(CollectionHelper::class);
 });
 
 /**
@@ -57,7 +60,7 @@ it('scopes entry counts to the current tenant', function (): void {
     ]);
     Page::factory()->create(['tenant_id' => $tenant->id, 'collection_id' => $ownCollection->id]);
 
-    $otherTenant = \Noerd\Models\Tenant::factory()->create();
+    $otherTenant = Tenant::factory()->create();
     $foreignCollection = Collection::create([
         'tenant_id' => $otherTenant->id,
         'collection_key' => 'CONTACTS',
@@ -134,7 +137,11 @@ it('dispatches modal when listAction is called', function (): void {
 
     Livewire::test('cms::collection-definitions-list')
         ->call('listAction', 'contacts')
-        ->assertDispatched('noerdModal', modalComponent: 'cms::collection-definition-detail');
+        ->assertDispatched(
+            'noerdModal',
+            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.collection-definition.detail'
+                && ($params['arguments']['modelId'] ?? null) === 'contacts',
+        );
 });
 
 it('loads existing collection definition in detail component', function (): void {

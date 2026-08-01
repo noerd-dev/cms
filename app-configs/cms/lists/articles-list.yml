@@ -3,7 +3,7 @@ searchableColumns:
   - title
 actions:
   - label: New Article
-    action: listAction
+    route: cms.article.detail
 columns:
   - field: title
     label: Title

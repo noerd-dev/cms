@@ -8,8 +8,9 @@ use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
@@ -30,7 +31,10 @@ it('reopens page detail and the element collection overlay from the URL', functi
 
     Livewire::withQueryParams(['pageId' => $page->id, 'collection' => $collection->id])
         ->test('cms::pages-list')
-        ->assertDispatched('noerdModal', modalComponent: 'cms::page-detail')
+        ->assertDispatched(
+            'noerdModal',
+            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.page.detail',
+        )
         ->assertDispatched(
             'noerdModal',
             modalComponent: 'cms::collection-entries-list',
@@ -78,7 +82,10 @@ it('reopens page detail, collection overlay and the row editor from the URL', fu
 
     Livewire::withQueryParams(['pageId' => $page->id, 'collection' => $collection->id, 'entry' => $row->id])
         ->test('cms::pages-list')
-        ->assertDispatched('noerdModal', modalComponent: 'cms::page-detail')
+        ->assertDispatched(
+            'noerdModal',
+            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.page.detail',
+        )
         ->assertDispatched('noerdModal', modalComponent: 'cms::collection-entries-list')
         ->assertDispatched(
             'noerdModal',

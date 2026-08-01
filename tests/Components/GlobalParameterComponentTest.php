@@ -1,10 +1,10 @@
 <?php
 
-
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class);
+uses(TestCase::class);
 uses(CreatesCmsUser::class);
 
 $testSettings = [
@@ -136,7 +136,11 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
     $model = GlobalParameter::factory()->withTenantId($tenant->id)->create();
 
     Livewire::test($testSettings['listName'])->call('listAction', $model->id)
-        ->assertDispatched('noerdModal', modalComponent: $testSettings['componentName']);
+        ->assertDispatched(
+            'noerdModal',
+            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.global-parameter.detail'
+                && ($params['arguments']['modelId'] ?? null) === $model->id,
+        );
 
     Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
         ->test($testSettings['componentName'])
@@ -174,7 +178,7 @@ it('loads existing array value into component model for editing', function () us
     Livewire::withUrlParams([$testSettings['urlParam'] => $existingParameter->id])
         ->test($testSettings['componentName'])
         ->assertSet('detailData.key', 'test_key_array')
-        ->assertSet('detailData.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+        ->assertSet('detailData.value', fn ($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
 });
 
 it('saves a translatable parameter as a language-keyed JSON object', function () use ($testSettings): void {

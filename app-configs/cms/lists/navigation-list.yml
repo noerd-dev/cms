@@ -1,7 +1,7 @@
 title: Navigation
 actions:
   - label: New Navigation Item
-    action: listAction
+    route: cms.navigation.detail
 disableSearch: false
 columns:
   - field: name

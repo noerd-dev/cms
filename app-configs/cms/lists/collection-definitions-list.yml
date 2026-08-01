@@ -1,7 +1,7 @@
 title: Collection Definitions
 actions:
   - label: New Collection Definition
-    action: listAction
+    route: cms.collection-definition.detail
 disableSearch: false
 columns:
   - field: titleList
