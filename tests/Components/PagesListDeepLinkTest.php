@@ -33,7 +33,7 @@ it('reopens page detail and the element collection overlay from the URL', functi
         ->test('cms::pages-list')
         ->assertDispatched(
             'noerdModal',
-            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.page.detail',
+            fn(string $event, array $params): bool => ($params['route'] ?? null) === 'cms.page.detail',
         )
         ->assertDispatched(
             'noerdModal',
@@ -84,7 +84,7 @@ it('reopens page detail, collection overlay and the row editor from the URL', fu
         ->test('cms::pages-list')
         ->assertDispatched(
             'noerdModal',
-            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.page.detail',
+            fn(string $event, array $params): bool => ($params['route'] ?? null) === 'cms.page.detail',
         )
         ->assertDispatched('noerdModal', modalComponent: 'cms::collection-entries-list')
         ->assertDispatched(

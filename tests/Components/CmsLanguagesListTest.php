@@ -45,7 +45,7 @@ it('opens cms-language-detail modal from table', function () use ($testSettings)
         ->call('listAction', 5)
         ->assertDispatched(
             'noerdModal',
-            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.language.detail'
+            fn(string $event, array $params): bool => ($params['route'] ?? null) === 'cms.language.detail'
                 && ($params['arguments']['modelId'] ?? null) === 5,
         );
 });
