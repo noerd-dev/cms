@@ -127,7 +127,7 @@ it('dispatches table action from pages table', function () use ($testSettings): 
     $component->call('listAction', 123)
         ->assertDispatched(
             'noerdModal',
-            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.page.detail'
+            fn(string $event, array $params): bool => ($params['route'] ?? null) === 'cms.page.detail'
                 && ($params['source'] ?? null) === $testSettings['listName']
                 && ($params['arguments'] ?? null) === ['modelId' => 123, 'relations' => []],
         );
