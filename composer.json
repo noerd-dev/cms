@@ -5,6 +5,7 @@
     "version": "v1.2.6",
     "license": "proprietary",
     "require": {
+        "laravel/framework": "^13.0",
         "noerd/noerd": "^0.9",
         "noerd/media":  "^0.1 || ^0.2",
         "noerd/communication": "^0.1 || ^0.2 || ^0.3",
