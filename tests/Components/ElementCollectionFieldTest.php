@@ -1,8 +1,10 @@
 <?php
 
 use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Tests\TestCase;
@@ -13,6 +15,7 @@ uses(CreatesCmsUser::class);
 beforeEach(function (): void {
     ['user' => $this->user, 'tenant' => $this->tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($this->user);
+    DatabaseCollectionDefinitionRepository::resetCache();
 });
 
 it('shows a save-first hint when the owner is not yet saved', function (): void {
@@ -71,6 +74,34 @@ it('creates an element_page-owned element collection on manage()', function (): 
 });
 
 it('renders the element-collection field through the entry editor instead of [object Object]', function (): void {
+    // The entry editor resolves its fields from the collection definition row, so the
+    // SERVICES definition has to exist before the Livewire component is mounted.
+    CollectionDefinition::create([
+        'tenant_id' => $this->tenant->id,
+        'filename' => 'services',
+        'key' => 'SERVICES',
+        'title' => 'Leistung',
+        'title_list' => 'Leistungen',
+        'has_page' => true,
+        'fields' => [
+            ['name' => 'detailData.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 12],
+            [
+                'name' => 'detailData.triggers_items',
+                'label' => 'Triggers',
+                'type' => 'element-collection',
+                'colspan' => 12,
+                'fields' => [['name' => 'text', 'label' => 'Text', 'type' => 'translatableTextarea', 'colspan' => 12]],
+            ],
+            [
+                'name' => 'detailData.activities_items',
+                'label' => 'Aktivitäten',
+                'type' => 'element-collection',
+                'colspan' => 12,
+                'fields' => [['name' => 'text', 'label' => 'Text', 'type' => 'translatableTextarea', 'colspan' => 12]],
+            ],
+        ],
+    ]);
+
     $services = Collection::firstOrCreate(
         ['tenant_id' => $this->tenant->id, 'collection_key' => 'SERVICES'],
         ['name' => 'Leistungen', 'is_element_collection' => false],
@@ -85,7 +116,13 @@ it('renders the element-collection field through the entry editor instead of [ob
 
     // The entry editor renders the SERVICES fields (e.g. the "Titel" field) and the
     // triggers/activities fields no longer stringify their array into "[object Object]".
-    Livewire::test('page-detail', ['pageId' => $entry->id, 'collectionKey' => 'services'])
+    // pageId is the URL alias of $modelId (see NoerdPage::queryStringNoerdPage), so it
+    // has to arrive as a query param — as a mount arg the editor would open blank and
+    // the element-collection field would only show its "save first" hint.
+    Livewire::withQueryParams(['pageId' => $entry->id])
+        ->test('page-detail', ['collectionKey' => 'services'])
         ->assertSee('Titel')
+        ->assertSee('Triggers')
+        ->assertSee('Verwalten')
         ->assertDontSee('[object Object]');
 });
