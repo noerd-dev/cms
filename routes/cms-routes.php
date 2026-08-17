@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('cms')
     ->as('cms.')
-    ->middleware(['web', 'auth', 'verified', 'app-access:cms'])
+    ->middleware(['noerd', 'app-access:cms'])
     ->group(function (): void {
         Route::livewire('/', 'cms::dashboard')->name('dashboard');
         Route::livewire('/pages', 'cms::pages-list')->name('pages');
