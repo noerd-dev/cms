@@ -2,6 +2,7 @@
 
 namespace Noerd\Cms\Helpers;
 
+use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Helpers\StaticConfigHelper;
 use Symfony\Component\Yaml\Yaml;
 
@@ -50,7 +51,7 @@ class FieldHelper
             $baseKey = preg_replace('/^\w+\./', '', $elementField['name']);
 
             if (in_array($elementField['type'], $translatableTypes)) {
-                foreach (['de', 'en'] as $lang) {
+                foreach (CmsLanguageCodes::active() as $lang) {
                     $model[$baseKey][$lang] = $data[$baseKey][$lang] ?? $data[$baseKey] ?? '';
                 }
             } else {
@@ -81,7 +82,7 @@ class FieldHelper
             $baseKey = preg_replace('/^\w+\./', '', $elementField['name']);
 
             if (in_array($elementField['type'], ['translatableText', 'translatableRichText'])) {
-                foreach (['de', 'en'] as $lang) {
+                foreach (CmsLanguageCodes::active() as $lang) {
                     $value = $datas[$baseKey][$lang] ?? $datas[$baseKey] ?? '';
                     if (self::isJsonAndDecode($value)) {
                         $value = self::isJsonAndDecode($value);

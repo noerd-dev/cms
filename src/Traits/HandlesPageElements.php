@@ -3,6 +3,7 @@
 namespace Noerd\Cms\Traits;
 
 use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Support\CmsLanguageCodes;
 
 trait HandlesPageElements
 {
@@ -126,12 +127,16 @@ trait HandlesPageElements
     {
         $localized = [];
 
+        // The tenant's default language is the fallback when a value has not been
+        // translated yet — never a hard-coded 'de'.
+        $fallbackLanguage = CmsLanguageCodes::active()[0] ?? 'de';
+
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 if ($this->isTranslatableArray($value)) {
-                    $resolved = $value[$language] ?? $value['de'] ?? reset($value);
+                    $resolved = $value[$language] ?? $value[$fallbackLanguage] ?? reset($value);
                     if (is_array($resolved)) {
-                        $resolved = $resolved[$language] ?? $resolved['de'] ?? reset($resolved);
+                        $resolved = $resolved[$language] ?? $resolved[$fallbackLanguage] ?? reset($resolved);
                     }
                     $localized[$key] = is_string($resolved) ? $resolved : '';
                 } else {
@@ -150,7 +155,9 @@ trait HandlesPageElements
      */
     protected function isTranslatableArray(array $array): bool
     {
-        $languageCodes = ['de', 'en', 'fr', 'es', 'it', 'nl'];
+        // Derived from the configured CMS languages, so a tenant-added language
+        // (e.g. Danish) is recognised without touching the framework.
+        $languageCodes = CmsLanguageCodes::known();
         $keys = array_keys($array);
 
         return ! empty($keys) && count(array_intersect($keys, $languageCodes)) === count($keys);

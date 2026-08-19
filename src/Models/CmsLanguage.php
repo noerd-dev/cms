@@ -5,6 +5,7 @@ namespace Noerd\Cms\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Database\Factories\CmsLanguageFactory;
+use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Traits\BelongsToTenant;
 
 class CmsLanguage extends Model
@@ -50,6 +51,11 @@ class CmsLanguage extends Model
     protected static function boot(): void
     {
         parent::boot();
+
+        // Adding, changing or removing a language changes which codes count as
+        // translatable — drop the memoized lists.
+        static::saved(fn () => CmsLanguageCodes::clearCache());
+        static::deleted(fn () => CmsLanguageCodes::clearCache());
 
         // After deleting, ensure there's still a default language
         static::deleted(function (CmsLanguage $language): void {
