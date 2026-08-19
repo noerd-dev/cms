@@ -2,7 +2,7 @@
     "name": "noerd/cms",
     "description": "",
     "type": "library",
-    "version": "v1.2.11",
+    "version": "v1.2.12",
     "license": "proprietary",
     "require": {
         "laravel/framework": "^12.0 || ^13.0",
