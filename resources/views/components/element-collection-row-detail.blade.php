@@ -1,12 +1,15 @@
 <?php
 
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
+use Noerd\Facades\Noerd;
 use Noerd\Helpers\TenantHelper;
+use Noerd\Media\Models\Media;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component
@@ -112,6 +115,48 @@ new class extends Component
 
         $this->dispatch('refreshList-element-collection-field');
         $this->closeModalProcess('collection-entries-list');
+    }
+
+    /**
+     * Open the media library to pick an image for an `image` row field. The token
+     * scopes the resulting event to this component instance, since several row
+     * editors can be alive at once.
+     */
+    public function openSelectMediaModal(string $fieldName): void
+    {
+        $token = uniqid('media_', true);
+        $this->detailData['__mediaToken'] = $token;
+
+        Noerd::modal('media::media-list', ['selectMode' => true, 'selectContext' => $fieldName, 'selectToken' => $token]);
+    }
+
+    #[On('mediaSelected')]
+    public function mediaSelected(int $mediaId, ?string $fieldName = 'image', ?string $token = null): void
+    {
+        if (($this->detailData['__mediaToken'] ?? null) !== $token) {
+            return;
+        }
+
+        $media = Media::find($mediaId);
+
+        if (! $media) {
+            return;
+        }
+
+        $this->detailData[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
+        unset($this->detailData['__mediaToken']);
+    }
+
+    public function deleteImage(string $fieldName): void
+    {
+        $this->detailData[$fieldName] = null;
+    }
+
+    private function urlWithoutDomain(Media $media): string
+    {
+        $url = Storage::disk($media->disk)->url($media->path);
+
+        return mb_strstr($url, '/storage');
     }
 
     private function elementCollection(): ?Collection
