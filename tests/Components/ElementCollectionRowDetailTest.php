@@ -3,6 +3,7 @@
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Media\Models\Media;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -151,4 +152,74 @@ it('deletes the row', function (): void {
         ->assertDispatched('closeTopModal');
 
     expect(Page::find($rowId))->toBeNull();
+});
+
+it('stores a picked media file in an image row field only for the matching token', function (): void {
+    $collection = app(ElementCollectionService::class)->importItems(
+        ElementCollectionService::OWNER_ELEMENT_PAGE,
+        4242,
+        $this->tenant->id,
+        'collection_id',
+        [['name' => 'Achim Kammerer', 'logo' => '']],
+        [
+            ['name' => 'name', 'label' => 'Name', 'type' => 'text', 'colspan' => 6],
+            ['name' => 'logo', 'label' => 'Logo', 'type' => 'image', 'colspan' => 12],
+        ],
+        'Kundenstimmen Demo',
+    );
+    $row = $collection->rows()->first();
+
+    $media = Media::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'path' => 'kammerer.svg',
+        'disk' => 'media',
+    ]);
+
+    $component = Livewire::test('element-collection-row-detail', [
+        'modelId' => $row->id,
+        'collectionKey' => $collection->collection_key,
+    ]);
+
+    // Without an open selection there is no token, so the event must be ignored.
+    $component->call('mediaSelected', $media->id, 'logo', 'fremder-token')
+        ->assertSet('detailData.logo', '');
+
+    $component->call('openSelectMediaModal', 'logo');
+    $token = $component->get('detailData.__mediaToken');
+
+    expect($token)->toBeString()->not->toBeEmpty();
+
+    $component->call('mediaSelected', $media->id, 'logo', $token)
+        ->assertSet('detailData.logo', '/storage/media/kammerer.svg')
+        ->assertSet('detailData.__mediaToken', null)
+        ->call('store');
+
+    expect($row->fresh()->data['logo'])->toBe('/storage/media/kammerer.svg');
+});
+
+it('clears an image row field', function (): void {
+    $collection = app(ElementCollectionService::class)->importItems(
+        ElementCollectionService::OWNER_ELEMENT_PAGE,
+        4343,
+        $this->tenant->id,
+        'collection_id',
+        [['name' => 'Achim Kammerer', 'logo' => '/storage/media/kammerer.svg']],
+        [
+            ['name' => 'name', 'label' => 'Name', 'type' => 'text', 'colspan' => 6],
+            ['name' => 'logo', 'label' => 'Logo', 'type' => 'image', 'colspan' => 12],
+        ],
+        'Kundenstimmen Demo',
+    );
+    $row = $collection->rows()->first();
+
+    Livewire::test('element-collection-row-detail', [
+        'modelId' => $row->id,
+        'collectionKey' => $collection->collection_key,
+    ])
+        ->assertSet('detailData.logo', '/storage/media/kammerer.svg')
+        ->call('deleteImage', 'logo')
+        ->assertSet('detailData.logo', null)
+        ->call('store');
+
+    expect($row->fresh()->data['logo'])->toBeNull();
 });
