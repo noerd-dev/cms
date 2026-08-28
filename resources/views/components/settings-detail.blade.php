@@ -11,6 +11,7 @@ new class extends Component {
         'homepage_page_id' => null,
         'google_analytics_id' => null,
         'show_cookie_banner' => false,
+        'cookie_lifetime_days' => 182,
         'form_recipients' => null,
     ];
 
@@ -21,6 +22,7 @@ new class extends Component {
         $this->detailData['homepage_page_id'] = $settings->homepage_page_id;
         $this->detailData['google_analytics_id'] = $settings->google_analytics_id;
         $this->detailData['show_cookie_banner'] = $settings->show_cookie_banner ?? false;
+        $this->detailData['cookie_lifetime_days'] = $settings->cookieLifetimeInDays();
         $this->detailData['form_recipients'] = $settings->form_recipients;
     }
 
@@ -30,6 +32,7 @@ new class extends Component {
             'detailData.homepage_page_id' => ['nullable', 'exists:pages,id'],
             'detailData.google_analytics_id' => ['nullable', 'string', 'max:50'],
             'detailData.show_cookie_banner' => ['boolean'],
+            'detailData.cookie_lifetime_days' => ['required', 'integer', 'min:1', 'max:365'],
             'detailData.form_recipients' => ['nullable', 'string', 'max:255', function (string $attribute, mixed $value, \Closure $fail): void {
                 foreach (array_filter(array_map('trim', explode(',', (string) $value))) as $email) {
                     if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -49,6 +52,7 @@ new class extends Component {
                 'homepage_page_id' => $this->detailData['homepage_page_id'],
                 'google_analytics_id' => $this->detailData['google_analytics_id'],
                 'show_cookie_banner' => $this->detailData['show_cookie_banner'],
+                'cookie_lifetime_days' => (int) $this->detailData['cookie_lifetime_days'],
                 'form_recipients' => $this->detailData['form_recipients'] ?: null,
             ]
         );
@@ -121,6 +125,20 @@ new class extends Component {
     </div>
 
     @if($detailData['show_cookie_banner'] ?? false)
+        <div class="pt-4">
+            <x-noerd::forms.input-select
+                name="detailData.cookie_lifetime_days"
+                label="{{ __('Cookie Consent Duration') }}"
+                :options="[
+                    ['value' => 30, 'label' => __('30 days')],
+                    ['value' => 90, 'label' => __('3 months')],
+                    ['value' => 182, 'label' => __('6 months (recommended)')],
+                    ['value' => 365, 'label' => __('12 months')],
+                ]"
+            />
+            <p class="text-sm text-gray-500 mt-1">{{ __('Applies equally to acceptance and rejection. After this period visitors are asked again.') }}</p>
+        </div>
+
         <div class="pt-4">
             <x-noerd::forms.input
                 name="detailData.google_analytics_id"
