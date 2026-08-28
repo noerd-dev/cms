@@ -117,3 +117,50 @@ it('saves comma separated form recipients and rejects invalid email addresses', 
 
     expect(CmsSetting::formRecipientsForTenant($tenant->id))->toBe([]);
 });
+
+it('saves the cookie consent duration and rejects values outside the allowed range', function (): void {
+    $tenant = Tenant::factory()->create();
+
+    $cmsApp = TenantApp::create([
+        'name' => 'CMS',
+        'title' => 'CMS',
+        'is_active' => true,
+        'icon' => 'cms::icons.app',
+        'route' => 'cms.index',
+    ]);
+    $tenant->tenantApps()->attach($cmsApp->id);
+
+    $profile = Profile::create([
+        'key' => 'ADMIN',
+        'name' => 'Administrator',
+        'tenant_id' => $tenant->id,
+    ]);
+
+    $user = NoerdUser::factory()->create();
+    $user->tenants()->attach($tenant->id, ['profile_id' => $profile->id]);
+    TenantHelper::setSelectedTenantId($tenant->id);
+
+    $component = Livewire::actingAs($user)
+        ->test('cms::settings-detail');
+
+    // Falls noch nichts gesetzt ist, greift der Default aus der Paket-Konfiguration
+    $component->assertSet('detailData.cookie_lifetime_days', config('laravel-cookie-consent.cookie_lifetime'));
+
+    $component
+        ->set('detailData.show_cookie_banner', true)
+        ->set('detailData.cookie_lifetime_days', 90)
+        ->call('store')
+        ->assertHasNoErrors();
+
+    expect(CmsSetting::where('tenant_id', $tenant->id)->first()->cookieLifetimeInDays())->toBe(90);
+
+    $component
+        ->set('detailData.cookie_lifetime_days', 3650)
+        ->call('store')
+        ->assertHasErrors('detailData.cookie_lifetime_days');
+
+    $component
+        ->set('detailData.cookie_lifetime_days', 0)
+        ->call('store')
+        ->assertHasErrors('detailData.cookie_lifetime_days');
+});
