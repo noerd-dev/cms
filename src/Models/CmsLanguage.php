@@ -54,8 +54,8 @@ class CmsLanguage extends Model
 
         // Adding, changing or removing a language changes which codes count as
         // translatable — drop the memoized lists.
-        static::saved(fn () => CmsLanguageCodes::clearCache());
-        static::deleted(fn () => CmsLanguageCodes::clearCache());
+        static::saved(fn() => CmsLanguageCodes::clearCache());
+        static::deleted(fn() => CmsLanguageCodes::clearCache());
 
         // After deleting, ensure there's still a default language
         static::deleted(function (CmsLanguage $language): void {

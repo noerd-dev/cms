@@ -17,13 +17,15 @@ it('loads and displays page options with localized names and saves selection', f
     $tenant = Tenant::factory()->create();
 
     // CMS App aktivieren, damit die Route/Seite verfügbar ist
-    $cmsApp = TenantApp::create([
-        'name' => 'CMS',
-        'title' => 'CMS',
-        'is_active' => true,
-        'icon' => 'cms::icons.app',
-        'route' => 'cms.index',
-    ]);
+    $cmsApp = TenantApp::firstOrCreate(
+        ['name' => 'CMS'],
+        [
+            'title' => 'CMS',
+            'is_active' => true,
+            'icon' => 'cms::icons.app',
+            'route' => 'cms.index',
+        ],
+    );
     $tenant->tenantApps()->attach($cmsApp->id);
 
     $profile = Profile::create([
@@ -75,13 +77,15 @@ it('loads and displays page options with localized names and saves selection', f
 it('saves comma separated form recipients and rejects invalid email addresses', function (): void {
     $tenant = Tenant::factory()->create();
 
-    $cmsApp = TenantApp::create([
-        'name' => 'CMS',
-        'title' => 'CMS',
-        'is_active' => true,
-        'icon' => 'cms::icons.app',
-        'route' => 'cms.index',
-    ]);
+    $cmsApp = TenantApp::firstOrCreate(
+        ['name' => 'CMS'],
+        [
+            'title' => 'CMS',
+            'is_active' => true,
+            'icon' => 'cms::icons.app',
+            'route' => 'cms.index',
+        ],
+    );
     $tenant->tenantApps()->attach($cmsApp->id);
 
     $profile = Profile::create([
@@ -121,13 +125,15 @@ it('saves comma separated form recipients and rejects invalid email addresses', 
 it('saves the cookie consent duration and rejects values outside the allowed range', function (): void {
     $tenant = Tenant::factory()->create();
 
-    $cmsApp = TenantApp::create([
-        'name' => 'CMS',
-        'title' => 'CMS',
-        'is_active' => true,
-        'icon' => 'cms::icons.app',
-        'route' => 'cms.index',
-    ]);
+    $cmsApp = TenantApp::firstOrCreate(
+        ['name' => 'CMS'],
+        [
+            'title' => 'CMS',
+            'is_active' => true,
+            'icon' => 'cms::icons.app',
+            'route' => 'cms.index',
+        ],
+    );
     $tenant->tenantApps()->attach($cmsApp->id);
 
     $profile = Profile::create([
@@ -140,11 +146,15 @@ it('saves the cookie consent duration and rejects values outside the allowed ran
     $user->tenants()->attach($tenant->id, ['profile_id' => $profile->id]);
     TenantHelper::setSelectedTenantId($tenant->id);
 
+    // Falls noch nichts gesetzt ist, greift der Default aus der Paket-Konfiguration —
+    // ohne installiertes Banner-Paket der eingebaute Default
+    $expectedDefault = ((int) config('laravel-cookie-consent.cookie_lifetime'))
+        ?: CmsSetting::DEFAULT_COOKIE_LIFETIME_DAYS;
+
     $component = Livewire::actingAs($user)
         ->test('cms::settings-detail');
 
-    // Falls noch nichts gesetzt ist, greift der Default aus der Paket-Konfiguration
-    $component->assertSet('detailData.cookie_lifetime_days', config('laravel-cookie-consent.cookie_lifetime'));
+    $component->assertSet('detailData.cookie_lifetime_days', $expectedDefault);
 
     $component
         ->set('detailData.show_cookie_banner', true)

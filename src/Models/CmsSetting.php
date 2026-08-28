@@ -9,16 +9,11 @@ class CmsSetting extends Model
 {
     use HasFactory;
 
+    public const DEFAULT_COOKIE_LIFETIME_DAYS = 182;
+
     protected $table = 'cms_settings';
 
-    protected $fillable = [
-        'tenant_id',
-        'homepage_page_id',
-        'google_analytics_id',
-        'show_cookie_banner',
-        'cookie_lifetime_days',
-        'form_recipients',
-    ];
+    protected $guarded = [];
 
     /**
      * Parsed list of form notification recipients for a tenant.
@@ -37,14 +32,17 @@ class CmsSetting extends Model
     }
 
     /**
-     * Storage duration of the cookie consent in days, falling back to the package default.
+     * Storage duration of the cookie consent in days. Falls back to the cookie-consent
+     * package configuration when installed, then to the built-in default — the config
+     * key does not exist on installations without the banner package.
      *
      * The same value is used for acceptance and rejection: re-asking users who declined
      * sooner than users who accepted is a deceptive design pattern.
      */
     public function cookieLifetimeInDays(): int
     {
-        return $this->cookie_lifetime_days ?: (int) config('laravel-cookie-consent.cookie_lifetime');
+        return $this->cookie_lifetime_days
+            ?: ((int) config('laravel-cookie-consent.cookie_lifetime') ?: self::DEFAULT_COOKIE_LIFETIME_DAYS);
     }
 
     protected static function newFactory()
