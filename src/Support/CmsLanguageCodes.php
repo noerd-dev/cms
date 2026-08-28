@@ -53,12 +53,12 @@ final class CmsLanguageCodes
         }
 
         $codes = self::query(
-            fn (): array => CmsLanguage::query()
+            fn(): array => CmsLanguage::query()
                 ->where('is_active', true)
                 ->orderBy('is_default', 'desc')
                 ->orderBy('sort_order')
                 ->pluck('code')
-                ->all()
+                ->all(),
         );
 
         return self::$activeCache = $codes === [] ? self::FALLBACK : $codes;
@@ -79,7 +79,7 @@ final class CmsLanguageCodes
         }
 
         $configured = self::query(
-            fn (): array => CmsLanguage::withoutGlobalScopes()->distinct()->pluck('code')->all()
+            fn(): array => CmsLanguage::withoutGlobalScopes()->distinct()->pluck('code')->all(),
         );
 
         return self::$knownCache = array_values(array_unique([...self::BUILT_IN, ...$configured]));
@@ -106,8 +106,8 @@ final class CmsLanguageCodes
             }
 
             return array_values(array_filter(array_map(
-                static fn ($code): string => (string) $code,
-                $resolver()
+                static fn($code): string => (string) $code,
+                $resolver(),
             )));
         } catch (Throwable) {
             return [];
