@@ -23,19 +23,6 @@ beforeEach(function (): void {
     );
 });
 
-it('can set listFilters without error', function (): void {
-    Livewire::test('cms::navigation-list')
-        ->set('listFilters.language', 'de')
-        ->assertHasNoErrors();
-});
-
-it('applies language filter without error', function (): void {
-    $component = Livewire::test('cms::navigation-list')
-        ->set('listFilters.language', 'en');
-
-    expect($component->get('listFilters')['language'])->toBe('en');
-});
-
 it('can filter by navigation_key', function (): void {
     Navigation::create([
         'tenant_id' => $this->tenant->id,

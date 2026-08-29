@@ -7,21 +7,33 @@ uses(Tests\TestCase::class);
 beforeEach(function (): void {
     $this->skillsDir = base_path('.claude/skills');
     $this->target = $this->skillsDir . '/cms-website-import';
+    $this->backup = $this->target . '.zz-test-backup';
 
-    $this->preExisting = is_link($this->target) || file_exists($this->target);
-});
+    if (! is_dir($this->skillsDir)) {
+        mkdir($this->skillsDir, 0755, true);
+    }
 
-afterEach(function (): void {
-    if (! ($this->preExisting ?? false) && (is_link($this->target) || file_exists($this->target))) {
-        if (is_link($this->target) || is_file($this->target)) {
-            @unlink($this->target);
-        } elseif (is_dir($this->target)) {
-            removeDirectory($this->target);
-        }
+    // Snapshot a pre-existing entry (file, symlink or directory) so every test
+    // runs against a clean target; afterEach always restores the snapshot.
+    if (is_link($this->target) || file_exists($this->target)) {
+        rename($this->target, $this->backup);
     }
 });
 
-function removeDirectory(string $path): void
+afterEach(function (): void {
+    // Always clean up whatever the test produced, then restore the snapshot.
+    if (is_link($this->target) || is_file($this->target)) {
+        @unlink($this->target);
+    } elseif (is_dir($this->target)) {
+        zzCmsRemoveDirectory($this->target);
+    }
+
+    if (is_link($this->backup) || file_exists($this->backup)) {
+        rename($this->backup, $this->target);
+    }
+});
+
+function zzCmsRemoveDirectory(string $path): void
 {
     foreach (scandir($path) ?: [] as $entry) {
         if ($entry === '.' || $entry === '..') {
@@ -29,7 +41,7 @@ function removeDirectory(string $path): void
         }
         $full = $path . '/' . $entry;
         if (is_dir($full) && ! is_link($full)) {
-            removeDirectory($full);
+            zzCmsRemoveDirectory($full);
         } else {
             @unlink($full);
         }
@@ -37,7 +49,7 @@ function removeDirectory(string $path): void
     @rmdir($path);
 }
 
-function invokePublishSkills(bool $refreshCopies): void
+function zzCmsInvokePublishSkills(bool $refreshCopies): void
 {
     $command = app(NoerdCmsInstallCommand::class);
     $command->setLaravel(app());
@@ -52,46 +64,30 @@ function invokePublishSkills(bool $refreshCopies): void
 }
 
 it('auto-discovers and publishes the cms-website-import skill', function (): void {
-    if ($this->preExisting) {
-        $this->markTestSkipped('Skill already published in this project; skipping side-effect test.');
-    }
-
-    invokePublishSkills(refreshCopies: false);
+    zzCmsInvokePublishSkills(refreshCopies: false);
 
     expect(is_link($this->target) || is_dir($this->target))->toBeTrue();
     expect(file_exists($this->target . '/SKILL.md'))->toBeTrue();
 });
 
 it('leaves an existing symlink alone on update', function (): void {
-    if (! $this->preExisting) {
-        invokePublishSkills(refreshCopies: false);
-    }
-
-    if (! is_link($this->target)) {
-        $this->markTestSkipped('Skill is not a symlink in this environment; refresh-symlink behavior cannot be asserted.');
-    }
+    // Deterministic symlink scenario: place the link ourselves instead of
+    // depending on how the first publish materialized it in this environment.
+    symlink('../../app-modules/cms/skills/cms-website-import', $this->target);
 
     $linkTargetBefore = readlink($this->target);
 
-    invokePublishSkills(refreshCopies: true);
+    zzCmsInvokePublishSkills(refreshCopies: true);
 
     expect(is_link($this->target))->toBeTrue();
     expect(readlink($this->target))->toEqual($linkTargetBefore);
 });
 
 it('refreshes a stale copied skill on update', function (): void {
-    if ($this->preExisting) {
-        $this->markTestSkipped('Skill pre-existing; cannot safely overwrite for refresh test.');
-    }
-
-    if (! is_dir($this->skillsDir) && ! mkdir($this->skillsDir, 0755, true)) {
-        $this->markTestSkipped('Could not create .claude/skills directory.');
-    }
-
     mkdir($this->target, 0755, true);
     file_put_contents($this->target . '/SKILL.md', 'STALE');
 
-    invokePublishSkills(refreshCopies: true);
+    zzCmsInvokePublishSkills(refreshCopies: true);
 
     expect(is_link($this->target) || is_dir($this->target))->toBeTrue();
     expect(file_exists($this->target . '/SKILL.md'))->toBeTrue();
