@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Noerd\Cms\Models\CmsLanguage;
+use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 
@@ -91,6 +92,36 @@ it('resets to default language when session language does not exist', function (
 
     expect($result)->toBe('de');
     expect(session('selectedLanguage'))->toBe('de');
+});
+
+it('displays pages list without htmlspecialchars error when no session is set', function (): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    // Create a default language
+    CmsLanguage::create([
+        'tenant_id' => $tenant->id,
+        'code' => 'de',
+        'name' => 'Deutsch',
+        'is_active' => true,
+        'is_default' => true,
+    ]);
+
+    // Create a page with multilingual name
+    Page::create([
+        'tenant_id' => $tenant->id,
+        'name' => ['de' => 'Testseite', 'en' => 'Test Page'],
+        'slug' => ['de' => '/testseite', 'en' => '/test-page'],
+    ]);
+
+    // Ensure session is empty
+    session()->forget('selectedLanguage');
+
+    // Visit pages list - should not throw htmlspecialchars error
+    $response = $this->get(route('cms.pages'));
+
+    $response->assertStatus(200);
+    $response->assertDontSee('htmlspecialchars()');
 });
 
 it('resets to default language when session language is inactive', function (): void {

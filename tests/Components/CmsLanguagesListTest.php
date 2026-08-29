@@ -31,10 +31,13 @@ it('lists languages for tenant in table with sorting and search', function () us
     // English is auto-created as default, add German
     CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => false]);
 
-    Livewire::test($testSettings['listName'])
-        ->set('search', 'Eng')
-        ->call('listData')
-        ->assertSet('search', 'Eng');
+    $component = Livewire::test($testSettings['listName'])
+        ->set('search', 'Deutsch');
+
+    $rows = $component->instance()->listData()['rows'];
+
+    expect($rows)->toHaveCount(1);
+    expect($rows->first()->name)->toBe('Deutsch');
 });
 
 it('opens cms-language-detail modal from table', function () use ($testSettings): void {

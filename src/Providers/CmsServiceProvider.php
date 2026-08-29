@@ -26,7 +26,6 @@ use Noerd\Services\FieldTypeRegistry;
 use Noerd\Services\RelationFieldRegistry;
 use Noerd\Support\FieldTypeDefinition;
 use Noerd\Support\RelationFieldDefinition;
-use Noerd\Website\Services\PageElementService;
 
 class CmsServiceProvider extends ServiceProvider
 {
@@ -45,10 +44,14 @@ class CmsServiceProvider extends ServiceProvider
         // Register CollectionHelper as singleton for mockability in tests
         $this->app->singleton(CollectionHelper::class, fn($app) => new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class)));
 
-        // Register CMS PageElementService as fallback for Website namespace
-        if (! $this->app->bound(PageElementService::class)) {
+        // Soft integration point: the website module resolves its
+        // PageElementService from the container; when website is not installed
+        // (or has not bound it yet), the CMS implementation answers instead.
+        // Deliberately a plain container KEY — never a class load — so CMS has
+        // no dependency on the website module.
+        if (! $this->app->bound('Noerd\Website\Services\PageElementService')) {
             $this->app->singleton(
-                PageElementService::class,
+                'Noerd\Website\Services\PageElementService',
                 fn() => new \Noerd\Cms\Services\PageElementService(),
             );
         }

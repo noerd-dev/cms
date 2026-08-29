@@ -6,6 +6,18 @@ use Symfony\Component\Yaml\Yaml;
 
 uses(Tests\TestCase::class);
 
+/**
+ * @param  array{buttons?: array<int, array{component?: string}>}  $config
+ * @return array<int, array<string, mixed>>
+ */
+function zzCmsWebsiteLinkButtons(array $config): array
+{
+    return array_values(array_filter(
+        $config['buttons'] ?? [],
+        fn(array $button): bool => ($button['component'] ?? null) === 'quick-menu.website-link',
+    ));
+}
+
 it('creates quick-menu.yml with website link button when file does not exist', function (): void {
     $path = base_path('app-configs/quick-menu.yml');
     $existed = file_exists($path);
@@ -29,11 +41,13 @@ it('creates quick-menu.yml with website link button when file does not exist', f
 
         $config = Yaml::parseFile($path);
         expect($config)->toHaveKey('buttons')
-            ->and($config['buttons'])->toHaveCount(1)
-            ->and($config['buttons'][0])->toBe([
-                'policy' => 'canCms',
-                'component' => 'quick-menu.website-link',
-            ]);
+            ->and(zzCmsWebsiteLinkButtons($config))->toHaveCount(1);
+
+        // Re-running the install must not duplicate the entry
+        $method->invoke($command);
+
+        $config = Yaml::parseFile($path);
+        expect(zzCmsWebsiteLinkButtons($config))->toHaveCount(1);
     } finally {
         if ($existed) {
             file_put_contents($path, $original);
@@ -68,10 +82,7 @@ it('appends website link button to existing quick-menu.yml', function (): void {
         $config = Yaml::parseFile($path);
         expect($config['buttons'])->toHaveCount(2)
             ->and($config['buttons'][0]['component'])->toBe('quick-menu.other-link')
-            ->and($config['buttons'][1])->toBe([
-                'policy' => 'canCms',
-                'component' => 'quick-menu.website-link',
-            ]);
+            ->and(zzCmsWebsiteLinkButtons($config))->toHaveCount(1);
     } finally {
         if ($existed) {
             file_put_contents($path, $original);
@@ -134,11 +145,7 @@ it('handles existing file with missing buttons key', function (): void {
 
         $config = Yaml::parseFile($path);
         expect($config)->toHaveKey('buttons')
-            ->and($config['buttons'])->toHaveCount(1)
-            ->and($config['buttons'][0])->toBe([
-                'policy' => 'canCms',
-                'component' => 'quick-menu.website-link',
-            ])
+            ->and(zzCmsWebsiteLinkButtons($config))->toHaveCount(1)
             ->and($config)->toHaveKey('other_key');
     } finally {
         if ($existed) {

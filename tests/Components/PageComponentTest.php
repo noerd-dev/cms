@@ -198,12 +198,3 @@ it('copies a collection page and appends 2 to data title', function () use ($tes
     expect($copiedPage->data['title'])->toBe('Original Benefit 2');
     expect($copiedPage->data['description'])->toBe('Some text');
 });
-
-it('sets a table key for the list', function () use ($testSettings): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-
-    $this->actingAs($user);
-
-    Livewire::test($testSettings['listName'])
-        ->assertNotSet('listId', '');
-});

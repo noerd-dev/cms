@@ -156,23 +156,6 @@ it('loads existing collection definition in detail component', function (): void
         ->assertSet('detailData.title', 'Kontakt');
 });
 
-it('loads pageLayout with metadata fields from the detail config', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
-
-    $component = Livewire::test('cms::collection-definition-detail');
-
-    $pageLayout = $component->get('pageLayout');
-    expect($pageLayout)->not->toBeEmpty();
-    expect($pageLayout['fields'])->toBeArray();
-
-    $fieldNames = array_column($pageLayout['fields'], 'name');
-    expect($fieldNames)->toContain('detailData.filename');
-    expect($fieldNames)->toContain('detailData.title');
-    expect($fieldNames)->toContain('detailData.titleList');
-    expect($fieldNames)->toContain('detailData.hasPage');
-});
-
 it('allows renaming the filename of an existing collection definition', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);

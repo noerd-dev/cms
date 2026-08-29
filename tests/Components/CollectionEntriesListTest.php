@@ -233,7 +233,7 @@ it('renders element-collection fields in the list with their row count', functio
 
     Livewire::test('cms::collection-entries-list', ['collectionKey' => 'services'])
         ->assertSee('Beratung')
-        ->assertSee('2 Einträge');
+        ->assertSee('2 ' . trans_choice('Eintrag|Einträge', 2));
 });
 
 it('shows the linked page name for pageRelation fields and marks the column as badge', function (): void {
