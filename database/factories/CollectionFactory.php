@@ -13,10 +13,8 @@ class CollectionFactory extends Factory
     {
         return [
             'tenant_id' => 1,
-            'collection_key' => mb_strtoupper($this->faker->word),
+            'collection_key' => mb_strtoupper($this->faker->unique()->lexify('COLLECTION_??????')),
             'name' => $this->faker->words(2, true),
-            'created_at' => now(),
-            'updated_at' => now(),
         ];
     }
 }

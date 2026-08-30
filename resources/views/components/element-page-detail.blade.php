@@ -1,14 +1,13 @@
 <?php
 
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\FieldHelper;
-use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\ElementPage;
-use Noerd\Cms\Models\Page;
 use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdDetail;
 use Noerd\Media\Models\Media;
@@ -19,12 +18,22 @@ new class extends Component {
     use NoerdDetail;
 
     public array $elementLayout;
-    public ElementPage $elementPage;
-    public Page $page;
+
+    /**
+     * The element key of the edited row — models are never stored as
+     * component properties.
+     */
+    #[Locked]
+    public ?string $elementKey = null;
+
     public array $images = [];
 
-    public $image;
-    public $image2;
+    /**
+     * Correlates a media-picker round trip; kept out of $detailData so it can
+     * never leak into the persisted element data.
+     */
+    #[Locked]
+    public ?string $mediaToken = null;
 
     public function mount(): void
     {
@@ -35,11 +44,13 @@ new class extends Component {
             $elementPage = ElementPage::find($this->modelId) ?? new ElementPage;
         }
 
-        $this->elementLayout = FieldHelper::getElementFields($elementPage->element_key) ?? [];
+        $this->elementKey = (string) ($elementPage->element_key ?: 'text_block_1_column');
+        $this->elementLayout = FieldHelper::getElementFields($this->elementKey) ?? [];
 
-        $this->detailData = FieldHelper::parseElementToData($elementPage->element_key,
-            json_decode($elementPage->data, true)) ?? [];
-        $this->elementPage = $elementPage;
+        $elementData = is_array($elementPage->data)
+            ? $elementPage->data
+            : (json_decode((string) $elementPage->data, true) ?? []);
+        $this->detailData = FieldHelper::parseElementToData($this->elementKey, $elementData) ?? [];
 
         // Send initial data to a parent component for live preview
         $this->dispatch('updateLiveElementData',
@@ -51,18 +62,20 @@ new class extends Component {
     #[Computed]
     public function elementName()
     {
-        $elementFields = FieldHelper::getElementFields($this->elementPage->element_key);
-        return $elementFields['title'] ?: ucwords(str_replace('_', ' ', $this->elementPage->element_key));
+        $elementFields = FieldHelper::getElementFields($this->elementKey);
+
+        return ($elementFields['title'] ?? '') ?: ucwords(str_replace('_', ' ', (string) $this->elementKey));
     }
 
     #[On('storeElements')]
     public function store(): void
     {
         $elementPage = ElementPage::find($this->modelId);
-        if (! $elementPage) {
+        // Tenant guard: the owning page resolves through the tenant scope.
+        if (! $elementPage || ! $elementPage->page) {
             return;
         }
-        $elementPage->data = json_encode($this->detailData);
+        $elementPage->data = $this->detailData;
         $elementPage->save();
         $this->dispatch('reloadPageComponent');
     }
@@ -81,11 +94,10 @@ new class extends Component {
     public function delete(): void
     {
         $elementPage = ElementPage::find($this->modelId);
-        if (! $elementPage) {
+        if (! $elementPage || ! $elementPage->page) {
             return;
         }
         $elementPage->delete();
-        $this->elementPage = new ElementPage;
         $this->modelId = null;
         $this->dispatch('reloadPageComponent');
     }
@@ -123,15 +135,14 @@ new class extends Component {
 
     public function openSelectMediaModal(string $fieldName): void
     {
-        $token = uniqid('media_', true);
-        $this->detailData['__mediaToken'] = $token;
-        Noerd::modal('media::media-list', ['selectMode' => true, 'selectContext' => $fieldName, 'selectToken' => $token]);
+        $this->mediaToken = uniqid('media_', true);
+        Noerd::modal('media::media-list', ['selectMode' => true, 'selectContext' => $fieldName, 'selectToken' => $this->mediaToken]);
     }
 
     #[On('mediaSelected')]
     public function mediaSelected(int $mediaId, ?string $fieldName = 'image', ?string $token = null): void
     {
-        if (($this->detailData['__mediaToken'] ?? null) !== $token) {
+        if ($this->mediaToken === null || $this->mediaToken !== $token) {
             return; // ignore events not intended for this instance
         }
         $media = Media::find($mediaId);
@@ -139,7 +150,7 @@ new class extends Component {
             return;
         }
         data_set($this->detailData, $fieldName ?? 'image', $this->urlWithoutDomain($media));
-        unset($this->detailData['__mediaToken']);
+        $this->mediaToken = null;
 
         // Notify parent to refresh live preview after media selection
         $this->dispatch('updateLiveElementData',
@@ -197,7 +208,7 @@ new class extends Component {
             </div>
 
             <div x-data x-show="$store.elements?.collapsed" class="py-3 pl-2">
-                <span class="text-sm font-medium text-gray-600">{{ __($elementLayout['title'] ?? $this->elementPage->element_key) }}</span>
+                <span class="text-sm font-medium text-gray-600">{{ __(($elementLayout['title'] ?? '') ?: $this->elementKey) }}</span>
             </div>
 
             <div x-data x-show="!$store.elements?.collapsed">
@@ -209,7 +220,7 @@ new class extends Component {
             class="p-4 border border-red-300 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-red-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-red-500/10">
             <div class="flex items-start justify-between gap-4">
                 <div class="flex-1">
-                    <p class="text-sm font-semibold text-red-800">{{ __('Element component not found:') }} {{ $this->elementPage->element_key }}</p>
+                    <p class="text-sm font-semibold text-red-800">{{ __('Element component not found:') }} {{ $this->elementKey }}</p>
                     <p class="text-xs text-red-700 mt-2">{{ __('Please create both the .yml and .blade.php files in the elements folder.') }}</p>
                 </div>
                 <div>

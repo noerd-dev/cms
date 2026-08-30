@@ -21,12 +21,51 @@ new class extends Component {
 
     public ?string $detailRoute = 'cms.page.detail';
 
+    public $detailComponent = 'cms::page-detail';
 
     public function mount(): void
     {
-        $this->listId = Str::random();
-        $this->loadListFilters();
+        $this->mountList();
         $this->ensureDefaultLanguage();
+
+        if (empty($this->listFilters['language'])) {
+            $this->listFilters['language'] = session('selectedLanguage');
+        }
+
+        $this->openCollectionFromRequest();
+    }
+
+    /**
+     * Deep link: /cms/pages?collection={id|key}[&entry={id}] opens the matching
+     * collection entries list (and optionally one element-collection entry).
+     */
+    private function openCollectionFromRequest(): void
+    {
+        $collectionParam = (string) request()->collection;
+        if ($collectionParam === '') {
+            return;
+        }
+
+        $collection = is_numeric($collectionParam)
+            ? Collection::query()->find((int) $collectionParam)
+            : Collection::query()->where('collection_key', mb_strtoupper($collectionParam))->first();
+
+        if ($collection === null) {
+            return;
+        }
+
+        Noerd::modal('cms::collection-entries-list', [
+            'collectionKey' => $collection->id,
+            'elementCollection' => (bool) $collection->is_element_collection,
+        ]);
+
+        $entryId = (int) request()->entry;
+        if ($entryId && $collection->is_element_collection && Page::query()->where('collection_id', $collection->id)->whereKey($entryId)->exists()) {
+            Noerd::modal('cms::element-collection-row-detail', [
+                'modelId' => $entryId,
+                'collectionKey' => strtolower($collection->collection_key),
+            ]);
+        }
     }
 
     #[Computed]
@@ -60,6 +99,8 @@ new class extends Component {
         if (! empty($this->listFilters['language'])) {
             session(['selectedLanguage' => $this->listFilters['language']]);
         }
+
+        $this->resetPage();
     }
 
     public function listData(): array
@@ -76,7 +117,10 @@ new class extends Component {
             ->pluck('id')
             ->toArray();
 
-        $rows = Page::with('collection')
+        // listQuery() applies search, sort and the YAML column filters — the
+        // page-specific constraints are chained on top.
+        $rows = $this->listQuery($this->listModel)
+            ->with('collection')
             ->where(function ($query) use ($collectionsWithoutPages) {
                 // Show pages that don't belong to any collection
                 $query->whereNull('collection_id')
@@ -89,21 +133,6 @@ new class extends Component {
                 } elseif ($pageType === 'single') {
                     $query->whereNull('collection_id');
                 }
-            })
-            ->when($this->search, function ($query): void {
-                $languages = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
-                    ->where('is_active', true)
-                    ->pluck('code');
-
-                $search = mb_strtolower($this->search);
-                $query->where(function ($query) use ($languages, $search): void {
-                    foreach ($languages as $code) {
-                        $query->orWhereRaw(
-                            'LOWER(JSON_UNQUOTE(JSON_EXTRACT(name, ?))) LIKE ?',
-                            ['$.'.$code, '%'.$search.'%']
-                        );
-                    }
-                });
             })
             ->paginate($this->perPage);
 
@@ -124,45 +153,6 @@ new class extends Component {
         return $this->buildList($rows);
     }
 
-    public function rendering()
-    {
-        $this->loadListFilters();
-
-        // Sync selectedLanguage with listFilters
-        if (empty($this->listFilters['language'])) {
-            $this->listFilters['language'] = session('selectedLanguage');
-        }
-
-        if ((int) request()->pageId) {
-            $this->listAction(request()->pageId);
-        }
-
-        $collectionParam = (string) request()->collection;
-        if ($collectionParam !== '') {
-            $collection = is_numeric($collectionParam)
-                ? Collection::query()->find((int) $collectionParam)
-                : Collection::query()->where('collection_key', mb_strtoupper($collectionParam))->first();
-
-            if ($collection !== null) {
-                Noerd::modal('cms::collection-entries-list', [
-                    'collectionKey' => $collection->id,
-                    'elementCollection' => (bool) $collection->is_element_collection,
-                ]);
-
-                $entryId = (int) request()->entry;
-                if ($entryId && $collection->is_element_collection && Page::query()->where('collection_id', $collection->id)->whereKey($entryId)->exists()) {
-                    Noerd::modal('cms::element-collection-row-detail', [
-                        'modelId' => $entryId,
-                        'collectionKey' => strtolower($collection->collection_key),
-                    ]);
-                }
-            }
-        }
-
-        if (request()->create) {
-            $this->listAction();
-        }
-    }
 } ?>
 
 <x-noerd::page>

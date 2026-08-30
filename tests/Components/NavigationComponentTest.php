@@ -41,14 +41,14 @@ it('persists parent_id when assigning a parent to an existing navigation', funct
     $parent = Navigation::factory()->create([
         'tenant_id' => $tenant->id,
         'navigation_key' => 'MAIN',
-        'name' => json_encode(['de' => 'Hauptmenü', 'en' => 'Main']),
+        'name' => ['de' => 'Hauptmenü', 'en' => 'Main'],
         'parent_id' => null,
     ]);
 
     $item = Navigation::factory()->create([
         'tenant_id' => $tenant->id,
         'navigation_key' => 'ITEM',
-        'name' => json_encode(['de' => 'Punkt', 'en' => 'Item']),
+        'name' => ['de' => 'Punkt', 'en' => 'Item'],
         'parent_id' => null,
     ]);
 
@@ -70,7 +70,7 @@ it('stores a new sub navigation and inherits the parent navigation_key', functio
     $parent = Navigation::factory()->create([
         'tenant_id' => $tenant->id,
         'navigation_key' => 'MAIN',
-        'name' => json_encode(['de' => 'Hauptmenü', 'en' => 'Main']),
+        'name' => ['de' => 'Hauptmenü', 'en' => 'Main'],
         'parent_id' => null,
     ]);
 
@@ -91,7 +91,7 @@ it('stores a navigation with page and clears link', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
 
-    $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => json_encode(['de' => 'Seite', 'en' => 'Page'])]);
+    $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => ['de' => 'Seite', 'en' => 'Page']]);
 
     Livewire::test('cms::navigation-detail')
         ->set('detailData.navigation_key', 'MAIN')
@@ -153,7 +153,7 @@ it('respects language switching behavior for page selection display', function (
 
     $page = Page::factory()->create([
         'tenant_id' => $tenant->id,
-        'name' => json_encode(['de' => 'Über uns', 'en' => 'About us']),
+        'name' => ['de' => 'Über uns', 'en' => 'About us'],
     ]);
 
     // default language from session is used internally by component; we ensure action does not error

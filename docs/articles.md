@@ -41,36 +41,41 @@ Articles are managed at `/cms/articles`. Each article has:
 | `is_active` | checkbox | Whether the article is published |
 | `author_id` | authorRelation | Link to an author |
 | `publication_date` | date | Scheduled publication date |
-| `body` | textarea | Article content |
+| `body` | richText | Article content |
 
 ## Article YAML Configuration
 
 ```yaml
-title: cms_label_article
+title: Article
 fields:
-  - name: articleData.title
-    label: cms_label_title
+  - name: detailData.title
+    label: Title
     type: translatableText
     colspan: 5
-  - name: articleData.slug
+  - name: detailData.slug
     label: Slug
     type: translatableText
     colspan: 5
-  - name: articleData.is_active
-    label: cms_label_is_active
+  - name: detailData.is_active
+    label: 'Active?'
     type: checkbox
     colspan: 2
-  - name: articleData.author_id
-    label: cms_label_author
+  - name: detailData.featured_image
+    label: Featured Image
+    type: image
+    colspan: 12
+  - name: detailData.author_id
+    label: Author
     type: authorRelation
+    relationField: relationTitles.author_id
     colspan: 6
-  - name: articleData.publication_date
-    label: cms_label_publication_date
+  - name: detailData.publication_date
+    label: Publication Date
     type: date
     colspan: 6
-  - name: articleData.body
-    label: cms_label_body
-    type: textarea
+  - name: detailData.body
+    label: Content
+    type: richText
     colspan: 12
 ```
 

@@ -1,6 +1,15 @@
 title: ''
 description: ''
 fields:
-  - { name: detailData.text1, label: Text links, type: translatableRichText, colspan: 4 }
-  - { name: detailData.text2, label: Text mitte, type: translatableRichText, colspan: 4 }
-  - { name: detailData.text3, label: Text rechts, type: translatableRichText, colspan: 4 }
+  - name: detailData.text1
+    label: Text left
+    type: translatableRichText
+    colspan: 4
+  - name: detailData.text2
+    label: Text center
+    type: translatableRichText
+    colspan: 4
+  - name: detailData.text3
+    label: Text right
+    type: translatableRichText
+    colspan: 4

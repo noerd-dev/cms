@@ -1,4 +1,6 @@
 title: Articles
+notSortableColumns:
+  - author_name
 searchableColumns:
   - title
 actions:

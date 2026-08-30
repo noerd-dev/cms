@@ -8,10 +8,16 @@ use Noerd\Cms\Mail\FormConfirmation;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\FormRequest;
 use Noerd\Communication\Services\Communicator;
+use Throwable;
 
 class SendFormConfirmationEmail implements ShouldQueue
 {
     use Queueable;
+
+    public int $tries = 3;
+
+    /** @var array<int, int> */
+    public array $backoff = [30, 120];
 
     public function __construct(
         public FormRequest $formRequest,
@@ -46,9 +52,10 @@ class SendFormConfirmationEmail implements ShouldQueue
             return;
         }
 
-        // Replace placeholders in subject and body
+        // Replace placeholders in subject and body. The body is rendered as
+        // HTML, so its substituted values must be escaped.
         $emailSubject = $formType->replacePlaceholders($this->formRequest, $formType->email_subject);
-        $emailBody = $formType->replacePlaceholders($this->formRequest, $formType->email_body);
+        $emailBody = $formType->replacePlaceholders($this->formRequest, $formType->email_body, escapeHtml: true);
 
         // Send email to customer (if email field exists in form data)
         if (isset($this->formRequest->data['email']) && filter_var($this->formRequest->data['email'], FILTER_VALIDATE_EMAIL)) {
@@ -66,7 +73,6 @@ class SendFormConfirmationEmail implements ShouldQueue
             logger()->info('Form confirmation email sent to customer', [
                 'form_request_id' => $this->formRequest->id,
                 'form_type_id' => $formType->id,
-                'email' => $customerEmail,
             ]);
         }
 
@@ -91,8 +97,15 @@ class SendFormConfirmationEmail implements ShouldQueue
             logger()->info('Form confirmation email sent to admin', [
                 'form_request_id' => $this->formRequest->id,
                 'form_type_id' => $formType->id,
-                'notification_recipients' => $notificationRecipients,
             ]);
         }
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        logger()->error('Form confirmation email failed permanently', [
+            'form_request_id' => $this->formRequest->id,
+            'error' => $exception?->getMessage(),
+        ]);
     }
 }

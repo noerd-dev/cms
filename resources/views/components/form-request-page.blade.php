@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Mail\FormConfirmation;
 use Noerd\Cms\Models\FormRequest;
@@ -89,7 +88,10 @@ new class extends Component {
 
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $seconds = RateLimiter::availableIn($key);
-            $this->js("alert('" . __('Bitte warten Sie :seconds Sekunden, bevor Sie die Benachrichtigung erneut senden.', ['seconds' => $seconds]) . "')");
+            $this->dispatch('toast', [
+                'title' => __('Please wait'),
+                'description' => __('Please wait :seconds seconds before resending the notification.', ['seconds' => $seconds]),
+            ]);
 
             return;
         }
@@ -100,7 +102,10 @@ new class extends Component {
             $formRequest = FormRequest::find($this->modelId);
 
             if (! $formType || ! $formRequest) {
-                $this->js("alert('" . __('Fehler: FormType oder FormRequest nicht gefunden.') . "')");
+                $this->dispatch('toast', [
+                    'title' => __('Error'),
+                    'description' => __('Form type or form request not found.'),
+                ]);
 
                 return;
             }
@@ -108,7 +113,7 @@ new class extends Component {
             RateLimiter::hit($key, 30);
 
             $emailSubject = $formType->replacePlaceholders($formRequest, $formType->email_subject);
-            $emailBody = $formType->replacePlaceholders($formRequest, $formType->email_body);
+            $emailBody = $formType->replacePlaceholders($formRequest, $formType->email_body, escapeHtml: true);
 
             app(Communicator::class)->send(
                 mailable: new FormConfirmation(
@@ -122,26 +127,25 @@ new class extends Component {
             logger()->info('Notification email resent for form request', [
                 'form_request_id' => $this->modelId,
                 'form_type_id' => $formType->id,
-                'notification_email' => $formType->notification_email,
-                'resent_by' => auth()->id(),
             ]);
 
-            $this->js("alert('" . __('Benachrichtigung wurde erneut an :email gesendet.', ['email' => $formType->notification_email]) . "')");
+            $this->dispatch('toast', [
+                'title' => __('Sent'),
+                'description' => __('Notification was resent to :email.', ['email' => $formType->notification_email]),
+            ]);
         } catch (\Exception $e) {
             logger()->error('Failed to resend notification email', [
                 'form_request_id' => $this->modelId,
                 'error' => $e->getMessage(),
             ]);
 
-            $this->js("alert('" . __('Fehler beim Senden der Benachrichtigung.') . "')");
+            $this->dispatch('toast', [
+                'title' => __('Error'),
+                'description' => __('Failed to send the notification.'),
+            ]);
         }
     }
 
-    #[On('languageChanged')]
-    public function languageChanged(): void
-    {
-        $this->dispatch('$refresh');
-    }
 } ?>
 
 <x-noerd::page>
@@ -149,6 +153,8 @@ new class extends Component {
         <x-noerd::modal-title>{{ __('Form Request') }} #{{$detailData['id'] ?? ''}}</x-noerd::modal-title>
     </x-slot:header>
 
+    <x-noerd::tab-content :layout="[]" :modelId="$modelId" :showBlock="false">
+        <x-slot:tab1>
     <div class="p-4 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-gray-950/[2.5%] after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-gray-950/5">
         <div class="text-sm text-gray-600 mb-4">
             <div><strong>{{ __('Created') }}:</strong>
@@ -179,6 +185,8 @@ new class extends Component {
             @endif
         </div>
     </div>
+        </x-slot:tab1>
+    </x-noerd::tab-content>
 
     <x-slot:footer>
         <div class="flex items-center w-full gap-2">
@@ -211,21 +219,21 @@ new class extends Component {
                             x-on:click="if(cooldown <= 0) { cooldown = 30; startCountdown(); }">
                             <span wire:loading.remove wire:target="resendNotificationEmail">
                                 <template x-if="cooldown <= 0">
-                                    <span>{{ __('Benachrichtigung erneut senden') }}</span>
+                                    <span>{{ __('Resend notification') }}</span>
                                 </template>
                                 <template x-if="cooldown > 0">
-                                    <span>{{ __('Benachrichtigung erneut senden') }} (<span x-text="cooldown"></span>s)</span>
+                                    <span>{{ __('Resend notification') }} (<span x-text="cooldown"></span>s)</span>
                                 </template>
                             </span>
                             <span wire:loading wire:target="resendNotificationEmail">
-                                {{ __('Wird gesendet...') }}
+                                {{ __('Sending...') }}
                             </span>
                         </x-noerd::button>
                     </div>
                 </div>
             @endif
 
-            <x-noerd::delete-save-bar :showDelete="$modelId" :showSave="false" />
+            <x-noerd::delete-save-bar :showDelete="isset($modelId)" :showSave="false" />
         </div>
     </x-slot:footer>
 </x-noerd::page>

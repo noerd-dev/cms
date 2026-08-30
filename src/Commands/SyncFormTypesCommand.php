@@ -1,13 +1,13 @@
 <?php
 
-namespace Noerd\Cms\Console\Commands;
+namespace Noerd\Cms\Commands;
 
 use Illuminate\Console\Command;
 use Noerd\Cms\Services\FormTypeSyncService;
 
 class SyncFormTypesCommand extends Command
 {
-    protected $signature = 'forms:sync
+    protected $signature = 'cms:sync-form-types
                             {--tenant-id= : Sync for a specific tenant ID}
                             {--force : Force sync even if files haven\'t changed}';
 
@@ -25,15 +25,15 @@ class SyncFormTypesCommand extends Command
 
         // Display results
         if ($results['synced'] > 0) {
-            $this->info("✓ Synced: {$results['synced']} form type(s)");
+            $this->info("Synced: {$results['synced']} form type(s)");
         }
 
         if ($results['skipped'] > 0) {
-            $this->comment("⊘ Skipped: {$results['skipped']} form type(s) (no changes)");
+            $this->comment("Skipped: {$results['skipped']} form type(s) (no changes)");
         }
 
         if ($results['errors'] > 0) {
-            $this->error("✗ Errors: {$results['errors']}");
+            $this->error("Errors: {$results['errors']}");
         }
 
         // Display detailed messages if verbose

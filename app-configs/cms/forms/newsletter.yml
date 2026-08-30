@@ -1,8 +1,6 @@
 key: newsletter
 title: Newsletter-Anmeldung
 description: 'Formular für Newsletter-Abonnements'
-is_active: true
-sort_order: 20
 send_email: true
 email_subject: 'Newsletter-Anmeldung: {{field:email}}'
 email_body: |

@@ -18,6 +18,20 @@ new class extends Component
 
     public ?string $detailRoute = 'cms.navigation.detail';
 
+    public $detailComponent = 'cms::navigation-detail';
+
+    public function mount(): void
+    {
+        $this->mountList();
+
+        if (empty($this->listFilters['language'])) {
+            $this->listFilters['language'] = session('selectedLanguage') ?: $this->getDefaultLanguageCode();
+        }
+
+        if (empty(session('selectedLanguage'))) {
+            session(['selectedLanguage' => $this->listFilters['language']]);
+        }
+    }
 
     #[Computed]
     public function tableFilters(): array
@@ -55,6 +69,8 @@ new class extends Component
         if (! empty($this->listFilters['language'])) {
             session(['selectedLanguage' => $this->listFilters['language']]);
         }
+
+        $this->resetPage();
     }
 
     public function createSubNav(mixed $parentId): void
@@ -69,11 +85,13 @@ new class extends Component
 
     public function listData(): array
     {
-        $allItems = Navigation::query()
+        // listQuery() applies search and the read guard; the hierarchical
+        // ordering below requires in-memory assembly and manual pagination.
+        $allItems = $this->listQuery($this->listModel)
             ->when($this->listFilters['navigation_key'] ?? null, function ($query, $key): void {
                 $query->where('navigation_key', $key);
             })
-            ->orderBy('sort_order')
+            ->reorder('sort_order')
             ->get();
 
         // Build hierarchical flat list: parent followed by its children
@@ -128,30 +146,6 @@ new class extends Component
         }
 
         return $this->buildList($rows);
-    }
-
-    public function rendering()
-    {
-        $this->loadListFilters();
-
-        $selectedLanguage = session('selectedLanguage');
-        if ($selectedLanguage && empty($this->listFilters['language'])) {
-            $this->listFilters['language'] = $selectedLanguage;
-        }
-
-        if (empty($this->listFilters['language']) && empty(session('selectedLanguage'))) {
-            $defaultCode = $this->getDefaultLanguageCode();
-            $this->listFilters['language'] = $defaultCode;
-            session(['selectedLanguage' => $defaultCode]);
-        }
-
-        if ((int) request()->navigationId) {
-            $this->listAction(request()->navigationId);
-        }
-
-        if (request()->create) {
-            $this->listAction();
-        }
     }
 
     private function getDefaultLanguageCode(): string

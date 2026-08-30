@@ -2,7 +2,6 @@
 
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
@@ -15,11 +14,11 @@ new class extends Component
 
     public ?string $detailRoute = 'cms.collection-definition.detail';
 
+    public $detailComponent = 'cms::collection-definition-detail';
 
     public function mount(): void
     {
-        $this->listId = Str::random();
-        $this->loadListFilters();
+        $this->mountList();
     }
 
     #[Computed]
@@ -114,6 +113,7 @@ new class extends Component
                 'title' => 'Collection Definitions',
                 'actions' => [['label' => 'New Collection', 'action' => 'listAction']],
                 'disableSearch' => false,
+                'notSortableColumns' => ['titleList', 'key', 'hasPage', 'fieldCount', 'entryCount', 'createdBy'],
                 'columns' => [
                     ['field' => 'titleList', 'label' => __('Title (Plural)')],
                     ['field' => 'key', 'label' => 'Key'],

@@ -11,27 +11,14 @@ new class extends Component
     public ?string $detailPrimary = 'authorId';
 
     public $detailModel = Author::class;
-
-    public function store(): void
-    {
-        $this->validate([
-            'detailData.name' => ['required', 'string', 'max:255'],
-        ]);
-
-        $data = $this->detailData;
-        $data['tenant_id'] = auth()->user()->selected_tenant_id;
-
-        $author = Author::updateOrCreate(
-            ['id' => $this->modelId],
-            $data,
-        );
-
-        $this->storeProcess($author);
-    }
 } ?>
 
 <x-noerd::page>
-    <x-noerd::tab-content :layout="$pageLayout" />
+    <x-slot:header>
+        <x-noerd::modal-title>{{ $pageLayout['title'] ?? __('Author') }}</x-noerd::modal-title>
+    </x-slot:header>
+
+    <x-noerd::tab-content :layout="$pageLayout" :modelId="$modelId" />
 
     <x-slot:footer>
         <x-noerd::delete-save-bar :showDelete="isset($modelId)" />

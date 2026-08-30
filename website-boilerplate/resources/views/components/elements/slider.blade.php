@@ -10,9 +10,6 @@ new class extends Component {
 <div class="py-4 pt-2 flex">
 
     <div class="w-full">
-        <h3 class="text-xl font-semibold mb-4">Slider</h3>
-        {{ $element->doesNotExist ?? '' }}
-
         <div class="grid gap-4">
             @foreach($this->collection('sliders') as $slider)
                 <div class="p-4 border rounded-lg">

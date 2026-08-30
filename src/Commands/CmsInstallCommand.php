@@ -9,7 +9,7 @@ use Noerd\Cms\Services\DefaultHomepageSeeder;
 use Noerd\Traits\HasModuleInstallation;
 use Noerd\Traits\RequiresNoerdInstallation;
 
-class NoerdCmsInstallCommand extends Command
+class CmsInstallCommand extends Command
 {
     use HasModuleInstallation;
     use RequiresNoerdInstallation;
@@ -20,16 +20,14 @@ class NoerdCmsInstallCommand extends Command
 
     public function handle(): int
     {
-        $this->installMediaIfNeeded();
-
         $result = $this->runModuleInstallation();
 
         if ($result === 0) {
             // Publish config file
             $this->publishConfig();
 
-            // Register the CMS module
-            $this->registerModule();
+            // Ensure the media filesystem the CMS media pickers rely on
+            $this->installMediaIfNeeded();
 
             // Seed a starter homepage for tenants that don't have one yet
             $this->seedDefaultHomepage();
@@ -66,11 +64,6 @@ class NoerdCmsInstallCommand extends Command
         return 'cms.dashboard';
     }
 
-    protected function getSnippetTitle(): string
-    {
-        return 'CMS';
-    }
-
     protected function getSourceDir(): string
     {
         return dirname(__DIR__, 2) . '/app-configs/cms';
@@ -87,7 +80,7 @@ class NoerdCmsInstallCommand extends Command
     /**
      * Publish the CMS config file to the project's config directory.
      */
-    private function publishConfig(): void
+    protected function publishConfig(): void
     {
         $source = __DIR__ . '/../../config/noerd_cms.php';
         $destination = config_path('noerd_cms.php');
@@ -105,48 +98,11 @@ class NoerdCmsInstallCommand extends Command
     }
 
     /**
-     * Register the CMS module with Composer.
-     */
-    private function registerModule(): void
-    {
-        $this->line('');
-        $this->info('Registering CMS module...');
-
-        try {
-            // Run composer require to register the module
-            $this->line('<comment>Running composer require noerd/cms...</comment>');
-            exec('composer require noerd/cms 2>&1', $output, $returnCode);
-
-            if ($returnCode !== 0) {
-                $this->warn('Composer require failed, trying composer dump-autoload...');
-            }
-
-            // Run composer dump-autoload
-            $this->line('<comment>Running composer dump-autoload...</comment>');
-            exec('composer dump-autoload 2>&1', $dumpOutput, $dumpReturnCode);
-
-            // Clear Laravel caches
-            Artisan::call('config:clear');
-            Artisan::call('cache:clear');
-
-            // Remove services cache to force re-discovery
-            $servicesCache = base_path('bootstrap/cache/services.php');
-            if (file_exists($servicesCache)) {
-                unlink($servicesCache);
-            }
-
-            $this->line('<info>CMS module registered successfully.</info>');
-        } catch (Exception $e) {
-            $this->warn('Module registration failed: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Seed a default homepage (page + cms_settings) for every tenant that does
      * not have one yet. Runs at install time, once tenants have been assigned,
-     * so a fresh installation starts with a usable starter page.
+     * so a fresh installation starts with a usable starter page. Idempotent.
      */
-    private function seedDefaultHomepage(): void
+    protected function seedDefaultHomepage(): void
     {
         try {
             (new DefaultHomepageSeeder())->seedMissingHomepages();

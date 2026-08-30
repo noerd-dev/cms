@@ -15,8 +15,6 @@ new class extends Component
 
     public $detailModel = Article::class;
 
-    public const DETAIL_COMPONENT = 'cms::article-detail';
-
     public function mount(): void
     {
         $this->initDetail();
@@ -120,6 +118,10 @@ new class extends Component
     public function authorSelected($authorId): void
     {
         $author = Author::find($authorId);
+        if (! $author) {
+            return;
+        }
+
         $this->detailData['author_id'] = $author->id;
         $this->relationTitles['author_id'] = $author->name;
     }
@@ -132,11 +134,17 @@ new class extends Component
 
     public function store(): void
     {
+        if (! $this->canSaveObject()) {
+            return;
+        }
+
         $this->validate([
             'detailData.title' => ['required', 'array'],
         ]);
 
-        $data = $this->detailData;
+        $data = collect($this->detailData)
+            ->except(['created_at', 'updated_at'])
+            ->toArray();
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
 
         // Clean empty slug values

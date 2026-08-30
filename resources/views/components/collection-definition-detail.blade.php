@@ -1,12 +1,15 @@
 <?php
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Support\CollectionDefinitionData;
+use Noerd\Facades\Noerd;
 use Noerd\Helpers\StaticConfigHelper;
 use Noerd\Traits\NoerdDetail;
 
@@ -53,7 +56,10 @@ new class extends Component
                 $this->detailData['description'] = $definition->description ?? '';
                 $this->detailData['hasPage'] = $definition->hasPage;
 
-                $this->fields = $definition->fields;
+                $this->fields = array_map(
+                    fn (array $field): array => $field + ['_key' => uniqid('field_', true)],
+                    $definition->fields,
+                );
                 foreach ($this->fields as $index => $field) {
                     $this->originalFieldNames[$index] = $field['name'];
                 }
@@ -68,6 +74,7 @@ new class extends Component
             'label' => '',
             'type' => 'text',
             'colspan' => 6,
+            '_key' => uniqid('field_', true),
         ];
     }
 
@@ -75,6 +82,20 @@ new class extends Component
     {
         unset($this->fields[$index]);
         $this->fields = array_values($this->fields);
+    }
+
+    #[Computed]
+    public function entryCount(): int
+    {
+        if (! $this->isEditing || ! $this->modelId) {
+            return 0;
+        }
+
+        $collection = Collection::where('tenant_id', Auth::user()->selected_tenant_id)
+            ->where('collection_key', mb_strtoupper(str_replace('-', '_', $this->modelId)))
+            ->first();
+
+        return $collection ? $collection->rows()->count() : 0;
     }
 
     public function store(): void
@@ -118,10 +139,11 @@ new class extends Component
             }
         }
 
-        // If there are renames and user hasn't confirmed yet, ask
+        // If there are renames and user hasn't confirmed yet, ask via modal
         if ($renames && ! $this->showRenameConfirmation) {
             $this->pendingRenames = $renames;
             $this->showRenameConfirmation = true;
+            Noerd::modal('cms::collection-rename-confirmation', ['renames' => $renames]);
 
             return;
         }
@@ -134,7 +156,7 @@ new class extends Component
             titleList: $this->detailData['titleList'],
             description: $this->detailData['description'] ?: null,
             hasPage: (bool) $this->detailData['hasPage'],
-            fields: array_values($this->fields),
+            fields: array_values(array_map(fn (array $field): array => Arr::except($field, ['_key']), $this->fields)),
         );
 
         $repository->save(
@@ -163,10 +185,17 @@ new class extends Component
         $this->isEditing = true;
         $this->modelId = $filename;
 
+        // A completed save resets the rename round trip and the rename baseline.
+        $this->syncOriginalFieldNames();
+        $this->pendingRenames = [];
+        $this->showRenameConfirmation = false;
+
         $this->dispatch('listRefresh');
+        $this->dispatch('refreshList-collection-definitions-list');
         $this->showSuccessIndicator = true;
     }
 
+    #[On('collectionRenameConfirmed')]
     public function confirmRenameAndSave(): void
     {
         $this->renameFieldsInDatabase();
@@ -175,6 +204,7 @@ new class extends Component
         $this->store();
     }
 
+    #[On('collectionRenameSkipped')]
     public function skipRenameAndSave(): void
     {
         $this->pendingRenames = [];
@@ -257,6 +287,7 @@ new class extends Component
         }
 
         $this->dispatch('listRefresh');
+        $this->dispatch('refreshList-collection-definitions-list');
         $this->closeModalProcess('collection-definitions-list');
     }
 
@@ -315,7 +346,7 @@ new class extends Component
                 </thead>
                 <tbody>
                     @foreach($fields as $index => $field)
-                        <tr wire:key="field-{{ $index }}" class="group hover:bg-brand-bg border border-black/10">
+                        <tr wire:key="field-{{ $field['_key'] ?? $index }}" class="group hover:bg-brand-bg border border-black/10">
                             <td class="py-1 first:pl-4 border-gray-300 border-r border-b">
                                 <input type="text" wire:model="fields.{{ $index }}.name"
                                        placeholder="{{ __('Field Name') }}"
@@ -370,34 +401,6 @@ new class extends Component
         </x-noerd::button>
     </div>
 
-    @if($showRenameConfirmation)
-        <div class="fixed inset-0 z-50 flex items-center justify-center" x-data x-on:keydown.escape.window="$wire.skipRenameAndSave()">
-            <div class="fixed inset-0 bg-gray-800/50" wire:click="skipRenameAndSave"></div>
-            <div class="relative bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ __('Rename fields in entries?') }}</h3>
-                <p class="text-sm text-gray-600 mb-4">{{ __('The following fields were renamed. Should the corresponding data in all existing entries of this collection be updated as well?') }}</p>
-                <ul class="text-sm text-gray-700 mb-4 space-y-1">
-                    @foreach($pendingRenames as $oldName => $newName)
-                        <li class="flex items-center gap-2">
-                            <span class="font-mono bg-gray-100 px-1.5 py-0.5 rounded">{{ $oldName }}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                            <span class="font-mono bg-gray-100 px-1.5 py-0.5 rounded">{{ $newName }}</span>
-                        </li>
-                    @endforeach
-                </ul>
-                <div class="flex justify-end gap-2">
-                    <x-noerd::button variant="secondary" wire:click="skipRenameAndSave">
-                        {{ __('No, save definition only') }}
-                    </x-noerd::button>
-                    <x-noerd::button variant="primary" wire:click="confirmRenameAndSave">
-                        {{ __('Yes, update entries') }}
-                    </x-noerd::button>
-                </div>
-            </div>
-        </div>
-    @endif
 
     <x-slot:footer>
         <div class="flex items-center w-full gap-2">
@@ -408,19 +411,7 @@ new class extends Component
                     </x-noerd::button>
                 </div>
             @endif
-            @php
-                $entryCount = 0;
-                if ($isEditing && $modelId) {
-                    $collectionKey = mb_strtoupper(str_replace('-', '_', $modelId));
-                    $collection = Collection::where('tenant_id', Auth::user()->selected_tenant_id)
-                        ->where('collection_key', $collectionKey)
-                        ->first();
-                    if ($collection) {
-                        $entryCount = $collection->rows()->count();
-                    }
-                }
-            @endphp
-            <x-noerd::delete-save-bar :showDelete="$isEditing" deleteMessage="{{ __('Warning: The collection and all associated entries (:count entries) will be permanently deleted. Continue?', ['count' => $entryCount]) }}" />
+            <x-noerd::delete-save-bar :showDelete="$isEditing" deleteMessage="{{ __('Warning: The collection and all associated entries (:count entries) will be permanently deleted. Continue?', ['count' => $this->entryCount]) }}" />
         </div>
     </x-slot:footer>
 </x-noerd::page>

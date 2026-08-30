@@ -1,40 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Locked;
 use Livewire\Component;
-use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
 
 new class () extends Component {
-    #[Locked]
-    public $clientId = null;
-
     public function with(): array
     {
         $tenantId = Auth::user()->selected_tenant_id;
 
-        $pagesCount = Page::where('tenant_id', $tenantId)->count();
-        $navigationCount = Navigation::where('tenant_id', $tenantId)->count();
-        $globalParametersCount = GlobalParameter::where('tenant_id', $tenantId)->count();
-
-        // Get active/published pages
-        $activePages = Page::where('tenant_id', $tenantId)
-            ->where('is_active', true)
-            ->count();
-
-        // Get recent pages (last 7 days)
-        $recentPages = Page::where('tenant_id', $tenantId)
-            ->where('created_at', '>=', now()->subDays(7))
-            ->count();
-
         return [
-            'pagesCount' => $pagesCount,
-            'navigationCount' => $navigationCount,
-            'globalParametersCount' => $globalParametersCount,
-            'activePages' => $activePages,
-            'recentPages' => $recentPages,
+            'pagesCount' => Page::where('tenant_id', $tenantId)->count(),
+            'navigationCount' => Navigation::where('tenant_id', $tenantId)->count(),
         ];
     }
 } ?>
@@ -46,7 +24,7 @@ new class () extends Component {
             {{ __('Overview') }}
         </div>
         <div class="flex">
-            <x-noerd::dashboard-card heroicon="document" title="Seiten" :value="$pagesCount"
+            <x-noerd::dashboard-card heroicon="document" title="{{ __('Pages') }}" :value="$pagesCount"
                                      component="cms::pages-list"/>
             <x-noerd::dashboard-card heroicon="list-bullet" title="Navigation" :value="$navigationCount"
                                      component="cms::navigation-list"/>
@@ -54,4 +32,3 @@ new class () extends Component {
     </div>
 
 </x-noerd::page>
-

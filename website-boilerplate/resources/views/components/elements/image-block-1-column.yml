@@ -2,5 +2,11 @@ title: 'Single Image Block'
 description: 'Display a single image with optional video URL'
 group: 'Images'
 fields:
-  - { name: image, label: Bild, type: image, colspan: 12 }
-  - { name: detailData.videoUrl, label: YouTube URL links (optional), type: translatableText, colspan: 6 }
+  - name: image
+    label: Image
+    type: image
+    colspan: 12
+  - name: detailData.videoUrl
+    label: YouTube URL (optional)
+    type: translatableText
+    colspan: 6

@@ -22,7 +22,7 @@ class Page extends Model
 
     public function elements()
     {
-        return $this->hasMany(ElementPage::class)->with('element')->orderBy('sort');
+        return $this->hasMany(ElementPage::class)->orderBy('sort');
     }
 
     protected static function newFactory()

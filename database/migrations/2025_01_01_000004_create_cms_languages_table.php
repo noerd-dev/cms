@@ -7,10 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        if (Schema::hasTable('cms_languages')) {
-            return;
-        }
-
         Schema::create('cms_languages', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
@@ -23,10 +19,6 @@ return new class extends Migration {
 
             $table->unique(['tenant_id', 'code']);
             $table->index('tenant_id');
-            $table->index('code');
-            $table->index('is_active');
-            $table->index('is_default');
-            $table->index('sort_order');
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
         });

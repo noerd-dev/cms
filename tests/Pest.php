@@ -29,7 +29,7 @@ uses(TestCase::class, RefreshDatabase::class)
             [
                 'title' => 'CMS',
                 'icon' => 'cms::icons.app',
-                'route' => 'cms.index',
+                'route' => 'cms.dashboard',
                 'is_active' => true,
             ],
         );

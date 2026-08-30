@@ -3,14 +3,14 @@ description: ''
 cols: 6
 fields:
   - name: detailData.send_email
-    label: Send Email Notification
+    label: Send email notification
     type: checkbox
     colspan: 6
   - name: detailData.email_subject
-    label: Email Subject
+    label: Email subject
     type: text
     colspan: 6
   - name: detailData.notification_email
-    label: Notification Email
+    label: Notification email (optional)
     type: text
     colspan: 6

@@ -11,17 +11,7 @@ new class extends Component {
 
     public ?string $detailRoute = 'cms.form-type.detail';
 
-
-    public function rendering()
-    {
-        if ((int) request()->formTypeId) {
-            $this->listAction(request()->formTypeId);
-        }
-
-        if (request()->create) {
-            $this->listAction();
-        }
-    }
+    public $detailComponent = 'cms::form-type-detail';
 } ?>
 
 <x-noerd::page>

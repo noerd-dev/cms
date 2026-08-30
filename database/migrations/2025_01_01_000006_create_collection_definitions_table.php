@@ -7,10 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        if (Schema::hasTable('collection_definitions')) {
-            return;
-        }
-
         Schema::create('collection_definitions', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('tenant_id');

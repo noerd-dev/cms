@@ -21,8 +21,8 @@ it('successfully mounts with element page', function () use ($testSettings): voi
 
     // Create a Page first
     $page = Page::create([
-        'name' => json_encode(['en' => 'Test Page']),
-        'slug' => json_encode(['en' => 'test-page']),
+        'name' => ['en' => 'Test Page'],
+        'slug' => ['en' => 'test-page'],
         'tenant_id' => $tenant->id,
     ]);
 
@@ -30,13 +30,13 @@ it('successfully mounts with element page', function () use ($testSettings): voi
     $elementPage = ElementPage::create([
         'page_id' => $page->id,
         'element_key' => 'text_block_1_column',
-        'data' => json_encode(['content' => 'Test content']),
+        'data' => ['content' => 'Test content'],
         'sort' => 1,
     ]);
 
     Livewire::test($testSettings['componentName'], ['modelId' => $elementPage->id])
         ->assertSet('modelId', $elementPage->id)
-        ->assertSet('elementPage.id', $elementPage->id)
+        ->assertSet('elementKey', 'text_block_1_column')
         ->assertHasNoErrors();
 });
 
@@ -47,15 +47,15 @@ it('validates element page data', function () use ($testSettings): void {
 
     // Create a Page first
     $page = Page::create([
-        'name' => json_encode(['en' => 'Test Page']),
-        'slug' => json_encode(['en' => 'test-page']),
+        'name' => ['en' => 'Test Page'],
+        'slug' => ['en' => 'test-page'],
         'tenant_id' => $tenant->id,
     ]);
 
     $elementPage = ElementPage::create([
         'page_id' => $page->id,
         'element_key' => 'text_block_1_column',
-        'data' => json_encode(['content' => 'Test content']),
+        'data' => ['content' => 'Test content'],
         'sort' => 1,
     ]);
 
@@ -72,15 +72,15 @@ it('can delete element page', function () use ($testSettings): void {
 
     // Create a Page first
     $page = Page::create([
-        'name' => json_encode(['en' => 'Test Page']),
-        'slug' => json_encode(['en' => 'test-page']),
+        'name' => ['en' => 'Test Page'],
+        'slug' => ['en' => 'test-page'],
         'tenant_id' => $tenant->id,
     ]);
 
     $elementPage = ElementPage::create([
         'page_id' => $page->id,
         'element_key' => 'text_block_1_column',
-        'data' => json_encode(['content' => 'Test content']),
+        'data' => ['content' => 'Test content'],
         'sort' => 1,
     ]);
 
@@ -98,15 +98,15 @@ it('uses passed modelId instead of URL id parameter', function () use ($testSett
     $this->actingAs($user);
 
     $page = Page::create([
-        'name' => json_encode(['en' => 'Test Page']),
-        'slug' => json_encode(['en' => 'test-page']),
+        'name' => ['en' => 'Test Page'],
+        'slug' => ['en' => 'test-page'],
         'tenant_id' => $tenant->id,
     ]);
 
     $elementPage = ElementPage::create([
         'page_id' => $page->id,
         'element_key' => 'text_block_1_column',
-        'data' => json_encode(['content' => 'Test content']),
+        'data' => ['content' => 'Test content'],
         'sort' => 1,
     ]);
 
@@ -114,7 +114,7 @@ it('uses passed modelId instead of URL id parameter', function () use ($testSett
     Livewire::withUrlParams(['id' => 999])
         ->test($testSettings['componentName'], ['modelId' => $elementPage->id])
         ->assertSet('modelId', $elementPage->id)
-        ->assertSet('elementPage.id', $elementPage->id)
+        ->assertSet('elementKey', 'text_block_1_column')
         ->call('store')
         ->assertHasNoErrors();
 });
@@ -124,15 +124,15 @@ it('store handles non-existent element page gracefully', function () use ($testS
     $this->actingAs($user);
 
     $page = Page::create([
-        'name' => json_encode(['en' => 'Test Page']),
-        'slug' => json_encode(['en' => 'test-page']),
+        'name' => ['en' => 'Test Page'],
+        'slug' => ['en' => 'test-page'],
         'tenant_id' => $tenant->id,
     ]);
 
     $elementPage = ElementPage::create([
         'page_id' => $page->id,
         'element_key' => 'text_block_1_column',
-        'data' => json_encode(['content' => 'Test content']),
+        'data' => ['content' => 'Test content'],
         'sort' => 1,
     ]);
 
@@ -148,15 +148,15 @@ it('delete handles non-existent element page gracefully', function () use ($test
     $this->actingAs($user);
 
     $page = Page::create([
-        'name' => json_encode(['en' => 'Test Page']),
-        'slug' => json_encode(['en' => 'test-page']),
+        'name' => ['en' => 'Test Page'],
+        'slug' => ['en' => 'test-page'],
         'tenant_id' => $tenant->id,
     ]);
 
     $elementPage = ElementPage::create([
         'page_id' => $page->id,
         'element_key' => 'text_block_1_column',
-        'data' => json_encode(['content' => 'Test content']),
+        'data' => ['content' => 'Test content'],
         'sort' => 1,
     ]);
 
@@ -176,15 +176,15 @@ it('shows a content error when element layout is missing', function () use ($tes
 
     // Create a Page first
     $page = Page::create([
-        'name' => json_encode(['en' => 'Test Page']),
-        'slug' => json_encode(['en' => 'test-page']),
+        'name' => ['en' => 'Test Page'],
+        'slug' => ['en' => 'test-page'],
         'tenant_id' => $tenant->id,
     ]);
 
     $elementPage = ElementPage::create([
         'page_id' => $page->id,
         'element_key' => '____missing____',
-        'data' => json_encode(['foo' => 'bar']),
+        'data' => ['foo' => 'bar'],
         'sort' => 1,
     ]);
 

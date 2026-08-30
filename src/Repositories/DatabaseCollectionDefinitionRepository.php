@@ -28,8 +28,14 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
     {
         $tenantId ??= TenantHelper::getSelectedTenantId();
 
+        // Fail closed: without a tenant context there is nothing to list. An
+        // unscoped query would leak every tenant's definitions.
+        if ($tenantId === null) {
+            return collect();
+        }
+
         return CollectionDefinition::query()
-            ->when($tenantId !== null, fn($q) => $q->where('tenant_id', $tenantId))
+            ->where('tenant_id', $tenantId)
             ->orderBy('title_list')
             ->get()
             ->map(fn(CollectionDefinition $m) => $this->toData($m));
@@ -46,8 +52,12 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
     {
         $tenantId ??= TenantHelper::getSelectedTenantId();
 
+        if ($tenantId === null) {
+            return null;
+        }
+
         $model = CollectionDefinition::query()
-            ->when($tenantId !== null, fn($q) => $q->where('tenant_id', $tenantId))
+            ->where('tenant_id', $tenantId)
             ->where('key', mb_strtoupper($key))
             ->first();
 
@@ -62,7 +72,12 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
     public function resolveFields(string $filename): ?array
     {
         $tenantId = TenantHelper::getSelectedTenantId();
-        $cacheKey = ($tenantId ?? 'null') . ':' . $filename;
+
+        if ($tenantId === null) {
+            return null;
+        }
+
+        $cacheKey = $tenantId . ':' . $filename;
 
         if (array_key_exists($cacheKey, self::$requestCache)) {
             return self::$requestCache[$cacheKey];
@@ -144,10 +159,10 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
         self::resetCache();
     }
 
-    private function resolveFieldsUncached(string $filename, ?int $tenantId): ?array
+    private function resolveFieldsUncached(string $filename, int $tenantId): ?array
     {
         $query = CollectionDefinition::query()
-            ->when($tenantId !== null, fn($q) => $q->where('tenant_id', $tenantId));
+            ->where('tenant_id', $tenantId);
 
         $model = (clone $query)->where('filename', $filename)->first();
 
@@ -189,8 +204,13 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
     {
         $tenantId ??= TenantHelper::getSelectedTenantId();
 
+        // Fail closed — see all(): no tenant, no rows.
+        if ($tenantId === null) {
+            return null;
+        }
+
         return CollectionDefinition::query()
-            ->when($tenantId !== null, fn($q) => $q->where('tenant_id', $tenantId))
+            ->where('tenant_id', $tenantId)
             ->where('filename', $filename)
             ->first();
     }

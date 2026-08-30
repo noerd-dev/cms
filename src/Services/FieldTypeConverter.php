@@ -3,6 +3,7 @@
 namespace Noerd\Cms\Services;
 
 use Noerd\Cms\Helpers\CollectionHelper;
+use Noerd\Cms\Support\CmsLanguageCodes;
 
 class FieldTypeConverter
 {
@@ -47,48 +48,50 @@ class FieldTypeConverter
     }
 
     /**
-     * Convert data to translatable field format
+     * Convert data to translatable field format: a map of the tenant's active
+     * language codes. The language set is tenant-configurable, so it is never
+     * hardcoded here.
      *
-     * @param  mixed  $value
+     * @return array<string, mixed>
      */
-    private static function convertToTranslatableField($value): array
+    private static function convertToTranslatableField(mixed $value): array
     {
         // If already in translatable format, return as-is
-        if (is_array($value) && (isset($value['de']) || isset($value['en']))) {
+        if (is_array($value) && CmsLanguageCodes::isLanguageMap($value)) {
             return $value;
         }
 
-        // Convert string to translatable format
-        if (is_string($value)) {
-            return [
-                'de' => $value,
-                'en' => $value, // Copy value to both languages as starting point
-            ];
-        }
+        // Copy the scalar value to every active language as a starting point;
+        // structured arrays cannot be stringified and start with empty slots.
+        $stringValue = is_scalar($value) ? (string) $value : '';
 
-        // Default fallback
-        $stringValue = (string) $value;
-
-        return [
-            'de' => $stringValue,
-            'en' => $stringValue, // Copy value to both languages as starting point
-        ];
+        return array_fill_keys(CmsLanguageCodes::active(), $stringValue);
     }
 
     /**
      * Convert data from translatable field format to simple field
-     *
-     * @param  mixed  $value
-     * @return mixed
      */
-    private static function convertFromTranslatableField($value)
+    private static function convertFromTranslatableField(mixed $value): mixed
     {
         if (is_array($value)) {
             // Only collapse arrays that actually look like translatable values.
             // Lists/repeater values must be preserved as-is, otherwise saving a
             // collection page would wipe the structured data.
-            if (array_key_exists('de', $value) || array_key_exists('en', $value)) {
-                return $value['de'] ?? $value['en'] ?? '';
+            if (CmsLanguageCodes::isLanguageMap($value)) {
+                // Prefer the default language, then any non-empty value.
+                foreach (CmsLanguageCodes::active() as $code) {
+                    if (isset($value[$code]) && $value[$code] !== '') {
+                        return $value[$code];
+                    }
+                }
+
+                foreach ($value as $languageValue) {
+                    if ($languageValue !== null && $languageValue !== '') {
+                        return $languageValue;
+                    }
+                }
+
+                return '';
             }
 
             return $value;

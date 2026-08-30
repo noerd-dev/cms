@@ -48,16 +48,13 @@ new class extends Component {
 
         session(['selectedLanguage' => $code]);
 
-
-        if ($page) {
-            $slug = $page->slug;
-
-            return redirect($slug[$code]);
-
+        // Redirect to the page's slug in the target language when it exists;
+        // otherwise stay on (or fall back to) the start page.
+        if ($page && ! empty($page->slug[$code])) {
+            return redirect($page->slug[$code]);
         }
 
-        redirect($slug ?? '/');
-
+        return redirect($slug ?: '/');
     }
 } ?>
 <div class="w-full flex">

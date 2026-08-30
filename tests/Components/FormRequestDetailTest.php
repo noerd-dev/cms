@@ -21,7 +21,7 @@ beforeEach(function (): void {
         [
             'title' => 'CMS',
             'icon' => 'cms::icons.app',
-            'route' => 'cms.index',
+            'route' => 'cms.dashboard',
             'is_active' => true,
         ],
     );
@@ -73,7 +73,7 @@ it('shows resend button when form type has notification email configured', funct
 
     Livewire::actingAs($this->user)
         ->test('form-request-page', ['modelId' => $formRequest->id])
-        ->assertSee('Benachrichtigung erneut senden');
+        ->assertSee(__('Resend notification'));
 });
 
 it('hides resend button when no form type is assigned', function (): void {
@@ -86,7 +86,7 @@ it('hides resend button when no form type is assigned', function (): void {
 
     Livewire::actingAs($this->user)
         ->test('form-request-page', ['modelId' => $formRequest->id])
-        ->assertDontSee('Benachrichtigung erneut senden');
+        ->assertDontSee(__('Resend notification'));
 });
 
 it('hides resend button when notification email is empty', function (): void {
@@ -101,7 +101,7 @@ it('hides resend button when notification email is empty', function (): void {
 
     Livewire::actingAs($this->user)
         ->test('form-request-page', ['modelId' => $formRequest->id])
-        ->assertDontSee('Benachrichtigung erneut senden');
+        ->assertDontSee(__('Resend notification'));
 });
 
 it('hides resend button when send_email is disabled', function (): void {
@@ -116,7 +116,7 @@ it('hides resend button when send_email is disabled', function (): void {
 
     Livewire::actingAs($this->user)
         ->test('form-request-page', ['modelId' => $formRequest->id])
-        ->assertDontSee('Benachrichtigung erneut senden');
+        ->assertDontSee(__('Resend notification'));
 });
 
 it('sends notification email only to the notification address', function (): void {

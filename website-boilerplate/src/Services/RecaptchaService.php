@@ -27,7 +27,7 @@ class RecaptchaService
             return true; // Allow submission if reCAPTCHA is not configured
         }
 
-        if (empty($token)) {
+        if (empty(mb_trim($token))) {
             return false;
         }
 

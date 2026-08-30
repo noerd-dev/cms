@@ -2,9 +2,11 @@
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Helpers\CollectionHelper;
+use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\FieldTypeConverter;
+use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Models\NoerdUser;
 use Noerd\Models\Tenant;
@@ -23,7 +25,7 @@ describe('FieldTypeConverter', function (): void {
             'name' => 'CMS_' . uniqid() . '_' . getmypid(),
             'title' => 'CMS',
             'icon' => 'cms::icons.app',
-            'route' => 'cms.index',
+            'route' => 'cms.dashboard',
             'is_active' => true,
         ]);
 
@@ -34,6 +36,17 @@ describe('FieldTypeConverter', function (): void {
         TenantHelper::setSelectedTenantId($tenant->id);
 
         $this->actingAs($user);
+
+        // The converter derives its language slots from the tenant's configured
+        // CMS languages — give this tenant German (default) and English so the
+        // expectations below are tenant-driven, not hardcoded. The Tenant::created
+        // hook already seeded a default language, hence updateOrCreate.
+        CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_active' => true, 'is_default' => true]);
+        CmsLanguage::updateOrCreate(
+            ['tenant_id' => $tenant->id, 'code' => 'en'],
+            ['name' => 'English', 'is_active' => true, 'is_default' => false],
+        );
+        CmsLanguageCodes::clearCache();
 
         // Mock CollectionHelper via Laravel's container
         $this->mock(CollectionHelper::class, function ($mock): void {

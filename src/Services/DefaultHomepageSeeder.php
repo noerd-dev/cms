@@ -2,45 +2,41 @@
 
 namespace Noerd\Cms\Services;
 
-use Illuminate\Support\Facades\DB;
+use Noerd\Cms\Models\CmsSetting;
+use Noerd\Cms\Models\Page;
+use Noerd\Models\Tenant;
 
 class DefaultHomepageSeeder
 {
     /**
-     * Create a default homepage page and cms_settings entry for every tenant that
-     * does not yet have a homepage configured. Idempotent: tenants that already
-     * have a homepage_page_id are skipped, so it is safe to run on every install.
+     * Create a default homepage page and cms_settings entry for every CMS tenant
+     * that does not yet have a homepage configured. Idempotent: tenants that
+     * already have a homepage_page_id are skipped, so it is safe to run on every
+     * install and update.
      */
     public function seedMissingHomepages(): void
     {
-        $tenantsWithoutHomepage = DB::table('tenants')
-            ->whereNotIn('id', function ($query): void {
-                $query->select('tenant_id')
-                    ->from('cms_settings')
-                    ->whereNotNull('homepage_page_id');
-            })
+        $tenantIdsWithHomepage = CmsSetting::query()
+            ->whereNotNull('homepage_page_id')
+            ->pluck('tenant_id');
+
+        $tenantsWithoutHomepage = Tenant::query()
+            ->whereHas('tenantApps', fn($query) => $query->where('name', 'CMS'))
+            ->whereNotIn('id', $tenantIdsWithHomepage)
             ->pluck('id');
 
-        $now = now();
-
         foreach ($tenantsWithoutHomepage as $tenantId) {
-            $pageId = DB::table('pages')->insertGetId([
+            $page = Page::create([
                 'tenant_id' => $tenantId,
-                'name' => json_encode(['de' => 'Startseite', 'en' => 'Homepage']),
-                'slug' => json_encode(['de' => '/startseite', 'en' => '/homepage']),
+                'name' => ['de' => 'Startseite', 'en' => 'Homepage'],
+                'slug' => ['de' => '/startseite', 'en' => '/homepage'],
                 'is_active' => true,
                 'layout' => null,
-                'created_at' => $now,
-                'updated_at' => $now,
             ]);
 
-            DB::table('cms_settings')->updateOrInsert(
+            CmsSetting::updateOrCreate(
                 ['tenant_id' => $tenantId],
-                [
-                    'homepage_page_id' => $pageId,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ],
+                ['homepage_page_id' => $page->id],
             );
         }
     }

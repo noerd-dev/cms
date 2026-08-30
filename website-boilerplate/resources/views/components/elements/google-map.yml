@@ -2,4 +2,7 @@ title: 'Google Map'
 description: 'Embed Google Map with custom coordinates'
 group: 'Maps & Media'
 fields:
-  - { name: detailData.latLng, label: Koordinaten Punkt, type: text, colspan: 12 }
+  - name: detailData.latLng
+    label: Coordinates
+    type: text
+    colspan: 12

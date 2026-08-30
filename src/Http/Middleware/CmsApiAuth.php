@@ -1,6 +1,6 @@
 <?php
 
-namespace Noerd\Cms\Middleware;
+namespace Noerd\Cms\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
@@ -33,18 +33,20 @@ class CmsApiAuth
             $token = (string) $request->query('api_token', '');
         }
 
+        // One generic message for every failure mode: the response must not
+        // disclose whether a presented token exists or how far it got.
         if (! $token) {
-            return response()->json(['message' => 'Unauthorized: missing API token'], 401);
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $user = NoerdUser::where('api_token', $token)->first();
         if (! $user || ! $user->selected_tenant_id) {
-            return response()->json(['message' => 'Unauthorized: invalid API token'], 401);
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $tenant = Tenant::find($user->selected_tenant_id);
         if (! $tenant) {
-            return response()->json(['message' => 'Unauthorized: tenant not found'], 401);
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         // Attach user and tenant context to request

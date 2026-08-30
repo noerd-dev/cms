@@ -38,7 +38,9 @@ trait HandlesPageElements
                 $elementKey = 'text_block_1_column';
             }
 
-            $rawData = json_decode($pageElement->data, true) ?? [];
+            $rawData = is_array($pageElement->data)
+                ? $pageElement->data
+                : (json_decode((string) $pageElement->data, true) ?? []);
 
             foreach ($elementCollectionsByOwner->get($pageElement->id, collect()) as $elementCollection) {
                 if (! $elementCollection->owner_field) {
@@ -49,10 +51,11 @@ trait HandlesPageElements
                     ->all();
             }
 
-            $element['id'] = $pageElement->id;
-            $element['key'] = $elementKey;
-            $element['data'] = (object) $this->localizeElementData($rawData, $selectedLanguage);
-            $elements[] = $element;
+            $elements[] = [
+                'id' => $pageElement->id,
+                'key' => $elementKey,
+                'data' => (object) $this->localizeElementData($rawData, $selectedLanguage),
+            ];
         }
 
         return $elements;
@@ -65,7 +68,7 @@ trait HandlesPageElements
     {
         $mapping = [];
 
-        $customElementsPath = env('CMS_PAGE_ELEMENTS_PATH');
+        $customElementsPath = config('noerd_cms.page_elements_path');
         $bladeFiles = [];
 
         if (! empty($customElementsPath) && is_dir(base_path($customElementsPath))) {
@@ -157,9 +160,6 @@ trait HandlesPageElements
     {
         // Derived from the configured CMS languages, so a tenant-added language
         // (e.g. Danish) is recognised without touching the framework.
-        $languageCodes = CmsLanguageCodes::known();
-        $keys = array_keys($array);
-
-        return ! empty($keys) && count(array_intersect($keys, $languageCodes)) === count($keys);
+        return CmsLanguageCodes::isLanguageMap($array);
     }
 }

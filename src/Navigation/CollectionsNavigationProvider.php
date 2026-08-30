@@ -31,7 +31,7 @@ class CollectionsNavigationProvider implements DynamicNavigationProviderContract
             ->filter(fn(CollectionDefinitionData $d) => $d->hasPage === $hasPage)
             ->map(fn(CollectionDefinitionData $d) => [
                 'title' => $d->titleList,
-                'link' => "/cms/collections?key={$d->filename}",
+                'link' => route('cms.collections', ['key' => $d->filename], absolute: false),
                 'icon' => 'icons.list-bullet',
             ])
             ->values()

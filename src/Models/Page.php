@@ -4,6 +4,8 @@ namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Noerd\Cms\Database\Factories\PageFactory;
 use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Traits\BelongsToTenant;
@@ -15,44 +17,29 @@ class Page extends Model
 
     protected $guarded = [];
 
-    protected $casts = [
-        'meta_noindex' => 'boolean',
-        'data' => 'array',
-        'name' => 'array',
-        'slug' => 'array',
-        'meta_title' => 'array',
-        'meta_description' => 'array',
-        'custom_attributes' => 'array',
-    ];
-
     protected $attributes = [
         'is_active' => true,
     ];
 
-    public function elements()
+    public function elements(): HasMany
     {
         return $this->hasMany(ElementPage::class)->orderBy('sort');
     }
 
-    public function collection()
+    public function collection(): BelongsTo
     {
         return $this->belongsTo(Collection::class);
     }
 
-    protected static function newFactory()
+    protected static function newFactory(): PageFactory
     {
         return PageFactory::new();
     }
 
-    /**
-     * Boot method to add model event listeners
-     */
-    protected static function boot(): void
+    protected static function booted(): void
     {
-        parent::boot();
-
         // Apply field type conversion before saving collection pages
-        static::saving(function ($page): void {
+        static::saving(function (self $page): void {
             if ($page->collection_id && $page->collection) {
                 $collectionKey = mb_strtolower($page->collection->collection_key);
 
@@ -65,7 +52,7 @@ class Page extends Model
 
         // Remove element collections owned by this entry or by any of its page
         // elements. Their row pages cascade away via the pages.collection_id FK.
-        static::deleting(function ($page): void {
+        static::deleting(function (self $page): void {
             $elementPageIds = $page->elements()->pluck('id')->all();
 
             Collection::query()
@@ -78,5 +65,22 @@ class Page extends Model
                 ->each
                 ->delete();
         });
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'meta_noindex' => 'boolean',
+            'is_active' => 'boolean',
+            'data' => 'array',
+            'name' => 'array',
+            'slug' => 'array',
+            'meta_title' => 'array',
+            'meta_description' => 'array',
+            'custom_attributes' => 'array',
+        ];
     }
 }

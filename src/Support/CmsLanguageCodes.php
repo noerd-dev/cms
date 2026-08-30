@@ -6,6 +6,7 @@ namespace Noerd\Cms\Support;
 
 use Illuminate\Support\Facades\Schema;
 use Noerd\Cms\Models\CmsLanguage;
+use Noerd\Helpers\TenantHelper;
 use Throwable;
 
 /**
@@ -34,8 +35,14 @@ final class CmsLanguageCodes
      */
     public const BUILT_IN = ['de', 'en', 'fr', 'es', 'it', 'nl'];
 
-    /** @var array<int, string>|null */
-    private static ?array $activeCache = null;
+    /**
+     * Memoized active codes, keyed by tenant id (0 = no tenant context) so a
+     * process serving several tenants (Octane, queue workers, tests) never
+     * serves one tenant's language list to another.
+     *
+     * @var array<int, array<int, string>>
+     */
+    private static array $activeCache = [];
 
     /** @var array<int, string>|null */
     private static ?array $knownCache = null;
@@ -48,8 +55,10 @@ final class CmsLanguageCodes
      */
     public static function active(): array
     {
-        if (self::$activeCache !== null) {
-            return self::$activeCache;
+        $tenantId = (int) (TenantHelper::currentTenantId() ?? 0);
+
+        if (isset(self::$activeCache[$tenantId])) {
+            return self::$activeCache[$tenantId];
         }
 
         $codes = self::query(
@@ -61,7 +70,7 @@ final class CmsLanguageCodes
                 ->all(),
         );
 
-        return self::$activeCache = $codes === [] ? self::FALLBACK : $codes;
+        return self::$activeCache[$tenantId] = $codes === [] ? self::FALLBACK : $codes;
     }
 
     /**
@@ -86,11 +95,25 @@ final class CmsLanguageCodes
     }
 
     /**
+     * Whether an array reads as a language map: every key is a known language
+     * code. The single heuristic shared by every "is this value translatable?"
+     * decision in the module.
+     *
+     * @param  array<array-key, mixed>  $value
+     */
+    public static function isLanguageMap(array $value): bool
+    {
+        $keys = array_keys($value);
+
+        return $keys !== [] && count(array_intersect($keys, self::known())) === count($keys);
+    }
+
+    /**
      * Drop the memoized codes — call after adding or removing a language.
      */
     public static function clearCache(): void
     {
-        self::$activeCache = null;
+        self::$activeCache = [];
         self::$knownCache = null;
     }
 

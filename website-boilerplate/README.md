@@ -1,80 +1,43 @@
-# CMS Website Boilerplate
+# Website Module
 
-This module provides a complete website boilerplate for the CMS system with its own dedicated CSS and JavaScript assets.
+The public website frontend for the Noerd CMS. This module is a boilerplate: `php artisan noerd:install-website` copies it into a project as `app-modules/website`, where it becomes project-owned code that you customize freely (layout, elements, styling).
+
+## What it provides
+
+- **Catch-all slug routing** — every active CMS page is served under its slug, per language (the tenant's default language without a prefix, other languages with their `/{lang}/...` slugs as stored). Registered with the lowest priority so it never shadows other module routes.
+- **Homepage** — `/index` renders the page configured as the tenant's homepage (CMS → Settings).
+- **Page elements** — the blade/YAML element pairs in `resources/views/components/elements/` are discovered by the CMS element picker; the element data is localized and rendered through the shared `PageElementService` (a thin subclass of the CMS implementation).
+- **Navigation & globals** — a view composer shares `$navigation` (all CMS navigation keys) and `$globals` (global parameters) with every view.
+- **Multi-language** — languages come from the CMS language configuration (`cms_languages`); the language switcher swaps between the page's slugs.
+- **Contact form** — a Livewire form storing `form_requests` rows, with optional reCAPTCHA (`config/recaptcha.php`).
+- **Tenant resolution** — `WebsiteMiddleware` resolves the tenant by `?hash=`, `?uuid=` (the backend quick-menu link) or falls back to the first tenant for single-tenant installations.
+
+## Requirements
+
+The module requires `noerd/cms` (models, language codes, element processing) and `noerd/noerd`. Both are declared in `composer.json` and are installed before this module.
 
 ## Assets
 
-### CSS (`resources/css/website.css`)
-- **Tailwind CSS 4**: Uses the new `@import "tailwindcss"` syntax
-- **Component Scoping**: Only includes styles from website boilerplate templates
-- **Custom Components**: Includes website-specific component classes
-- **Build Output**: Compiled to `public/build/assets/website-*.css`
+The layout (`resources/views/components/layouts/weblayout.blade.php`) uses the host project's Vite entries `resources/css/app.css` and `resources/js/app.js` — Tailwind CSS must be available there. The module ships no own CSS/JS build.
 
-### JavaScript (`resources/js/website.js`)
-- **Mobile Navigation**: Enhanced mobile menu with ARIA support
-- **Smooth Scrolling**: Automatic smooth scroll for anchor links
-- **Image Lazy Loading**: Fallback for browsers without native support
-- **reCAPTCHA Integration**: Callback handling for contact forms
-- **Build Output**: Compiled to `public/build/assets/website-*.js`
+## Configuration
 
-## Build Configuration
+`config/website.php`:
 
-The assets are automatically built when running:
-```bash
-npm run build
-npm run dev
-```
+- `media_url` (`MEDIA_URL`) — optional prefix for media file paths rendered by image elements.
+- `google_maps_key` (`GOOGLE_MAPS_API_KEY`) — required by the google-map element.
 
-Both files are configured in `vite.config.js`:
-```javascript
-input: [
-    'app-modules/cms/website-boilerplate/resources/css/website.css',
-    'app-modules/cms/website-boilerplate/resources/js/website.js',
-]
-```
+`config/recaptcha.php` (`RECAPTCHA_SITE_KEY` / `RECAPTCHA_SECRET_KEY`) — optional; the contact form fails open when unset.
 
-## Templates
+## Adding a page element
 
-The website boilerplate uses its own layout template:
-- **Layout**: `resources/views/components/layouts/weblayout.blade.php`
-- **Page Template**: `resources/views/page.blade.php`
-- **Element Components**: `resources/views/components/elements/*.blade.php`
+Create a blade/YAML pair in `resources/views/components/elements/`:
 
-## CSS Classes
+- `my-element.blade.php` — a Livewire single-file component using the `NoerdElement` trait; it receives the localized element data as `$element`.
+- `my-element.yml` — `title`, `description`, `group` and the `fields` the CMS editor shows (block-style YAML, English labels).
 
-The website.css provides these utility classes:
+The kebab-case file name maps to the snake_case element key (`my-element` → `my_element`).
 
-### Navigation
-- `.nav-link` - Base navigation link styles
-- `.nav-link--active` - Active navigation state
-- `.nav-link--inactive` - Inactive navigation state
+## Tests
 
-### Buttons
-- `.btn-primary` - Primary button styling
-- `.btn-secondary` - Secondary button styling
-
-### Forms
-- `.form-input` - Input field styling
-- `.form-label` - Label styling
-- `.form-error` - Error message styling
-
-### Layout
-- `.content-section` - Content section padding
-- `.content-container` - Container with max-width
-
-## Development
-
-When developing the website boilerplate:
-
-1. **CSS Changes**: Edit `resources/css/website.css`
-2. **JS Changes**: Edit `resources/js/website.js`
-3. **Build**: Run `npm run build` or `npm run dev`
-4. **Templates**: The layout automatically loads the built assets
-
-## Independence
-
-This module is completely independent from the main application's CSS/JS:
-- ✅ No dependency on `resources/css/app.css`
-- ✅ No dependency on `resources/js/app.js`
-- ✅ Own Tailwind configuration and scoping
-- ✅ Separate build output
+Pest tests live in `tests/`; run them from the host project with `php artisan test --compact app-modules/website/tests`.

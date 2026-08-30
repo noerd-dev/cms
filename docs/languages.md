@@ -6,14 +6,14 @@ The CMS supports multiple languages per tenant. Each translatable field (page na
 
 YAML Configurations:
 ```
-app-configs/cms/details/cms-language-detail.yml
-app-configs/cms/lists/cms-languages-list.yml
+app-configs/cms/details/language-detail.yml
+app-configs/cms/lists/languages-list.yml
 ```
 
 Livewire Components:
 ```
-app-modules/cms/resources/views/components/cms-language-detail.blade.php
-app-modules/cms/resources/views/components/cms-languages-list.blade.php
+app-modules/cms/resources/views/components/language-detail.blade.php
+app-modules/cms/resources/views/components/languages-list.blade.php
 app-modules/cms/resources/views/components/language-switcher.blade.php
 ```
 
@@ -36,7 +36,7 @@ Each tenant has exactly one default language. The CMS enforces this automaticall
 - When a new tenant is created, English (`en`) is set as the default language
 - Setting a new default language automatically unsets the previous default
 - If the current default is deactivated, the next active language becomes default
-- The default language cannot be deleted while other languages exist
+- When the default language is deleted, the next active language is promoted to default
 
 This logic is handled in the `CmsLanguage` model's boot method and the `ensureDefaultLanguageForTenant()` static method.
 

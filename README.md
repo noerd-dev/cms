@@ -9,6 +9,7 @@ submissions.
 
 - `noerd/noerd` (base framework)
 - `noerd/media` (file/media storage)
+- `noerd/communication` (email delivery for form notifications)
 
 ## Installation
 
@@ -20,6 +21,9 @@ php artisan noerd:install
 
 git submodule add git@github.com:noerd-dev/media.git app-modules/media
 composer require noerd/media
+
+git submodule add git@github.com:noerd-dev/communication.git app-modules/communication
+composer require noerd/communication
 ```
 
 Install the CMS module:
@@ -31,8 +35,10 @@ composer require noerd/cms
 php artisan noerd:install-cms
 ```
 
-The install command sets up database tables, publishes the configuration, and
-seeds the default tenant language.
+The install command publishes the YAML configs and the module configuration,
+registers the tenant app, runs the migrations and seeds a starter homepage for
+every tenant. The default tenant language is created automatically whenever a
+tenant is created.
 
 ## Configuration
 
@@ -40,11 +46,13 @@ seeds the default tenant language.
 
 ```php
 return [
-    'website_url' => env('CMS_WEBSITE_URL'),
+    'website_url' => env('CMS_WEBSITE_URL', ''),
+    'page_elements_path' => env('CMS_PAGE_ELEMENTS_PATH'),
 ];
 ```
 
-Set `CMS_WEBSITE_URL` in `.env` for live-preview links.
+Set `CMS_WEBSITE_URL` in `.env` for live-preview links; `CMS_PAGE_ELEMENTS_PATH`
+optionally adds an extra page-element directory.
 
 ## Core Features
 
@@ -109,8 +117,8 @@ Key classes:
 
 ## Routes
 
-All CMS routes are prefixed `/cms` and protected by `auth`, `verified`, and
-`app-access:cms` middleware.
+All CMS routes are prefixed `/cms` and protected by the `noerd` middleware
+group and `app-access:cms`.
 
 | Route | Component |
 |---|---|
@@ -134,7 +142,8 @@ All CMS routes are prefixed `/cms` and protected by `auth`, `verified`, and
 |---|---|
 | `pages` | Pages and collection entries |
 | `element_page` | Page-element associations with JSON data |
-| `cms_collections` | Collection definitions (including element collections) |
+| `collections` | Per-tenant collection instances (including element collections) |
+| `collection_definitions` | Collection definitions (fields, titles, hasPage) |
 | `cms_navigations` | Navigation items with hierarchy |
 | `form_types` | Form definitions synced from YAML |
 | `form_requests` | Submitted form data |
@@ -151,6 +160,7 @@ YAML configurations (project-level):
 ```
 app-configs/cms/lists/          # *-list.yml
 app-configs/cms/details/        # *-detail.yml
+app-configs/cms/settings/       # settings-page.yml
 app-configs/cms/forms/          # form definitions
 app-configs/cms/navigation.yml  # CMS admin navigation
 ```
@@ -171,9 +181,11 @@ app-modules/cms/database/           # Migrations, factories, seeders
 
 ## Multi-Tenancy
 
-All CMS models use the `BelongsToTenant` trait — content is automatically
-scoped to the current tenant. When a new tenant is created, a default
-language is set up via `CmsLanguage::ensureDefaultLanguageForTenant()`.
+Content models use the `BelongsToTenant` trait — content is automatically
+scoped to the current tenant (`CmsSetting` is a tenant singleton keyed
+explicitly, `ElementPage` is scoped through its page). When a new tenant is
+created, a default language is set up via
+`CmsLanguage::ensureDefaultLanguageForTenant()`.
 
 ## Access Control
 

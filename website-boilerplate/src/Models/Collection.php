@@ -10,10 +10,6 @@ class Collection extends Model
 
     protected $guarded = [];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
-
     public function pages()
     {
         return $this->hasMany(Page::class);

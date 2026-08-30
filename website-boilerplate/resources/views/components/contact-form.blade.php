@@ -37,15 +37,15 @@ new class extends Component {
     protected function messages(): array
     {
         return [
-            'name.required' => 'Der Name ist erforderlich.',
-            'name.max' => 'Der Name darf maximal 255 Zeichen lang sein.',
-            'email.required' => 'Die E-Mail-Adresse ist erforderlich.',
-            'email.email' => 'Bitte geben Sie eine gültige E-Mail-Adresse ein.',
-            'email.max' => 'Die E-Mail-Adresse darf maximal 255 Zeichen lang sein.',
-            'phone.max' => 'Die Telefonnummer darf maximal 255 Zeichen lang sein.',
-            'message.required' => 'Die Nachricht ist erforderlich.',
-            'message.max' => 'Die Nachricht darf maximal 2000 Zeichen lang sein.',
-            'recaptchaToken.required' => 'Bitte bestätigen Sie, dass Sie kein Roboter sind.',
+            'name.required' => __('The name is required.'),
+            'name.max' => __('The name may not be longer than 255 characters.'),
+            'email.required' => __('The email address is required.'),
+            'email.email' => __('Please enter a valid email address.'),
+            'email.max' => __('The email address may not be longer than 255 characters.'),
+            'phone.max' => __('The phone number may not be longer than 255 characters.'),
+            'message.required' => __('The message is required.'),
+            'message.max' => __('The message may not be longer than 2000 characters.'),
+            'recaptchaToken.required' => __('Please confirm that you are not a robot.'),
         ];
     }
 
@@ -62,7 +62,7 @@ new class extends Component {
             $recaptchaService = new RecaptchaService();
             if ($recaptchaService->isEnabled() && !empty($this->recaptchaToken)) {
                 if (!$recaptchaService->verify($this->recaptchaToken)) {
-                    $this->errorMessage = 'reCAPTCHA-Verifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.';
+                    $this->errorMessage = __('reCAPTCHA verification failed. Please try again.');
                     $this->isSubmitting = false;
                     return;
                 }
@@ -88,7 +88,7 @@ new class extends Component {
         }
 
         if (!$tenantId) {
-            $this->errorMessage = 'Fehler: Mandanten-Information fehlt. Bitte laden Sie die Seite neu.';
+            $this->errorMessage = __('Error: Tenant information is missing. Please reload the page.');
             $this->isSubmitting = false;
             return;
         }
@@ -109,7 +109,7 @@ new class extends Component {
             $this->showSuccess = true;
 
         } catch (\Exception $e) {
-            $this->errorMessage = 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.';
+            $this->errorMessage = __('An error occurred. Please try again later.');
             $this->isSubmitting = false;
             return;
         }
@@ -125,14 +125,14 @@ new class extends Component {
 }; ?>
 
 <div class="bg-white p-6 rounded-lg shadow-md max-w-md mx-auto" x-data="{ siteKey: '', recaptchaLoaded: false }">
-    <h3 class="text-xl font-semibold text-gray-900 mb-4">{{ __('Kontakt') }}</h3>
+    <h3 class="text-xl font-semibold text-gray-900 mb-4">{{ __('Contact') }}</h3>
 
     @if($showSuccess)
         <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-            <p class="font-medium">{{ __('Nachricht erfolgreich gesendet!') }}</p>
-            <p class="text-sm">{{ __('Wir werden uns so schnell wie möglich bei Ihnen melden.') }}</p>
+            <p class="font-medium">{{ __('Message sent successfully!') }}</p>
+            <p class="text-sm">{{ __('We will get back to you as soon as possible.') }}</p>
             <button wire:click="resetForm" class="mt-2 text-sm text-green-600 hover:text-green-800 underline">
-                {{ __('Neue Nachricht senden') }}
+                {{ __('Send a new message') }}
             </button>
         </div>
     @else
@@ -147,7 +147,7 @@ new class extends Component {
                     id="name"
                     wire:model="name"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-400 @error('name') border-red-500 @enderror"
-                    placeholder="{{ __('Ihr vollständiger Name') }}"
+                    placeholder="{{ __('Your full name') }}"
                     required
                 >
                 @error('name')
@@ -158,14 +158,14 @@ new class extends Component {
             {{-- Email Field --}}
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-                    {{ __('E-Mail') }} <span class="text-red-500">*</span>
+                    {{ __('Email') }} <span class="text-red-500">*</span>
                 </label>
                 <input
                     type="email"
                     id="email"
                     wire:model="email"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-400 @error('email') border-red-500 @enderror"
-                    placeholder="{{ __('ihre@email.de') }}"
+                    placeholder="{{ __('your@email.com') }}"
                     required
                 >
                 @error('email')
@@ -176,14 +176,14 @@ new class extends Component {
             {{-- Phone Field --}}
             <div>
                 <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
-                    {{ __('Telefon') }}
+                    {{ __('Phone') }}
                 </label>
                 <input
                     type="tel"
                     id="phone"
                     wire:model="phone"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-400 @error('phone') border-red-500 @enderror"
-                    placeholder="{{ __('Ihre Telefonnummer') }}"
+                    placeholder="{{ __('Your phone number') }}"
                 >
                 @error('phone')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -193,14 +193,14 @@ new class extends Component {
             {{-- Message Field --}}
             <div>
                 <label for="message" class="block text-sm font-medium text-gray-700 mb-1">
-                    {{ __('Nachricht') }} <span class="text-red-500">*</span>
+                    {{ __('Message') }} <span class="text-red-500">*</span>
                 </label>
                 <textarea
                     id="message"
                     wire:model="message"
                     rows="4"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-400 @error('message') border-red-500 @enderror"
-                    placeholder="{{ __('Ihre Nachricht an uns...') }}"
+                    placeholder="{{ __('Your message to us...') }}"
                     required
                 ></textarea>
                 @error('message')
@@ -232,13 +232,13 @@ new class extends Component {
                 wire:target="submit"
                 class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
-                <span wire:loading.remove wire:target="submit">{{ __('Nachricht senden') }}</span>
+                <span wire:loading.remove wire:target="submit">{{ __('Send message') }}</span>
                 <span wire:loading wire:target="submit" class="flex items-center justify-center">
                     <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {{ __('Sende...') }}
+                    {{ __('Sending...') }}
                 </span>
             </button>
         </form>

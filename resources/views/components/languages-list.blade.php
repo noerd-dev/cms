@@ -11,16 +11,12 @@ new class extends Component {
 
     public ?string $detailRoute = 'cms.language.detail';
 
+    public $detailComponent = 'cms::language-detail';
 
-    public function rendering()
+    protected function getDeepLinkParam(): string
     {
-        if ((int) request()->cmsLanguageId) {
-            $this->listAction(request()->cmsLanguageId);
-        }
-
-        if (request()->create) {
-            $this->listAction();
-        }
+        // Matches language-detail's $detailPrimary URL alias.
+        return 'cmsLanguageId';
     }
 } ?>
 

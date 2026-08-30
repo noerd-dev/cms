@@ -29,12 +29,20 @@ class InstallWebsiteBoilerplateCommand extends Command
             return 1;
         }
 
+        // Never delete a target that is its own git repository — it may hold
+        // unpushed customizations. This guard also applies under --force.
+        if (is_dir($targetDir . '/.git')) {
+            $this->error("Directory {$targetDir} is a git repository. Remove it manually before reinstalling the boilerplate.");
+
+            return self::FAILURE;
+        }
+
         // Check if target already exists and not forcing
         if (is_dir($targetDir) && ! $this->option('force')) {
             if (! $this->confirm("Directory {$targetDir} already exists. Do you want to overwrite it?")) {
                 $this->info('Installation cancelled.');
 
-                return 0;
+                return self::INVALID;
             }
         }
 
@@ -59,7 +67,7 @@ class InstallWebsiteBoilerplateCommand extends Command
             $this->info('Website boilerplate successfully installed!');
             $this->line('');
 
-            if ($this->confirm('Would you like to run migrations now to seed demo data?', true)) {
+            if ($this->confirm('Would you like to run migrations now?', true)) {
                 Artisan::call('migrate', ['--force' => true], $this->output);
             }
 
@@ -134,12 +142,12 @@ class InstallWebsiteBoilerplateCommand extends Command
         $this->info('Registering website module...');
 
         try {
-            // Update composer repositories to include the new local module
-            $this->updateComposerRepositories();
+            // Require the copied module through the app-modules path repository
+            $this->requireWebsitePackage();
 
             // Run composer dump-autoload to ensure the module is discoverable
             $this->line('<comment>Running composer dump-autoload...</comment>');
-            exec('cd ' . base_path() . ' && composer dump-autoload', $output, $returnCode);
+            exec('cd ' . escapeshellarg(base_path()) . ' && composer dump-autoload', $output, $returnCode);
 
             if ($returnCode !== 0) {
                 $this->warn('Failed to run composer dump-autoload automatically. Please run it manually.');
@@ -166,14 +174,30 @@ class InstallWebsiteBoilerplateCommand extends Command
     }
 
     /**
-     * Update composer to recognize the new website module
+     * Require the copied module via composer. This depends on a path repository
+     * covering app-modules/* — ensure one exists before requiring, so the
+     * command also works on hosts installed from a package registry.
      */
-    private function updateComposerRepositories(): void
+    private function requireWebsitePackage(): void
     {
+        $composerJson = json_decode((string) file_get_contents(base_path('composer.json')), true) ?? [];
+        $hasPathRepository = collect($composerJson['repositories'] ?? [])
+            ->contains(fn($repository) => ($repository['type'] ?? null) === 'path'
+                && str_starts_with((string) ($repository['url'] ?? ''), 'app-modules'));
+
+        if (! $hasPathRepository) {
+            $this->line('<comment>Adding app-modules path repository to composer.json...</comment>');
+            exec('cd ' . escapeshellarg(base_path()) . ' && composer config repositories.app-modules path "app-modules/*"', $repoOutput, $repoReturnCode);
+
+            if ($repoReturnCode !== 0) {
+                $this->warn('Could not add the path repository automatically. Add {"type": "path", "url": "app-modules/*"} to composer.json manually.');
+            }
+        }
+
         $this->line('<comment>Installing website package via composer...</comment>');
 
         // Install the website package explicitly to trigger package discovery
-        exec('cd ' . base_path() . ' && composer require noerd/website', $output, $returnCode);
+        exec('cd ' . escapeshellarg(base_path()) . ' && composer require noerd/website', $output, $returnCode);
 
         if ($returnCode !== 0) {
             $this->warn('Failed to install noerd/website package. Output: ' . implode("\n", $output));
@@ -189,16 +213,26 @@ class InstallWebsiteBoilerplateCommand extends Command
     private function installQuickMenuConfig(): void
     {
         $configPath = base_path('app-configs/quick-menu.yml');
-        $button = ['policy' => 'canCms', 'component' => 'quick-menu.website-link'];
+        $button = ['apps' => ['CMS'], 'component' => 'quick-menu.website-link'];
 
         if (file_exists($configPath)) {
             $config = Yaml::parse(file_get_contents($configPath)) ?? [];
             $buttons = $config['buttons'] ?? [];
 
-            foreach ($buttons as $existing) {
-                if (($existing['policy'] ?? null) === $button['policy']
-                    && ($existing['component'] ?? null) === $button['component']) {
-                    $this->line('<comment>Quick-menu already contains the website link button.</comment>');
+            // Match on the component and replace wholesale — a legacy entry
+            // still carrying the removed `policy:` gate migrates on re-install.
+            foreach ($buttons as $i => $existing) {
+                if (($existing['component'] ?? null) === $button['component']) {
+                    if ($existing === $button) {
+                        $this->line('<comment>Quick-menu already contains the website link button.</comment>');
+
+                        return;
+                    }
+
+                    $buttons[$i] = $button;
+                    $config['buttons'] = $buttons;
+                    file_put_contents($configPath, Yaml::dump($config, 10, 2));
+                    $this->line('<info>Quick-menu config updated:</info> app-configs/quick-menu.yml');
 
                     return;
                 }

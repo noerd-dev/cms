@@ -12,14 +12,13 @@ app-configs/cms/forms/{form-key}.yml
 YAML Configurations:
 ```
 app-configs/cms/lists/form-requests-list.yml
-app-configs/cms/details/form-request-detail.yml
 app-configs/cms/details/form-type-detail.yml
 ```
 
 Livewire Components:
 ```
 app-modules/cms/resources/views/components/form-requests-list.blade.php
-app-modules/cms/resources/views/components/form-request-detail.blade.php
+app-modules/cms/resources/views/components/form-request-page.blade.php
 app-modules/cms/resources/views/components/form-type-detail.blade.php
 app-modules/cms/resources/views/components/form-types-list.blade.php
 ```

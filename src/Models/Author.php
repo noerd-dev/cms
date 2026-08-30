@@ -15,11 +15,6 @@ class Author extends Model
 
     protected $guarded = [];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-        'custom_attributes' => 'array',
-    ];
-
     public function articles(): HasMany
     {
         return $this->hasMany(Article::class);
@@ -28,5 +23,16 @@ class Author extends Model
     protected static function newFactory(): AuthorFactory
     {
         return AuthorFactory::new();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+            'custom_attributes' => 'array',
+        ];
     }
 }

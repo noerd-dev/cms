@@ -117,9 +117,9 @@ It is registered as a singleton in the service container for mockability in test
 Collections can be dynamically added to the CMS navigation using the `dynamic` property:
 
 ```yaml
-- title: cms_nav_collections
+- title: Collections
   dynamic: collections
-- title: cms_nav_page_collections
+- title: Page Collections
   dynamic: page-collections
 ```
 

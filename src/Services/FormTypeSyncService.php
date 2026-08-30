@@ -42,9 +42,11 @@ class FormTypeSyncService
             return $this->getResults();
         }
 
+        // Only tenants that actually run the CMS app get form types — syncing
+        // for every tenant would create orphan rows.
         $tenants = $tenantId
             ? Tenant::where('id', $tenantId)->get()
-            : Tenant::all();
+            : Tenant::whereHas('tenantApps', fn($query) => $query->where('name', 'CMS'))->get();
 
         if ($tenants->isEmpty()) {
             $this->messages[] = 'No tenants found.';
@@ -94,19 +96,21 @@ class FormTypeSyncService
                 }
             }
 
-            // Sync the form type
+            // Sync the form type. Store the path relative to the project root so
+            // release-directory deploys keep resolving it, and only overwrite
+            // columns the YAML actually declares — a re-sync must not wipe
+            // values an admin edited in the UI.
             $formTypeData = [
-                'tenant_id' => $tenant->id,
-                'key' => $key,
                 'title' => $config['title'] ?? $key,
-                'description' => $config['description'] ?? null,
-                'send_email' => $config['send_email'] ?? false,
-                'email_subject' => $config['email_subject'] ?? null,
-                'email_body' => $config['email_body'] ?? null,
-                'notification_email' => $config['notification_email'] ?? null,
-                'yml_path' => $ymlFile,
+                'yml_path' => str_replace(base_path() . '/', '', $ymlFile),
                 'yml_synced_at' => now(),
             ];
+
+            foreach (['description', 'send_email', 'email_subject', 'email_body', 'notification_email'] as $column) {
+                if (array_key_exists($column, $config)) {
+                    $formTypeData[$column] = $config[$column];
+                }
+            }
 
             FormType::updateOrCreate(
                 [
