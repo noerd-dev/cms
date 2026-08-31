@@ -7,6 +7,7 @@ use Noerd\Cms\Models\Page;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Services\FieldTypeRegistry;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -125,4 +126,48 @@ it('renders the element-collection field through the entry editor instead of [ob
         ->assertSee('Triggers')
         ->assertSee(__('Manage'))
         ->assertDontSee('[object Object]');
+});
+
+it('resolves the element-collection owner to the element page inside the element editor', function (): void {
+    $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Startseite']]);
+    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'gallery_grid', 'data' => '{}', 'sort' => 0]);
+
+    $editor = Livewire::test('element-page-detail', ['modelId' => $element->id])->instance();
+
+    $props = app(FieldTypeRegistry::class)
+        ->resolve('element-collection')
+        ->resolveProps(
+            ['name' => 'detailData.images', 'label' => 'Bilder', 'fields' => []],
+            $editor,
+            [],
+            $element->id,
+        );
+
+    expect($props['ownerType'])->toBe(ElementCollectionService::OWNER_ELEMENT_PAGE);
+});
+
+it('counts existing element-collection entries in the element editor', function (): void {
+    $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Startseite']]);
+    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'gallery_grid', 'data' => '{}', 'sort' => 0]);
+
+    $elementCollection = app(ElementCollectionService::class)->ensure(
+        ElementCollectionService::OWNER_ELEMENT_PAGE,
+        $element->id,
+        $this->tenant->id,
+        'images',
+        [['name' => 'image', 'label' => 'Bild', 'type' => 'image', 'colspan' => 12]],
+        'Startseite: Projektfotos',
+    );
+
+    foreach (['/img/a.jpg', '/img/b.jpg'] as $sort => $image) {
+        Page::factory()->create([
+            'tenant_id' => $this->tenant->id,
+            'collection_id' => $elementCollection->id,
+            'data' => ['image' => $image],
+            'sort' => $sort,
+        ]);
+    }
+
+    Livewire::test('element-page-detail', ['modelId' => $element->id])
+        ->assertSee('2 ' . trans_choice('Entry|Entries', 2));
 });
