@@ -7,6 +7,7 @@ use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Helpers\NoerdAuth;
 use Noerd\Models\Tenant;
 use Tests\TestCase;
 
@@ -39,7 +40,7 @@ function createContactsDefinition(int $tenantId): CollectionDefinition
 
 it('renders the list component and shows existing definitions', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     $response = $this->get('/cms/collection-definitions');
     $response->assertStatus(200);
@@ -50,7 +51,7 @@ it('renders the list component and shows existing definitions', function (): voi
 
 it('scopes entry counts to the current tenant', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     createContactsDefinition($tenant->id);
     $ownCollection = Collection::create([
@@ -76,7 +77,7 @@ it('scopes entry counts to the current tenant', function (): void {
 
 it('searches definitions by titleList, key, and filename case-insensitively', function (string $term): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     createContactsDefinition($tenant->id);
     CollectionDefinition::create([
@@ -104,7 +105,7 @@ it('searches definitions by titleList, key, and filename case-insensitively', fu
 
 it('filters definitions by has_page', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     createContactsDefinition($tenant->id);
     CollectionDefinition::create([
@@ -131,7 +132,7 @@ it('filters definitions by has_page', function (): void {
 
 it('dispatches modal when listAction is called', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     createContactsDefinition($tenant->id);
 
@@ -139,14 +140,14 @@ it('dispatches modal when listAction is called', function (): void {
         ->call('listAction', 'contacts')
         ->assertDispatched(
             'noerdModal',
-            fn(string $event, array $params): bool => ($params['route'] ?? null) === 'cms.collection-definition.detail'
+            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.collection-definition.detail'
                 && ($params['arguments']['modelId'] ?? null) === 'contacts',
         );
 });
 
 it('loads existing collection definition in detail component', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     createContactsDefinition($tenant->id);
 
@@ -158,7 +159,7 @@ it('loads existing collection definition in detail component', function (): void
 
 it('allows renaming the filename of an existing collection definition', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     createContactsDefinition($tenant->id);
 
@@ -174,7 +175,7 @@ it('allows renaming the filename of an existing collection definition', function
 
 it('prevents renaming to an existing filename', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     createContactsDefinition($tenant->id);
 
@@ -199,7 +200,7 @@ it('prevents renaming to an existing filename', function (): void {
 
 it('creates a new collection definition with correct structure', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', 'test-store')
@@ -219,7 +220,7 @@ it('creates a new collection definition with correct structure', function (): vo
 
 it('prevents duplicate filenames', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     CollectionDefinition::create([
         'tenant_id' => $tenant->id,
@@ -241,7 +242,7 @@ it('prevents duplicate filenames', function (): void {
 
 it('validates required fields', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', '')
@@ -257,7 +258,7 @@ it('validates required fields', function (): void {
 
 it('validates filename format', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', 'Invalid Name!')
@@ -269,7 +270,7 @@ it('validates filename format', function (): void {
 
 it('normalizes filename by lowercasing', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', 'FILM')
@@ -283,7 +284,7 @@ it('normalizes filename by lowercasing', function (): void {
 
 it('normalizes underscores to hyphens in filename', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', 'My_Collection')
@@ -297,7 +298,7 @@ it('normalizes underscores to hyphens in filename', function (): void {
 
 it('adds and removes fields', function (): void {
     ['user' => $user] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
         ->assertSet('fields', [])
@@ -311,7 +312,7 @@ it('adds and removes fields', function (): void {
 
 it('stores fields in the collection definition', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
         ->set('detailData.filename', 'test-definition')
@@ -333,7 +334,7 @@ it('stores fields in the collection definition', function (): void {
 
 it('copies a collection definition with key, title and titleList all suffixed with 2', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     createContactsDefinition($tenant->id);
 
@@ -357,7 +358,7 @@ it('copies a collection definition with key, title and titleList all suffixed wi
 
 it('prevents copying when target definition already exists', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     createContactsDefinition($tenant->id);
 
@@ -378,7 +379,7 @@ it('prevents copying when target definition already exists', function (): void {
 
 it('deletes a collection definition', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     $definition = CollectionDefinition::create([
         'tenant_id' => $tenant->id,
@@ -398,7 +399,7 @@ it('deletes a collection definition', function (): void {
 
 it('deletes associated collection records when deleting a collection definition', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     CollectionDefinition::create([
         'tenant_id' => $tenant->id,
@@ -431,7 +432,7 @@ it('deletes associated collection records when deleting a collection definition'
 
 it('shows rename confirmation when a field name is changed', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     CollectionDefinition::create([
         'tenant_id' => $tenant->id,
@@ -454,7 +455,7 @@ it('shows rename confirmation when a field name is changed', function (): void {
 
 it('renames field keys in database entries when confirmed', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     CollectionDefinition::create([
         'tenant_id' => $tenant->id,
@@ -495,7 +496,7 @@ it('renames field keys in database entries when confirmed', function (): void {
 
 it('skips database rename when user declines', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     CollectionDefinition::create([
         'tenant_id' => $tenant->id,

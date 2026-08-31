@@ -1,10 +1,11 @@
 <?php
 
-
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Helpers\NoerdAuth;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class);
+uses(TestCase::class);
 uses(CreatesCmsUser::class);
 
 $testSettings = [
@@ -17,7 +18,7 @@ $testSettings = [
 it('validates the language data', function () use ($testSettings): void {
     ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
-    $this->actingAs($admin);
+    $this->actingAs($admin, NoerdAuth::guardName());
 
     $component = Livewire::test($testSettings['componentName'])
         ->set('detailData', [])
@@ -29,7 +30,7 @@ it('validates the language data', function () use ($testSettings): void {
 it('creates a new language and stores tenant_id', function () use ($testSettings): void {
     ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
-    $this->actingAs($admin);
+    $this->actingAs($admin, NoerdAuth::guardName());
 
     Livewire::test($testSettings['componentName'])
         ->set('detailData', validDetailPayload(CmsLanguage::class, [
@@ -52,7 +53,7 @@ it('creates a new language and stores tenant_id', function () use ($testSettings
 it('ensures only one default language per tenant', function () use ($testSettings): void {
     ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
 
-    $this->actingAs($admin);
+    $this->actingAs($admin, NoerdAuth::guardName());
 
     // Delete any auto-created languages and set up test-specific languages
     CmsLanguage::where('tenant_id', $tenant->id)->delete();
@@ -92,7 +93,7 @@ it('ensures only one default language per tenant', function () use ($testSetting
 
 it('updates an existing language', function () use ($testSettings): void {
     ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($admin);
+    $this->actingAs($admin, NoerdAuth::guardName());
 
     $language = CmsLanguage::create([
         'tenant_id' => $tenant->id,
@@ -115,7 +116,7 @@ it('updates an existing language', function () use ($testSettings): void {
 
 it('deletes a language', function () use ($testSettings): void {
     ['user' => $admin, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($admin);
+    $this->actingAs($admin, NoerdAuth::guardName());
 
     $language = CmsLanguage::create([
         'tenant_id' => $tenant->id,

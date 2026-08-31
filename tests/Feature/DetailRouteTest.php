@@ -10,15 +10,17 @@ use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Helpers\NoerdAuth;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
     $setup = $this->createUserWithCmsAccess();
     $this->user = $setup['user'];
     $this->tenant = $setup['tenant'];
-    $this->actingAs($this->user);
+    $this->actingAs($this->user, NoerdAuth::guardName());
 });
 
 it('loads page-detail via direct route', function (): void {
@@ -26,7 +28,7 @@ it('loads page-detail via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/page/' . $page->id)
+    $this->get('/cms/page/'.$page->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::page-detail');
 });
@@ -36,7 +38,7 @@ it('loads navigation-detail via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/navigation/' . $navigation->id)
+    $this->get('/cms/navigation/'.$navigation->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::navigation-detail');
 });
@@ -46,7 +48,7 @@ it('loads global-parameter-detail via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/global-parameter/' . $globalParameter->id)
+    $this->get('/cms/global-parameter/'.$globalParameter->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::global-parameter-detail');
 });
@@ -56,7 +58,7 @@ it('loads form-request-page via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/form-request/' . $formRequest->id)
+    $this->get('/cms/form-request/'.$formRequest->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::form-request-page');
 });
@@ -66,7 +68,7 @@ it('loads form-type-detail via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/form-type/' . $formType->id)
+    $this->get('/cms/form-type/'.$formType->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::form-type-detail');
 });
@@ -76,7 +78,7 @@ it('loads language-detail via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/language/' . $cmsLanguage->id)
+    $this->get('/cms/language/'.$cmsLanguage->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::language-detail');
 });

@@ -2,6 +2,7 @@
 
 use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Helpers\NoerdAuth;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -16,7 +17,7 @@ $testSettings = [
 
 it('test the route', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     $response = $this->get('/cms/global-parameters');
     $response->assertStatus(200);
@@ -24,7 +25,7 @@ it('test the route', function (): void {
 
 it('validates the data', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test($testSettings['componentName'])
         ->set('detailData.key', '')
@@ -35,7 +36,7 @@ it('validates the data', function () use ($testSettings): void {
 
 it('successfully stores the data', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
     $parameterKey = fake()->word;
     $parameterValue = fake()->sentence;
 
@@ -54,7 +55,7 @@ it('successfully stores the data', function () use ($testSettings): void {
 
 it('can retrieve existing global parameter data', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     $existingParameter = GlobalParameter::create([
         'key' => 'test_key',
@@ -71,13 +72,13 @@ it('can retrieve existing global parameter data', function (): void {
 
 it('it sets and removes the model id in url', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
     $model = GlobalParameter::factory()->withTenantId($tenant->id)->create();
 
     Livewire::test($testSettings['listName'])->call('listAction', $model->id)
         ->assertDispatched(
             'noerdModal',
-            fn(string $event, array $params): bool => ($params['route'] ?? null) === 'cms.global-parameter.detail'
+            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.global-parameter.detail'
                 && ($params['arguments']['modelId'] ?? null) === $model->id,
         );
 
@@ -89,7 +90,7 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
 
 it('loads existing string value into component model for editing', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     $existingParameter = GlobalParameter::create([
         'key' => 'test_key_string',
@@ -105,7 +106,7 @@ it('loads existing string value into component model for editing', function () u
 
 it('loads existing array value into component model for editing', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     $existingParameter = GlobalParameter::create([
         'key' => 'test_key_array',
@@ -117,12 +118,12 @@ it('loads existing array value into component model for editing', function () us
     Livewire::withUrlParams([$testSettings['urlParam'] => $existingParameter->id])
         ->test($testSettings['componentName'])
         ->assertSet('detailData.key', 'test_key_array')
-        ->assertSet('detailData.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+        ->assertSet('detailData.value', fn ($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
 });
 
 it('saves a translatable parameter as a language-keyed JSON object', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test($testSettings['componentName'])
         ->set('detailData.key', 'opening_hours')
@@ -138,7 +139,7 @@ it('saves a translatable parameter as a language-keyed JSON object', function ()
 
 it('saves a non-translatable parameter as a scalar JSON string', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test($testSettings['componentName'])
         ->set('detailData.key', 'INSTAGRAM_ACCESS_TOKEN')
@@ -154,7 +155,7 @@ it('saves a non-translatable parameter as a scalar JSON string', function () use
 
 it('switches a translatable value to scalar when the toggle is turned off', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     $existingParameter = GlobalParameter::create([
         'key' => 'INSTAGRAM_ACCESS_TOKEN',
