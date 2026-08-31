@@ -10,12 +10,6 @@ new class extends Component {
     public ?string $token = null;
 
     #[Computed]
-    public function elements()
-    {
-        return FieldHelper::getAllElements();
-    }
-
-    #[Computed]
     public function groupedElements()
     {
         return FieldHelper::getAllElementsGrouped();
@@ -42,6 +36,8 @@ new class extends Component {
         }
     @endphp
 
+    <x-noerd::tab-content :layout="[]" :modelId="null" :showBlock="false">
+        <x-slot:tab1>
     <div class="mt-4" x-data="{
         search: '',
         index: {{ Js::from($searchIndex) }},
@@ -77,9 +73,6 @@ new class extends Component {
             </div>
         @endforeach
     </div>
+        </x-slot:tab1>
+    </x-noerd::tab-content>
 </x-noerd::page>
-
-
-
-
-

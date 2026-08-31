@@ -23,14 +23,16 @@ class FormType extends Model
     protected $guarded = [];
 
     /**
-     * Get available email placeholders with descriptions
+     * Get available email placeholders with descriptions (translation keys).
+     *
+     * @return array<string, string>
      */
     public static function getEmailPlaceholders(): array
     {
         return [
-            '{{form_title}}' => 'Formular-Titel',
-            '{{submission_date}}' => 'Datum der Einreichung',
-            '{{field:*}}' => 'Formularfelder (z.B. {{field:name}}, {{field:email}})',
+            '{{form_title}}' => 'Form title',
+            '{{submission_date}}' => 'Submission date',
+            '{{field:*}}' => 'Form fields (e.g. {{field:name}}, {{field:email}})',
         ];
     }
 
@@ -76,13 +78,19 @@ class FormType extends Model
     }
 
     /**
-     * Replace placeholders in email content with actual form request values
+     * Replace placeholders in email content with actual form request values.
+     *
+     * With $escapeHtml every substituted value is HTML-escaped — mandatory when
+     * the result is rendered unescaped (the HTML email body): submitted form
+     * values are attacker-controlled and must never reach an HTML sink raw.
      */
-    public function replacePlaceholders(FormRequest $formRequest, string $content): string
+    public function replacePlaceholders(FormRequest $formRequest, string $content, bool $escapeHtml = false): string
     {
+        $escape = fn(string $value): string => $escapeHtml ? e($value) : $value;
+
         $replacements = [
-            '{{form_title}}' => $this->title,
-            '{{submission_date}}' => $formRequest->created_at->format('d.m.Y H:i'),
+            '{{form_title}}' => $escape((string) $this->title),
+            '{{submission_date}}' => $escape($formRequest->created_at->format('d.m.Y H:i')),
         ];
 
         // Replace static placeholders
@@ -91,8 +99,16 @@ class FormType extends Model
         // Replace dynamic field placeholders ({{field:name}})
         if (is_array($formRequest->data)) {
             foreach ($formRequest->data as $fieldName => $fieldValue) {
+                if (is_array($fieldValue)) {
+                    $fieldValue = implode(', ', array_filter($fieldValue, 'is_scalar'));
+                }
+
+                if (! is_scalar($fieldValue)) {
+                    continue;
+                }
+
                 $placeholder = '{{field:' . $fieldName . '}}';
-                $content = str_replace($placeholder, (string) $fieldValue, $content);
+                $content = str_replace($placeholder, $escape((string) $fieldValue), $content);
             }
         }
 
@@ -100,7 +116,9 @@ class FormType extends Model
     }
 
     /**
-     * Get dynamic field placeholders from YML config
+     * Get dynamic field placeholders from YML config.
+     *
+     * @return array<string, string>
      */
     public function getFieldPlaceholders(): array
     {

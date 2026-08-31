@@ -12,19 +12,7 @@ new class extends Component
 
     public ?string $detailRoute = 'cms.author.detail';
 
-
-    public function rendering()
-    {
-        $this->loadListFilters();
-
-        if ((int) request()->authorId) {
-            $this->listAction(request()->authorId);
-        }
-
-        if (request()->create) {
-            $this->listAction();
-        }
-    }
+    public $detailComponent = 'cms::author-detail';
 } ?>
 
 <x-noerd::page>

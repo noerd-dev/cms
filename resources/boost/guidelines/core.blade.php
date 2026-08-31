@@ -7,27 +7,29 @@ The CMS module is a multi-tenant, multi-language content management system. It p
 - **Model:** `Noerd\Cms\Models\Page` with traits `BelongsToTenant`, `HasFactory`
 - **Translatable fields** (cast as arrays): `name`, `slug`, `meta_title`, `meta_description`
 - **Data column:** `data` (array cast) stores collection-specific field data
-- **Casts:** `meta_noindex` (boolean), `is_active` defaults to `true`
+- **Casts:** `meta_noindex`, `is_active` (boolean; defaults to `true`)
 - **Relationships:** `elements()` hasMany ElementPage, `collection()` belongsTo Collection
-- Pages use `pageData` as the Livewire component property (array, never a model property)
+- The page editor is a slim `NoerdDetail` component (`cms::page-detail`): `$detailModel = Page::class`, `$detailPrimary = 'pageId'`, form state in `$detailData` (array — the Eloquent model is never a component property)
 - Slugs are auto-generated from the name; non-default languages get a language prefix (e.g., `/en/page-name`)
 - Layouts are discovered from `website/resources/views/components/layouts/`
 
 @verbatim
 <code-snippet name="Page Detail Component Pattern" lang="php">
-public array $pageData = [];
+public ?string $detailPrimary = 'pageId';
+
+public $detailModel = Page::class;
 
 public function mount(?string $collectionKey = null): void
 {
-    $this->mountDetail();
+    $this->initDetail();
 
-    $page = $this->modelId ? Page::find($this->modelId) : new Page();
+    $page = $this->modelId ? (Page::find($this->modelId) ?? new Page()) : new Page();
 
-    // Translatable fields must be initialized as arrays
-    $this->pageData = $page->toArray();
-    foreach (['name', 'slug', 'meta_title', 'meta_description'] as $field) {
-        if (! is_array($this->pageData[$field] ?? null)) {
-            $this->pageData[$field] = $this->initializeEmptySlugArray();
+    // Translatable fields must be initialized as arrays for every active language
+    $this->detailData = $page->toArray();
+    foreach (['name', 'slug'] as $field) {
+        if (! is_array($this->detailData[$field] ?? null)) {
+            $this->detailData[$field] = $this->initializeEmptySlugArray();
         }
     }
 }
@@ -89,8 +91,8 @@ CollectionDefinition::create([
 - `navigation_key` groups navigation items (e.g., main menu, footer)
 - Entries can link to a page or an external URL
 - Children are ordered by `sort_order`
-- Names are translatable (stored as text, displayed per language)
-- Casts: `new_tab` (boolean)
+- Names are translatable (`name` cast as array, one value per language code)
+- Casts: `name` (array), `new_tab` (boolean)
 
 ### Forms
 
@@ -99,7 +101,7 @@ CollectionDefinition::create([
 - **Sync:** `FormTypeSyncService` syncs YAML to database via `php artisan cms:sync-form-types`
 - Only re-syncs when the YAML file has changed (checks modification time) unless `--force` is used
 - **Email placeholders:** `@verbatim{{field:name}}@endverbatim`, `@verbatim{{form_title}}@endverbatim`, `@verbatim{{submission_date}}@endverbatim`
-- **API endpoint:** `POST /api/cms/form-requests` (protected by `CmsApiAuth` middleware)
+- **API endpoint:** `POST /api/cms/form-requests` (protected by `CmsApiAuth` middleware + a route-level throttle). The payload field `form` must match an existing FormType `key` of the token's tenant; submissions are validated against the form YAML rules, undeclared data keys are dropped, and the confirmation email job is dispatched when `send_email` is enabled
 
 @verbatim
 <code-snippet name="Form YAML Structure" lang="yaml">
@@ -142,7 +144,7 @@ submit_button_text: 'Nachricht senden'
 - **Translatable fields:** `title`, `slug` (both cast as arrays)
 - **Casts:** `is_active` (boolean), `publication_date` (date)
 - **Scope:** `published()` filters for `is_active = true`, `publication_date` not null, and `publication_date <= today`
-- Articles use `articleData` as the Livewire component property
+- The article editor is a slim `NoerdDetail` component (`cms::article-detail`) binding `$detailData`
 
 @verbatim
 <code-snippet name="Article Published Scope" lang="php">
@@ -163,7 +165,7 @@ $articles = Article::published()->with('author')->latest('publication_date')->ge
 - **Model:** `CmsLanguage` — table `cms_languages`, casts `is_active` and `is_default` as boolean
 - `ensureDefaultLanguageForTenant(int $tenantId)` ensures exactly one default language per tenant
 - Boot logic: only one default per tenant; if default is deleted, next active becomes default; first language is auto-default
-- Supported language codes: `de`, `en`, `fr`, `es`, `it`, `nl`
+- Language codes are tenant-configurable through the UI; `Noerd\Cms\Support\CmsLanguageCodes` resolves the active codes per tenant (`active()`) and the recognition baseline (`known()` — built-ins `de,en,fr,es,it,nl` plus every configured code)
 - `LanguageFilterTrait` provides session-based language selection for Livewire components
 
 @verbatim
@@ -202,9 +204,16 @@ class PagesListComponent extends Component
 curl -X POST https://example.test/api/cms/form-requests \
   -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"form_type_key": "contact", "data": {"name": "John", "email": "john@example.com", "message": "Hello"}}'
+  -d '{"form": "contact", "data": {"name": "John", "email": "john@example.com", "message": "Hello"}}'
 </code-snippet>
 @endverbatim
+
+### Settings Page
+
+- `/cms/settings` is a noerd settings page: `cms::settings-page` uses the `NoerdSettingsPage` trait with `public array $settingsModels = ['detailData' => CmsSetting::class];`
+- Layout comes exclusively from `settings/settings-page.yml`; the custom `store()` override adds the validation the YAML cannot express and ends with `validateFromLayout()` / `persistSettings()`
+- The dynamic homepage picker is the CMS-registered `homepage-select` field type (`cms::components.forms.input-homepage-select`)
+- `CmsSetting` is the tenant singleton (`cms_settings`, unique `tenant_id`); `formRecipientsForTenant()` parses the comma-separated recipients, `cookieLifetimeInDays()` resolves the consent duration with config fallback
 
 ### Translations
 
@@ -217,6 +226,7 @@ curl -X POST https://example.test/api/cms/form-requests \
 
 - Lists: `app-configs/cms/lists/` (e.g., `pages-list.yml`, `articles-list.yml`)
 - Details: `app-configs/cms/details/` (e.g., `page-detail.yml`, `article-detail.yml`)
+- Settings: `app-configs/cms/settings/settings-page.yml`
 - Forms: `app-configs/cms/forms/` (e.g., `contact.yml`)
 - Navigation: `app-configs/cms/navigation.yml`
 - When modifying YAML files, sync both `app-configs/cms/` and `app-modules/cms/app-configs/cms/`

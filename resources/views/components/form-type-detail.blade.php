@@ -34,7 +34,7 @@ new class () extends Component {
     public function getSampleEmailData(): array
     {
         $sampleData = [
-            '{{form_title}}' => $this->detailData['title'] ?? 'Formulartyp',
+            '{{form_title}}' => $this->detailData['title'] ?? __('Form Type'),
             '{{submission_date}}' => now()->format('d.m.Y H:i'),
         ];
 
@@ -43,7 +43,7 @@ new class () extends Component {
             if ($formType) {
                 $fieldPlaceholders = $formType->getFieldPlaceholders();
                 foreach ($fieldPlaceholders as $placeholder => $description) {
-                    $sampleData[$placeholder] = 'Beispiel: ' . $description;
+                    $sampleData[$placeholder] = __('Example') . ': ' . __($description);
                 }
             }
         }
@@ -82,6 +82,10 @@ new class () extends Component {
 
     public function store(): void
     {
+        if (! $this->canSaveObject()) {
+            return;
+        }
+
         $this->validate([
             'detailData.send_email' => ['boolean'],
             'detailData.email_subject' => ['nullable', 'string', 'max:255'],
@@ -91,28 +95,24 @@ new class () extends Component {
 
         $formType = FormType::find($this->modelId);
 
-        if ($formType) {
-            $formType->update([
-                'send_email' => $this->detailData['send_email'] ?? false,
-                'email_subject' => $this->detailData['email_subject'] ?? null,
-                'email_body' => $this->detailData['email_body'] ?? null,
-                'notification_email' => $this->detailData['notification_email'] ?? null,
-            ]);
-
-            $this->showSuccessIndicator = true;
-
-            logger()->info('FormType email configuration updated', [
-                'form_type_id' => $formType->id,
-                'key' => $formType->key,
-            ]);
+        if (! $formType) {
+            return;
         }
+
+        $formType->update([
+            'send_email' => $this->detailData['send_email'] ?? false,
+            'email_subject' => $this->detailData['email_subject'] ?? null,
+            'email_body' => $this->detailData['email_body'] ?? null,
+            'notification_email' => $this->detailData['notification_email'] ?? null,
+        ]);
+
+        $this->storeProcess($formType);
     }
 } ?>
 
-<div>
-    <x-noerd::page>
+<x-noerd::page>
         <x-slot:header>
-            <x-noerd::modal-title>{{ __('Formulartyp') }}</x-noerd::modal-title>
+            <x-noerd::modal-title>{{ __('Form Type') }}</x-noerd::modal-title>
         </x-slot:header>
 
         <div>
@@ -128,7 +128,7 @@ new class () extends Component {
                             </svg>
                             <div>
                                 <p class="text-sm font-semibold text-blue-900">
-                                    {{ __('Hybrid-Konfiguration') }}
+                                    {{ __('Hybrid configuration') }}
                                 </p>
                                 <p class="text-sm text-blue-700 mt-1">
                                     {{ __('Form fields are managed via YML files. Email texts can be edited directly here.') }}
@@ -140,7 +140,7 @@ new class () extends Component {
                     {{-- Basic Information (Read-Only) --}}
                     <div
                         class="space-y-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h3 class="text-base font-semibold text-gray-900">{{ __('Grundinformationen (aus YML)') }}</h3>
+                        <h3 class="text-base font-semibold text-gray-900">{{ __('Basic information (from YML)') }}</h3>
 
                         <div class="grid grid-cols-3 gap-4 text-sm">
                             <div>
@@ -148,11 +148,11 @@ new class () extends Component {
                                 <p class="mt-1 text-gray-900">{{ $detailData['key'] ?? '-' }}</p>
                             </div>
                             <div>
-                                <label class="font-medium text-gray-600">{{ __('Titel') }}</label>
+                                <label class="font-medium text-gray-600">{{ __('Title') }}</label>
                                 <p class="mt-1 text-gray-900">{{ $detailData['title'] ?? '-' }}</p>
                             </div>
                             <div>
-                                <label class="font-medium text-gray-600">{{ __('Beschreibung') }}</label>
+                                <label class="font-medium text-gray-600">{{ __('Description') }}</label>
                                 <p class="mt-1 text-gray-900">{{ $detailData['description'] ?? '-' }}</p>
                             </div>
                         </div>
@@ -162,7 +162,7 @@ new class () extends Component {
 
                 <x-slot:tab1>
                     <div class="mt-4">
-                        <x-noerd::input-label class="pb-2" value="{{ __('E-Mail-Inhalt') }}"/>
+                        <x-noerd::input-label class="pb-2" value="{{ __('Email body') }}"/>
                         <x-noerd::forms.tiptap
                             :field="'detailData.email_body'"
                             :content="$detailData['email_body'] ?? ''"/>
@@ -177,7 +177,7 @@ new class () extends Component {
                             @foreach($this->emailPlaceholders as $placeholder => $description)
                                 <div class="flex gap-2">
                                     <code class="bg-blue-100 px-2 py-1 rounded">{{ $placeholder }}</code>
-                                    <span>{{ $description }}</span>
+                                    <span>{{ __($description) }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -191,7 +191,7 @@ new class () extends Component {
                 @if($this->canShowPreview)
                     <div class="flex gap-2 mr-auto">
                         <x-noerd::button variant="secondary" wire:click="openPreview">
-                            {{ __('E-Mail-Vorschau') }}
+                            {{ __('Email preview') }}
                         </x-noerd::button>
 
                         <div x-data="{
@@ -220,14 +220,14 @@ new class () extends Component {
                                 :disabled="!$this->canSendTestEmail">
                                 <span wire:loading.remove wire:target="sendTestEmail">
                                     <template x-if="cooldown <= 0">
-                                        <span>{{ __('Testemail senden') }}</span>
+                                        <span>{{ __('Send test email') }}</span>
                                     </template>
                                     <template x-if="cooldown > 0">
-                                        <span>{{ __('Testemail senden') }} (<span x-text="cooldown"></span>s)</span>
+                                        <span>{{ __('Send test email') }} (<span x-text="cooldown"></span>s)</span>
                                     </template>
                                 </span>
                                 <span wire:loading wire:target="sendTestEmail">
-                                    {{ __('Wird gesendet...') }}
+                                    {{ __('Sending...') }}
                                 </span>
                             </x-noerd::button>
                         </div>
@@ -236,6 +236,5 @@ new class () extends Component {
 
                 <x-noerd::delete-save-bar :showDelete="false" class="ml-auto"/>
             </div>
-        </x-slot:footer>
-    </x-noerd::page>
-</div>
+    </x-slot:footer>
+</x-noerd::page>

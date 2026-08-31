@@ -8,7 +8,7 @@ trait LanguageFilterTrait
 {
     protected function ensureDefaultLanguage(): string
     {
-        $tenantId = auth()->user()->selected_tenant_id;
+        $tenantId = auth()->user()?->selected_tenant_id;
         $currentLanguage = session('selectedLanguage');
 
         // Check if the current session language exists and is active for this tenant
@@ -36,19 +36,21 @@ trait LanguageFilterTrait
 
     protected function hasMultipleLanguages(): bool
     {
-        return CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
+        return CmsLanguage::where('tenant_id', auth()->user()?->selected_tenant_id)
             ->where('is_active', true)
             ->count() > 1;
     }
 
     protected function getLanguageListFilter(): array
     {
-        $filter['label'] = __('Language');
-        $filter['column'] = 'language';
-        $filter['type'] = 'Picklist';
-        $filter['options'] = [];
+        $filter = [
+            'label' => __('Language'),
+            'column' => 'language',
+            'type' => 'Picklist',
+            'options' => [],
+        ];
 
-        $languages = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
+        $languages = CmsLanguage::where('tenant_id', auth()->user()?->selected_tenant_id)
             ->where('is_active', true)
             ->orderBy('is_default', 'desc')
             ->orderBy('name', 'asc')

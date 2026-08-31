@@ -2,16 +2,15 @@
 
 namespace Noerd\Cms\Providers;
 
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Noerd\Cms\Commands\CmsInstallCommand;
 use Noerd\Cms\Commands\CmsUpdateCommand;
 use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
-use Noerd\Cms\Commands\NoerdCmsInstallCommand;
-use Noerd\Cms\Console\Commands\SyncFormTypesCommand;
+use Noerd\Cms\Commands\SyncFormTypesCommand;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\CollectionHelper;
-use Noerd\Cms\Middleware\CmsApiAuth;
+use Noerd\Cms\Http\Middleware\CmsApiAuth;
 use Noerd\Cms\Models\Author;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Page;
@@ -63,7 +62,6 @@ class CmsServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cms');
         Livewire::addNamespace('cms', viewPath: __DIR__ . '/../../resources/views/components');
         Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/components');
-        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'cms');
         $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-routes.php');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-api.php');
@@ -71,23 +69,10 @@ class CmsServiceProvider extends ServiceProvider
         $router = $this->app['router'];
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
 
-        // Register gate for CMS access
-        Gate::define('canCms', function ($user) {
-            $tenant = $user->selectedTenant();
-
-            if (! $tenant) {
-                return false;
-            }
-
-            $activeApps = $tenant->tenantApps->pluck('name')->toArray();
-
-            return (bool) (array_intersect($activeApps, ['CMS']));
-        });
-
         // Register commands
         if ($this->app->runningInConsole()) {
             $this->commands([
-                NoerdCmsInstallCommand::class,
+                CmsInstallCommand::class,
                 CmsUpdateCommand::class,
                 InstallWebsiteBoilerplateCommand::class,
                 SyncFormTypesCommand::class,
@@ -103,6 +88,12 @@ class CmsServiceProvider extends ServiceProvider
         $relationFieldRegistry = $this->app->make(RelationFieldRegistry::class);
         $fieldTypeRegistry->register('collection-select', FieldTypeDefinition::include(
             'cms::components.forms.input-collection-select',
+            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => ['field' => $field],
+        ));
+
+        // Dynamic page select used by the CMS settings page (homepage picker).
+        $fieldTypeRegistry->register('homepage-select', FieldTypeDefinition::include(
+            'cms::components.forms.input-homepage-select',
             resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => ['field' => $field],
         ));
 

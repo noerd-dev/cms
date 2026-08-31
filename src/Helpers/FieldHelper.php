@@ -5,6 +5,7 @@ namespace Noerd\Cms\Helpers;
 use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Helpers\StaticConfigHelper;
 use Symfony\Component\Yaml\Yaml;
+use Throwable;
 
 class FieldHelper
 {
@@ -25,9 +26,7 @@ class FieldHelper
         foreach ($livewireElementFiles as $bladeFile) {
             $ymlFile = str_replace('.blade.php', '.yml', $bladeFile);
             if (file_exists($ymlFile)) {
-                $content = file_get_contents($ymlFile);
-
-                return Yaml::parse($content ?: '');
+                return self::parseYamlFile($ymlFile);
             }
         }
 
@@ -66,10 +65,7 @@ class FieldHelper
     {
         $datas = [];
         foreach ($data as $key => $value) {
-            if (self::isJsonAndDecode($value)) {
-                $value = self::isJsonAndDecode($value);
-            }
-            $datas[$key] = $value;
+            $datas[$key] = self::decodeJsonValue($value);
         }
 
         $model = [];
@@ -84,11 +80,8 @@ class FieldHelper
             if (in_array($elementField['type'], ['translatableText', 'translatableRichText'])) {
                 foreach (CmsLanguageCodes::active() as $lang) {
                     $value = $datas[$baseKey][$lang] ?? $datas[$baseKey] ?? '';
-                    if (self::isJsonAndDecode($value)) {
-                        $value = self::isJsonAndDecode($value);
-                    }
 
-                    $model[$baseKey][$lang] = $value;
+                    $model[$baseKey][$lang] = self::decodeJsonValue($value);
                 }
             } else {
                 $model[$baseKey] = $datas[$baseKey] ?? $elementField['default'] ?? '';
@@ -118,12 +111,11 @@ class FieldHelper
             $ymlFile = str_replace('.blade.php', '.yml', $livewireFile);
 
             if (file_exists($ymlFile)) {
-                $content = file_get_contents($ymlFile);
-                $yaml = Yaml::parse($content ?: '');
+                $yaml = self::parseYamlFile($ymlFile) ?? [];
 
                 $elements[] = (object) [
                     'element_key' => $elementKey,
-                    'name' => $yaml['title'] ?: ucwords(str_replace('_', ' ', $elementKey)),
+                    'name' => ($yaml['title'] ?? '') ?: ucwords(str_replace('_', ' ', $elementKey)),
                     'description' => $yaml['description'] ?? '',
                     'group' => $yaml['group'] ?? 'General',
                 ];
@@ -191,21 +183,40 @@ class FieldHelper
         return $flattened;
     }
 
-    private static function isJsonAndDecode($value): mixed
+    /**
+     * Decode a JSON string value once; every non-JSON value passes through
+     * unchanged (including strings that merely look falsy when decoded).
+     */
+    private static function decodeJsonValue(mixed $value): mixed
     {
-        // First check if it's a string (JSON must be a string)
         if (! is_string($value)) {
-            return false;
+            return $value;
         }
 
-        // Attempt to decode
         $decoded = json_decode($value, true);
 
-        // Check if decoding was successful
-        if (json_last_error() === JSON_ERROR_NONE) {
-            return $decoded;
-        }
+        return json_last_error() === JSON_ERROR_NONE ? $decoded : $value;
+    }
 
-        return false;
+    /**
+     * Parse one element YAML defensively: a malformed file is logged and
+     * skipped instead of breaking the element picker or the page render.
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function parseYamlFile(string $ymlFile): ?array
+    {
+        try {
+            $parsed = Yaml::parse(file_get_contents($ymlFile) ?: '');
+
+            return is_array($parsed) ? $parsed : null;
+        } catch (Throwable $e) {
+            logger()->warning('Skipping malformed element YAML', [
+                'file' => $ymlFile,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 }

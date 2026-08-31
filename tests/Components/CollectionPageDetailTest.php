@@ -121,14 +121,20 @@ it('does not update image on mediaSelected when token mismatches; updates when t
     ]);
 
     $component = Livewire::test('page-detail', ['pageId' => $entry->id, 'collectionKey' => 'projects'])
-        ->set('detailData.__mediaToken', 'token-abc')
         ->set('detailData.image', 'UNCHANGED');
+
+    // The token is minted server-side when the picker modal opens; it lives in
+    // a locked property, never in the mass-assigned detailData payload.
+    $component->call('openSelectMediaModal', 'image');
+    $token = $component->get('mediaToken');
+    expect($token)->toBeString()->not->toBe('');
 
     $component->call('mediaSelected', $media->id, 'image', 'wrong-token')
         ->assertSet('detailData.image', 'UNCHANGED');
 
-    $component->call('mediaSelected', $media->id, 'image', 'token-abc')
-        ->assertSet('detailData.image', fn($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED');
+    $component->call('mediaSelected', $media->id, 'image', $token)
+        ->assertSet('detailData.image', fn($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED')
+        ->assertSet('mediaToken', null);
 });
 
 it('handles collections without page features (hasPage: false)', function (): void {

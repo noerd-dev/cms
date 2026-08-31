@@ -1,13 +1,22 @@
-title: ''
-description: ''
+title: 'Header With Breadcrumb'
+description: 'Page header with title, optional parent-page link and intro text'
+group: 'Text'
 fields:
-  - { name: detailData.title, live: true, label: Text, type: translatableText, colspan: 4 }
-  - { name: detailData.toppage, label: 'Übergeordnete Seite', type: select,
-      options: [
-        '',
-        'Projekte',
-        'Leistungen',
-        'Kontakt',
-      ],
-      colspan: 4 }
-  - { name: detailData.description, label: Text, type: translatableRichText, colspan: 8 }
+  - name: detailData.title
+    live: true
+    label: Heading
+    type: translatableText
+    colspan: 4
+  - name: detailData.toppage
+    label: Parent page
+    type: select
+    options:
+      - ''
+      - 'Projects'
+      - 'Services'
+      - 'Contact'
+    colspan: 4
+  - name: detailData.description
+    label: Description
+    type: translatableRichText
+    colspan: 8

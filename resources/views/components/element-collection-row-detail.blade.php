@@ -30,6 +30,8 @@ new class extends Component
 
     public function mount(?string $collectionKey = null): void
     {
+        $this->initDetail();
+
         $this->collectionKey = $collectionKey ?? $this->collectionKey;
         $this->collectionLayout = CollectionHelper::getCollectionFields($this->collectionKey);
 
@@ -211,7 +213,7 @@ new class extends Component
 <x-noerd::page>
     <x-slot:header>
         <x-noerd::modal-title class="flex items-center">
-            {{ $collectionLayout['title'] ?? __('Eintrag') }}
+            {{ $collectionLayout['title'] ?? __('Entry') }}
 
             <div class="ml-auto">
                 <livewire:cms::language-switcher/>
@@ -219,11 +221,13 @@ new class extends Component
         </x-noerd::modal-title>
     </x-slot:header>
 
+    <x-noerd::tab-content :layout="[]" :modelId="$modelId" :showBlock="false">
+        <x-slot:tab1>
     <div class="py-4">
         <div class="flex">
             <div class="flex ml-auto items-center mb-6 space-x-4">
                 <div class="flex ml-auto items-center space-x-2">
-                    <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
+                    <label for="sort" class="text-sm text-gray-600 font-medium">{{ __('Sort') }}:</label>
                     <input
                         wire:model="detailData.sort"
                         id="sort"
@@ -238,13 +242,15 @@ new class extends Component
 
         @include('noerd::components.detail.block', array_merge($collectionLayout ?? ['fields' => []], ['model' => $detailData, 'modelId' => $modelId]))
     </div>
+        </x-slot:tab1>
+    </x-noerd::tab-content>
 
     <x-slot:footer>
         @if($modelId)
-            <x-noerd::button variant="secondary" wire:click="copy" wire:confirm="{{ __('Eintrag kopieren?') }}">
+            <x-noerd::button variant="secondary" wire:click="copy" wire:confirm="{{ __('Copy this entry?') }}">
                 {{ __('Copy') }}
             </x-noerd::button>
         @endif
-        <x-noerd::delete-save-bar :showDelete="(bool) $modelId"/>
+        <x-noerd::delete-save-bar :showDelete="isset($modelId)"/>
     </x-slot:footer>
 </x-noerd::page>

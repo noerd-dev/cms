@@ -31,26 +31,40 @@ Navigate to `/cms/navigation` to manage navigation items. Each item has the foll
 ## YAML Configuration
 
 ```yaml
-title: Navigationspunkt
+title: Navigation Item
 description: ''
 fields:
-  - name: navigationData.navigation_key
+  - name: detailData.navigation_key
     label: Key
     type: text
     colspan: 6
-  - name: navigationData.name
+  - name: detailData.name
     label: Name
     type: translatableText
     colspan: 6
-  - name: navigationData.page_id
+  - name: detailData.parent_id
+    label: Parent Item
+    type: picklist
+    picklistField: parentOptions
+    colspan: 6
+  - name: detailData.page_id
     label: Page
     type: pageRelation
+    relationField: relationTitles.page_id
     colspan: 6
-  - name: navigationData.link
+  - name: detailData.link
     label: 'Link (URL)'
     type: text
     colspan: 6
-  - name: navigationData.new_tab
+  - name: detailData.collection_id
+    label: 'Collection as Subpages (optional)'
+    type: select
+    colspan: 6
+  - name: detailData.sort_order
+    label: Sort Order
+    type: number
+    colspan: 6
+  - name: detailData.new_tab
     label: 'New Tab'
     type: checkbox
     colspan: 6

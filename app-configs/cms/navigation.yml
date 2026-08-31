@@ -8,26 +8,41 @@
         - title: Pages
           route: cms.pages
           heroicon: document
+          newRoute: cms.page.detail
+          newComponent: cms::page-detail
         - title: Navigation
           route: cms.navigation
           heroicon: list-bullet
+          newRoute: cms.navigation.detail
+          newComponent: cms::navigation-detail
         - title: Global Parameters
           route: cms.global-parameters
           heroicon: globe-alt
+          newRoute: cms.global-parameter.detail
+          newComponent: cms::global-parameter-detail
         - title: Form Requests
           route: cms.form-requests
-          heroicon: list-bullet
+          heroicon: inbox-arrow-down
+        - title: Form Types
+          route: cms.form-types
+          heroicon: envelope
         - title: Collection Definitions
           route: cms.collection-definitions
           heroicon: rectangle-stack
+          newRoute: cms.collection-definition.detail
+          newComponent: cms::collection-definition-detail
     - title: Blog
       navigations:
         - title: Articles
           route: cms.articles
           heroicon: newspaper
+          newRoute: cms.article.detail
+          newComponent: cms::article-detail
         - title: Authors
           route: cms.authors
           heroicon: user-group
+          newRoute: cms.author.detail
+          newComponent: cms::author-detail
     - title: Page Collections
       dynamic: page-collections
     - title: Collections
@@ -40,3 +55,5 @@
         - title: Languages
           route: cms.languages
           heroicon: language
+          newRoute: cms.language.detail
+          newComponent: cms::language-detail

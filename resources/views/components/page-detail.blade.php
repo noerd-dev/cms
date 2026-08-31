@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -16,6 +17,7 @@ use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Facades\Noerd;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Services\MediaUploadService;
+use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component
@@ -27,8 +29,6 @@ new class extends Component
 
     public $detailModel = Page::class;
 
-    public const DETAIL_COMPONENT = 'cms::page-detail';
-
     public ?array $collectionLayout = null;
 
     public ?string $collectionKey = null;
@@ -37,7 +37,13 @@ new class extends Component
 
     public array $images = [];
 
-    public string $hrefPage = '';
+    /**
+     * Correlates a media-picker round trip: only the modal opened by THIS
+     * component instance may write the selected media back. Kept out of
+     * $detailData so it can never leak into the mass-assigned payload.
+     */
+    #[Locked]
+    public ?string $mediaToken = null;
 
     public $lastChangeTime;
 
@@ -116,9 +122,7 @@ new class extends Component
             if (! $relatedPage) {
                 continue;
             }
-            $this->relationTitles[$fieldName] = is_array($relatedPage->name)
-                ? ($relatedPage->name[session('selectedLanguage')] ?? array_values($relatedPage->name)[0] ?? '')
-                : $relatedPage->name;
+            $this->relationTitles[$fieldName] = RelationFieldDefinition::normalizeDisplayValue($relatedPage->name);
         }
 
         // Ensure sort field is available for collections
@@ -282,15 +286,14 @@ new class extends Component
 
     public function openSelectMediaModal(string $fieldName): void
     {
-        $token = uniqid('media_', true);
-        $this->detailData['__mediaToken'] = $token;
-        Noerd::modal('media::media-list', ['selectMode' => true, 'selectContext' => $fieldName, 'selectToken' => $token]);
+        $this->mediaToken = uniqid('media_', true);
+        Noerd::modal('media::media-list', ['selectMode' => true, 'selectContext' => $fieldName, 'selectToken' => $this->mediaToken]);
     }
 
     #[On('mediaSelected')]
     public function mediaSelected(int $mediaId, ?string $fieldName = 'image', ?string $token = null): void
     {
-        if (($this->detailData['__mediaToken'] ?? null) !== $token) {
+        if ($this->mediaToken === null || $this->mediaToken !== $token) {
             return;
         }
         $media = Media::find($mediaId);
@@ -298,12 +301,17 @@ new class extends Component
             return;
         }
         $this->detailData[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
-        unset($this->detailData['__mediaToken']);
+        $this->mediaToken = null;
     }
 
     #[On('elementPicked')]
     public function addElement($elementKey, $token = 'insert-end'): void
     {
+        // Tenant guard: only operate on a page the current tenant owns.
+        if (! $this->pageModel) {
+            return;
+        }
+
         if (str_starts_with($token, 'insert-at-')) {
             $position = (int) str_replace('insert-at-', '', $token);
 
@@ -324,7 +332,7 @@ new class extends Component
             'page_id' => $this->modelId,
             'element_key' => $elementKey,
             'sort' => $sort,
-            'data' => '{}',
+            'data' => [],
         ]);
 
         $this->lastChangeTime = time();
@@ -339,18 +347,16 @@ new class extends Component
         }
 
         $fieldName = str_replace('detailData.', '', $context);
-        $name = is_array($page->name)
-            ? ($page->name[session('selectedLanguage')] ?? array_values($page->name)[0] ?? '')
-            : $page->name;
 
-        $this->hrefPage = $name;
-        $this->relationTitles[$fieldName] = $name;
+        $this->relationTitles[$fieldName] = RelationFieldDefinition::normalizeDisplayValue($page->name);
         $this->detailData[$fieldName] = $page->id;
     }
 
     public function elementSort($elementId, $newPosition): void
     {
-        \Log::info('elementSort called', ['elementId' => $elementId, 'newPosition' => $newPosition, 'type_id' => gettype($elementId), 'type_pos' => gettype($newPosition)]);
+        if (! $this->pageModel) {
+            return;
+        }
 
         $elementId = (int) $elementId;
         $newPosition = (int) $newPosition;
@@ -376,6 +382,10 @@ new class extends Component
 
     public function duplicateElement(int $elementPageId): void
     {
+        if (! $this->pageModel) {
+            return;
+        }
+
         $element = ElementPage::find($elementPageId);
         if (! $element || (int) $element->page_id !== (int) $this->modelId) {
             return;
@@ -398,6 +408,10 @@ new class extends Component
 
     public function deleteElement(int $elementPageId): void
     {
+        if (! $this->pageModel) {
+            return;
+        }
+
         $element = ElementPage::find($elementPageId);
         if ($element && (int) $element->page_id === (int) $this->modelId) {
             $element->delete();
@@ -418,11 +432,6 @@ new class extends Component
         $this->dispatch('$refresh');
     }
 
-    public function openElements(): void
-    {
-        Noerd::modal('cms::element-page-detail', ['elementPageId' => $this->modelId]);
-    }
-
     public function getPageUrl(): ?string
     {
         $selectedLanguage = session('selectedLanguage') ?? $this->getDefaultLanguageCode();
@@ -437,6 +446,10 @@ new class extends Component
 
     public function store(): void
     {
+        if (! $this->canSaveObject()) {
+            return;
+        }
+
         if ($this->collectionKey) {
             $this->storeCollectionPage();
 
@@ -491,15 +504,11 @@ new class extends Component
         $this->storeProcess($page);
     }
 
-    public function delete(): void
-    {
-        $page = Page::find($this->modelId);
-        $page->delete();
-        $this->closeModalProcess($this->getListComponent());
-    }
-
     public function copy(): void
     {
+        if (! $this->canSaveObject()) {
+            return;
+        }
         $sourcePage = Page::with('elements')->find($this->modelId);
         if (! $sourcePage) {
             return;
@@ -563,6 +572,7 @@ new class extends Component
         $this->lastChangeTime = time();
 
         $this->dispatch('listRefresh');
+        $this->dispatch('refreshList-pages-list');
         $this->showSuccessIndicator = true;
     }
 
@@ -728,7 +738,7 @@ new class extends Component
                         x-init="if (!Alpine.store('elements')) Alpine.store('elements', { collapsed: false })"
                         @click="$store.elements.collapsed = !$store.elements.collapsed"
                         class="px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-                        x-text="$store.elements.collapsed ? '{{ __('Elemente aufklappen') }}' : '{{ __('Elemente zuklappen') }}'"
+                        x-text="$store.elements.collapsed ? '{{ __('Expand elements') }}' : '{{ __('Collapse elements') }}'"
                     ></button>
                 @endif
 
@@ -739,7 +749,7 @@ new class extends Component
                     @if($pageUrl)
                         <a href="{{ $pageUrl }}" target="_blank"
                            class="px-4 py-2 rounded-md text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors">
-                            {{ __('Zur Seite') }}
+                            {{ __('View page') }}
                         </a>
                     @endif
                 @endif
@@ -752,7 +762,7 @@ new class extends Component
             <div class="flex">
                 <div class="flex ml-auto items-center my-6 space-x-4">
                     <div class="flex ml-auto items-center space-x-2">
-                        <label for="sort" class="text-sm text-gray-600 font-medium">Sort:</label>
+                        <label for="sort" class="text-sm text-gray-600 font-medium">{{ __('Sort') }}:</label>
                         <input
                             wire:model="detailData.sort"
                             id="sort"
@@ -783,7 +793,7 @@ new class extends Component
 
     <x-slot:footer>
         @if($modelId)
-            <x-noerd::button variant="secondary" wire:click="copy" wire:confirm="{{ __('Seite kopieren?') }}">
+            <x-noerd::button variant="secondary" wire:click="copy" wire:confirm="{{ __('Copy this page?') }}">
                 {{ __('Copy') }}
             </x-noerd::button>
         @endif

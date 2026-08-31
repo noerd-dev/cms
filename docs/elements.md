@@ -50,7 +50,7 @@ fields:
 
 | Property | Description |
 |----------|-------------|
-| `name` | Field path (e.g., `model.text`, `model.link`) |
+| `name` | Field path (e.g., `detailData.text`, `detailData.link`) |
 | `label` | Field label |
 | `type` | Field type: `translatableRichText`, `translatableText`, `text`, `checkbox`, `image` |
 | `colspan` | Grid column span (1-12) |
@@ -82,11 +82,11 @@ The website boilerplate includes these default elements:
 
 | Element | Description | Fields |
 |---------|-------------|--------|
-| `text-block-1-column` | Single column text | `model.text` (translatableRichText) |
-| `text-block-2-column` | Two column text | `model.text_left`, `model.text_right` (translatableRichText) |
-| `text-block-2-column-2-3` | Asymmetric 2/3 column | `model.text_left`, `model.text_right` (translatableRichText) |
-| `text-block-3-column` | Three column text | `model.text_1`, `model.text_2`, `model.text_3` (translatableRichText) |
-| `text-block-home-page` | Homepage text block | `model.text` (translatableRichText) |
+| `text-block-1-column` | Single column text | `detailData.text` (translatableRichText) |
+| `text-block-2-column` | Two column text | `detailData.text_left`, `detailData.text_right` (translatableRichText) |
+| `text-block-2-column-2-3` | Asymmetric 2/3 column | `detailData.text_left`, `detailData.text_right` (translatableRichText) |
+| `text-block-3-column` | Three column text | `detailData.text_1`, `detailData.text_2`, `detailData.text_3` (translatableRichText) |
+| `text-block-home-page` | Homepage text block | `detailData.text` (translatableRichText) |
 
 ## Creating Custom Elements
 
@@ -154,7 +154,7 @@ Translatable fields are stored as JSON objects with language codes as keys:
 - Element file names use **kebab-case** (`text-block-1-column.blade.php`), while `element_key` uses **snake_case** (`text_block_1_column`)
 - `FieldHelper::getElementFields()` loads the YAML config colocated with the Blade component
 - `FieldHelper::parseElementToData()` initializes translatable fields with empty values for each active language
-- The `CMS_PAGE_ELEMENTS_PATH` environment variable can override the default element discovery path
+- The `CMS_PAGE_ELEMENTS_PATH` environment variable (read through `config('noerd_cms.page_elements_path')`) can override the default element discovery path
 
 ## Next Steps
 

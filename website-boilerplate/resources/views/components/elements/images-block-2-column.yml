@@ -2,7 +2,19 @@ title: 'Two Column Images'
 description: 'Display images in a two-column layout'
 group: 'Images'
 fields:
-  - { name: image, label: Bild links, type: image, colspan: 6 }
-  - { name: image2, label: Bild rechts, type: image, colspan: 6 }
-  - { name: detailData.videoUrl, label: YouTube URL links (optional), type: translatableText, colspan: 6 }
-  - { name: detailData.videoUrl2, label: YouTube URL rechts (optional), type: translatableText, colspan: 6 }
+  - name: image
+    label: Image left
+    type: image
+    colspan: 6
+  - name: image2
+    label: Image right
+    type: image
+    colspan: 6
+  - name: detailData.videoUrl
+    label: YouTube URL left (optional)
+    type: translatableText
+    colspan: 6
+  - name: detailData.videoUrl2
+    label: YouTube URL right (optional)
+    type: translatableText
+    colspan: 6

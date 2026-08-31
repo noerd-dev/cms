@@ -17,8 +17,10 @@ it('creates a default homepage for tenants without one', function (): void {
 
     $this->assertDatabaseHas('pages', [
         'tenant_id' => $tenant->id,
-        'name' => json_encode(['de' => 'Startseite', 'en' => 'Homepage']),
-        'slug' => json_encode(['de' => '/startseite', 'en' => '/homepage']),
+        'name->de' => 'Startseite',
+        'name->en' => 'Homepage',
+        'slug->de' => '/startseite',
+        'slug->en' => '/homepage',
         'is_active' => true,
     ]);
 
@@ -36,7 +38,7 @@ it('does not overwrite an existing homepage', function (): void {
 
     $existingPage = Page::factory()->create([
         'tenant_id' => $tenant->id,
-        'name' => json_encode(['de' => 'Meine Seite', 'en' => 'My Page']),
+        'name' => ['de' => 'Meine Seite', 'en' => 'My Page'],
     ]);
 
     CmsSetting::create([

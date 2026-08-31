@@ -15,7 +15,7 @@ new class extends Component {
                 <div class="relative w-full aspect-[405/540] !bg-cover bg-center overflow-hidden group">
                     <a @if(isset($element->videoUrl[session('selectedLanguage')]) && $element->videoUrl[session('selectedLanguage')]) href="#/"
                        @click.prevent="openLightbox('{{ $element->videoUrl[session('selectedLanguage')] }}')" @endisset
-                       style="background: url('{{ env('MEDIA_URL') . ($element->image ?? '') }}')"
+                       style="background: url('{{ config('website.media_url') . ($element->image ?? '') }}')"
                        class="h-full bg-gray-300 flex transition-opacity opacity-100 transition-transform
                  @if(isset($element->videoUrl[session('selectedLanguage')]) && $element->videoUrl[session('selectedLanguage')]) hover:scale-105 @endif
                    bg-center !bg-cover">
@@ -28,7 +28,7 @@ new class extends Component {
                 <div class="relative w-full aspect-[405/540] !bg-cover bg-center overflow-hidden group">
                     <a @if(isset($element->videoUrl[session('selectedLanguage')]) && $element->videoUrl2[session('selectedLanguage')]) href="#/"
                        @click.prevent="openLightbox('{{ $element->videoUrl2[session('selectedLanguage')] }}')" @endisset
-                       style="background: url('{{ env('MEDIA_URL') . ($element->image2 ?? '') }}')"
+                       style="background: url('{{ config('website.media_url') . ($element->image2 ?? '') }}')"
                        class="h-full bg-gray-300 flex transition-opacity opacity-100 transition-transform
                  @if(isset($element->videoUrl2[session('selectedLanguage')]) && $element->videoUrl2[session('selectedLanguage')]) hover:scale-105 @endif
                    bg-center !bg-cover">
@@ -41,7 +41,7 @@ new class extends Component {
                 <div class="relative w-full aspect-[405/540] !bg-cover bg-center overflow-hidden group">
                     <a @if(isset($element->videoUrl[session('selectedLanguage')]) && $element->videoUrl3[session('selectedLanguage')]) href="#/"
                        @click.prevent="openLightbox('{{ $element->videoUrl3[session('selectedLanguage')] }}')" @endisset
-                       style="background: url('{{ env('MEDIA_URL') . ($element->image3 ?? '') }}')"
+                       style="background: url('{{ config('website.media_url') . ($element->image3 ?? '') }}')"
                        class="h-full bg-gray-300 flex transition-opacity opacity-100 transition-transform
                  @if(isset($element->videoUrl3[session('selectedLanguage')]) && $element->videoUrl3[session('selectedLanguage')]) hover:scale-105 @endif
                    bg-center !bg-cover">

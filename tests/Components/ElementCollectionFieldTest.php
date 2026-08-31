@@ -25,7 +25,7 @@ it('shows a save-first hint when the owner is not yet saved', function (): void 
         'fieldName' => 'triggers_items',
         'label' => 'Triggers — Items',
         'rowFields' => [['name' => 'text', 'type' => 'translatableTextarea']],
-    ])->assertSee('zuerst speichern');
+    ])->assertSee(__('Please save the entry first to manage its entries.'));
 });
 
 it('creates a page-owned element collection and opens the modal on manage()', function (): void {
@@ -38,7 +38,7 @@ it('creates a page-owned element collection and opens the modal on manage()', fu
         'label' => 'Triggers — Items',
         'rowFields' => [['name' => 'text', 'label' => 'Text', 'type' => 'translatableTextarea', 'colspan' => 12]],
     ])
-        ->assertSee('Verwalten')
+        ->assertSee(__('Manage'))
         ->call('manage')
         ->assertDispatched('noerdModal');
 
@@ -61,7 +61,7 @@ it('creates an element_page-owned element collection on manage()', function (): 
         'label' => 'Team-Mitglieder',
         'rowFields' => [['name' => 'name', 'type' => 'translatableText']],
     ])
-        ->assertSee('Verwalten')
+        ->assertSee(__('Manage'))
         ->call('manage')
         ->assertDispatched('noerdModal');
 
@@ -123,6 +123,6 @@ it('renders the element-collection field through the entry editor instead of [ob
         ->test('page-detail', ['collectionKey' => 'services'])
         ->assertSee('Titel')
         ->assertSee('Triggers')
-        ->assertSee('Verwalten')
+        ->assertSee(__('Manage'))
         ->assertDontSee('[object Object]');
 });

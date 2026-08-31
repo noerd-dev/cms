@@ -10,6 +10,7 @@ use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
+use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
 use Noerd\Support\RelationFieldDefinition;
@@ -56,6 +57,8 @@ new class extends Component
         if (! empty($this->listFilters['language'])) {
             session(['selectedLanguage' => $this->listFilters['language']]);
         }
+
+        $this->resetPage();
     }
 
     /**
@@ -82,6 +85,8 @@ new class extends Component
 
     public function mount(): void
     {
+        $this->mountList();
+
         if (! $this->collectionKey) {
             $this->collectionKey = $this->collectionId ?? request()->get('key');
         }
@@ -92,8 +97,12 @@ new class extends Component
         // Load collection layout
         $this->collectionLayout = CollectionHelper::getCollectionFields($this->collectionKey);
 
-        if (request()->create) {
-            $this->listAction();
+        if (empty($this->listFilters['language'])) {
+            $this->listFilters['language'] = session('selectedLanguage') ?: $this->getDefaultLanguageCode();
+        }
+
+        if (empty(session('selectedLanguage'))) {
+            session(['selectedLanguage' => $this->listFilters['language']]);
         }
     }
 
@@ -127,41 +136,40 @@ new class extends Component
         if (! $this->collectionKey) {
             return $this->buildList(collect([]), [
                 'title' => 'Collections',
-                'actions' => [['label' => 'Neuer Eintrag', 'action' => 'listAction']],
+                'actions' => [['label' => __('New Entry'), 'action' => 'listAction']],
                 'disableSearch' => false,
                 'columns' => [],
             ]);
         }
 
-        // Get or create the parent collection. Pull the display name from the
+        // Resolve the parent collection. Pull the display name from the
         // definition repository when available so it matches what the user
-        // configured (instead of falling back to ucfirst on the key).
+        // configured. The row itself is created lazily when the first entry is
+        // stored (storeCollectionPage) — never as a render side effect.
         // The definition's key is authoritative: URL keys are filenames
         // (hyphenated), while definition keys may use underscores — uppercasing
         // the filename would create an empty duplicate row next to the real one.
         $definition = app(CollectionDefinitionRepositoryContract::class)->find($this->collectionKey);
-        $parentCollection = Collection::firstOrCreate([
-            'tenant_id' => auth()->user()->selected_tenant_id,
-            'collection_key' => $definition?->key ?: mb_strtoupper($this->collectionKey),
-        ], [
-            'name' => $definition?->titleList ?: ucfirst($this->collectionKey),
-            'created_by' => auth()->id(),
-        ]);
+        $parentCollection = Collection::where('tenant_id', auth()->user()->selected_tenant_id)
+            ->where('collection_key', $definition?->key ?: mb_strtoupper($this->collectionKey))
+            ->first();
 
-        $this->collectionId = $parentCollection->id;
+        $this->collectionId = $parentCollection?->id;
 
-        // Get collection entries (pages)
-        $query = Page::where('tenant_id', auth()->user()->selected_tenant_id)
-            ->where('collection_id', $parentCollection->id)
-            ->orderBy('sort', 'asc')
+        // Get collection entries (pages); listQuery() carries the read guard.
+        $languageCodes = CmsLanguageCodes::active();
+        $query = $this->listQuery($this->listModel)
+            ->where('collection_id', $parentCollection?->id ?? 0)
+            ->reorder('sort', 'asc')
             ->orderBy('created_at', 'desc');
 
         // Apply search if provided
         if (! empty($this->search)) {
-            $query->where(function ($q): void {
-                // Search in standard fields
-                $q->whereRaw('JSON_EXTRACT(name, "$.de") LIKE ?', ['%'.$this->search.'%'])
-                    ->orWhereRaw('JSON_EXTRACT(name, "$.en") LIKE ?', ['%'.$this->search.'%']);
+            $query->where(function ($q) use ($languageCodes): void {
+                // Search in standard fields, per configured language
+                foreach ($languageCodes as $code) {
+                    $q->orWhereRaw('JSON_EXTRACT(name, ?) LIKE ?', ['$.' . $code, '%' . $this->search . '%']);
+                }
 
                 // Search in dynamic fields from the collection definition
                 if ($this->collectionLayout && isset($this->collectionLayout['fields'])) {
@@ -176,9 +184,10 @@ new class extends Component
                         }
 
                         // Search in translatable fields
-                        $q->orWhereRaw("JSON_EXTRACT(data, \"$.{$fieldKey}.de\") LIKE ?", ['%'.$this->search.'%'])
-                            ->orWhereRaw("JSON_EXTRACT(data, \"$.{$fieldKey}.en\") LIKE ?", ['%'.$this->search.'%'])
-                            ->orWhereRaw("JSON_EXTRACT(data, \"$.{$fieldKey}\") LIKE ?", ['%'.$this->search.'%']);
+                        foreach ($languageCodes as $code) {
+                            $q->orWhereRaw('JSON_EXTRACT(data, ?) LIKE ?', ['$.' . $fieldKey . '.' . $code, '%' . $this->search . '%']);
+                        }
+                        $q->orWhereRaw('JSON_EXTRACT(data, ?) LIKE ?', ['$.' . $fieldKey, '%' . $this->search . '%']);
                     }
                 }
             });
@@ -234,7 +243,7 @@ new class extends Component
                             ->where('is_element_collection', true)
                             ->first();
                         $count = $elementCollection ? $elementCollection->rows()->count() : 0;
-                        $value = $count > 0 ? $count.' '.trans_choice('Eintrag|Einträge', $count) : '';
+                        $value = $count > 0 ? $count.' '.trans_choice('Entry|Entries', $count) : '';
                     } elseif (isset($data[$fieldKey])) {
                         $fieldData = $data[$fieldKey];
 
@@ -258,7 +267,7 @@ new class extends Component
 
                     // Handle special field types
                     if ($fieldType === 'image' && $value) {
-                        $value = '✓ Bild vorhanden';
+                        $value = '✓ ' . __('Image present');
                     }
 
                     if ($fieldType === 'pageRelation') {
@@ -322,7 +331,7 @@ new class extends Component
         }
 
         // Add standard columns
-        $columns[] = ['field' => 'sort', 'label' => 'Sortierung', 'width' => 0.5];
+        $columns[] = ['field' => 'sort', 'label' => __('Sort'), 'width' => 0.5];
         $columns[] = ['field' => 'updated_at', 'label' => __('Last Modified')];
 
         return $this->buildList($rows, [
@@ -331,22 +340,6 @@ new class extends Component
             'disableSearch' => false,
             'columns' => $columns,
         ]);
-    }
-
-    public function rendering(): void
-    {
-        $this->loadListFilters();
-
-        $selectedLanguage = session('selectedLanguage');
-        if ($selectedLanguage && empty($this->listFilters['language'])) {
-            $this->listFilters['language'] = $selectedLanguage;
-        }
-
-        if (empty($this->listFilters['language']) && empty(session('selectedLanguage'))) {
-            $defaultCode = $this->getDefaultLanguageCode();
-            $this->listFilters['language'] = $defaultCode;
-            session(['selectedLanguage' => $defaultCode]);
-        }
     }
 
     private function getDefaultLanguageCode(): string

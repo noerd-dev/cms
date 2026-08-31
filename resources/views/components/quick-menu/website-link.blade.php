@@ -11,7 +11,7 @@ new class () extends Component {
         $tenant = $user?->selectedTenant();
         $uuid = $tenant?->uuid ?? null;
 
-        if ($user && $user->can('canCms') && ! empty($uuid)) {
+        if ($user && \Noerd\Helpers\AccessHelper::canUseApp('CMS') && ! empty($uuid)) {
             $configuredUrl = config('noerd_cms.website_url');
 
             $this->websiteUrl = ! empty($configuredUrl)

@@ -4,9 +4,11 @@ namespace Noerd\Website\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Noerd\Traits\BelongsToTenant;
 
 class FormRequest extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     protected $table = 'form_requests';

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\File;
 use Noerd\Cms\Models\FormType;
 use Noerd\Cms\Services\FormTypeSyncService;
 use Noerd\Models\Tenant;
+use Noerd\Models\TenantApp;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
@@ -47,9 +48,26 @@ function writeFormFixtureYaml(string $formsPath, string $filename, string $yaml)
     return $file;
 }
 
+/**
+ * The sync only targets tenants running the CMS app — every fixture tenant
+ * therefore gets the CMS tenant app attached.
+ */
+function createCmsSyncTenant(): Tenant
+{
+    $tenant = Tenant::factory()->create();
+
+    $cmsApp = TenantApp::firstOrCreate(
+        ['name' => 'CMS'],
+        ['title' => 'CMS', 'icon' => 'cms::icons.app', 'route' => 'cms.dashboard', 'is_active' => true],
+    );
+    $tenant->tenantApps()->attach($cmsApp->id);
+
+    return $tenant;
+}
+
 it('creates form type rows for every tenant on the initial sync', function (): void {
-    $tenantA = Tenant::factory()->create();
-    $tenantB = Tenant::factory()->create();
+    $tenantA = createCmsSyncTenant();
+    $tenantB = createCmsSyncTenant();
 
     writeFormFixtureYaml($this->formsPath, 'fixture-contact.yml', <<<'YAML'
 key: fixture-contact
@@ -58,7 +76,7 @@ send_email: true
 notification_email: forms@example.com
 YAML);
 
-    $exitCode = Artisan::call('forms:sync');
+    $exitCode = Artisan::call('cms:sync-form-types');
 
     expect($exitCode)->toBe(0);
 
@@ -76,7 +94,7 @@ YAML);
 });
 
 it('skips the second sync when the file mtime has not changed', function (): void {
-    Tenant::factory()->create();
+    createCmsSyncTenant();
 
     writeFormFixtureYaml($this->formsPath, 'fixture-skip.yml', <<<'YAML'
 key: fixture-skip
@@ -100,7 +118,7 @@ YAML);
 });
 
 it('re-syncs when the yaml file is touched', function (): void {
-    Tenant::factory()->create();
+    createCmsSyncTenant();
 
     $file = writeFormFixtureYaml($this->formsPath, 'fixture-touch.yml', <<<'YAML'
 key: fixture-touch
@@ -122,7 +140,7 @@ YAML);
 });
 
 it('force re-syncs files regardless of mtime', function (): void {
-    Tenant::factory()->create();
+    createCmsSyncTenant();
 
     writeFormFixtureYaml($this->formsPath, 'fixture-force.yml', <<<'YAML'
 key: fixture-force
@@ -138,11 +156,11 @@ YAML);
     expect($forced['skipped'])->toBe(0);
 
     // The --force flag drives the same path through the artisan command.
-    expect(Artisan::call('forms:sync', ['--force' => true]))->toBe(0);
+    expect(Artisan::call('cms:sync-form-types', ['--force' => true]))->toBe(0);
 });
 
 it('reports an error for a yaml file without a key', function (): void {
-    Tenant::factory()->create();
+    createCmsSyncTenant();
 
     writeFormFixtureYaml($this->formsPath, 'fixture-broken.yml', <<<'YAML'
 title: Broken Fixture Without Key
@@ -157,7 +175,7 @@ YAML);
     expect(FormType::withoutGlobalScopes()->count())->toBe(0);
 
     // The command exits with failure when the sync reported errors.
-    expect(Artisan::call('forms:sync'))->toBe(1);
+    expect(Artisan::call('cms:sync-form-types'))->toBe(1);
 });
 
 it('handles a missing or empty forms directory gracefully', function (): void {
@@ -180,7 +198,7 @@ it('handles a missing or empty forms directory gracefully', function (): void {
 });
 
 it('does not duplicate rows when syncing repeatedly', function (): void {
-    $tenant = Tenant::factory()->create();
+    $tenant = createCmsSyncTenant();
 
     writeFormFixtureYaml($this->formsPath, 'fixture-idempotent.yml', <<<'YAML'
 key: fixture-idempotent

@@ -17,6 +17,7 @@ fields:
   - name: detailData.page_id
     label: Page
     type: pageRelation
+    relationField: relationTitles.page_id
     colspan: 6
   - name: detailData.link
     label: 'Link (URL)'

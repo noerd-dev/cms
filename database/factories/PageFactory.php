@@ -16,9 +16,15 @@ class PageFactory extends Factory
 
         return [
             'tenant_id' => 1,
-            'name' => $deTitle,
-            'is_active' => $this->faker->boolean(80),
-            'slug' => str($deTitle)->slug()->toString(),
+            'name' => [
+                'de' => $deTitle,
+                'en' => $enTitle,
+            ],
+            'is_active' => true,
+            'slug' => [
+                'de' => '/' . str($deTitle)->slug()->toString(),
+                'en' => '/en/' . str($enTitle)->slug()->toString(),
+            ],
             'data' => [
                 'name' => [
                     'de' => $deTitle,
@@ -26,28 +32,11 @@ class PageFactory extends Factory
                 ],
             ],
             'sort' => $this->faker->numberBetween(1, 100),
-            'created_at' => now(),
-            'updated_at' => now(),
         ];
     }
 
-    private function generateSlug(string $name): string
+    public function inactive(): static
     {
-        // Replace umlauts and special characters BEFORE lowercasing
-        $slug = str_replace(['ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'], ['ae', 'oe', 'ue', 'ss', 'ae', 'oe', 'ue'], $name);
-
-        // Convert to lowercase
-        $slug = mb_strtolower($slug);
-
-        // Remove all non-alphanumeric characters and spaces, replace with hyphens
-        $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug);
-
-        // Replace multiple spaces/hyphens with single hyphen
-        $slug = preg_replace('/[\s-]+/', '-', $slug);
-
-        // Trim hyphens from beginning and end
-        $slug = mb_trim($slug, '-');
-
-        return $slug;
+        return $this->state(fn(): array => ['is_active' => false]);
     }
 }

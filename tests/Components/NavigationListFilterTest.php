@@ -27,13 +27,13 @@ it('can filter by navigation_key', function (): void {
     Navigation::create([
         'tenant_id' => $this->tenant->id,
         'navigation_key' => 'MAIN',
-        'name' => json_encode(['de' => 'Startseite']),
+        'name' => ['de' => 'Startseite'],
         'sort_order' => 0,
     ]);
     Navigation::create([
         'tenant_id' => $this->tenant->id,
         'navigation_key' => 'FOOTER',
-        'name' => json_encode(['de' => 'Impressum']),
+        'name' => ['de' => 'Impressum'],
         'sort_order' => 0,
     ]);
 
@@ -53,13 +53,13 @@ it('shows all entries when navigation_key filter is empty', function (): void {
     Navigation::create([
         'tenant_id' => $this->tenant->id,
         'navigation_key' => 'MAIN',
-        'name' => json_encode(['de' => 'Startseite']),
+        'name' => ['de' => 'Startseite'],
         'sort_order' => 0,
     ]);
     Navigation::create([
         'tenant_id' => $this->tenant->id,
         'navigation_key' => 'FOOTER',
-        'name' => json_encode(['de' => 'Impressum']),
+        'name' => ['de' => 'Impressum'],
         'sort_order' => 0,
     ]);
 
@@ -78,26 +78,26 @@ it('displays children directly after their parent', function (): void {
     $parent1 = Navigation::create([
         'tenant_id' => $this->tenant->id,
         'navigation_key' => 'MAIN',
-        'name' => json_encode(['de' => 'Über uns']),
+        'name' => ['de' => 'Über uns'],
         'sort_order' => 1,
     ]);
     $parent2 = Navigation::create([
         'tenant_id' => $this->tenant->id,
         'navigation_key' => 'MAIN',
-        'name' => json_encode(['de' => 'Startseite']),
+        'name' => ['de' => 'Startseite'],
         'sort_order' => 0,
     ]);
     $child1 = Navigation::create([
         'tenant_id' => $this->tenant->id,
         'navigation_key' => 'MAIN',
-        'name' => json_encode(['de' => 'Team']),
+        'name' => ['de' => 'Team'],
         'parent_id' => $parent1->id,
         'sort_order' => 0,
     ]);
     $child2 = Navigation::create([
         'tenant_id' => $this->tenant->id,
         'navigation_key' => 'MAIN',
-        'name' => json_encode(['de' => 'Geschichte']),
+        'name' => ['de' => 'Geschichte'],
         'parent_id' => $parent1->id,
         'sort_order' => 1,
     ]);
@@ -117,13 +117,13 @@ it('prefixes child navigation items with arrow indicator', function (): void {
     $parent = Navigation::create([
         'tenant_id' => $this->tenant->id,
         'navigation_key' => 'MAIN',
-        'name' => json_encode(['de' => 'Über uns']),
+        'name' => ['de' => 'Über uns'],
         'sort_order' => 0,
     ]);
     Navigation::create([
         'tenant_id' => $this->tenant->id,
         'navigation_key' => 'MAIN',
-        'name' => json_encode(['de' => 'Team']),
+        'name' => ['de' => 'Team'],
         'parent_id' => $parent->id,
         'sort_order' => 0,
     ]);

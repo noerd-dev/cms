@@ -8,6 +8,7 @@ use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
 use Noerd\Facades\Noerd;
+use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
@@ -36,7 +37,7 @@ new class extends Component {
         }
 
         if ($navigation['page_id']) {
-            $this->pageSelected($navigation['page_id']);
+            $this->pageSelected($navigation['page_id'], 'detailData.page_id');
         }
     }
 
@@ -72,11 +73,10 @@ new class extends Component {
         }
 
         $selectedLanguage = session('selectedLanguage', 'de');
-        $options = ['' => '-- Kein übergeordneter Punkt --'];
+        $options = ['' => '-- ' . __('No parent item') . ' --'];
 
         foreach ($query->orderBy('sort_order')->get() as $item) {
-            $decoded = is_string($item->name) ? json_decode($item->name, true) : ($item->name ?? []);
-            $label = $decoded[$selectedLanguage] ?? (is_array($decoded) ? (array_values($decoded)[0] ?? '') : $item->name);
+            $label = RelationFieldDefinition::normalizeDisplayValue($item->name);
             $options[$item->id] = $label ?: '(ID: ' . $item->id . ')';
         }
 
@@ -85,6 +85,10 @@ new class extends Component {
 
     public function store(): void
     {
+        if (! $this->canSaveObject()) {
+            return;
+        }
+
         $parentId = ! empty($this->detailData['parent_id']) ? (int) $this->detailData['parent_id'] : null;
         $this->detailData['parent_id'] = $parentId;
         $isSub = $parentId !== null;
@@ -100,16 +104,15 @@ new class extends Component {
             'detailData.new_tab' => ['nullable', 'boolean'],
         ]);
 
-        $data = $this->detailData;
-        unset($data['navigation_type']);
+        $data = collect($this->detailData)
+            ->except(['navigation_type', 'created_at', 'updated_at'])
+            ->toArray();
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
 
         if ($isSub) {
             $parent = Navigation::find($parentId);
             $data['navigation_key'] = $parent?->navigation_key ?? $data['navigation_key'];
         }
-        // TODO auto detect if value is an array and convert it to JSON
-        $data['name'] = json_encode($data['name']);
 
         $data['collection_id'] = !empty($data['collection_id']) ? (int) $data['collection_id'] : null;
 
@@ -129,28 +132,28 @@ new class extends Component {
         $this->storeProcess($navigation);
     }
 
-    public function delete(): void
-    {
-        if ($this->modelId) {
-            $navigation = Navigation::find($this->modelId);
-            $navigation?->delete();
-        }
-        $this->closeModalProcess($this->getListComponent());
-    }
-
     public function openPageSelect(): void
     {
-        Noerd::modal('cms::pages-list', ['listActionMethod' => 'selectAction']);
+        Noerd::modal('cms::pages-list', ['listActionMethod' => 'selectAction', 'context' => 'detailData.page_id']);
     }
 
     #[On('pageSelected')]
-    public function pageSelected($value): void
+    public function pageSelected($value, mixed $context = 'detailData.page_id'): void
     {
+        if ($context !== 'detailData.page_id') {
+            return;
+        }
+
         $page = Page::find($value);
+        if (! $page) {
+            return;
+        }
+
         $this->detailData['page_id'] = $page->id;
-        $decoded = is_string($page->name) ? json_decode($page->name, true) : ($page->name ?? []);
-        $lang = session('selectedLanguage');
-        $this->relationTitles['page_id'] = $decoded[$lang] ?? (is_array($decoded) ? (array_values($decoded)[0] ?? '') : $page->name);
+        $decoded = is_array($page->name)
+            ? $page->name
+            : (json_decode((string) $page->name, true) ?: []);
+        $this->relationTitles['page_id'] = RelationFieldDefinition::normalizeDisplayValue($page->name);
 
         // Auto-fill name field only if it's empty
         $currentName = $this->detailData['name'] ?? [];

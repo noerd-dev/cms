@@ -2,10 +2,8 @@
 
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\GlobalParameter;
-use Noerd\Helpers\StaticConfigHelper;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
@@ -57,12 +55,18 @@ new class extends Component {
 
     public function store(): void
     {
+        if (! $this->canSaveObject()) {
+            return;
+        }
+
         $this->validate([
             'detailData.key' => ['required', 'string', 'max:255'],
             'detailData.value' => ['required'],
         ]);
 
-        $data = $this->detailData;
+        $data = collect($this->detailData)
+            ->except(['created_at', 'updated_at'])
+            ->toArray();
         $data['tenant_id'] = auth()->user()->selected_tenant_id;
         $data['is_translatable'] = (bool) ($data['is_translatable'] ?? false);
 
@@ -79,7 +83,6 @@ new class extends Component {
 
         $globalParameter = GlobalParameter::updateOrCreate(['id' => $this->modelId], $data);
 
-        $this->dispatch('storeElements');
         $this->storeProcess($globalParameter);
     }
 
@@ -182,6 +185,6 @@ new class extends Component {
     <x-noerd::tab-content :layout="$pageLayout" />
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="false && isset($modelId)"/>
+        <x-noerd::delete-save-bar :showDelete="false"/>
     </x-slot:footer>
 </x-noerd::page>

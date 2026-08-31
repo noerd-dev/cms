@@ -44,23 +44,23 @@
                             @endphp
                             <a href="{{ $link['href'] }}"
                                @if(($link['new_tab'] ?? false)) target="_blank" rel="noopener" @endif
-                               class="nav-link {{ $isActive ? 'nav-link--active' : 'nav-link--inactive' }}">
+                               class="rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 {{ $activeClasses }}">
                                 {{ $link['name'] }}
                             </a>
                         @empty
-                            <a href="#" class="nav-link nav-link--inactive">Home</a>
+                            <a href="#" class="rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">Home</a>
                         @endforelse
                     </div>
                 </div>
             </div>
 
             <div class="hidden md:flex items-center space-x-4">
-                <livewire:website-boilerplate::frontend-language-switcher/>
+                <livewire:website::frontend-language-switcher/>
             </div>
 
             <div class="md:hidden">
-                <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-black" aria-controls="mobile-menu" aria-expanded="false">
-                    <span class="sr-only">Menü öffnen</span>
+                <button id="mobile-menu-button" type="button" onclick="document.getElementById('mobile-menu').classList.toggle('hidden'); this.setAttribute('aria-expanded', document.getElementById('mobile-menu').classList.contains('hidden') ? 'false' : 'true');" class="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-black" aria-controls="mobile-menu" aria-expanded="false">
+                    <span class="sr-only">{{ __('Open menu') }}</span>
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                     </svg>
@@ -88,13 +88,13 @@
                 @endphp
                 <a href="{{ $link['href'] }}"
                    @if(($link['new_tab'] ?? false)) target="_blank" rel="noopener" @endif
-                   class="nav-link block text-base {{ $isActive ? 'nav-link--active' : 'nav-link--inactive' }}">
+                   class="block rounded-md px-3 py-2 text-base font-medium transition-colors duration-200 {{ $mobileActiveClasses }}">
                     {{ $link['name'] }}
                 </a>
             @endforeach
             <div class="border-t border-gray-200 my-2"></div>
             <div class="px-3 py-2">
-                @livewire('website-boilerplate::frontend-language-switcher', key('language-switcher-mobile'))
+                @livewire('website::frontend-language-switcher', key('language-switcher-mobile'))
             </div>
         </div>
     </div>
@@ -137,7 +137,7 @@
             <!-- Contact Info -->
             @if(!empty($globals['phone']))
                 <div>
-                    <h3 class="text-lg font-semibold mb-4">{{ __('Kontakt') }}</h3>
+                    <h3 class="text-lg font-semibold mb-4">{{ __('Contact') }}</h3>
                     <a href="tel:{{ $globals['phone'] }}" class="text-gray-300 hover:text-white transition-colors duration-200">
                         {{ $globals['phone'] }}
                     </a>
@@ -146,13 +146,13 @@
 
             <!-- Contact Form -->
             <div>
-                @livewire('website-boilerplate::contact-form')
+                @livewire('website::contact-form')
             </div>
         </div>
 
         <!-- Footer Bottom -->
         <div class="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-400">
-            <p>&copy; {{ date('Y') }} {{ $globals['siteTitle'] ?? 'CMS Frontend' }}. {{ __('Alle Rechte vorbehalten.') }}</p>
+            <p>&copy; {{ date('Y') }} {{ $globals['siteTitle'] ?? 'CMS Frontend' }}. {{ __('All rights reserved.') }}</p>
         </div>
     </div>
 </footer>

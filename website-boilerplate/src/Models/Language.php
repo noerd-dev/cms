@@ -9,7 +9,7 @@ class Language extends Model
 {
     use HasFactory;
 
-    public $casts = [
+    protected $casts = [
         'is_active' => 'boolean',
         'is_default' => 'boolean',
     ];

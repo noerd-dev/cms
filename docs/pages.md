@@ -45,46 +45,54 @@ title: ''
 description: ''
 tabs:
   - number: 1
-    label: noerd_general
+    label: General
   - number: 2
-    label: cms_metadata
+    label: Metadata
 fields:
   - type: block
-    title: cms_page_info
+    title: Page Info
     tab: 1
     fields:
-      - name: pageData.name
+      - name: detailData.name
         label: Title
         type: translatableText
         colspan: 5
-      - name: pageData.slug
+      - name: detailData.slug
         label: URL
         type: translatableText
         colspan: 5
-      - name: pageData.is_active
-        label: cms_label_is_active
+      - name: detailData.is_active
+        label: 'Active?'
         type: checkbox
         colspan: 2
   - type: block
-    title: noerd_layout_settings
+    title: Layout Settings
     tab: 1
     fields:
-      - name: pageData.layout
+      - name: detailData.layout
         label: Layout
         type: picklist
         picklistField: layoutOptions
         colspan: 12
   - type: block
-    title: cms_seo_metadata
+    title: SEO Metadata
     tab: 2
     fields:
-      - name: pageData.meta_title
-        label: cms_meta_title
+      - name: detailData.meta_title
+        label: Meta Title
         type: translatableText
         colspan: 6
-      - name: pageData.meta_description
-        label: cms_meta_description
+      - name: detailData.meta_description
+        label: Meta Description
         type: translatableText
+        colspan: 6
+      - name: detailData.og_image
+        label: Open Graph Image
+        type: image
+        colspan: 6
+      - name: detailData.meta_noindex
+        label: Exclude from search engines (noindex)
+        type: checkbox
         colspan: 6
 ```
 

@@ -4,10 +4,10 @@ namespace Noerd\Website\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\View;
 use Noerd\Website\Models\Language;
 use Noerd\Website\Models\Tenant;
+use Symfony\Component\HttpFoundation\Response;
 
 class WebsiteMiddleware
 {
@@ -23,6 +23,14 @@ class WebsiteMiddleware
             if ($tenant) {
                 $tenantId = $tenant->id;
                 session(['hash' => $hash]);
+            }
+        }
+
+        // 1b. The backend quick-menu links to the website with ?uuid={tenant}
+        if (! $tenant && ! empty($request->uuid)) {
+            $tenant = Tenant::where('uuid', $request->uuid)->first();
+            if ($tenant) {
+                $tenantId = $tenant->id;
             }
         }
 

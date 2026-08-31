@@ -24,7 +24,7 @@ trait CreatesCmsUser
             [
                 'title' => 'CMS',
                 'icon' => 'cms::icons.app',
-                'route' => 'cms.index',
+                'route' => 'cms.dashboard',
                 'is_active' => true,
             ],
         );

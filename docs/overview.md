@@ -33,7 +33,8 @@ The CMS module creates the following tables:
 |-------|-------------|
 | `pages` | Website pages and collection entries |
 | `element_page` | Page-element associations with JSON data |
-| `collections` | Collection definitions |
+| `collections` | Per-tenant collection instances (including element collections) |
+| `collection_definitions` | Collection definitions (fields, titles, hasPage) |
 | `cms_navigations` | Navigation items with hierarchy |
 | `form_types` | Form definitions synced from YAML |
 | `form_requests` | Submitted form data |
@@ -65,7 +66,7 @@ app-modules/cms/config/         # noerd_cms.php configuration
 
 ## Routes
 
-All CMS web routes are prefixed with `/cms` and protected by `auth`, `verified`, and `app-access:cms` middleware.
+All CMS web routes are prefixed with `/cms` and protected by the `noerd` middleware group and `app-access:cms`.
 
 | Route | Component |
 |-------|-----------|
@@ -101,7 +102,7 @@ Set `CMS_WEBSITE_URL` in your `.env` file to configure the website URL used for 
 
 ## Multi-Tenancy
 
-All CMS models use the `BelongsToTenant` trait. Content is automatically scoped to the current tenant. When a new tenant is created, a default English language is automatically set up via `CmsLanguage::ensureDefaultLanguageForTenant()`.
+Content models use the `BelongsToTenant` trait (`CmsSetting` is a tenant singleton keyed explicitly; `ElementPage` is scoped through its page). Content is automatically scoped to the current tenant. When a new tenant is created, a default English language is automatically set up via `CmsLanguage::ensureDefaultLanguageForTenant()`.
 
 ## Access Control
 

@@ -17,8 +17,9 @@ class WebsiteServiceProvider extends ServiceProvider
         $this->app->singleton(WebsiteService::class, fn() => new WebsiteService());
         $this->app->singleton(PageElementService::class, fn() => new PageElementService());
 
-        // Register reCAPTCHA configuration
+        // Register reCAPTCHA and website configuration
         $this->mergeConfigFrom(__DIR__ . '/../../config/recaptcha.php', 'recaptcha');
+        $this->mergeConfigFrom(__DIR__ . '/../../config/website.php', 'website');
     }
 
     public function boot(): void
@@ -28,11 +29,10 @@ class WebsiteServiceProvider extends ServiceProvider
         $router->aliasMiddleware('website', WebsiteMiddleware::class);
 
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'website');
-        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'website');
+        $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/website-routes.php');
 
-        Livewire::addNamespace('website-boilerplate', viewPath: __DIR__ . '/../../resources/views/components');
-        Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/livewire');
+        Livewire::addNamespace('website', viewPath: __DIR__ . '/../../resources/views/components');
         Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/components');
 
         // Register route loading after all providers have been registered

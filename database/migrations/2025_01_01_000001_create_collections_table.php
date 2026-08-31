@@ -12,10 +12,6 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        if (Schema::hasTable('collections')) {
-            return;
-        }
-
         Schema::create('collections', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
@@ -26,7 +22,6 @@ return new class extends Migration {
             $table->json('element_fields')->nullable();
             $table->boolean('is_element_collection')->default(false);
             $table->integer('sort')->default(0);
-            $table->json('data')->nullable();
             $table->string('name')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();

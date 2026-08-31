@@ -21,7 +21,7 @@ new class extends Component {
             if (!window.__googleMapsBootstrapped) {
                 window.__googleMapsBootstrapped = true;
                 ((g) => { var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window; b = b[c] || (b[c] = {}); var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams, u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = m.querySelector("script[nonce]")?.nonce || ""; m.head.append(a); })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)); })({
-                    key: 'AIzaSyAI68-3ss71KRMJDLvGDtIGAW97i5RuE7E',
+                    key: @js(config('website.google_maps_key')),
                     v: 'weekly'
                 });
             }
@@ -29,7 +29,12 @@ new class extends Component {
             (async () => {
                 const { Map } = await google.maps.importLibrary('maps');
 
-                const position = { lat: 47.7579609, lng: 11.7397999 };
+                // Coordinates come from the element's "Coordinates" field ("lat, lng").
+                const rawLatLng = @js((string) ($element->latLng ?? ''));
+                const parts = rawLatLng.split(',').map((value) => parseFloat(value.trim()));
+                const position = parts.length === 2 && parts.every((value) => !isNaN(value))
+                    ? { lat: parts[0], lng: parts[1] }
+                    : { lat: 52.520008, lng: 13.404954 };
 
                 const warmMapStyles = [
                     { elementType: 'geometry', stylers: [{ color: '#f5efe6' }] },
@@ -79,7 +84,6 @@ new class extends Component {
                 new google.maps.Marker({
                     position: position,
                     map: map,
-                    title: 'Auswall',
                     icon: markerIcon
                 });
             })();

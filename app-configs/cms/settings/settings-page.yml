@@ -1,0 +1,32 @@
+title: Settings
+fields:
+  - name: detailData.homepage_page_id
+    label: Homepage
+    type: homepage-select
+  - name: detailData.form_recipients
+    label: Form Recipients
+    type: text
+    helpText: Recipients of all form submissions. Separate multiple email addresses with commas.
+  - name: detailData.show_cookie_banner
+    label: Show Cookie Banner
+    type: checkbox
+    helpText: Required to use Analytics
+  - name: detailData.cookie_lifetime_days
+    label: Cookie Consent Duration
+    type: select
+    showIf: detailData.show_cookie_banner
+    helpText: Applies equally to acceptance and rejection. After this period visitors are asked again.
+    options:
+      - value: 30
+        label: 30 days
+      - value: 90
+        label: 3 months
+      - value: 182
+        label: 6 months (recommended)
+      - value: 365
+        label: 12 months
+  - name: detailData.google_analytics_id
+    label: Google Analytics
+    type: text
+    showIf: detailData.show_cookie_banner
+    helpText: Google Analytics Measurement ID (e.g. G-XXXXXXXXXX)

@@ -104,9 +104,13 @@ The `CmsApiAuth` middleware:
 5. Attaches `tenant_id`, `tenant`, and `user` to the request attributes
 6. Returns `401 Unauthorized` JSON response on any failure
 
+## Validation
+
+The `form` value must match an existing FormType `key` of the token's tenant — unknown forms are rejected with `422`. When the form's YAML definition declares `fields`, the submitted `data` is validated against each field's `validation` rules (with its `error_messages`), undeclared keys are dropped before persisting, and oversized payloads are rejected. The endpoint is rate limited (`throttle:60,1`).
+
 ## Email Notifications
 
-If the matching `FormType` has `send_email: true`, an email notification is sent after a successful submission. See [Forms](forms.md) for email template configuration.
+If the matching `FormType` has `send_email: true`, the confirmation email job is dispatched after a successful submission. See [Forms](forms.md) for email template configuration.
 
 ## Next Steps
 

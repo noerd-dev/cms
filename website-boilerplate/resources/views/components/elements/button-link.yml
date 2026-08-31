@@ -2,6 +2,15 @@ title: 'Button Link'
 description: 'Interactive button with customizable text and link'
 group: 'Interactive'
 fields:
-  - { name: detailData.text, label: Text Button, type: translatableText, colspan: 4 }
-  - { name: detailData.link, label: Link Button, type: translatableText, colspan: 4 }
-  - { name: detailData.external, label: Extern?, type: checkbox, colspan: 4 }
+  - name: detailData.text
+    label: Text Button
+    type: translatableText
+    colspan: 4
+  - name: detailData.link
+    label: Link Button
+    type: translatableText
+    colspan: 4
+  - name: detailData.external
+    label: External?
+    type: checkbox
+    colspan: 4

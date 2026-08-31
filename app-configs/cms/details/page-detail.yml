@@ -44,10 +44,10 @@ fields:
         type: translatableText
         colspan: 6
       - name: detailData.og_image
-        label: Open Graph Bild
+        label: Open Graph Image
         type: image
         colspan: 6
       - name: detailData.meta_noindex
-        label: Suchmaschinen ausschließen (noindex)
+        label: Exclude from search engines (noindex)
         type: checkbox
         colspan: 6

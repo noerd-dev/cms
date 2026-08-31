@@ -135,9 +135,9 @@ new class extends Component
             class="!mt-0 inline-flex items-center gap-2"
         >
             <x-noerd::icons.list-bullet class="w-5 h-5"/>
-            <span>{{ $this->entryCount }} {{ trans_choice('Eintrag|Einträge', $this->entryCount) }} — {{ __('Verwalten') }}</span>
+            <span>{{ $this->entryCount }} {{ trans_choice('Entry|Entries', $this->entryCount) }} — {{ __('Manage') }}</span>
         </x-noerd::button>
     @else
-        <p class="text-sm text-zinc-500">{{ __('Bitte den Eintrag zuerst speichern, um Einträge zu verwalten.') }}</p>
+        <p class="text-sm text-zinc-500">{{ __('Please save the entry first to manage its entries.') }}</p>
     @endif
 </div>

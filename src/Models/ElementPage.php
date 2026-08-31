@@ -4,6 +4,7 @@ namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ElementPage extends Model
 {
@@ -13,42 +14,16 @@ class ElementPage extends Model
 
     protected $table = 'element_page';
 
-    public function page()
+    public function page(): BelongsTo
     {
         return $this->belongsTo(Page::class);
     }
 
-    public function element()
+    protected static function booted(): void
     {
-        return $this->belongsTo(Element::class);
-    }
-
-    public function getElementKeyAttribute()
-    {
-        // If we have a related element, use its element_key
-        if ($this->element && $this->element->element_key) {
-            return $this->element->element_key;
-        }
-
-        // Fallback: try to get element_key from attributes (in case it's directly stored)
-        if (isset($this->attributes['element_key'])) {
-            return $this->attributes['element_key'];
-        }
-
-        // Last fallback: default element type (to prevent view errors)
-        return 'text_block_1_column';
-    }
-
-    /**
-     * Boot method to add model event listeners.
-     */
-    protected static function boot(): void
-    {
-        parent::boot();
-
         // Remove element collections owned by this element instance. Their row
         // pages cascade away via the pages.collection_id foreign key.
-        static::deleting(function ($elementPage): void {
+        static::deleting(function (self $elementPage): void {
             Collection::query()
                 ->where('is_element_collection', true)
                 ->where('element_page_id', $elementPage->id)
@@ -56,5 +31,15 @@ class ElementPage extends Model
                 ->each
                 ->delete();
         });
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'data' => 'array',
+        ];
     }
 }

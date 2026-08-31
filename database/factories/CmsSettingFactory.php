@@ -16,12 +16,18 @@ class CmsSettingFactory extends Factory
 
     public function definition(): array
     {
-        $tenant = Tenant::factory()->create();
-        $page = Page::factory()->create(['tenant_id' => $tenant->id]);
-
         return [
-            'tenant_id' => $tenant->id,
-            'homepage_page_id' => $page->id,
+            'tenant_id' => Tenant::factory(),
+            'homepage_page_id' => null,
         ];
+    }
+
+    public function withHomepage(): static
+    {
+        return $this->state(fn(array $attributes): array => [
+            'homepage_page_id' => Page::factory()->state(
+                fn(): array => ['tenant_id' => $attributes['tenant_id']],
+            ),
+        ]);
     }
 }

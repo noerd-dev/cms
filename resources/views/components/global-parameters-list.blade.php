@@ -16,6 +16,20 @@ new class extends Component
 
     public ?string $detailRoute = 'cms.global-parameter.detail';
 
+    public $detailComponent = 'cms::global-parameter-detail';
+
+    public function mount(): void
+    {
+        $this->mountList();
+
+        if (empty($this->listFilters['language'])) {
+            $this->listFilters['language'] = session('selectedLanguage') ?: $this->getDefaultLanguageCode();
+        }
+
+        if (empty(session('selectedLanguage'))) {
+            session(['selectedLanguage' => $this->listFilters['language']]);
+        }
+    }
 
     #[Computed]
     public function tableFilters(): array
@@ -34,6 +48,8 @@ new class extends Component
         if (! empty($this->listFilters['language'])) {
             session(['selectedLanguage' => $this->listFilters['language']]);
         }
+
+        $this->resetPage();
     }
 
     public function listData(): array
@@ -60,30 +76,6 @@ new class extends Component
         }
 
         return $this->buildList($rows);
-    }
-
-    public function rendering()
-    {
-        $this->loadListFilters();
-
-        $selectedLanguage = session('selectedLanguage');
-        if ($selectedLanguage && empty($this->listFilters['language'])) {
-            $this->listFilters['language'] = $selectedLanguage;
-        }
-
-        if (empty($this->listFilters['language']) && empty(session('selectedLanguage'))) {
-            $defaultCode = $this->getDefaultLanguageCode();
-            $this->listFilters['language'] = $defaultCode;
-            session(['selectedLanguage' => $defaultCode]);
-        }
-
-        if ((int) request()->globalParameterId) {
-            $this->listAction(request()->globalParameterId);
-        }
-
-        if (request()->create) {
-            $this->listAction();
-        }
     }
 
     private function getDefaultLanguageCode(): string

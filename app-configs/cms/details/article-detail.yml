@@ -19,6 +19,7 @@ fields:
   - name: detailData.author_id
     label: Author
     type: authorRelation
+    relationField: relationTitles.author_id
     colspan: 6
   - name: detailData.publication_date
     label: Publication Date

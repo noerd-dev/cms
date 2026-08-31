@@ -9,7 +9,7 @@ metadata:
 
 # CMS Website Import
 
-Migrate a hand-written Blade website into the Noerd CMS module. The CMS ships as a complete subsystem (Page, ElementPage, Navigation, Collection, FormType, CmsLanguage, WebsiteController, WebsiteMiddleware, weblayout, ~26 ready-made elements) and is multi-tenant + multi-language. This skill produces a deterministic procedure that turns static templates into DB-driven pages.
+Migrate a hand-written Blade website into the Noerd CMS module. The CMS ships as a complete subsystem (Page, ElementPage, Navigation, Collection, FormType, CmsLanguage, WebsiteController, WebsiteMiddleware, weblayout, 13 ready-made element blade+yml pairs) and is multi-tenant + multi-language. This skill produces a deterministic procedure that turns static templates into DB-driven pages.
 
 ## Deliverables
 
@@ -17,7 +17,7 @@ A successful run produces:
 
 - One timestamped Laravel migration in `database/migrations/` that seeds **Pages**, **ElementPage** rows, **Navigation**, **GlobalParameters**, **CollectionDefinitions** and **Collection** rows for every tenant. Idempotent. Empty `down()`.
 - New element `*.blade.php` + `*.yml` pairs in `resources/views/components/elements/` for any section that has no matching CMS element.
-- New form YAMLs in `app-configs/cms/forms/`, synced via `php artisan forms:sync`.
+- New form YAMLs in `app-configs/cms/forms/`, synced via `php artisan cms:sync-form-types`.
 - A verification checklist proving every migrated URL renders with no browser errors.
 
 ## Working procedure (run phases in order)
@@ -81,7 +81,7 @@ Every `element_page.data` field that the yml declares as `translatableText` / `t
 ]),
 ```
 
-`HandlesPageElements::localizeArray()` decides translatability by checking whether **all** array keys are language codes (`de, en, fr, es, it, nl`). Anything else stays flat. Element rows must set `sort` (1, 2, 3 …) and the correct snake_case `element_key`.
+`HandlesPageElements::localizeArray()` decides translatability by checking whether **all** array keys are language codes (the tenant-configured codes resolved by `CmsLanguageCodes::known()` — built-ins `de, en, fr, es, it, nl` plus every code added through the UI). Anything else stays flat. Element rows must set `sort` (1, 2, 3 …) and the correct snake_case `element_key`.
 
 ### Phase 5 — Forms
 
@@ -89,7 +89,7 @@ For every `<form>` found:
 
 1. Convert each input to a YAML field (`name`, `label`, `type`, `required`, `validation`, optional `error_messages`, `placeholder`).
 2. Save as `app-configs/cms/forms/{key}.yml`, modeled on `templates/form.yml.stub`.
-3. Append `php artisan forms:sync --force` to the post-migration step list.
+3. Append `php artisan cms:sync-form-types --force` to the post-migration step list.
 4. Replace the original `<form>` in any leftover Blade with the CMS form-render component (or rely on the new CMS page).
 
 ### Phase 6 — Routing & middleware (verify, don't recreate)
@@ -117,7 +117,7 @@ Generate a fresh migration file:
 php artisan make:migration seed_imported_website_content --no-interaction
 ```
 
-Replace the body with content modeled on `templates/seed_imported_website.php.stub` (which mirrors `app-modules/cms/database/migrations/2026_02_17_000000_seed_demo_website_data.php`). Requirements:
+Replace the body with content modeled on `templates/seed_imported_website.php.stub`. Requirements:
 
 - Iterate `cms_settings` rows (or every `tenants` row if `cms_settings` is unpopulated).
 - **Idempotent**: every insert wrapped in `exists()` / `whereJsonContains()` check or `updateOrInsert()`.
@@ -129,7 +129,7 @@ Replace the body with content modeled on `templates/seed_imported_website.php.st
 Run all of these and report results:
 
 1. `php artisan migrate --no-interaction` — must complete without errors.
-2. `php artisan forms:sync --force` — every form synced.
+2. `php artisan cms:sync-form-types --force` — every form synced.
 3. `get-absolute-url` MCP tool → build URL for each migrated page.
 4. `browser-logs` MCP tool → zero errors after each URL load.
 5. Visually compare homepage and one detail page to the original Blade output. Report any missing content.
@@ -150,9 +150,9 @@ Run all of these and report results:
 
 | File | Use |
 |------|-----|
-| `app-modules/cms/database/migrations/2026_02_17_000000_seed_demo_website_data.php` | **canonical migration template** |
-| `app-modules/cms/database/migrations/2026_01_30_080256_seed_default_homepage.php` | homepage + `cms_settings` setup |
-| `app-modules/cms/database/migrations/2025_12_15_173420_seed_default_english_language.php` | language seed pattern |
+| `templates/seed_imported_website.php.stub` | **canonical migration template** |
+| `app-modules/cms/src/Services/DefaultHomepageSeeder.php` | homepage + `cms_settings` setup pattern |
+| `app-modules/cms/src/Models/CmsLanguage.php` | `ensureDefaultLanguageForTenant()` language seed pattern |
 | `app-modules/cms/src/Models/Page.php` | translatable casts |
 | `app-modules/cms/website-boilerplate/src/Models/Page.php` | website-side `elements()` ordering |
 | `app-modules/cms/website-boilerplate/src/Models/ElementPage.php` | join + `element_key` fallback |

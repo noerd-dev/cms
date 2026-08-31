@@ -2,7 +2,7 @@
 
 namespace Noerd\Cms\Commands;
 
-class CmsUpdateCommand extends NoerdCmsInstallCommand
+class CmsUpdateCommand extends CmsInstallCommand
 {
     protected $signature = 'noerd:update-cms {--force : Overwrite existing files without asking}';
 
@@ -10,6 +10,14 @@ class CmsUpdateCommand extends NoerdCmsInstallCommand
 
     public function handle(): int
     {
-        return $this->runModuleUpdate();
+        $result = $this->runModuleUpdate();
+
+        if ($result === 0) {
+            // Idempotent post-install step: tenants created since the install
+            // get their starter homepage too.
+            $this->seedDefaultHomepage();
+        }
+
+        return $result;
     }
 }

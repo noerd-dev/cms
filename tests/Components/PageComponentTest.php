@@ -51,7 +51,8 @@ it('successfully stores the data', function () use ($testSettings): void {
 
     $this->assertDatabaseHas('pages', [
         'tenant_id' => $user->selected_tenant_id,
-        'name' => '{"en":"Test Page","de":"Test Seite"}',
+        'name->en' => 'Test Page',
+        'name->de' => 'Test Seite',
         'layout' => 'weblayout',
     ]);
 });
@@ -112,7 +113,8 @@ it('opens and stores existing page', function () use ($testSettings): void {
 
     $this->assertDatabaseHas('pages', [
         'id' => $model->id,
-        'name' => '{"en":"New Page","de":"Neue Seite"}',
+        'name->en' => 'New Page',
+        'name->de' => 'Neue Seite',
     ]);
 });
 

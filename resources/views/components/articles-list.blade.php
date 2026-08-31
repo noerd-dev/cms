@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Models\Article;
@@ -16,12 +15,16 @@ new class extends Component
 
     public ?string $detailRoute = 'cms.article.detail';
 
+    public $detailComponent = 'cms::article-detail';
 
     public function mount(): void
     {
-        $this->listId = Str::random();
-        $this->loadListFilters();
+        $this->mountList();
         $this->ensureDefaultLanguage();
+
+        if (empty($this->listFilters['language'])) {
+            $this->listFilters['language'] = session('selectedLanguage');
+        }
     }
 
     #[Computed]
@@ -41,6 +44,8 @@ new class extends Component
         if (! empty($this->listFilters['language'])) {
             session(['selectedLanguage' => $this->listFilters['language']]);
         }
+
+        $this->resetPage();
     }
 
     public function listData(): array
@@ -60,23 +65,6 @@ new class extends Component
         }
 
         return $this->buildList($rows);
-    }
-
-    public function rendering()
-    {
-        $this->loadListFilters();
-
-        if (empty($this->listFilters['language'])) {
-            $this->listFilters['language'] = session('selectedLanguage');
-        }
-
-        if ((int) request()->articleId) {
-            $this->listAction(request()->articleId);
-        }
-
-        if (request()->create) {
-            $this->listAction();
-        }
     }
 } ?>
 

@@ -16,14 +16,6 @@ class Article extends Model
 
     protected $guarded = [];
 
-    protected $casts = [
-        'title' => 'array',
-        'slug' => 'array',
-        'is_active' => 'boolean',
-        'publication_date' => 'date',
-        'custom_attributes' => 'array',
-    ];
-
     protected $attributes = [
         'is_active' => true,
     ];
@@ -43,5 +35,19 @@ class Article extends Model
     protected static function newFactory(): ArticleFactory
     {
         return ArticleFactory::new();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'title' => 'array',
+            'slug' => 'array',
+            'is_active' => 'boolean',
+            'publication_date' => 'date',
+            'custom_attributes' => 'array',
+        ];
     }
 }

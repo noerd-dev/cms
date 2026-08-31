@@ -13,7 +13,7 @@ class AuthorFactory extends Factory
     {
         return [
             'tenant_id' => 1,
-            'name' => fake()->word() . ' ' . fake()->word(),
+            'name' => fake()->name(),
             'bio' => fake()->text(200),
             'is_active' => true,
         ];

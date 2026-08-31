@@ -15,10 +15,10 @@ test('page selection auto-fills empty name field', function (): void {
 
     $page = Page::factory()->create([
         'tenant_id' => $tenant->id,
-        'name' => json_encode([
+        'name' => [
             'de' => 'Test Seite',
             'en' => 'Test Page',
-        ]),
+        ],
     ]);
 
     session(['selectedLanguage' => 'de']);
@@ -43,10 +43,10 @@ test('page selection does not overwrite existing name field', function (): void 
 
     $page = Page::factory()->create([
         'tenant_id' => $tenant->id,
-        'name' => json_encode([
+        'name' => [
             'de' => 'Test Seite',
             'en' => 'Test Page',
-        ]),
+        ],
     ]);
 
     $existingName = [
@@ -73,10 +73,10 @@ test('page selection auto-fills when name field has only empty values', function
 
     $page = Page::factory()->create([
         'tenant_id' => $tenant->id,
-        'name' => json_encode([
+        'name' => [
             'de' => 'Test Seite',
             'en' => 'Test Page',
-        ]),
+        ],
     ]);
 
     session(['selectedLanguage' => 'de']);

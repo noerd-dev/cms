@@ -1,9 +1,27 @@
 title: ''
 description: ''
 fields:
-  - { name: image, label: Bild links, type: image, colspan: 4 }
-  - { name: image2, label: Bild mitte, type: image, colspan: 4 }
-  - { name: image3, label: Bild rechts, type: image, colspan: 4 }
-  - { name: detailData.videoUrl, label: YouTube URL links (optional), type: translatableText, colspan: 4 }
-  - { name: detailData.videoUrl2, label: YouTube URL links (optional), type: translatableText, colspan: 4 }
-  - { name: detailData.videoUrl3, label: YouTube URL links (optional), type: translatableText, colspan: 4 }
+  - name: image
+    label: Image left
+    type: image
+    colspan: 4
+  - name: image2
+    label: Image center
+    type: image
+    colspan: 4
+  - name: image3
+    label: Image right
+    type: image
+    colspan: 4
+  - name: detailData.videoUrl
+    label: YouTube URL left (optional)
+    type: translatableText
+    colspan: 4
+  - name: detailData.videoUrl2
+    label: YouTube URL center (optional)
+    type: translatableText
+    colspan: 4
+  - name: detailData.videoUrl3
+    label: YouTube URL right (optional)
+    type: translatableText
+    colspan: 4

@@ -1,6 +1,6 @@
 <?php
 
-use Noerd\Cms\Commands\NoerdCmsInstallCommand;
+use Noerd\Cms\Commands\CmsInstallCommand;
 
 uses(Tests\TestCase::class);
 
@@ -51,7 +51,7 @@ function zzCmsRemoveDirectory(string $path): void
 
 function zzCmsInvokePublishSkills(bool $refreshCopies): void
 {
-    $command = app(NoerdCmsInstallCommand::class);
+    $command = app(CmsInstallCommand::class);
     $command->setLaravel(app());
     $command->setOutput(new \Illuminate\Console\OutputStyle(
         new \Symfony\Component\Console\Input\ArrayInput([]),

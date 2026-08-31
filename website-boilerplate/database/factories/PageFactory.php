@@ -13,8 +13,8 @@ class PageFactory extends Factory
     {
         return [
             'tenant_id' => null, // Should be set when creating
-            'name' => json_encode(['de' => $this->faker->sentence(3), 'en' => $this->faker->sentence(3)]),
-            'slug' => json_encode(['de' => '/' . $this->faker->slug(), 'en' => '/' . $this->faker->slug()]),
+            'name' => ['de' => $this->faker->sentence(3), 'en' => $this->faker->sentence(3)],
+            'slug' => ['de' => '/' . $this->faker->slug(), 'en' => '/' . $this->faker->slug()],
             'is_active' => true,
         ];
     }
