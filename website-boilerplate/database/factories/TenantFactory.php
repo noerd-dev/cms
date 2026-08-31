@@ -13,7 +13,7 @@ class TenantFactory extends Factory
     {
         return [
             'name' => $this->faker->company(),
-            'hash' => $this->faker->unique()->md5(),
+            'uuid' => $this->faker->unique()->md5(),
         ];
     }
 }

@@ -78,7 +78,7 @@ it('it sets and removes the model id in url', function () use ($testSettings): v
     Livewire::test($testSettings['listName'])->call('listAction', $model->id)
         ->assertDispatched(
             'noerdModal',
-            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.global-parameter.detail'
+            fn(string $event, array $params): bool => ($params['route'] ?? null) === 'cms.global-parameter.detail'
                 && ($params['arguments']['modelId'] ?? null) === $model->id,
         );
 
@@ -118,7 +118,7 @@ it('loads existing array value into component model for editing', function () us
     Livewire::withUrlParams([$testSettings['urlParam'] => $existingParameter->id])
         ->test($testSettings['componentName'])
         ->assertSet('detailData.key', 'test_key_array')
-        ->assertSet('detailData.value', fn ($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+        ->assertSet('detailData.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
 });
 
 it('saves a translatable parameter as a language-keyed JSON object', function () use ($testSettings): void {

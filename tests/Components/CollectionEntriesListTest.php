@@ -143,7 +143,7 @@ it('resolves the existing collection row via the definition key instead of creat
         ],
     ]);
 
-    $this->get(route('cms.collections').'?key=stellenangebote-permanent')->assertOk();
+    $this->get(route('cms.collections') . '?key=stellenangebote-permanent')->assertOk();
 
     expect(Collection::query()->where('collection_key', 'STELLENANGEBOTE-PERMANENT')->exists())->toBeFalse()
         ->and(Collection::query()->where('collection_key', 'STELLENANGEBOTE_PERMANENT')->count())->toBe(1)
@@ -153,7 +153,7 @@ it('resolves the existing collection row via the definition key instead of creat
 it('does not create a collection row as a render side effect', function (): void {
     // The backing collection row is created lazily when the first entry is
     // stored — rendering the (possibly remounted) list must never write.
-    $this->get(route('cms.collections').'?key=adhoc-things')->assertOk();
+    $this->get(route('cms.collections') . '?key=adhoc-things')->assertOk();
 
     expect(Collection::query()->where('collection_key', 'ADHOC-THINGS')->exists())->toBeFalse();
 });
@@ -185,7 +185,7 @@ it('renders dynamic columns and translated values from the definition fields', f
     $response->assertSee(__('Sort'));
     $response->assertSee('Laravel Projekt');
     $response->assertSee('Vue.js Anwendung');
-    $response->assertSee('✓ '.__('Image present'));
+    $response->assertSee('✓ ' . __('Image present'));
 });
 
 it('handles empty collection entries gracefully', function (): void {
@@ -236,7 +236,7 @@ it('renders element-collection fields in the list with their row count', functio
 
     Livewire::test('cms::collection-entries-list', ['collectionKey' => 'services'])
         ->assertSee('Beratung')
-        ->assertSee('2 '.trans_choice('Entry|Entries', 2));
+        ->assertSee('2 ' . trans_choice('Entry|Entries', 2));
 });
 
 it('shows the linked page name for pageRelation fields and marks the column as badge', function (): void {

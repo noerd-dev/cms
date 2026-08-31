@@ -10,7 +10,7 @@ The public website frontend for the Noerd CMS. This module is a boilerplate: `ph
 - **Navigation & globals** — a view composer shares `$navigation` (all CMS navigation keys) and `$globals` (global parameters) with every view.
 - **Multi-language** — languages come from the CMS language configuration (`cms_languages`); the language switcher swaps between the page's slugs.
 - **Contact form** — a Livewire form storing `form_requests` rows, protected by Cloudflare Turnstile (`services.turnstile`).
-- **Tenant resolution** — `WebsiteMiddleware` resolves the tenant by `?hash=`, `?uuid=` (the backend quick-menu link) or falls back to the first tenant for single-tenant installations.
+- **Tenant resolution** — `WebsiteMiddleware` resolves the tenant by `?uuid=`, `?uuid=` (the backend quick-menu link) or falls back to the first tenant for single-tenant installations.
 
 ## Requirements
 

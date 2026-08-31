@@ -28,7 +28,7 @@ it('loads page-detail via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/page/'.$page->id)
+    $this->get('/cms/page/' . $page->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::page-detail');
 });
@@ -38,7 +38,7 @@ it('loads navigation-detail via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/navigation/'.$navigation->id)
+    $this->get('/cms/navigation/' . $navigation->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::navigation-detail');
 });
@@ -48,7 +48,7 @@ it('loads global-parameter-detail via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/global-parameter/'.$globalParameter->id)
+    $this->get('/cms/global-parameter/' . $globalParameter->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::global-parameter-detail');
 });
@@ -58,7 +58,7 @@ it('loads form-request-page via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/form-request/'.$formRequest->id)
+    $this->get('/cms/form-request/' . $formRequest->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::form-request-page');
 });
@@ -68,7 +68,7 @@ it('loads form-type-detail via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/form-type/'.$formType->id)
+    $this->get('/cms/form-type/' . $formType->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::form-type-detail');
 });
@@ -78,7 +78,7 @@ it('loads language-detail via direct route', function (): void {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $this->get('/cms/language/'.$cmsLanguage->id)
+    $this->get('/cms/language/' . $cmsLanguage->id)
         ->assertSuccessful()
         ->assertSeeLivewire('cms::language-detail');
 });

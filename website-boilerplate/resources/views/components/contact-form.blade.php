@@ -70,10 +70,10 @@ new class extends Component {
         $tenantId = session('selectedTenantId');
 
         if (!$tenantId) {
-            // Try to get tenant via hash from session
-            $hash = session('hash');
-            if ($hash) {
-                $tenant = \Noerd\Website\Models\Tenant::where('hash', $hash)->first();
+            // Try to get tenant via uuid from session
+            $uuid = session('uuid');
+            if ($uuid) {
+                $tenant = \Noerd\Website\Models\Tenant::where('uuid', $uuid)->first();
                 $tenantId = $tenant?->id;
                 if ($tenantId) {
                     session(['selectedTenantId' => $tenantId]);

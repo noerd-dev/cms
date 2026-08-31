@@ -140,7 +140,7 @@ it('dispatches modal when listAction is called', function (): void {
         ->call('listAction', 'contacts')
         ->assertDispatched(
             'noerdModal',
-            fn (string $event, array $params): bool => ($params['route'] ?? null) === 'cms.collection-definition.detail'
+            fn(string $event, array $params): bool => ($params['route'] ?? null) === 'cms.collection-definition.detail'
                 && ($params['arguments']['modelId'] ?? null) === 'contacts',
         );
 });

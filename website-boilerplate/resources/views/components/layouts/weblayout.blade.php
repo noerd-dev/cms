@@ -25,7 +25,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">
             <div class="flex items-center">
-                <a href="{{ route('website.index', ['hash' => request('hash')]) }}" class="flex items-center">
+                <a href="{{ route('website.index', ['uuid' => request('uuid')]) }}" class="flex items-center">
                     <span class="font-semibold">{{ $globals['siteTitle'] ?? 'CMS Frontend' }}</span>
                 </a>
                 <div class="hidden md:block ml-8">

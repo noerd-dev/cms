@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Noerd\Cms\Jobs\SendFormConfirmationEmail;
 use Noerd\Cms\Models\FormType;
@@ -120,12 +119,12 @@ it('validates the submission against the form YAML and dispatches the email job'
 
 it('stores the form request under the tenant resolved for the token user', function (): void {
     // CmsApiAuth reads $user->selected_tenant_id, which on NoerdUser is a
-    // session-backed ACCESSOR (TenantHelper::getSelectedTenantId()) — the raw
-    // noerd_users.selected_tenant_id column is never consulted. The stored row
-    // must carry the tenant the middleware resolved for the token user, not a
-    // stale value in the user's database column.
+    // session-backed ACCESSOR (TenantHelper::getSelectedTenantId()) — noerd_users
+    // carries no column of its own and the persisted copy on the user's settings
+    // row is only the starting point restored at login. The stored form request
+    // must carry the tenant the middleware resolved, not a stale persisted value.
     $resolvedTenant = Tenant::factory()->create();
-    $staleColumnTenant = Tenant::factory()->create();
+    $stalePersistedTenant = Tenant::factory()->create();
     FormType::factory()->create([
         'tenant_id' => $resolvedTenant->id,
         'key' => 'contact',
@@ -133,11 +132,9 @@ it('stores the form request under the tenant resolved for the token user', funct
 
     $user = NoerdUser::factory()->create(['api_token' => 'tenant_precedence_token']);
 
-    // Bypass the Eloquent mutator (which would write the session) to plant a
-    // DIFFERENT tenant id in the raw database column.
-    DB::table('noerd_users')->where('id', $user->id)->update([
-        'selected_tenant_id' => $staleColumnTenant->id,
-    ]);
+    // Plant a DIFFERENT tenant id in the persisted settings row. Nobody is
+    // authenticated here, so TenantHelper only writes the session and leaves it.
+    $user->setting->update(['selected_tenant_id' => $stalePersistedTenant->id]);
 
     TenantHelper::setSelectedTenantId($resolvedTenant->id);
 
@@ -154,7 +151,7 @@ it('stores the form request under the tenant resolved for the token user', funct
     ]);
     $this->assertDatabaseMissing('form_requests', [
         'id' => $response->json('id'),
-        'tenant_id' => $staleColumnTenant->id,
+        'tenant_id' => $stalePersistedTenant->id,
     ]);
 });
 

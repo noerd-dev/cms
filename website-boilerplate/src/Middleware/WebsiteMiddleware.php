@@ -16,13 +16,13 @@ class WebsiteMiddleware
         $tenant = null;
         $tenantId = null;
 
-        // 1. Try hash-based tenant resolution first
-        $hash = $request->hash ?? session('hash');
-        if (! empty($hash)) {
-            $tenant = Tenant::where('hash', $hash)->first();
+        // 1. Try uuid-based tenant resolution first
+        $uuid = $request->uuid ?? session('uuid');
+        if (! empty($uuid)) {
+            $tenant = Tenant::where('uuid', $uuid)->first();
             if ($tenant) {
                 $tenantId = $tenant->id;
-                session(['hash' => $hash]);
+                session(['uuid' => $uuid]);
             }
         }
 
@@ -34,7 +34,7 @@ class WebsiteMiddleware
             }
         }
 
-        // 2. Fallback to first available tenant if no hash or tenant found
+        // 2. Fallback to first available tenant if no uuid or tenant found
         if (! $tenant) {
             $tenant = Tenant::first();
             if (! $tenant) {
