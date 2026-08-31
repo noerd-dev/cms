@@ -10,6 +10,23 @@ use Tests\TestCase;
 
 /*
 |--------------------------------------------------------------------------
+| Global test helpers
+|--------------------------------------------------------------------------
+|
+| These tests bind Tests\TestCase (the host application's), not
+| Noerd\Tests\TestCase, so the noerd helpers (validDetailPayload,
+| requiredLayoutFields, registerTestLivewireRoute, ...) are not loaded through
+| that class. They are deliberately absent from the production composer
+| autoload, so load them explicitly. HelperLoader resolves the file through the
+| autoloader and therefore works whether noerd is installed as a composer
+| package or as a submodule.
+|
+*/
+
+\Noerd\Tests\HelperLoader::load();
+
+/*
+|--------------------------------------------------------------------------
 | Test Case
 |--------------------------------------------------------------------------
 |
