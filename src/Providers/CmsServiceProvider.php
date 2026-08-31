@@ -100,9 +100,9 @@ class CmsServiceProvider extends ServiceProvider
         $fieldTypeRegistry->register('element-collection', FieldTypeDefinition::livewire(
             'cms::element-collection-field',
             resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
-                // A page-element editor exposes an `elementPage` property; a collection
-                // entry editor (page-detail) does not.
-                'ownerType' => (is_object($component) && property_exists($component, 'elementPage')) ? 'element_page' : 'page',
+                // A page-element editor exposes an `elementKey` property; a collection
+                // entry editor (page-detail, element-collection-row-detail) does not.
+                'ownerType' => (is_object($component) && property_exists($component, 'elementKey')) ? 'element_page' : 'page',
                 'ownerId' => $modelId,
                 'fieldName' => str_replace('detailData.', '', (string) ($field['name'] ?? '')),
                 'label' => (string) ($field['label'] ?? ''),
