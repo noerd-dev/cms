@@ -17,8 +17,7 @@ class WebsiteServiceProvider extends ServiceProvider
         $this->app->singleton(WebsiteService::class, fn() => new WebsiteService());
         $this->app->singleton(PageElementService::class, fn() => new PageElementService());
 
-        // Register reCAPTCHA and website configuration
-        $this->mergeConfigFrom(__DIR__ . '/../../config/recaptcha.php', 'recaptcha');
+        // Register website configuration
         $this->mergeConfigFrom(__DIR__ . '/../../config/website.php', 'website');
     }
 

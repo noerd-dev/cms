@@ -15,6 +15,9 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    @if (config('services.turnstile.enabled'))
+        <x-turnstile.scripts />
+    @endif
 </head>
 <body class="min-h-screen flex flex-col bg-gray-50 text-gray-900">
 

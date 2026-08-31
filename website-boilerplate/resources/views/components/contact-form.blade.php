@@ -1,8 +1,9 @@
 <?php
 
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Noerd\Website\Models\FormRequest;
-use Noerd\Website\Services\RecaptchaService;
+use RyanChandler\LaravelCloudflareTurnstile\Rules\Turnstile;
 
 new class extends Component {
 
@@ -10,28 +11,28 @@ new class extends Component {
     public string $email = '';
     public string $phone = '';
     public string $message = '';
-    public string $recaptchaToken = '';
+    public string $turnstileToken = '';
     public bool $isSubmitting = false;
     public bool $showSuccess = false;
     public string $errorMessage = '';
 
-    public function mount()
-    {
-        // Share reCAPTCHA site key with frontend
-        $recaptchaService = new RecaptchaService();
-        if ($recaptchaService->isEnabled()) {
-            $this->dispatch('recaptcha-site-key', $recaptchaService->getSiteKey());
-        }
-    }
-
+    /**
+     * @return array<string, array<int, mixed>>
+     */
     protected function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:2000'],
         ];
+
+        if (config('services.turnstile.enabled')) {
+            $rules['turnstileToken'] = ['required', new Turnstile];
+        }
+
+        return $rules;
     }
 
     protected function messages(): array
@@ -45,7 +46,7 @@ new class extends Component {
             'phone.max' => __('The phone number may not be longer than 255 characters.'),
             'message.required' => __('The message is required.'),
             'message.max' => __('The message may not be longer than 2000 characters.'),
-            'recaptchaToken.required' => __('Please confirm that you are not a robot.'),
+            'turnstileToken.required' => __('Please confirm that you are not a robot.'),
         ];
     }
 
@@ -57,18 +58,11 @@ new class extends Component {
 
         try {
             $this->validate();
-
-            // Verify reCAPTCHA if enabled (but don't require token - fail-open approach)
-            $recaptchaService = new RecaptchaService();
-            if ($recaptchaService->isEnabled() && !empty($this->recaptchaToken)) {
-                if (!$recaptchaService->verify($this->recaptchaToken)) {
-                    $this->errorMessage = __('reCAPTCHA verification failed. Please try again.');
-                    $this->isSubmitting = false;
-                    return;
-                }
-            }
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
+            // Turnstile tokens are single-use; clearing it re-renders the widget.
+            $this->reset('turnstileToken');
             $this->isSubmitting = false;
+
             throw $e; // Re-throw validation exceptions so Livewire can handle them
         }
 
@@ -105,7 +99,7 @@ new class extends Component {
                 ],
             ]);
 
-            $this->reset(['name', 'email', 'phone', 'message', 'recaptchaToken']);
+            $this->reset(['name', 'email', 'phone', 'message', 'turnstileToken']);
             $this->showSuccess = true;
 
         } catch (\Exception $e) {
@@ -119,12 +113,12 @@ new class extends Component {
 
     public function resetForm()
     {
-        $this->reset(['name', 'email', 'phone', 'message', 'recaptchaToken', 'showSuccess', 'errorMessage']);
+        $this->reset(['name', 'email', 'phone', 'message', 'turnstileToken', 'showSuccess', 'errorMessage']);
         $this->resetErrorBag();
     }
 }; ?>
 
-<div class="bg-white p-6 rounded-lg shadow-md max-w-md mx-auto" x-data="{ siteKey: '', recaptchaLoaded: false }">
+<div class="bg-white p-6 rounded-lg shadow-md max-w-md mx-auto">
     <h3 class="text-xl font-semibold text-gray-900 mb-4">{{ __('Contact') }}</h3>
 
     @if($showSuccess)
@@ -208,11 +202,12 @@ new class extends Component {
                 @enderror
             </div>
 
-            {{-- Hidden reCAPTCHA Token Field --}}
-            <input type="hidden" wire:model="recaptchaToken">
+            {{-- Cloudflare Turnstile --}}
+            @if (config('services.turnstile.enabled'))
+                <x-turnstile id="footer_contact" wire:model="turnstileToken" />
+            @endif
 
-            {{-- reCAPTCHA Error --}}
-            @error('recaptchaToken')
+            @error('turnstileToken')
                 <div class="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                     {{ $message }}
                 </div>
@@ -244,31 +239,3 @@ new class extends Component {
         </form>
     @endif
 </div>
-
-@if(config('recaptcha.enabled'))
-<script>
-    document.addEventListener('livewire:init', function () {
-        // Listen for reCAPTCHA site key
-        Livewire.on('recaptcha-site-key', (siteKey) => {
-            if (siteKey && siteKey.length > 0) {
-                loadRecaptcha(siteKey);
-            }
-        });
-
-        // Load reCAPTCHA script
-        function loadRecaptcha(siteKey) {
-            if (document.querySelector(`script[src*="recaptcha"]`)) return;
-
-            const script = document.createElement('script');
-            script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
-            script.onload = () => {
-                console.log('reCAPTCHA loaded successfully');
-            };
-            script.onerror = () => {
-                console.error('Failed to load reCAPTCHA');
-            };
-            document.head.appendChild(script);
-        }
-    });
-</script>
-@endif
