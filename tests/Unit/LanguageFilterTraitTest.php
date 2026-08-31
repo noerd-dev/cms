@@ -6,8 +6,10 @@ use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Traits\LanguageFilterTrait;
+use Noerd\Helpers\NoerdAuth;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class);
+uses(TestCase::class);
 uses(CreatesCmsUser::class);
 
 // Create a test class that uses the trait
@@ -23,7 +25,7 @@ class TestLanguageFilterClass
 
 it('returns default language when session is not set', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     CmsLanguage::create([
         'tenant_id' => $tenant->id,
@@ -35,7 +37,7 @@ it('returns default language when session is not set', function (): void {
 
     session()->forget('selectedLanguage');
 
-    $testClass = new TestLanguageFilterClass();
+    $testClass = new TestLanguageFilterClass;
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('de');
@@ -44,7 +46,7 @@ it('returns default language when session is not set', function (): void {
 
 it('returns existing session language when it exists in cms_languages', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     CmsLanguage::create([
         'tenant_id' => $tenant->id,
@@ -61,7 +63,7 @@ it('returns existing session language when it exists in cms_languages', function
 
     session(['selectedLanguage' => 'en']);
 
-    $testClass = new TestLanguageFilterClass();
+    $testClass = new TestLanguageFilterClass;
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('en');
@@ -70,7 +72,7 @@ it('returns existing session language when it exists in cms_languages', function
 
 it('resets to default language when session language does not exist', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     // Clear any existing languages for this tenant
     CmsLanguage::where('tenant_id', $tenant->id)->delete();
@@ -87,7 +89,7 @@ it('resets to default language when session language does not exist', function (
     // Set session to non-existing language
     session(['selectedLanguage' => 'en']);
 
-    $testClass = new TestLanguageFilterClass();
+    $testClass = new TestLanguageFilterClass;
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('de');
@@ -96,7 +98,7 @@ it('resets to default language when session language does not exist', function (
 
 it('displays pages list without htmlspecialchars error when no session is set', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     // Create a default language
     CmsLanguage::create([
@@ -126,7 +128,7 @@ it('displays pages list without htmlspecialchars error when no session is set', 
 
 it('resets to default language when session language is inactive', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $this->actingAs($user, NoerdAuth::guardName());
 
     // Clear any existing languages for this tenant
     CmsLanguage::where('tenant_id', $tenant->id)->delete();
@@ -150,7 +152,7 @@ it('resets to default language when session language is inactive', function (): 
 
     session(['selectedLanguage' => 'en']);
 
-    $testClass = new TestLanguageFilterClass();
+    $testClass = new TestLanguageFilterClass;
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('de');
