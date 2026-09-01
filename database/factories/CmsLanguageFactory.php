@@ -12,9 +12,17 @@ class CmsLanguageFactory extends Factory
 
     public function definition(): array
     {
+        // Every tenant already owns `en` through ensureDefaultLanguageForTenant(),
+        // and cms_languages is unique per (tenant_id, code). Rolling that one code
+        // therefore collides, which made any test creating a language for an
+        // existing tenant fail on the dice rather than on its own behaviour.
+        do {
+            $code = $this->faker->unique()->languageCode();
+        } while ($code === 'en');
+
         return [
             'tenant_id' => Tenant::factory(),
-            'code' => $this->faker->unique()->languageCode(),
+            'code' => $code,
             'name' => $this->faker->word(),
         ];
     }
