@@ -48,7 +48,7 @@ class WebsiteService
             })->toArray();
     }
 
-    public function getNavigation(int $tenantId, string $group = 'main', string $language = 'de', ?string $hash = null): array
+    public function getNavigation(int $tenantId, string $group = 'main', string $language = 'de', ?string $uuid = null): array
     {
         $query = Navigation::query()->where('tenant_id', $tenantId);
         $hasGroup = (clone $query)->where('navigation_key', $group)->exists();
@@ -58,7 +58,7 @@ class WebsiteService
 
         $items = $query->orderBy('id')->get(['name', 'page_id', 'link', 'new_tab']);
 
-        return $items->map(function ($item) use ($language, $hash) {
+        return $items->map(function ($item) use ($language, $uuid) {
             $label = $item->name;
             if (is_string($label)) {
                 $decoded = json_decode($label, true);
@@ -90,7 +90,7 @@ class WebsiteService
                         $href = (string) $slugs; // Fallback if neither array nor valid JSON
                     }
                 } else {
-                    $href = route('website.index', ['hash' => $hash, 'page' => $item->page_id]);
+                    $href = route('website.index', ['uuid' => $uuid, 'page' => $item->page_id]);
                 }
 
             }

@@ -48,7 +48,7 @@ class WebsiteServiceProvider extends ServiceProvider
 
             $service = app(WebsiteService::class);
             $lang = session('selectedLanguage', 'de');
-            $hash = request()->query('hash');
+            $uuid = request()->query('uuid');
 
             $globals = $service->getGlobals($tenantId);
 
@@ -59,7 +59,7 @@ class WebsiteServiceProvider extends ServiceProvider
 
             $navigation = [];
             foreach ($navigationKeys as $key) {
-                $navigation[mb_strtolower($key)] = $service->getNavigation($tenantId, $key, $lang, $hash);
+                $navigation[mb_strtolower($key)] = $service->getNavigation($tenantId, $key, $lang, $uuid);
             }
 
             $view->with('globals', $globals)

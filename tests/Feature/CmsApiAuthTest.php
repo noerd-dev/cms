@@ -86,8 +86,9 @@ it('rejects a request without any token with 401', function (): void {
 
 it('rejects a valid token when no tenant is selected for the user', function (): void {
     // selected_tenant_id on NoerdUser is a session-backed accessor
-    // (TenantHelper::getSelectedTenantId()). With an empty session and no
-    // tenant rows at all, it resolves to null and the middleware must refuse.
+    // (TenantHelper::getSelectedTenantId()) — there is no column behind it. With
+    // an empty session and no tenant rows at all, it resolves to null and the
+    // middleware must refuse.
     NoerdUser::factory()->create(['api_token' => 'tenantless_token']);
 
     $captured = [];
