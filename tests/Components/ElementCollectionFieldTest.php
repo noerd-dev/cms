@@ -148,13 +148,16 @@ it('resolves the element-collection owner to the element page inside the element
 
 it('counts existing element-collection entries in the element editor', function (): void {
     $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Startseite']]);
-    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'gallery_grid', 'data' => '{}', 'sort' => 0]);
+    // element_collection_test is the fixture element that declares an
+    // `element-collection` field (`items`); a key without a matching
+    // .blade.php renders the "component not found" box instead of the editor.
+    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'element_collection_test', 'data' => '{}', 'sort' => 0]);
 
     $elementCollection = app(ElementCollectionService::class)->ensure(
         ElementCollectionService::OWNER_ELEMENT_PAGE,
         $element->id,
         $this->tenant->id,
-        'images',
+        'items',
         [['name' => 'image', 'label' => 'Bild', 'type' => 'image', 'colspan' => 12]],
         'Startseite: Projektfotos',
     );
