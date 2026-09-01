@@ -196,5 +196,14 @@
     "Width": "Breite",
     "With page": "Mit Seite",
     "YAML Content": "YAML-Inhalt",
-    "Yes, update entries": "Ja, Einträge aktualisieren"
+    "Yes, update entries": "Ja, Einträge aktualisieren",
+    "Coordinates": "Koordinaten Punkt",
+    "Error: Tenant information is missing. Please reload the page.": "Fehler: Mandanten-Information fehlt. Bitte laden Sie die Seite neu.",
+    "Global parameters are values that can be used throughout the application.": "Globaler Parameter sind Werte, die in der gesamten Anwendung verwendet werden können.",
+    "Image left": "Bild links",
+    "Image right": "Bild rechts",
+    "New Parameter": "Neuer Parameter",
+    "Storage": "Lager",
+    "Text left": "Text links",
+    "Text right": "Text rechts"
 }
