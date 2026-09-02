@@ -157,7 +157,7 @@ new class extends Component {
     <div class="p-4 mb-4 sm:p-8 relative overflow-hidden rounded-lg bg-gray-950/[2.5%] after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-gray-950/5">
         <div class="text-sm text-gray-600 mb-4">
             <div><strong>{{ __('Created') }}:</strong>
-                {{\Carbon\Carbon::parse($detailData['created_at'])->format('d.m.Y H:i')}}
+                {{ \Noerd\Helpers\FormatHelper::dateTime($detailData['created_at']) }}
             </div>
         </div>
 

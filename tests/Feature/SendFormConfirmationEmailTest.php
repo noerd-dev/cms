@@ -9,6 +9,8 @@ use Noerd\Cms\Mail\FormConfirmation;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\FormRequest;
 use Noerd\Cms\Models\FormType;
+use Noerd\Helpers\FormatHelper;
+use Noerd\Models\NoerdSettings;
 use Noerd\Models\Tenant;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
@@ -112,7 +114,22 @@ describe('placeholders', function (): void {
 
         Mail::assertSent(FormConfirmation::class, fn(FormConfirmation $mail): bool => $mail->emailSubject === 'Re: Kontaktformular'
                 && $mail->emailBody === '<p>Hallo Max Mustermann (absender@example.com), eingegangen am '
-                    . $formRequest->created_at->format('d.m.Y H:i') . '.</p>');
+                    . FormatHelper::documentDateTime($formRequest->created_at, $this->tenant->id) . '.</p>');
+    });
+
+    it('writes the submission date in the tenant locale', function (): void {
+        // The mail leaves the system, so the tenant locale applies — whatever
+        // the format of the user who happens to be logged in.
+        NoerdSettings::create(['tenant_id' => $this->tenant->id, 'currency' => 'USD', 'locale' => 'en-US']);
+
+        $this->formType->update(['email_body' => '<p>Eingegangen am {{submission_date}}.</p>']);
+
+        $formRequest = zzSubmitContactForm($this);
+
+        SendFormConfirmationEmail::dispatchSync($formRequest);
+
+        Mail::assertSent(FormConfirmation::class, fn(FormConfirmation $mail): bool => str_contains($mail->emailBody, $formRequest->created_at->format('m/d/Y'))
+                && ! str_contains($mail->emailBody, $formRequest->created_at->format('d.m.Y')));
     });
 
     it('escapes submitted values before they reach the html mail body', function (): void {

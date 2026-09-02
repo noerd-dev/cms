@@ -223,7 +223,7 @@ new class extends Component
             $transformedData = [
                 'id' => $page->id,
                 'sort' => $page->sort ?? 0,
-                'updated_at' => $page->updated_at->format('d.m.Y H:i'),
+                'updated_at' => \Noerd\Helpers\FormatHelper::dateTime($page->updated_at),
             ];
 
             // Add dynamic fields from the collection definition
