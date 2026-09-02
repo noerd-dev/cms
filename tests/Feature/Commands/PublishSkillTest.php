@@ -1,53 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\File;
 use Noerd\Cms\Commands\CmsInstallCommand;
 
 uses(Tests\TestCase::class);
 
+/*
+ | publishSkills() writes into base_path('.claude/skills'). The tests therefore
+ | run against a THROWAWAY base path: the host's own .claude directory (and any
+ | symlink an installation placed there) is never touched.
+ */
 beforeEach(function (): void {
+    $this->originalBasePath = $this->app->basePath();
+    $this->hostPath = storage_path('framework/testing/zz-cms-skills');
+
+    File::deleteDirectory($this->hostPath);
+    File::ensureDirectoryExists($this->hostPath . '/.claude/skills');
+
+    $this->app->setBasePath($this->hostPath);
+
     $this->skillsDir = base_path('.claude/skills');
     $this->target = $this->skillsDir . '/cms-website-import';
-    $this->backup = $this->target . '.zz-test-backup';
-
-    if (! is_dir($this->skillsDir)) {
-        mkdir($this->skillsDir, 0755, true);
-    }
-
-    // Snapshot a pre-existing entry (file, symlink or directory) so every test
-    // runs against a clean target; afterEach always restores the snapshot.
-    if (is_link($this->target) || file_exists($this->target)) {
-        rename($this->target, $this->backup);
-    }
 });
 
 afterEach(function (): void {
-    // Always clean up whatever the test produced, then restore the snapshot.
-    if (is_link($this->target) || is_file($this->target)) {
-        @unlink($this->target);
-    } elseif (is_dir($this->target)) {
-        zzCmsRemoveDirectory($this->target);
-    }
-
-    if (is_link($this->backup) || file_exists($this->backup)) {
-        rename($this->backup, $this->target);
-    }
+    $this->app->setBasePath($this->originalBasePath);
+    File::deleteDirectory($this->hostPath);
 });
-
-function zzCmsRemoveDirectory(string $path): void
-{
-    foreach (scandir($path) ?: [] as $entry) {
-        if ($entry === '.' || $entry === '..') {
-            continue;
-        }
-        $full = $path . '/' . $entry;
-        if (is_dir($full) && ! is_link($full)) {
-            zzCmsRemoveDirectory($full);
-        } else {
-            @unlink($full);
-        }
-    }
-    @rmdir($path);
-}
 
 function zzCmsInvokePublishSkills(bool $refreshCopies): void
 {
@@ -73,7 +54,7 @@ it('auto-discovers and publishes the cms-website-import skill', function (): voi
 it('leaves an existing symlink alone on update', function (): void {
     // Deterministic symlink scenario: place the link ourselves instead of
     // depending on how the first publish materialized it in this environment.
-    symlink('../../app-modules/cms/skills/cms-website-import', $this->target);
+    symlink(dirname(__DIR__, 3) . '/skills/cms-website-import', $this->target);
 
     $linkTargetBefore = readlink($this->target);
 

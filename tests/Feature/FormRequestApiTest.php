@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Queue;
 use Noerd\Cms\Jobs\SendFormConfirmationEmail;
 use Noerd\Cms\Models\FormType;
@@ -63,8 +64,14 @@ it('validates the submission against the form YAML and dispatches the email job'
     Queue::fake();
 
     $tenant = Tenant::factory()->create();
-    $ymlPath = 'app-configs/cms/forms-api-test-' . getmypid() . '.yml';
-    file_put_contents(base_path($ymlPath), implode("\n", [
+
+    // FormType::loadYmlConfig() accepts an ABSOLUTE path, so the fixture lives in
+    // the throwaway testing storage instead of the host's tracked app-configs.
+    $fixtureDir = storage_path('framework/testing/zz-cms-form-api');
+    File::deleteDirectory($fixtureDir);
+    File::ensureDirectoryExists($fixtureDir);
+    $ymlPath = $fixtureDir . '/contact.yml';
+    File::put($ymlPath, implode("\n", [
         'key: contact',
         'title: Contact',
         'send_email: true',
@@ -114,7 +121,7 @@ it('validates the submission against the form YAML and dispatches the email job'
 
     Queue::assertPushed(SendFormConfirmationEmail::class, 1);
 
-    unlink(base_path($ymlPath));
+    File::deleteDirectory($fixtureDir);
 });
 
 it('stores the form request under the tenant resolved for the token user', function (): void {
