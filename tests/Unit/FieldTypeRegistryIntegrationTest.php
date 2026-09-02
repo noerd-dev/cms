@@ -47,6 +47,8 @@ it('resolves pageRelation props from nested detail data', function (): void {
         'readonly' => false,
         'helpText' => '',
         'modelId' => 99,
+        'owner' => null,
+        'errorMessages' => [],
         'theme' => 'default',
     ]);
 
