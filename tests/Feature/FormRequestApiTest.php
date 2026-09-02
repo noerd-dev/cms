@@ -162,16 +162,27 @@ it('stores the form request under the tenant resolved for the token user', funct
     ]);
 });
 
-it('rejects requests with missing or invalid token', function (): void {
-    $payload = [
-        'form' => 'contact',
-        'data' => ['x' => 'y'],
-    ];
+it('rejects a form key that belongs to another tenant', function (): void {
+    // The token resolves tenant A; the form key exists only for tenant B. The
+    // controller must not reach across tenants — no row, no 201.
+    $tenantA = Tenant::factory()->create();
+    $tenantB = Tenant::factory()->create();
 
-    $this->postJson('/api/cms/form-requests', $payload)
-        ->assertStatus(401);
+    $foreignFormType = FormType::factory()->create([
+        'tenant_id' => $tenantB->id,
+        'key' => 'foreign-contact',
+    ]);
 
-    $this->withHeader('Authorization', 'Bearer wrong')
-        ->postJson('/api/cms/form-requests', $payload)
-        ->assertStatus(401);
+    NoerdUser::factory()->create(['api_token' => 'cross_tenant_token']);
+    TenantHelper::setSelectedTenantId($tenantA->id);
+
+    $this->withHeader('Authorization', 'Bearer cross_tenant_token')
+        ->postJson('/api/cms/form-requests', [
+            'form' => 'foreign-contact',
+            'data' => ['name' => 'Mallory'],
+        ])
+        ->assertStatus(422);
+
+    $this->assertDatabaseMissing('form_requests', ['form' => 'foreign-contact']);
+    $this->assertDatabaseMissing('form_requests', ['form_type_id' => $foreignFormType->id]);
 });

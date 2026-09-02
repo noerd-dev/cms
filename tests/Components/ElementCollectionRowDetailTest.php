@@ -102,12 +102,12 @@ it('renders the copy button only for existing rows', function (): void {
     Livewire::test('element-collection-row-detail', [
         'modelId' => $this->row->id,
         'collectionKey' => $this->elementCollection->collection_key,
-    ])->assertSeeHtml('wire:click="copy"');
+    ])->assertSee(__('Copy this entry?'));
 
     Livewire::test('element-collection-row-detail', [
         'modelId' => null,
         'collectionKey' => $this->elementCollection->collection_key,
-    ])->assertDontSeeHtml('wire:click="copy"');
+    ])->assertDontSee(__('Copy this entry?'));
 });
 
 it('copies the row, inserts it after the original and switches to the copy', function (): void {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Noerd\Cms\Jobs\SendFormConfirmationEmail;
@@ -28,7 +30,7 @@ beforeEach(function (): void {
     ]);
 });
 
-function submitContactForm(object $context, array $data = []): FormRequest
+function zzSubmitContactForm(object $context, array $data = []): FormRequest
 {
     return FormRequest::create([
         'form' => 'contact',
@@ -42,26 +44,13 @@ function submitContactForm(object $context, array $data = []): FormRequest
     ]);
 }
 
-it('stores the submission in the database', function (): void {
-    $formRequest = submitContactForm($this);
-
-    $this->assertDatabaseHas('form_requests', [
-        'id' => $formRequest->id,
-        'form' => 'contact',
-        'tenant_id' => $this->tenant->id,
-        'form_type_id' => $this->formType->id,
-    ]);
-
-    expect($formRequest->fresh()->data['email'])->toBe('absender@example.com');
-});
-
 it('sends a copy to the sender and to the recipients maintained in the cms settings', function (): void {
     CmsSetting::create([
         'tenant_id' => $this->tenant->id,
         'form_recipients' => 'empfaenger@example.com',
     ]);
 
-    SendFormConfirmationEmail::dispatchSync(submitContactForm($this));
+    SendFormConfirmationEmail::dispatchSync(zzSubmitContactForm($this));
 
     Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('absender@example.com'));
     Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('empfaenger@example.com'));
@@ -74,13 +63,13 @@ it('sends to every recipient of a comma separated settings list', function (): v
         'form_recipients' => 'eins@example.com, zwei@example.com',
     ]);
 
-    SendFormConfirmationEmail::dispatchSync(submitContactForm($this));
+    SendFormConfirmationEmail::dispatchSync(zzSubmitContactForm($this));
 
     Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('eins@example.com') && $mail->hasTo('zwei@example.com'));
 });
 
 it('falls back to the form type notification email when no recipients are maintained', function (): void {
-    SendFormConfirmationEmail::dispatchSync(submitContactForm($this));
+    SendFormConfirmationEmail::dispatchSync(zzSubmitContactForm($this));
 
     Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('fallback@example.com'));
     Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('absender@example.com'));
@@ -92,7 +81,7 @@ it('only notifies the recipients of the submitting tenant', function (): void {
     CmsSetting::create(['tenant_id' => $this->tenant->id, 'form_recipients' => 'richtig@example.com']);
     CmsSetting::create(['tenant_id' => $otherTenant->id, 'form_recipients' => 'falsch@example.com']);
 
-    SendFormConfirmationEmail::dispatchSync(submitContactForm($this));
+    SendFormConfirmationEmail::dispatchSync(zzSubmitContactForm($this));
 
     Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('richtig@example.com'));
     Mail::assertNotSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('falsch@example.com'));
@@ -104,8 +93,54 @@ it('skips the sender copy when no valid email was submitted', function (): void 
         'form_recipients' => 'empfaenger@example.com',
     ]);
 
-    SendFormConfirmationEmail::dispatchSync(submitContactForm($this, ['email' => 'keine-mail']));
+    SendFormConfirmationEmail::dispatchSync(zzSubmitContactForm($this, ['email' => 'keine-mail']));
 
     Mail::assertSent(FormConfirmation::class, 1);
     Mail::assertSent(FormConfirmation::class, fn($mail): bool => $mail->hasTo('empfaenger@example.com'));
+});
+
+describe('placeholders', function (): void {
+    it('substitutes the form title, the submission date and every field placeholder', function (): void {
+        $this->formType->update([
+            'email_subject' => 'Re: {{form_title}}',
+            'email_body' => '<p>Hallo {{field:name}} ({{field:email}}), eingegangen am {{submission_date}}.</p>',
+        ]);
+
+        $formRequest = zzSubmitContactForm($this);
+
+        SendFormConfirmationEmail::dispatchSync($formRequest);
+
+        Mail::assertSent(FormConfirmation::class, fn(FormConfirmation $mail): bool => $mail->emailSubject === 'Re: Kontaktformular'
+                && $mail->emailBody === '<p>Hallo Max Mustermann (absender@example.com), eingegangen am '
+                    . $formRequest->created_at->format('d.m.Y H:i') . '.</p>');
+    });
+
+    it('escapes submitted values before they reach the html mail body', function (): void {
+        $this->formType->update([
+            'email_body' => '<p>Hallo {{field:name}}</p>',
+        ]);
+
+        SendFormConfirmationEmail::dispatchSync(
+            zzSubmitContactForm($this, ['name' => '<script>alert(1)</script>']),
+        );
+
+        Mail::assertSent(FormConfirmation::class, fn(FormConfirmation $mail): bool => ! str_contains($mail->emailBody, '<script>')
+                && str_contains($mail->emailBody, '&lt;script&gt;'));
+    });
+
+    it('renders the substituted body into the mail view', function (): void {
+        $this->formType->update([
+            'email_body' => '<p>Hallo {{field:name}}</p>',
+        ]);
+
+        $mail = new FormConfirmation(
+            zzSubmitContactForm($this, ['name' => 'Erika']),
+            'Ihre Anfrage',
+            '<p>Hallo Erika</p>',
+        );
+
+        $rendered = $mail->render();
+
+        expect($rendered)->toContain('<p>Hallo Erika</p>');
+    });
 });

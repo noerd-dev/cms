@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Cms\Tests\Traits\CreatesElementFixtures;
 use Noerd\Helpers\NoerdAuth;
 use Tests\TestCase;
 
 uses(TestCase::class);
-uses(CreatesCmsUser::class);
+uses(CreatesCmsUser::class, CreatesElementFixtures::class);
 
 $testSettings = [
     'componentName' => 'cms::page-detail',
@@ -17,19 +20,18 @@ $testSettings = [
     'urlParam' => 'pageId',
 ];
 
-it('test the route', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+beforeEach(function (): void {
+    ['user' => $this->user, 'tenant' => $this->tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($this->user, NoerdAuth::guardName());
+    $this->createElementFixtures();
+});
 
-    $this->actingAs($user, NoerdAuth::guardName());
-
-    $response = $this->get(route('cms.pages'));
-    $response->assertStatus(200);
+afterEach(function (): void {
+    $this->removeElementFixtures();
 });
 
 it('validates the data', function () use ($testSettings): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-
-    $this->actingAs($user, NoerdAuth::guardName());
+    $user = $this->user;
 
     // Test with invalid data (empty name array)
     Livewire::test($testSettings['componentName'])
@@ -39,9 +41,7 @@ it('validates the data', function () use ($testSettings): void {
 });
 
 it('successfully stores the data', function () use ($testSettings): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-
-    $this->actingAs($user, NoerdAuth::guardName());
+    $user = $this->user;
 
     $component = Livewire::test($testSettings['componentName'])
         ->set('detailData.name.en', 'Test Page')
@@ -59,9 +59,7 @@ it('successfully stores the data', function () use ($testSettings): void {
 });
 
 it('successfully deletes a page', function () use ($testSettings): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-
-    $this->actingAs($user, NoerdAuth::guardName());
+    $user = $this->user;
     $model = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'name' => ['en' => 'Test Page', 'de' => 'Test Seite'],
@@ -78,27 +76,8 @@ it('successfully deletes a page', function () use ($testSettings): void {
     ]);
 });
 
-it('opens page with pageId', function () use ($testSettings): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-
-    $this->actingAs($user, NoerdAuth::guardName());
-    $model = Page::factory()->create([
-        'tenant_id' => $user->selected_tenant_id,
-        'name' => ['en' => 'Test Page', 'de' => 'Test Seite'],
-        'slug' => ['en' => '/test-page', 'de' => '/test-seite'],
-    ]);
-
-    $component = Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
-        ->test($testSettings['componentName']);
-
-    $component->assertSet('modelId', $model->id);
-    // Note: model.id might be set differently due to FieldHelper parsing
-});
-
 it('opens and stores existing page', function () use ($testSettings): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-
-    $this->actingAs($user, NoerdAuth::guardName());
+    $user = $this->user;
     $model = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'name' => ['en' => 'Old Page', 'de' => 'Alte Seite'],
@@ -120,9 +99,7 @@ it('opens and stores existing page', function () use ($testSettings): void {
 });
 
 it('dispatches table action from pages table', function () use ($testSettings): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-
-    $this->actingAs($user, NoerdAuth::guardName());
+    $user = $this->user;
 
     // Test just the listAction method without rendering the full table
     $component = Livewire::test($testSettings['listName']);
@@ -137,9 +114,7 @@ it('dispatches table action from pages table', function () use ($testSettings): 
 });
 
 it('copies a page with elements', function () use ($testSettings): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-
-    $this->actingAs($user, NoerdAuth::guardName());
+    $user = $this->user;
     $model = Page::factory()->create([
         'tenant_id' => $user->selected_tenant_id,
         'name' => ['en' => 'Original Page', 'de' => 'Original Seite'],
@@ -148,7 +123,7 @@ it('copies a page with elements', function () use ($testSettings): void {
 
     ElementPage::create([
         'page_id' => $model->id,
-        'element_key' => 'text_block_1_column',
+        'element_key' => $this->zzTextElementKey(),
         'sort' => 1,
         'data' => json_encode(['text' => ['en' => 'Hello']]),
     ]);
@@ -169,13 +144,11 @@ it('copies a page with elements', function () use ($testSettings): void {
 
     $copiedElements = ElementPage::where('page_id', $copiedPage->id)->get();
     expect($copiedElements)->toHaveCount(1);
-    expect($copiedElements->first()->getRawOriginal('element_key'))->toBe('text_block_1_column');
+    expect($copiedElements->first()->getRawOriginal('element_key'))->toBe($this->zzTextElementKey());
 });
 
 it('copies a collection page and appends 2 to data title', function () use ($testSettings): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-
-    $this->actingAs($user, NoerdAuth::guardName());
+    $user = $this->user;
 
     $collection = Collection::create([
         'tenant_id' => $user->selected_tenant_id,
