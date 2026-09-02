@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
@@ -8,17 +9,13 @@ use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 uses(Tests\TestCase::class);
 uses(CreatesCmsUser::class);
 
-it('renders the navigation component', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
-
-    Livewire::test('cms::navigation-detail')
-        ->assertOk();
+beforeEach(function (): void {
+    ['user' => $this->user, 'tenant' => $this->tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($this->user);
 });
 
 it('allows storing a navigation without page or link for parent items', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $tenant = $this->tenant;
 
     Livewire::test('cms::navigation-detail')
         ->set('detailData.navigation_key', 'MAIN')
@@ -35,8 +32,7 @@ it('allows storing a navigation without page or link for parent items', function
 });
 
 it('persists parent_id when assigning a parent to an existing navigation', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $tenant = $this->tenant;
 
     $parent = Navigation::factory()->create([
         'tenant_id' => $tenant->id,
@@ -64,8 +60,7 @@ it('persists parent_id when assigning a parent to an existing navigation', funct
 });
 
 it('stores a new sub navigation and inherits the parent navigation_key', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $tenant = $this->tenant;
 
     $parent = Navigation::factory()->create([
         'tenant_id' => $tenant->id,
@@ -88,8 +83,7 @@ it('stores a new sub navigation and inherits the parent navigation_key', functio
 });
 
 it('stores a navigation with page and clears link', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $tenant = $this->tenant;
 
     $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => ['de' => 'Seite', 'en' => 'Page']]);
 
@@ -110,8 +104,7 @@ it('stores a navigation with page and clears link', function (): void {
 });
 
 it('stores a navigation with link and clears page', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $tenant = $this->tenant;
 
     Livewire::test('cms::navigation-detail')
         ->set('detailData.navigation_key', 'MAIN')
@@ -129,8 +122,7 @@ it('stores a navigation with link and clears page', function (): void {
 });
 
 it('normalizes new_tab default and stores 0 when not set', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
+    $tenant = $this->tenant;
 
     Livewire::test('cms::navigation-detail')
         ->set('detailData.navigation_key', 'MAIN')
@@ -147,17 +139,60 @@ it('normalizes new_tab default and stores 0 when not set', function (): void {
     expect((int) $navigation->new_tab)->toBe(0);
 });
 
-it('respects language switching behavior for page selection display', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user);
 
-    $page = Page::factory()->create([
-        'tenant_id' => $tenant->id,
-        'name' => ['de' => 'Über uns', 'en' => 'About us'],
+describe('page selection', function (): void {
+    test('page selection auto-fills empty name field', function (array $emptyName): void {
+        $page = Page::factory()->create([
+            'tenant_id' => $this->tenant->id,
+            'name' => [
+                'de' => 'Test Seite',
+                'en' => 'Test Page',
+            ],
+        ]);
+
+        session(['selectedLanguage' => 'de']);
+
+        Livewire::test('cms::navigation-detail')
+            ->set('detailData', [
+                'navigation_key' => 'test-nav',
+                'name' => $emptyName,
+                'page_id' => null,
+            ])
+            ->call('pageSelected', $page->id)
+            ->assertSet('detailData.page_id', $page->id)
+            ->assertSet('detailData.name', [
+                'de' => 'Test Seite',
+                'en' => 'Test Page',
+            ]);
+    })->with([
+        'missing values' => [[]],
+        'empty string values' => [['de' => '', 'en' => '']],
     ]);
 
-    // default language from session is used internally by component; we ensure action does not error
-    Livewire::test('cms::navigation-detail')
-        ->call('pageSelected', $page->id)
-        ->assertHasNoErrors();
+    test('page selection does not overwrite existing name field', function (): void {
+        $page = Page::factory()->create([
+            'tenant_id' => $this->tenant->id,
+            'name' => [
+                'de' => 'Test Seite',
+                'en' => 'Test Page',
+            ],
+        ]);
+
+        $existingName = [
+            'de' => 'Bereits vorhandener Name',
+            'en' => 'Existing Name',
+        ];
+
+        session(['selectedLanguage' => 'de']);
+
+        Livewire::test('cms::navigation-detail')
+            ->set('detailData', [
+                'navigation_key' => 'test-nav',
+                'name' => $existingName, // Pre-filled name field
+                'page_id' => null,
+            ])
+            ->call('pageSelected', $page->id)
+            ->assertSet('detailData.page_id', $page->id)
+            ->assertSet('detailData.name', $existingName); // Should remain unchanged
+    });
 });

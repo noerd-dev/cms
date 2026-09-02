@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
@@ -33,7 +35,7 @@ beforeEach(function (): void {
     TenantHelper::setSelectedApp('CMS');
 });
 
-function createFormType(object $context, array $overrides = []): FormType
+function zzCreateFormType(object $context, array $overrides = []): FormType
 {
     return FormType::create(array_merge([
         'tenant_id' => $context->tenant->id,
@@ -62,7 +64,7 @@ it('renders the form-request-page component', function (): void {
 });
 
 it('shows resend button when form type has notification email configured', function (): void {
-    $formType = createFormType($this);
+    $formType = zzCreateFormType($this);
 
     $formRequest = FormRequest::create([
         'tenant_id' => $this->tenant->id,
@@ -76,10 +78,12 @@ it('shows resend button when form type has notification email configured', funct
         ->assertSee(__('Resend notification'));
 });
 
-it('hides resend button when no form type is assigned', function (): void {
+it('hides the resend button when the notification cannot be sent', function (?array $formTypeOverrides): void {
+    $formType = $formTypeOverrides === null ? null : zzCreateFormType($this, $formTypeOverrides);
+
     $formRequest = FormRequest::create([
         'tenant_id' => $this->tenant->id,
-        'form_type_id' => null,
+        'form_type_id' => $formType?->id,
         'form' => 'contact',
         'data' => ['name' => 'Test'],
     ]);
@@ -87,42 +91,16 @@ it('hides resend button when no form type is assigned', function (): void {
     Livewire::actingAs($this->user)
         ->test('form-request-page', ['modelId' => $formRequest->id])
         ->assertDontSee(__('Resend notification'));
-});
-
-it('hides resend button when notification email is empty', function (): void {
-    $formType = createFormType($this, ['notification_email' => null]);
-
-    $formRequest = FormRequest::create([
-        'tenant_id' => $this->tenant->id,
-        'form_type_id' => $formType->id,
-        'form' => 'contact',
-        'data' => ['name' => 'Test'],
-    ]);
-
-    Livewire::actingAs($this->user)
-        ->test('form-request-page', ['modelId' => $formRequest->id])
-        ->assertDontSee(__('Resend notification'));
-});
-
-it('hides resend button when send_email is disabled', function (): void {
-    $formType = createFormType($this, ['send_email' => false]);
-
-    $formRequest = FormRequest::create([
-        'tenant_id' => $this->tenant->id,
-        'form_type_id' => $formType->id,
-        'form' => 'contact',
-        'data' => ['name' => 'Test'],
-    ]);
-
-    Livewire::actingAs($this->user)
-        ->test('form-request-page', ['modelId' => $formRequest->id])
-        ->assertDontSee(__('Resend notification'));
-});
+})->with([
+    'no form type is assigned' => [null],
+    'notification email is empty' => [['notification_email' => null]],
+    'send_email is disabled' => [['send_email' => false]],
+]);
 
 it('sends notification email only to the notification address', function (): void {
     Mail::fake();
 
-    $formType = createFormType($this, [
+    $formType = zzCreateFormType($this, [
         'email_subject' => 'New: {{form_title}}',
         'email_body' => 'Submission from {{field:name}}',
     ]);
@@ -147,7 +125,7 @@ it('sends notification email only to the notification address', function (): voi
 it('prevents rapid resending via rate limiting', function (): void {
     Mail::fake();
 
-    $formType = createFormType($this);
+    $formType = zzCreateFormType($this);
 
     $formRequest = FormRequest::create([
         'tenant_id' => $this->tenant->id,
@@ -169,7 +147,7 @@ it('prevents rapid resending via rate limiting', function (): void {
 });
 
 it('includes form_type_id in detailData', function (): void {
-    $formType = createFormType($this);
+    $formType = zzCreateFormType($this);
 
     $formRequest = FormRequest::create([
         'tenant_id' => $this->tenant->id,

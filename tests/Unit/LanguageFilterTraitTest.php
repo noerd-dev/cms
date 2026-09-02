@@ -12,15 +12,20 @@ use Tests\TestCase;
 uses(TestCase::class);
 uses(CreatesCmsUser::class);
 
-// Create a test class that uses the trait
-class TestLanguageFilterClass
+/**
+ * Probe object for the trait — anonymous, so no class name leaks into the
+ * global namespace shared by every module suite.
+ */
+function zzLanguageFilterProbe(): object
 {
-    use LanguageFilterTrait;
+    return new class {
+        use LanguageFilterTrait;
 
-    public function callEnsureDefaultLanguage(): string
-    {
-        return $this->ensureDefaultLanguage();
-    }
+        public function callEnsureDefaultLanguage(): string
+        {
+            return $this->ensureDefaultLanguage();
+        }
+    };
 }
 
 it('returns default language when session is not set', function (): void {
@@ -37,7 +42,7 @@ it('returns default language when session is not set', function (): void {
 
     session()->forget('selectedLanguage');
 
-    $testClass = new TestLanguageFilterClass();
+    $testClass = zzLanguageFilterProbe();
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('de');
@@ -63,7 +68,7 @@ it('returns existing session language when it exists in cms_languages', function
 
     session(['selectedLanguage' => 'en']);
 
-    $testClass = new TestLanguageFilterClass();
+    $testClass = zzLanguageFilterProbe();
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('en');
@@ -89,7 +94,7 @@ it('resets to default language when session language does not exist', function (
     // Set session to non-existing language
     session(['selectedLanguage' => 'en']);
 
-    $testClass = new TestLanguageFilterClass();
+    $testClass = zzLanguageFilterProbe();
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('de');
@@ -152,7 +157,7 @@ it('resets to default language when session language is inactive', function (): 
 
     session(['selectedLanguage' => 'en']);
 
-    $testClass = new TestLanguageFilterClass();
+    $testClass = zzLanguageFilterProbe();
     $result = $testClass->callEnsureDefaultLanguage();
 
     expect($result)->toBe('de');

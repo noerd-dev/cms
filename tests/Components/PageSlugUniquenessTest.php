@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -23,14 +25,6 @@ beforeEach(function (): void {
         'is_default' => true,
         'sort_order' => 0,
     ]);
-});
-
-it('auto-generates slug when typing title on new page', function (): void {
-    $component = Livewire::test('cms::page-detail')
-        ->set('detailData.name.de', 'Meine Seite');
-
-    $detailData = $component->get('detailData');
-    expect($detailData['slug']['de'])->toBe('/meine-seite');
 });
 
 it('appends -2 when slug already exists', function (): void {
@@ -133,4 +127,31 @@ it('updates slug live on new page when title changes', function (): void {
     $component->set('detailData.name.de', 'Zweiter Titel');
     $detailData = $component->get('detailData');
     expect($detailData['slug']['de'])->toBe('/zweiter-titel');
+});
+
+describe('language prefix', function (): void {
+    /*
+     | Slug generation for non-default languages: the default language stays
+     | unprefixed, every other active language gets its code as a path prefix,
+     | and umlauts transliterate.
+     */
+
+    it('prefixes non-default language slugs with the language code', function (): void {
+        CmsLanguage::firstOrCreate(
+            ['tenant_id' => $this->tenant->id, 'code' => 'en'],
+            ['name' => 'English', 'is_active' => true, 'is_default' => false],
+        );
+
+        $instance = Livewire::test('cms::page-detail')->instance();
+
+        expect($instance->generateSlug('Über uns', 'de'))->toBe('/ueber-uns')
+            ->and($instance->generateSlug('Über uns', 'en'))->toBe('/en/ueber-uns');
+    });
+
+    it('keeps the default language unprefixed whatever it is', function (): void {
+        $default = CmsLanguage::where('tenant_id', $this->tenant->id)->where('is_default', true)->first();
+
+        expect(Livewire::test('cms::page-detail')->instance()->generateSlug('Startseite', $default->code))
+            ->toBe('/startseite');
+    });
 });

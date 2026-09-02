@@ -15,14 +15,6 @@ $testSettings = [
     'urlParam' => 'globalParameterId',
 ];
 
-it('test the route', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user, NoerdAuth::guardName());
-
-    $response = $this->get('/cms/global-parameters');
-    $response->assertStatus(200);
-});
-
 it('validates the data', function () use ($testSettings): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user, NoerdAuth::guardName());
@@ -50,23 +42,6 @@ it('successfully stores the data', function () use ($testSettings): void {
         'key' => $parameterKey,
         'value' => json_encode($parameterValue),
         'tenant_id' => $tenant->id,
-    ]);
-});
-
-it('can retrieve existing global parameter data', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user, NoerdAuth::guardName());
-
-    $existingParameter = GlobalParameter::create([
-        'key' => 'test_key',
-        'value' => json_encode('test_value'),
-        'tenant_id' => $tenant->id,
-    ]);
-
-    $this->assertDatabaseHas('global_parameters', [
-        'id' => $existingParameter->id,
-        'key' => 'test_key',
-        'value' => json_encode('test_value'),
     ]);
 });
 

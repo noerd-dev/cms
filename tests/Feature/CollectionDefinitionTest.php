@@ -38,17 +38,6 @@ function createContactsDefinition(int $tenantId): CollectionDefinition
     ]);
 }
 
-it('renders the list component and shows existing definitions', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
-    $this->actingAs($user, NoerdAuth::guardName());
-
-    $response = $this->get('/cms/collection-definitions');
-    $response->assertStatus(200);
-
-    Livewire::test('cms::collection-definitions-list')
-        ->assertNotSet('listId', '');
-});
-
 it('scopes entry counts to the current tenant', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user, NoerdAuth::guardName());

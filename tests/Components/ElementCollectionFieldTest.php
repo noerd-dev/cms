@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Models\ElementPage;
@@ -7,16 +9,22 @@ use Noerd\Cms\Models\Page;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Cms\Tests\Traits\CreatesElementFixtures;
 use Noerd\Services\FieldTypeRegistry;
 use Tests\TestCase;
 
 uses(TestCase::class);
-uses(CreatesCmsUser::class);
+uses(CreatesCmsUser::class, CreatesElementFixtures::class);
 
 beforeEach(function (): void {
     ['user' => $this->user, 'tenant' => $this->tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($this->user);
     DatabaseCollectionDefinitionRepository::resetCache();
+    $this->createElementFixtures();
+});
+
+afterEach(function (): void {
+    $this->removeElementFixtures();
 });
 
 it('shows a save-first hint when the owner is not yet saved', function (): void {
@@ -148,10 +156,10 @@ it('resolves the element-collection owner to the element page inside the element
 
 it('counts existing element-collection entries in the element editor', function (): void {
     $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Startseite']]);
-    // element_collection_test is the fixture element that declares an
-    // `element-collection` field (`items`); a key without a matching
-    // .blade.php renders the "component not found" box instead of the editor.
-    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'element_collection_test', 'data' => '{}', 'sort' => 0]);
+    // The module's own throwaway fixture element declares an `element-collection`
+    // field (`items`); a key without a matching .blade.php renders the
+    // "component not found" box instead of the editor.
+    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => $this->zzCollectionElementKey(), 'data' => '{}', 'sort' => 0]);
 
     $elementCollection = app(ElementCollectionService::class)->ensure(
         ElementCollectionService::OWNER_ELEMENT_PAGE,

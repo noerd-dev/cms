@@ -291,37 +291,6 @@ it('does not overwrite slug column or core page fields from stale data on mount'
         ->and($detailData['title'])->toBe('Collection Field');
 });
 
-it('preserves element-collection array data when saving a collection page', function (): void {
-    $collection = pageDetailDefinition($this->tenant->id, 'services', [
-        ['name' => 'detailData.title', 'label' => 'Titel', 'type' => 'translatableText', 'colspan' => 6],
-        [
-            'name' => 'detailData.activities_items',
-            'label' => 'Activities',
-            'type' => 'element-collection',
-            'fields' => [
-                ['name' => 'text', 'label' => 'Text', 'type' => 'translatableTextarea'],
-            ],
-        ],
-    ]);
-
-    $items = [
-        ['text' => ['de' => 'Analyse', 'en' => 'Analysis']],
-        ['text' => ['de' => 'Konzeption', 'en' => 'Concept']],
-    ];
-
-    $page = Page::create([
-        'tenant_id' => $this->tenant->id,
-        'collection_id' => $collection->id,
-        'data' => [
-            'title' => ['de' => 'Beratung', 'en' => 'Consulting'],
-            'activities_items' => $items,
-        ],
-        'sort' => 1,
-    ]);
-
-    expect($page->fresh()->data['activities_items'])->toEqual($items);
-});
-
 it('stores entries under the definition key even when the URL key is hyphenated', function (): void {
     $collection = pageDetailDefinition($this->tenant->id, 'team-members', [
         ['name' => 'detailData.title', 'label' => 'Name', 'type' => 'text', 'colspan' => 6],

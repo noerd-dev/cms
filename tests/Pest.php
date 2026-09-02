@@ -1,11 +1,6 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Noerd\Cms\Models\CmsLanguage;
-use Noerd\Helpers\TenantHelper;
-use Noerd\Models\NoerdUser;
-use Noerd\Models\Tenant;
-use Noerd\Models\TenantApp;
 use Tests\TestCase;
 
 /*
@@ -34,31 +29,11 @@ use Tests\TestCase;
 | case class. By default, that class is "PHPUnit\Framework\TestCase". Of course, you may
 | need to change it using the "uses()" function to bind a different classes or traits.
 |
+| There is deliberately NO global fixture here: the single source of the
+| tenant/user/language fixture is the CreatesCmsUser trait. A global
+| beforeEach next to it created a SECOND tenant for every test that also
+| called createUserWithCmsAccess().
+|
 */
 
-uses(TestCase::class, RefreshDatabase::class)
-    ->beforeEach(function (): void {
-        $tenant = Tenant::factory()->create();
-
-        // Check if CMS app already exists, otherwise create it
-        $cmsApp = TenantApp::firstOrCreate(
-            ['name' => 'CMS'],
-            [
-                'title' => 'CMS',
-                'icon' => 'cms::icons.app',
-                'route' => 'cms.dashboard',
-                'is_active' => true,
-            ],
-        );
-
-        $tenant->tenantApps()->attach($cmsApp->id);
-
-        // Ensure default English language exists for this tenant
-        CmsLanguage::ensureDefaultLanguageForTenant($tenant->id);
-
-        $this->user = NoerdUser::factory()->create();
-        $this->user->tenants()->attach($tenant->id);
-        TenantHelper::setSelectedTenantId($tenant->id);
-        $this->tenant = $tenant;
-    })
-    ->in(__DIR__);
+uses(TestCase::class, RefreshDatabase::class)->in(__DIR__);
