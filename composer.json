@@ -2,11 +2,11 @@
     "name": "noerd/cms",
     "description": "Multi-tenant, multi-language CMS module for the noerd framework: pages with a visual element builder, collections, navigation, forms, articles and languages.",
     "type": "library",
-    "version": "v0.1.4",
+    "version": "v0.1.5",
     "license": "proprietary",
     "require": {
         "laravel/framework": "^12.0 || ^13.0",
-        "noerd/noerd": "^0.13.0 || ^0.14.0 || ^0.15.0",
+        "noerd/noerd": "^0.13.0 || ^0.14.0 || ^0.15.0 || ^0.16.0",
         "noerd/media": "^0.3.0",
         "noerd/communication": "^0.4.0",
         "symfony/yaml": "^7.1 || ^8.0"
