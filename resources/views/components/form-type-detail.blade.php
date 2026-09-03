@@ -35,7 +35,7 @@ new class () extends Component {
     {
         $sampleData = [
             '{{form_title}}' => $this->detailData['title'] ?? __('Form Type'),
-            '{{submission_date}}' => now()->format('d.m.Y H:i'),
+            '{{submission_date}}' => \Noerd\Helpers\FormatHelper::documentDateTime(now()),
         ];
 
         if ($this->modelId) {

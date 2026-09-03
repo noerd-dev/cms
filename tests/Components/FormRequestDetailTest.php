@@ -56,11 +56,16 @@ it('renders the form-request-page component', function (): void {
         'data' => ['name' => 'Test User', 'email' => 'test@example.com'],
     ]);
 
+    // Backend UI: the submission date follows the reader's format locale.
+    $this->user->setting->update(['format_locale' => 'en-US']);
+
     Livewire::actingAs($this->user)
         ->test('form-request-page', ['modelId' => $formRequest->id])
         ->assertSee(__('Form Request'))
         ->assertSee('Test User')
-        ->assertSee('test@example.com');
+        ->assertSee('test@example.com')
+        ->assertSee($formRequest->created_at->format('m/d/Y'))
+        ->assertDontSee($formRequest->created_at->format('d.m.Y'));
 });
 
 it('shows resend button when form type has notification email configured', function (): void {

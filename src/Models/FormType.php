@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\File;
 use Noerd\Cms\Database\Factories\FormTypeFactory;
+use Noerd\Helpers\FormatHelper;
 use Noerd\Models\Tenant;
 use Noerd\Traits\BelongsToTenant;
 use Symfony\Component\Yaml\Yaml;
@@ -88,9 +89,15 @@ class FormType extends Model
     {
         $escape = fn(string $value): string => $escapeHtml ? e($value) : $value;
 
+        // The confirmation mail leaves the system: dates follow the tenant locale.
+        $tenantId = $formRequest->tenant_id ?? $this->tenant_id;
+
         $replacements = [
             '{{form_title}}' => $escape((string) $this->title),
-            '{{submission_date}}' => $escape($formRequest->created_at->format('d.m.Y H:i')),
+            '{{submission_date}}' => $escape(FormatHelper::documentDateTime(
+                $formRequest->created_at,
+                $tenantId === null ? null : (int) $tenantId,
+            )),
         ];
 
         // Replace static placeholders
