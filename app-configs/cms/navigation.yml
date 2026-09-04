@@ -15,6 +15,11 @@
           heroicon: list-bullet
           newRoute: cms.navigation.detail
           newComponent: cms::navigation-detail
+        - title: Redirects
+          route: cms.redirects
+          heroicon: arrows-right-left
+          newRoute: cms.redirect.detail
+          newComponent: cms::redirect-detail
         - title: Global Parameters
           route: cms.global-parameters
           heroicon: globe-alt

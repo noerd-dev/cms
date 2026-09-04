@@ -1,0 +1,16 @@
+title: Redirect
+description: ''
+fields:
+  - name: detailData.source_path
+    label: 'Source Path'
+    type: text
+    colspan: 6
+  - name: detailData.target_page_id
+    label: 'Target Page'
+    type: pageRelation
+    relationField: relationTitles.target_page_id
+    colspan: 6
+  - name: detailData.is_active
+    label: 'Active?'
+    type: checkbox
+    colspan: 6

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Website\Models\Page;
+use Noerd\Website\Models\Redirect;
 use Noerd\Website\Services\PageElementService;
 
 class WebsiteController extends Controller
@@ -87,6 +88,11 @@ class WebsiteController extends Controller
         }
 
         if (! $page) {
+            $targetUrl = $this->resolveRedirect($slug, $tenantId);
+            if ($targetUrl !== null) {
+                return redirect($targetUrl, 301);
+            }
+
             abort(404, 'Page not found');
         }
 
@@ -98,5 +104,36 @@ class WebsiteController extends Controller
             'page' => $page,
             'elements' => $elements,
         ]);
+    }
+
+    /**
+     * A managed redirect only ever answers a path no active page claims, so it
+     * can never shadow live content.
+     */
+    private function resolveRedirect(string $slug, int $tenantId): ?string
+    {
+        $redirect = Redirect::where('tenant_id', $tenantId)
+            ->where('is_active', true)
+            ->where('source_path', Redirect::normalizePath($slug))
+            ->first();
+
+        if (! $redirect) {
+            return null;
+        }
+
+        $target = Page::where('tenant_id', $tenantId)
+            ->where('is_active', 1)
+            ->find($redirect->target_page_id);
+
+        if (! $target) {
+            return null;
+        }
+
+        $slugs = (array) ($target->slug ?? []);
+        $language = session('selectedLanguage') ?? (CmsLanguageCodes::active()[0] ?? 'de');
+        $url = $slugs[$language] ?? (reset($slugs) ?: null);
+
+        // Redirecting a path onto itself would loop forever.
+        return is_string($url) && $url !== $slug ? $url : null;
     }
 }

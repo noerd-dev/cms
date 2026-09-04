@@ -11,6 +11,8 @@ Route::prefix('cms')
         Route::livewire('/page/{modelId}', 'cms::page-detail')->name('page.detail');
         Route::livewire('/navigation', 'cms::navigation-list')->name('navigation');
         Route::livewire('/navigation/{modelId}', 'cms::navigation-detail')->name('navigation.detail');
+        Route::livewire('/redirects', 'cms::redirects-list')->name('redirects');
+        Route::livewire('/redirect/{modelId}', 'cms::redirect-detail')->name('redirect.detail');
         Route::livewire('global-parameters', 'cms::global-parameters-list')->name('global-parameters');
         Route::livewire('global-parameter/{modelId}', 'cms::global-parameter-detail')->name('global-parameter.detail');
 

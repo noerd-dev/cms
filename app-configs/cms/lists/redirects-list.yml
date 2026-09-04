@@ -1,0 +1,18 @@
+title: Redirects
+notSortableColumns:
+  - target_page_name
+searchableColumns:
+  - source_path
+actions:
+  - label: New Redirect
+    route: cms.redirect.detail
+disableSearch: false
+columns:
+  - field: source_path
+    label: 'Source Path'
+  - field: target_page_name
+    label: 'Target Page'
+  - field: is_active
+    label: 'Active?'
+    type: boolean
+    width: 0.5
