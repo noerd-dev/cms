@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\PageElementService;
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Tests\Traits\CreatesElementFixtures;
 
 uses(Tests\TestCase::class);
 uses(CreatesElementFixtures::class);
+uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
     $this->createElementFixtures();
@@ -75,5 +79,48 @@ describe('getComponentMapping', function (): void {
         } finally {
             File::deleteDirectory(base_path($custom));
         }
+    });
+});
+
+describe('processPageElements', function (): void {
+    it('renders an element whose data was stored as double encoded JSON', function (): void {
+        // A write that pushed an already encoded string through the array cast
+        // of ElementPage stored the payload as a JSON string. The editor
+        // preview must recover it instead of raising a TypeError.
+        ['tenant' => $tenant] = $this->createUserWithCmsAccess();
+        $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => ['de' => 'Datenschutz']]);
+
+        DB::table('element_page')->insert([
+            'page_id' => $page->id,
+            'element_key' => 'header2',
+            'sort' => 0,
+            'data' => json_encode(json_encode(['headline' => ['de' => 'Datenschutzerklärung']])),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $elements = $this->service->processPageElements($page->fresh(), 'de');
+
+        expect($elements)->toHaveCount(1)
+            ->and($elements[0]['data']->headline)->toBe('Datenschutzerklärung');
+    });
+
+    it('falls back to empty data when the stored JSON is not an element payload', function (): void {
+        ['tenant' => $tenant] = $this->createUserWithCmsAccess();
+        $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => ['de' => 'Impressum']]);
+
+        DB::table('element_page')->insert([
+            'page_id' => $page->id,
+            'element_key' => 'header2',
+            'sort' => 0,
+            'data' => json_encode('[]'),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $elements = $this->service->processPageElements($page->fresh(), 'de');
+
+        expect($elements)->toHaveCount(1)
+            ->and((array) $elements[0]['data'])->toBe([]);
     });
 });
