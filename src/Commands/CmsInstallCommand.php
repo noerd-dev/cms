@@ -34,9 +34,23 @@ class CmsInstallCommand extends Command
 
             // Install website module if it doesn't exist
             $this->installWebsiteIfNeeded();
+
+            // Ensure the quick-menu carries the "To Website" button
+            $this->installQuickMenuConfig();
         }
 
         return $result;
+    }
+
+    /**
+     * Ensure the quick-menu config contains the "To Website" button. The shared
+     * writer replaces a same-component entry wholesale, so an installation still
+     * carrying the removed `policy: canCms` gate — which fails closed and hides
+     * the button — migrates to the `apps:` key on every install and update.
+     */
+    protected function installQuickMenuConfig(): void
+    {
+        $this->ensureQuickMenuButton(['apps' => ['CMS'], 'component' => 'quick-menu.website-link']);
     }
 
     protected function getModuleName(): string
