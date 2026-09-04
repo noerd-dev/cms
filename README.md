@@ -189,8 +189,14 @@ created, a default language is set up via
 
 ## Access Control
 
-The `canCms` gate checks whether the current user's tenant has the CMS app
-enabled. Routes use the `app-access:cms` middleware to enforce this.
+Access is governed by the generic noerd app permission — there is no
+module-specific gate. Routes use the `app-access:cms` middleware; tenant-scoped
+chrome such as the "To Website" quick-menu button checks
+`AccessHelper::canUseApp('CMS')` (CMS app assigned to the selected tenant AND
+allowed by the user's app permission). The button is declared in
+`app-configs/quick-menu.yml` with `apps: [CMS]`; `noerd:install-cms` and
+`noerd:update-cms` ensure that entry and migrate a legacy `policy: canCms` line,
+which would otherwise fail closed and hide the button.
 
 ## Translations
 

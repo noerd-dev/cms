@@ -106,7 +106,7 @@ Content models use the `BelongsToTenant` trait (`CmsSetting` is a tenant singlet
 
 ## Access Control
 
-Access to the CMS is controlled by the `canCms` gate, which checks whether the current user's tenant has the CMS app enabled.
+Access to the CMS is governed by the generic noerd app permission: the backend routes use the `app-access:cms` middleware, and tenant-scoped chrome (e.g. the "To Website" quick-menu button) checks `AccessHelper::canUseApp('CMS')` — the CMS app must be assigned to the selected tenant AND the user's app permission must allow it. There is no module-specific gate.
 
 ## Next Steps
 

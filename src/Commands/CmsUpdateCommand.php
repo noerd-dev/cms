@@ -16,6 +16,10 @@ class CmsUpdateCommand extends CmsInstallCommand
             // Idempotent post-install step: tenants created since the install
             // get their starter homepage too.
             $this->seedDefaultHomepage();
+
+            // Idempotent: re-ensures the "To Website" button and migrates a
+            // legacy `policy:` entry that would otherwise hide it.
+            $this->installQuickMenuConfig();
         }
 
         return $result;
