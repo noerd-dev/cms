@@ -38,9 +38,7 @@ trait HandlesPageElements
                 $elementKey = 'text_block_1_column';
             }
 
-            $rawData = is_array($pageElement->data)
-                ? $pageElement->data
-                : (json_decode((string) $pageElement->data, true) ?? []);
+            $rawData = $this->decodeElementData($pageElement->data);
 
             foreach ($elementCollectionsByOwner->get($pageElement->id, collect()) as $elementCollection) {
                 if (! $elementCollection->owner_field) {
@@ -113,6 +111,27 @@ trait HandlesPageElements
         );
 
         return ! empty($bladeMatches) && ! empty($ymlMatches);
+    }
+
+    /**
+     * Element data is normally an array (the model casts the JSON column), but
+     * historic writes pushed an already encoded string through that cast, which
+     * stored the JSON wrapped in JSON. Unwrap every layer so such a row renders
+     * empty instead of taking the whole page down with a TypeError.
+     *
+     * @return array<string, mixed>
+     */
+    protected function decodeElementData(mixed $data): array
+    {
+        if (is_array($data)) {
+            return $data;
+        }
+
+        for ($depth = 0; is_string($data) && $depth < 3; $depth++) {
+            $data = json_decode($data, true);
+        }
+
+        return is_array($data) ? $data : [];
     }
 
     /**
