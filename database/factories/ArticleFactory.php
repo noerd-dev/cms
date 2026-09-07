@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Noerd\Cms\Models\Article;
+use Noerd\Models\Tenant;
 
 class ArticleFactory extends Factory
 {
@@ -15,7 +18,7 @@ class ArticleFactory extends Factory
         $enTitle = fake()->words(3, true);
 
         return [
-            'tenant_id' => 1,
+            'tenant_id' => Tenant::factory(),
             'author_id' => null,
             'title' => [
                 'de' => $deTitle,

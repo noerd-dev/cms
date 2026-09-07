@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -7,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('collection_definitions', function (Blueprint $table): void {
+        Schema::create('cms_collection_definitions', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
             $table->string('filename');
@@ -31,6 +33,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('collection_definitions');
+        Schema::dropIfExists('cms_collection_definitions');
     }
 };

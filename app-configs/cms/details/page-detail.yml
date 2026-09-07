@@ -1,5 +1,13 @@
 title: ''
 description: ''
+actions:
+  - label: Copy
+    action: copy
+    heroicon: document-duplicate
+    confirm: Copy this page?
+  - label: View page
+    url: pageUrl
+    heroicon: arrow-top-right-on-square
 tabs:
   - number: 1
     label: General

@@ -8,6 +8,7 @@ use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
 use Noerd\Facades\Noerd;
+use Noerd\Helpers\TenantHelper;
 use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdDetail;
 
@@ -23,7 +24,6 @@ new class extends Component {
     public function mount(): void
     {
         $this->initDetail();
-        $this->injectCollectionOptions();
 
         $navigation = new Navigation;
         if ($this->modelId) {
@@ -41,30 +41,29 @@ new class extends Component {
         }
     }
 
-    private function injectCollectionOptions(): void
+    /**
+     * Page collections of the tenant — the options of the YAML select
+     * (`optionsMethod: collectionOptions`).
+     *
+     * @return array<int, string>
+     */
+    public function collectionOptions(): array
     {
-        $tenantId = auth()->user()->selected_tenant_id;
-        $collections = Collection::where('tenant_id', $tenantId)->orderBy('name')->get();
+        $options = [];
 
-        $options = [['value' => '', 'label' => '-- ' . __('Please select...') . ' --']];
-        foreach ($collections as $collection) {
-            $config = CollectionHelper::getCollectionFields(strtolower($collection->collection_key));
-            if ($config && !empty($config['hasPage'])) {
-                $options[] = ['value' => $collection->id, 'label' => $collection->name];
+        foreach (Collection::query()->orderBy('name')->get() as $collection) {
+            $config = CollectionHelper::getCollectionFields(mb_strtolower((string) $collection->collection_key));
+            if ($config && ! empty($config['hasPage'])) {
+                $options[$collection->id] = (string) $collection->name;
             }
         }
 
-        foreach ($this->pageLayout['fields'] as &$field) {
-            if (($field['name'] ?? '') === 'detailData.collection_id') {
-                $field['options'] = $options;
-                break;
-            }
-        }
+        return $options;
     }
 
     public function parentOptions(): array
     {
-        $tenantId = auth()->user()->selected_tenant_id;
+        $tenantId = TenantHelper::currentTenantId();
         $query = Navigation::where('tenant_id', $tenantId)
             ->whereNull('parent_id');
 
@@ -72,7 +71,6 @@ new class extends Component {
             $query->where('id', '!=', $this->modelId);
         }
 
-        $selectedLanguage = session('selectedLanguage', 'de');
         $options = ['' => '-- ' . __('No parent item') . ' --'];
 
         foreach ($query->orderBy('sort_order')->get() as $item) {
@@ -100,14 +98,14 @@ new class extends Component {
             'detailData.sort_order' => ['nullable', 'integer', 'min:0'],
             'detailData.page_id' => ['nullable', 'numeric'],
             'detailData.link' => ['nullable', 'string', 'max:2048'],
-            'detailData.collection_id' => ['nullable', 'numeric', 'exists:collections,id'],
+            'detailData.collection_id' => ['nullable', 'numeric', 'exists:cms_collections,id'],
             'detailData.new_tab' => ['nullable', 'boolean'],
         ]);
 
         $data = collect($this->detailData)
             ->except(['navigation_type', 'created_at', 'updated_at'])
             ->toArray();
-        $data['tenant_id'] = auth()->user()->selected_tenant_id;
+        $data['tenant_id'] = TenantHelper::currentTenantId();
 
         if ($isSub) {
             $parent = Navigation::find($parentId);
@@ -175,9 +173,9 @@ new class extends Component {
     }
 
     #[On('languageChanged')]
-    public function refresh()
+    public function onLanguageChanged(): void
     {
-        $this->dispatch('$refresh');
+        // The roundtrip re-renders the translatable inputs against the new language.
     }
 
 }; ?>
@@ -188,9 +186,7 @@ new class extends Component {
             {{ __('Navigation Point') }}
 
             <div class="ml-auto">
-                <div class="flex bg-white p-1 rounded-lg w-fit border border-gray-200">
-                    <livewire:cms::language-switcher/>
-                </div>
+                <livewire:cms::language-switcher/>
             </div>
         </x-noerd::modal-title>
     </x-slot:header>

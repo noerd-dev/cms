@@ -10,3 +10,7 @@ fields:
     type: checkbox
     colspan: 6
     live: true
+  - name: detailData.value
+    label: Value
+    type: text
+    colspan: 12

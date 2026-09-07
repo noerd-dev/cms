@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-uses(Tests\TestCase::class);
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 
 it('declares every module dependency it uses', function (): void {
     // Allowed: the provider binds the website PageElementService purely by

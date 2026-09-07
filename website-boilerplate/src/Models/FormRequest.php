@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Website\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +13,7 @@ class FormRequest extends Model
     use BelongsToTenant;
     use HasFactory;
 
-    protected $table = 'form_requests';
+    protected $table = 'cms_form_requests';
 
     protected $guarded = [];
 

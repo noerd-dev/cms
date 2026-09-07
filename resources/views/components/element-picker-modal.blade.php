@@ -56,7 +56,7 @@ new class extends Component {
 
         @foreach($this->groupedElements() as $groupName => $groupElements)
             <div class="mb-8"
-                 x-show="search === '' || [{{ collect($groupElements)->map(fn($el) => "'" . $el->element_key . "'")->join(', ') }}].some(key => matches(key))">
+                 x-show="search === '' || {{ Js::from(collect($groupElements)->pluck('element_key')->values()) }}.some(key => matches(key))">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">
                     {{ $groupName }}
                 </h3>
@@ -75,4 +75,10 @@ new class extends Component {
     </div>
         </x-slot:tab1>
     </x-noerd::tab-content>
+
+    <x-slot:footer>
+        <div class="ml-auto flex items-center gap-2">
+            <x-noerd::button variant="secondary" wire:click="$dispatch('closeTopModal')">{{ __('Cancel') }}</x-noerd::button>
+        </div>
+    </x-slot:footer>
 </x-noerd::page>

@@ -14,6 +14,7 @@ fields:
   - name: detailData.cookie_lifetime_days
     label: Cookie Consent Duration
     type: select
+    default: 182
     showIf: detailData.show_cookie_banner
     helpText: Applies equally to acceptance and rejection. After this period visitors are asked again.
     options:

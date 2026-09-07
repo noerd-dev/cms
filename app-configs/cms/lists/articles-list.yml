@@ -1,4 +1,7 @@
 title: Articles
+defaultSort:
+  field: publication_date
+  direction: desc
 notSortableColumns:
   - author_name
 searchableColumns:

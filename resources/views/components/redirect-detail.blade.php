@@ -5,6 +5,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Models\Redirect;
+use Noerd\Helpers\TenantHelper;
 use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdDetail;
 
@@ -25,7 +26,6 @@ new class extends Component {
         }
 
         $this->detailData = $redirect->toArray();
-        $this->detailData['is_active'] = (bool) ($this->detailData['is_active'] ?? true);
 
         if ($redirect->target_page_id) {
             $this->pageSelected($redirect->target_page_id, 'detailData.target_page_id');
@@ -38,14 +38,14 @@ new class extends Component {
             return;
         }
 
-        $tenantId = auth()->user()->selected_tenant_id;
+        $tenantId = TenantHelper::currentTenantId();
 
         $this->validate([
             'detailData.source_path' => ['required', 'string', 'max:191'],
             'detailData.target_page_id' => [
                 'required',
                 'integer',
-                Rule::exists('pages', 'id')->where('tenant_id', $tenantId),
+                Rule::exists('cms_pages', 'id')->where('tenant_id', $tenantId),
             ],
             'detailData.is_active' => ['nullable', 'boolean'],
         ]);

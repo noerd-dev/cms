@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
@@ -50,6 +52,7 @@ class FormRequestController extends Controller
 
         $data = $request->input('data', []);
 
+        // Byte length, not character count — the column limits are bytes.
         if (mb_strlen((string) json_encode($data)) > self::MAX_PAYLOAD_BYTES) {
             return response()->json(['message' => 'Payload too large.'], 422);
         }
@@ -70,7 +73,7 @@ class FormRequestController extends Controller
         }
 
         $model = FormRequestModel::create([
-            'form' => $request->string('form'),
+            'form' => (string) $request->string('form'),
             'form_type_id' => $formType->id,
             'tenant_id' => $tenantId,
             'data' => $data,

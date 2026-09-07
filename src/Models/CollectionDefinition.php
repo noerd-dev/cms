@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -8,31 +10,30 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Noerd\Cms\Database\Factories\CollectionDefinitionFactory;
 use Noerd\Models\NoerdUser;
-use Noerd\Models\Tenant;
+use Noerd\Traits\BelongsToTenant;
 
 class CollectionDefinition extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
-    protected $table = 'collection_definitions';
+    protected $table = 'cms_collection_definitions';
 
     protected $guarded = [];
-
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
 
     public function creator(): BelongsTo
     {
         return $this->belongsTo(NoerdUser::class, 'created_by');
     }
 
-    protected static function newFactory()
+    protected static function newFactory(): CollectionDefinitionFactory
     {
         return CollectionDefinitionFactory::new();
     }
 
+    /**
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [

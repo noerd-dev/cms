@@ -7,10 +7,11 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Models\Collection;
+use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Support\CollectionDefinitionData;
 use Noerd\Facades\Noerd;
-use Noerd\Helpers\StaticConfigHelper;
+use Noerd\Helpers\AccessHelper;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component
@@ -29,10 +30,26 @@ new class extends Component
 
     public array $pendingRenames = [];
 
+    /**
+     * The record id is the definition FILENAME, not a model key, so the
+     * definition cannot be declared as $detailModel — the object permission is
+     * resolved against the CollectionDefinition model explicitly.
+     */
+    public function canSaveObject(): bool
+    {
+        return $this->modelId
+            ? AccessHelper::canWriteObject(CollectionDefinition::class)
+            : AccessHelper::canCreateObject(CollectionDefinition::class);
+    }
+
+    public function canDeleteObject(): bool
+    {
+        return AccessHelper::canDeleteObject(CollectionDefinition::class);
+    }
+
     public function mount(): void
     {
         $this->initDetail();
-        $this->pageLayout = StaticConfigHelper::getComponentFields('collection-definition-detail');
 
         $repository = app(CollectionDefinitionRepositoryContract::class);
 
@@ -259,7 +276,8 @@ new class extends Component
 
     public function copy(): void
     {
-        if (! $this->modelId) {
+        // copy() is not covered by the generic store/delete guard.
+        if (! $this->modelId || ! AccessHelper::canCreateObject(CollectionDefinition::class)) {
             return;
         }
 
@@ -362,14 +380,9 @@ new class extends Component
                             <td class="py-1 border-gray-300 border-r border-b">
                                 <select wire:model="fields.{{ $index }}.type"
                                         class="border-transparent! ring-0! border-1! focus:ring-0! focus:border-1! p-0 bg-transparent w-full text-sm py-0.5 px-1.5">
-                                    <option value="text">Text</option>
-                                    <option value="translatableText">Translatable Text</option>
-                                    <option value="translatableTextarea">Translatable Textarea</option>
-                                    <option value="translatableRichText">Translatable RichText</option>
-                                    <option value="image">Image</option>
-                                    <option value="email">E-Mail</option>
-                                    <option value="tel">Tel</option>
-                                    <option value="checkbox">Checkbox</option>
+                                    @foreach (config('noerd_cms.collection_field_types', []) as $typeKey => $typeLabel)
+                                        <option value="{{ $typeKey }}">{{ __($typeLabel) }}</option>
+                                    @endforeach
                                 </select>
                             </td>
                             <td class="py-1 border-gray-300 border-r border-b">
@@ -404,13 +417,6 @@ new class extends Component
 
     <x-slot:footer>
         <div class="flex items-center w-full gap-2">
-            @if($isEditing)
-                <div class="flex gap-2 mr-auto">
-                    <x-noerd::button variant="secondary" wire:click="copy" wire:confirm="{{ __('Only the collection structure will be copied, not the entries. Continue?') }}">
-                        {{ __('Copy') }}
-                    </x-noerd::button>
-                </div>
-            @endif
             <x-noerd::delete-save-bar :showDelete="$isEditing" deleteMessage="{{ __('Warning: The collection and all associated entries (:count entries) will be permanently deleted. Continue?', ['count' => $this->entryCount]) }}" />
         </div>
     </x-slot:footer>

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +17,7 @@ class FormRequest extends Model
 
     protected $guarded = [];
 
-    protected $table = 'form_requests';
+    protected $table = 'cms_form_requests';
 
     public function formType(): BelongsTo
     {

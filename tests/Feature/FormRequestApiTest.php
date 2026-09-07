@@ -1,19 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Queue;
 use Noerd\Cms\Jobs\SendFormConfirmationEmail;
 use Noerd\Cms\Models\FormType;
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Models\NoerdUser;
 use Noerd\Models\Tenant;
 
-uses(Tests\TestCase::class, RefreshDatabase::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
+uses(CreatesCmsUser::class);
 
 it('stores a form request via API using user api token', function (): void {
     // Arrange: create a tenant, its form type and a user with api token
-    $tenant = Tenant::factory()->create();
+    $tenant = $this->createCmsTenant();
     $formType = FormType::factory()->create([
         'tenant_id' => $tenant->id,
         'key' => 'contact',
@@ -38,7 +42,7 @@ it('stores a form request via API using user api token', function (): void {
 
     // Assert
     $response->assertCreated();
-    $this->assertDatabaseHas('form_requests', [
+    $this->assertDatabaseHas('cms_form_requests', [
         'tenant_id' => $tenant->id,
         'form' => 'contact',
         'form_type_id' => $formType->id,
@@ -46,7 +50,7 @@ it('stores a form request via API using user api token', function (): void {
 });
 
 it('rejects a submission for an unknown form type', function (): void {
-    $tenant = Tenant::factory()->create();
+    $tenant = $this->createCmsTenant();
     NoerdUser::factory()->create(['api_token' => 'unknown_form_token']);
     TenantHelper::setSelectedTenantId($tenant->id);
 
@@ -57,13 +61,13 @@ it('rejects a submission for an unknown form type', function (): void {
         ])
         ->assertStatus(422);
 
-    $this->assertDatabaseMissing('form_requests', ['form' => 'does-not-exist']);
+    $this->assertDatabaseMissing('cms_form_requests', ['form' => 'does-not-exist']);
 });
 
 it('validates the submission against the form YAML and dispatches the email job', function (): void {
     Queue::fake();
 
-    $tenant = Tenant::factory()->create();
+    $tenant = $this->createCmsTenant();
 
     // FormType::loadYmlConfig() accepts an ABSOLUTE path, so the fixture lives in
     // the throwaway testing storage instead of the host's tracked app-configs.
@@ -110,11 +114,11 @@ it('validates the submission against the form YAML and dispatches the email job'
         ]);
 
     $response->assertCreated();
-    $this->assertDatabaseHas('form_requests', [
+    $this->assertDatabaseHas('cms_form_requests', [
         'id' => $response->json('id'),
         'data->email' => 'max@example.com',
     ]);
-    $this->assertDatabaseMissing('form_requests', [
+    $this->assertDatabaseMissing('cms_form_requests', [
         'id' => $response->json('id'),
         'data->undeclared' => 'dropped',
     ]);
@@ -130,8 +134,8 @@ it('stores the form request under the tenant resolved for the token user', funct
     // carries no column of its own and the persisted copy on the user's settings
     // row is only the starting point restored at login. The stored form request
     // must carry the tenant the middleware resolved, not a stale persisted value.
-    $resolvedTenant = Tenant::factory()->create();
-    $stalePersistedTenant = Tenant::factory()->create();
+    $resolvedTenant = $this->createCmsTenant();
+    $stalePersistedTenant = $this->createCmsTenant();
     FormType::factory()->create([
         'tenant_id' => $resolvedTenant->id,
         'key' => 'contact',
@@ -152,11 +156,11 @@ it('stores the form request under the tenant resolved for the token user', funct
         ]);
 
     $response->assertCreated();
-    $this->assertDatabaseHas('form_requests', [
+    $this->assertDatabaseHas('cms_form_requests', [
         'id' => $response->json('id'),
         'tenant_id' => $resolvedTenant->id,
     ]);
-    $this->assertDatabaseMissing('form_requests', [
+    $this->assertDatabaseMissing('cms_form_requests', [
         'id' => $response->json('id'),
         'tenant_id' => $stalePersistedTenant->id,
     ]);
@@ -165,8 +169,8 @@ it('stores the form request under the tenant resolved for the token user', funct
 it('rejects a form key that belongs to another tenant', function (): void {
     // The token resolves tenant A; the form key exists only for tenant B. The
     // controller must not reach across tenants — no row, no 201.
-    $tenantA = Tenant::factory()->create();
-    $tenantB = Tenant::factory()->create();
+    $tenantA = $this->createCmsTenant();
+    $tenantB = $this->createCmsTenant();
 
     $foreignFormType = FormType::factory()->create([
         'tenant_id' => $tenantB->id,
@@ -183,6 +187,6 @@ it('rejects a form key that belongs to another tenant', function (): void {
         ])
         ->assertStatus(422);
 
-    $this->assertDatabaseMissing('form_requests', ['form' => 'foreign-contact']);
-    $this->assertDatabaseMissing('form_requests', ['form_type_id' => $foreignFormType->id]);
+    $this->assertDatabaseMissing('cms_form_requests', ['form' => 'foreign-contact']);
+    $this->assertDatabaseMissing('cms_form_requests', ['form_type_id' => $foreignFormType->id]);
 });

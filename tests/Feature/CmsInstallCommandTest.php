@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Noerd\Models\TenantApp;
 
-uses(Tests\TestCase::class, RefreshDatabase::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 
 /*
  | The installer writes into base_path() (app-configs, config, .claude/skills)

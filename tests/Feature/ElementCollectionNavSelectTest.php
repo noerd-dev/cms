@@ -1,15 +1,17 @@
 <?php
 
-use Illuminate\Support\ViewErrorBag;
+declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Navigation\CollectionsNavigationProvider;
 use Noerd\Cms\Navigation\PageCollectionsNavigationProvider;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
-use Tests\TestCase;
+use Noerd\Services\FieldTypeRegistry;
 
-uses(TestCase::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
@@ -55,11 +57,12 @@ it('excludes element collections from the collection-select field options', func
         'Versteckte Triggers',
     );
 
-    $html = view('cms::components.forms.input-collection-select', [
-        'field' => ['name' => 'rel', 'label' => 'Relation', 'type' => 'collection-select'],
-        'errors' => new ViewErrorBag(),
-    ])->render();
+    // The options are resolved by the registered field type, never in the template.
+    $props = app(FieldTypeRegistry::class)
+        ->resolve('collection-select')
+        ->resolveProps(['name' => 'rel', 'label' => 'Relation', 'type' => 'collection-select']);
+    $labels = collect($props['field']['options'])->pluck('label')->all();
 
-    expect($html)->toContain('Sichtbare Collection')
-        ->and($html)->not->toContain('Versteckte Triggers');
+    expect($labels)->toContain('Sichtbare Collection')
+        ->and($labels)->not->toContain('Versteckte Triggers');
 });

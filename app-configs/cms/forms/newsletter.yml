@@ -1,18 +1,18 @@
 key: newsletter
-title: Newsletter-Anmeldung
-description: 'Formular für Newsletter-Abonnements'
+title: Newsletter Signup
+description: 'Form for newsletter subscriptions'
 send_email: true
-email_subject: 'Newsletter-Anmeldung: {{field:email}}'
+email_subject: 'Newsletter signup: {{field:email}}'
 email_body: |
-  <h2>Neue Newsletter-Anmeldung</h2>
-  <p><strong>E-Mail:</strong> {{field:email}}</p>
+  <h2>New newsletter signup</h2>
+  <p><strong>Email:</strong> {{field:email}}</p>
   <p><strong>Name:</strong> {{field:name}}</p>
   <hr>
-  <p><small>Angemeldet am {{submission_date}}</small></p>
+  <p><small>Signed up on {{submission_date}}</small></p>
 notification_email: newsletter@example.com
 fields:
   - name: email
-    label: E-Mail-Adresse
+    label: Email address
     type: email
     required: true
     validation:
@@ -20,9 +20,9 @@ fields:
       - email
       - 'max:255'
     error_messages:
-      required: 'Bitte geben Sie Ihre E-Mail-Adresse ein.'
-      email: 'Bitte geben Sie eine gültige E-Mail-Adresse ein.'
-    placeholder: ihre@email.de
+      required: 'Please enter your email address.'
+      email: 'Please enter a valid email address.'
+    placeholder: you@example.com
   - name: name
     label: 'Name (optional)'
     type: text
@@ -31,6 +31,6 @@ fields:
       - nullable
       - string
       - 'max:255'
-    placeholder: 'Ihr Name'
-success_message: 'Vielen Dank! Sie haben sich erfolgreich für unseren Newsletter angemeldet.'
-submit_button_text: 'Jetzt anmelden'
+    placeholder: 'Your name'
+success_message: 'Thank you! You have successfully subscribed to our newsletter.'
+submit_button_text: 'Subscribe now'

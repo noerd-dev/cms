@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -13,17 +15,16 @@ class CmsLanguageFactory extends Factory
     public function definition(): array
     {
         // Every tenant already owns `en` through ensureDefaultLanguageForTenant(),
-        // and cms_languages is unique per (tenant_id, code). Rolling that one code
-        // therefore collides, which made any test creating a language for an
-        // existing tenant fail on the dice rather than on its own behaviour.
-        do {
-            $code = $this->faker->unique()->languageCode();
-        } while ($code === 'en');
+        // and cms_languages is unique per (tenant_id, code) — so the codes are
+        // dealt deterministically from a fixed pool that never contains `en`.
+        static $sequence = 0;
+        $pool = ['de', 'fr', 'es', 'it', 'nl', 'da', 'sv', 'pl', 'pt', 'cs', 'fi', 'hu', 'no', 'ro', 'tr'];
+        $code = $pool[$sequence++ % count($pool)];
 
         return [
             'tenant_id' => Tenant::factory(),
             'code' => $code,
-            'name' => $this->faker->word(),
+            'name' => mb_strtoupper($code),
         ];
     }
 

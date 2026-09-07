@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Builder;
@@ -15,6 +17,8 @@ class Article extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    protected $table = 'cms_articles';
 
     protected $attributes = [
         'is_active' => true,

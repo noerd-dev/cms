@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -9,10 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Noerd\Cms\Database\Factories\NavigationFactory;
 use Noerd\Traits\BelongsToTenant;
+use Noerd\Traits\GuardedByObjectPermission;
 
 class Navigation extends Model
 {
     use BelongsToTenant;
+    use GuardedByObjectPermission;
     use HasFactory;
 
     protected $guarded = [];

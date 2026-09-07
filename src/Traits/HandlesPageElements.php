@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Traits;
 
+use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Support\CmsLanguageCodes;
 
 trait HandlesPageElements
 {
     /**
-     * Process page elements for frontend rendering
-     *
-     * @param  mixed  $page
+     * Process page elements for frontend rendering. Typed against the base
+     * model: the website frontend passes its own Page model with an
+     * `elements()` relation.
      */
-    public function processPageElements($page, string $selectedLanguage = 'de'): array
+    public function processPageElements(?Model $page, string $selectedLanguage): array
     {
         $elements = [];
 
@@ -137,7 +140,7 @@ trait HandlesPageElements
     /**
      * Localize element data by extracting the correct language value
      */
-    protected function localizeElementData(array $data, string $selectedLanguage = 'de'): array
+    protected function localizeElementData(array $data, string $selectedLanguage): array
     {
         return $this->localizeArray($data, $selectedLanguage);
     }
@@ -151,7 +154,7 @@ trait HandlesPageElements
 
         // The tenant's default language is the fallback when a value has not been
         // translated yet — never a hard-coded 'de'.
-        $fallbackLanguage = CmsLanguageCodes::active()[0] ?? 'de';
+        $fallbackLanguage = CmsLanguageCodes::active()[0];
 
         foreach ($data as $key => $value) {
             if (is_array($value)) {

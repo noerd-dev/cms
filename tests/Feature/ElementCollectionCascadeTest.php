@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
-use Tests\TestCase;
 
-uses(TestCase::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
@@ -52,7 +54,7 @@ it('leaves element collections of other entries intact', function (): void {
 
 it('deletes an element_page-owned element collection when the element instance is deleted', function (): void {
     $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Page']]);
-    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'team_section', 'data' => '{}', 'sort' => 0]);
+    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'team_section', 'data' => [], 'sort' => 0]);
 
     $elementCollection = app(ElementCollectionService::class)->ensure(
         ElementCollectionService::OWNER_ELEMENT_PAGE,
@@ -60,7 +62,7 @@ it('deletes an element_page-owned element collection when the element instance i
         $this->tenant->id,
         'members',
         [['name' => 'name', 'type' => 'translatableText']],
-        'Team-Mitglieder',
+        'Team members',
     );
 
     $element->delete();
@@ -70,7 +72,7 @@ it('deletes an element_page-owned element collection when the element instance i
 
 it('deletes element_page-owned collections when the host page is deleted', function (): void {
     $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Page']]);
-    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'team_section', 'data' => '{}', 'sort' => 0]);
+    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'team_section', 'data' => [], 'sort' => 0]);
 
     $elementCollection = app(ElementCollectionService::class)->ensure(
         ElementCollectionService::OWNER_ELEMENT_PAGE,
@@ -78,7 +80,7 @@ it('deletes element_page-owned collections when the host page is deleted', funct
         $this->tenant->id,
         'members',
         [['name' => 'name', 'type' => 'translatableText']],
-        'Team-Mitglieder',
+        'Team members',
     );
 
     $page->delete();

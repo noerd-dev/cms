@@ -1,32 +1,43 @@
 <?php
 
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
-use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Services\CollectionEntryStore;
+use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
-use Noerd\Helpers\TenantHelper;
 use Noerd\Media\Models\Media;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component
 {
+    use LanguageFilterTrait;
     use NoerdDetail;
+
+    public $detailModel = Page::class;
 
     /**
      * Override the trait's URL-bound modelId with a dedicated alias. This editor
      * is opened as a modal nested inside the entry editor (which already binds
      * ?pageId), so a shared URL param would clobber the id on first open. The
-     * dedicated ?entry param deep-links the open row without that conflict.
+     * dedicated ?entryId param deep-links the open row without that conflict.
      */
-    public ?string $detailPrimary = 'entry';
+    public ?string $detailPrimary = 'entryId';
 
     public ?string $collectionKey = null;
 
     public ?array $collectionLayout = null;
+
+    /**
+     * Correlates a media-picker round trip; kept out of $detailData so it can
+     * never leak into the persisted row data.
+     */
+    #[Locked]
+    public ?string $mediaToken = null;
 
     public function mount(?string $collectionKey = null): void
     {
@@ -55,31 +66,13 @@ new class extends Component
             return;
         }
 
-        $fieldData = [];
-        foreach ($this->collectionLayout['fields'] ?? [] as $field) {
-            $key = str_replace('detailData.', '', $field['name'] ?? '');
-            if ($key === '') {
-                continue;
-            }
-            $fieldData[$key] = $this->detailData[$key] ?? null;
-        }
-
-        $attributes = [
-            'tenant_id' => $elementCollection->tenant_id,
-            'collection_id' => $elementCollection->id,
-            'data' => $fieldData,
-            'is_active' => true,
-        ];
-
-        if ($this->modelId) {
-            $attributes['sort'] = (int) ($this->detailData['sort'] ?? 0);
-            $page = Page::updateOrCreate(['id' => $this->modelId], $attributes);
-        } else {
-            // Append new rows after the existing ones.
-            $attributes['sort'] = (int) ($elementCollection->rows()->max('sort') ?? -1) + 1;
-            $page = Page::create($attributes);
-            $this->modelId = $page->id;
-        }
+        $page = app(CollectionEntryStore::class)->persistRow(
+            $elementCollection,
+            $this->collectionLayout,
+            $this->detailData,
+            $this->modelId ? (int) $this->modelId : null,
+        );
+        $this->modelId = $page->id;
 
         $this->storeProcess($page);
         $this->dispatch('refreshList-collection-entries-list');
@@ -88,18 +81,17 @@ new class extends Component
 
     public function copy(): void
     {
+        // copy() is not covered by the generic store/delete guard.
+        if (! $this->canSaveObject()) {
+            return;
+        }
+
         $sourceRow = Page::find($this->modelId);
         if (! $sourceRow) {
             return;
         }
 
-        Page::where('collection_id', $sourceRow->collection_id)
-            ->where('sort', '>', $sourceRow->sort ?? 0)
-            ->increment('sort');
-
-        $newRow = $sourceRow->replicate(['id']);
-        $newRow->sort = ($sourceRow->sort ?? 0) + 1;
-        $newRow->save();
+        $newRow = app(CollectionEntryStore::class)->duplicateRow($sourceRow);
 
         $this->modelId = $newRow->id;
         $this->detailData['sort'] = $newRow->sort;
@@ -126,16 +118,15 @@ new class extends Component
      */
     public function openSelectMediaModal(string $fieldName): void
     {
-        $token = uniqid('media_', true);
-        $this->detailData['__mediaToken'] = $token;
+        $this->mediaToken = uniqid('media_', true);
 
-        Noerd::modal('media::media-list', ['selectMode' => true, 'selectContext' => $fieldName, 'selectToken' => $token]);
+        Noerd::modal('media::media-list', ['selectMode' => true, 'selectContext' => $fieldName, 'selectToken' => $this->mediaToken]);
     }
 
     #[On('mediaSelected')]
     public function mediaSelected(int $mediaId, ?string $fieldName = 'image', ?string $token = null): void
     {
-        if (($this->detailData['__mediaToken'] ?? null) !== $token) {
+        if ($this->mediaToken === null || $this->mediaToken !== $token) {
             return;
         }
 
@@ -146,7 +137,7 @@ new class extends Component
         }
 
         $this->detailData[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
-        unset($this->detailData['__mediaToken']);
+        $this->mediaToken = null;
     }
 
     public function deleteImage(string $fieldName): void
@@ -197,17 +188,6 @@ new class extends Component
         return $data;
     }
 
-    /**
-     * @return array<int, string>
-     */
-    private function activeLanguageCodes(): array
-    {
-        $tenantId = auth()->user()?->selected_tenant_id ?? TenantHelper::getSelectedTenantId();
-
-        $codes = CmsLanguage::where('tenant_id', $tenantId)->pluck('code')->all();
-
-        return $codes ?: ['de'];
-    }
 }; ?>
 
 <x-noerd::page>

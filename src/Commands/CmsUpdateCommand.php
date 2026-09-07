@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Commands;
 
 class CmsUpdateCommand extends CmsInstallCommand
@@ -13,6 +15,10 @@ class CmsUpdateCommand extends CmsInstallCommand
         $result = $this->runModuleUpdate();
 
         if ($result === 0) {
+            // A project installed before a config key existed gets the file;
+            // an existing file is never touched.
+            $this->publishConfigIfMissing();
+
             // Idempotent post-install step: tenants created since the install
             // get their starter homepage too.
             $this->seedDefaultHomepage();

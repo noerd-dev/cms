@@ -85,22 +85,14 @@ curl -X POST /api/cms/form-requests \
   -d '{"data": {"name": "John"}, "form": "contact"}'
 ```
 
-### 3. Query Parameter
-
-```bash
-curl -X POST "/api/cms/form-requests?api_token=YOUR_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"data": {"name": "John"}, "form": "contact"}'
-```
-
 ## Authentication Flow
 
 The `CmsApiAuth` middleware:
 
-1. Extracts the token from the request (header or query param)
+1. Extracts the token from the `Authorization: Bearer` or `X-API-Key` header (never from the query string — query parameters end up in access logs)
 2. Looks up a `NoerdUser` with a matching `api_token`
 3. Verifies the user has a `selected_tenant_id`
-4. Validates the tenant exists
+4. Validates the tenant exists and runs the CMS app
 5. Attaches `tenant_id`, `tenant`, and `user` to the request attributes
 6. Returns `401 Unauthorized` JSON response on any failure
 

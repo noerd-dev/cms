@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Website\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +26,6 @@ class Redirect extends Model
         $path = preg_split('/[?#]/', mb_trim($path))[0] ?? '';
         $path = mb_trim(mb_strtolower(mb_trim($path)), '/');
 
-        return $path === '' ? '/' : '/'.$path;
+        return $path === '' ? '/' : '/' . $path;
     }
 }

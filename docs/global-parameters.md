@@ -22,8 +22,9 @@ Navigate to `/cms/global-parameters` to manage parameters. Each parameter has:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `key` | text | Unique parameter identifier (e.g., `footer_text`, `phone_number`) |
-| `value` | text | Parameter value |
+| `key` | text | Parameter identifier, unique per tenant (e.g., `footer_text`, `phone_number`) |
+| `value` | text | Parameter value — a JSON language map when the parameter is translatable |
+| `is_translatable` | checkbox | Whether the value is kept per language |
 
 ## Multi-Language Support
 
@@ -49,10 +50,14 @@ The `GlobalParameter` model:
 
 ## Accessing Parameters
 
-Global parameters can be queried by key:
+Global parameters can be queried by key. Inside a noerd session the tenant
+scope applies automatically; in a job or command the tenant must be explicit:
 
 ```php
-$value = GlobalParameter::where('key', 'footer_text')->first()?->value;
+$value = GlobalParameter::query()
+    ->where('tenant_id', $tenantId)
+    ->where('key', 'footer_text')
+    ->value('value');
 ```
 
 ## Next Steps

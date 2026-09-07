@@ -42,17 +42,23 @@ tenant is created.
 
 ## Configuration
 
-`app-modules/cms/config/noerd_cms.php`:
+`noerd:install-cms` publishes `config/noerd_cms.php` (also available through
+`php artisan vendor:publish --tag=cms-config`; `noerd:update-cms` publishes it
+when missing):
 
 ```php
 return [
     'website_url' => env('CMS_WEBSITE_URL', ''),
     'page_elements_path' => env('CMS_PAGE_ELEMENTS_PATH'),
+    'layout_path' => env('CMS_LAYOUT_PATH', 'app-modules/website/resources/views/components/layouts'),
+    'collection_field_types' => [/* type => label */],
 ];
 ```
 
 Set `CMS_WEBSITE_URL` in `.env` for live-preview links; `CMS_PAGE_ELEMENTS_PATH`
-optionally adds an extra page-element directory.
+optionally adds an extra page-element directory; `CMS_LAYOUT_PATH` points the
+page editor at the frontend layouts; `collection_field_types` lists the field
+types a collection definition may use.
 
 ## Core Features
 
@@ -63,6 +69,7 @@ optionally adds an extra page-element directory.
 | Collections | Database-defined content types (services, projects, sliders). | [docs/collections.md](docs/collections.md) |
 | Element Collections | Per-element row lists owned by a page entry or element instance. | see below |
 | Navigation | Hierarchical, multi-language site navigation. | [docs/navigation.md](docs/navigation.md) |
+| Redirects | Managed redirects for retired page paths. | [docs/redirects.md](docs/redirects.md) |
 | Forms | YAML-defined forms with email notifications. | [docs/forms.md](docs/forms.md) |
 | Articles | Blog/news posts with authors and publication dates. | [docs/articles.md](docs/articles.md) |
 | Languages | Per-tenant language configuration. | [docs/languages.md](docs/languages.md) |
@@ -126,6 +133,7 @@ group and `app-access:cms`.
 | `/cms/pages` | Pages list |
 | `/cms/page/{modelId}` | Page editor |
 | `/cms/navigation` | Navigation list |
+| `/cms/redirects` | Redirects list |
 | `/cms/collections` | Collection entries |
 | `/cms/collection-definitions` | Collection definitions |
 | `/cms/form-requests` | Form submissions |
@@ -140,18 +148,22 @@ group and `app-access:cms`.
 
 | Table | Purpose |
 |---|---|
-| `pages` | Pages and collection entries |
-| `element_page` | Page-element associations with JSON data |
-| `collections` | Per-tenant collection instances (including element collections) |
-| `collection_definitions` | Collection definitions (fields, titles, hasPage) |
+| `cms_pages` | Pages and collection entries |
+| `cms_page_elements` | Page-element associations with JSON data |
+| `cms_collections` | Per-tenant collection instances (including element collections) |
+| `cms_collection_definitions` | Collection definitions (fields, titles, hasPage) |
 | `cms_navigations` | Navigation items with hierarchy |
-| `form_types` | Form definitions synced from YAML |
-| `form_requests` | Submitted form data |
+| `cms_redirects` | Managed redirects for retired page paths |
+| `cms_form_types` | Form definitions synced from YAML |
+| `cms_form_requests` | Submitted form data |
 | `cms_languages` | Language configuration per tenant |
 | `cms_settings` | CMS settings per tenant |
-| `global_parameters` | Key/value site-wide parameters |
-| `authors` | Article authors |
-| `articles` | Articles |
+| `cms_global_parameters` | Key/value site-wide parameters (unique per tenant and key) |
+| `cms_authors` | Article authors |
+| `cms_articles` | Articles |
+
+Every table carries the `cms_` prefix, so the module never collides with a
+host application's own `pages` or `articles` table.
 
 ## File Locations
 
@@ -175,7 +187,7 @@ app-modules/cms/src/Repositories/   # Collection definition repositories
 app-modules/cms/src/Traits/         # HandlesPageElements, LanguageFilterTrait
 app-modules/cms/routes/             # Web and API routes
 app-modules/cms/resources/views/    # Livewire components and Blade views
-app-modules/cms/config/             # noerd_cms.php
+app-modules/cms/config/             # noerd_cms.php (published to config/ by noerd:install-cms)
 app-modules/cms/database/           # Migrations, factories, seeders
 ```
 
@@ -190,7 +202,12 @@ created, a default language is set up via
 ## Access Control
 
 Access is governed by the generic noerd app permission — there is no
-module-specific gate. Routes use the `app-access:cms` middleware; tenant-scoped
+module-specific gate. Routes use the `app-access:cms` middleware. The
+tenant-wide configuration screens (settings, languages, collection
+definitions) are admin-only: they are registered with
+`ComponentAccessGuard::registerAdminComponents()`, which rejects every mount
+of those components (route, modal, component page) for a non-admin with 403.
+Tenant-scoped
 chrome such as the "To Website" quick-menu button checks
 `AccessHelper::canUseApp('CMS')` (CMS app assigned to the selected tenant AND
 allowed by the user's app permission). The button is declared in
@@ -206,12 +223,22 @@ where English equals German are omitted.
 
 ## Testing
 
+Inside a host project (sequentially — the test database is shared):
+
 ```bash
 php artisan test --compact app-modules/cms/tests
 ```
 
-The module ships unit tests, feature tests, and component (Livewire) tests
-covering collections, element collections, forms, navigation, and the API.
+Standalone (Orchestra Testbench on sqlite, the same suite CI runs):
+
+```bash
+composer install
+vendor/bin/pest --compact
+```
+
+The Pest suite covers the Livewire components, the services, the form API,
+the install/update commands and the access rules. Tests prove mechanics,
+never the current YAML configuration.
 
 ## Further Reading
 

@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Noerd\Cms\Models\Page;
+use Noerd\Models\Tenant;
 
 class PageFactory extends Factory
 {
@@ -15,7 +18,7 @@ class PageFactory extends Factory
         $enTitle = $this->faker->sentence(3);
 
         return [
-            'tenant_id' => 1,
+            'tenant_id' => Tenant::factory(),
             'name' => [
                 'de' => $deTitle,
                 'en' => $enTitle,

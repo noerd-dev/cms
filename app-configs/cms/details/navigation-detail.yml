@@ -26,6 +26,8 @@ fields:
   - name: detailData.collection_id
     label: 'Collection as Subpages (optional)'
     type: select
+    optionsMethod: collectionOptions
+    placeholder: 'Please select...'
     colspan: 6
   - name: detailData.sort_order
     label: Sort Order

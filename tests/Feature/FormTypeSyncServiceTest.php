@@ -7,10 +7,10 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Noerd\Cms\Models\FormType;
 use Noerd\Cms\Services\FormTypeSyncService;
-use Noerd\Models\Tenant;
-use Noerd\Models\TenantApp;
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
-uses(Tests\TestCase::class, RefreshDatabase::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
+uses(CreatesCmsUser::class);
 
 /*
  | The sync reads base_path('app-configs/cms/forms'). The tests therefore run
@@ -41,26 +41,9 @@ function zzWriteFormFixtureYaml(string $formsPath, string $filename, string $yam
     return $file;
 }
 
-/**
- * The sync only targets tenants running the CMS app — every fixture tenant
- * therefore gets the CMS tenant app attached.
- */
-function zzCreateCmsSyncTenant(): Tenant
-{
-    $tenant = Tenant::factory()->create();
-
-    $cmsApp = TenantApp::firstOrCreate(
-        ['name' => 'CMS'],
-        ['title' => 'CMS', 'icon' => 'cms::icons.app', 'route' => 'cms.dashboard', 'is_active' => true],
-    );
-    $tenant->tenantApps()->attach($cmsApp->id);
-
-    return $tenant;
-}
-
 it('creates form type rows for every tenant on the initial sync', function (): void {
-    $tenantA = zzCreateCmsSyncTenant();
-    $tenantB = zzCreateCmsSyncTenant();
+    $tenantA = $this->createCmsTenant();
+    $tenantB = $this->createCmsTenant();
 
     zzWriteFormFixtureYaml($this->formsPath, 'fixture-contact.yml', <<<'YAML'
 key: fixture-contact
@@ -74,7 +57,7 @@ YAML);
     expect($exitCode)->toBe(0);
 
     foreach ([$tenantA, $tenantB] as $tenant) {
-        $this->assertDatabaseHas('form_types', [
+        $this->assertDatabaseHas('cms_form_types', [
             'tenant_id' => $tenant->id,
             'key' => 'fixture-contact',
             'title' => 'Fixture Contact',
@@ -87,7 +70,7 @@ YAML);
 });
 
 it('skips the second sync when the file mtime has not changed', function (): void {
-    zzCreateCmsSyncTenant();
+    $this->createCmsTenant();
 
     zzWriteFormFixtureYaml($this->formsPath, 'fixture-skip.yml', <<<'YAML'
 key: fixture-skip
@@ -111,7 +94,7 @@ YAML);
 });
 
 it('re-syncs when the yaml file is touched', function (): void {
-    zzCreateCmsSyncTenant();
+    $this->createCmsTenant();
 
     $file = zzWriteFormFixtureYaml($this->formsPath, 'fixture-touch.yml', <<<'YAML'
 key: fixture-touch
@@ -133,7 +116,7 @@ YAML);
 });
 
 it('force re-syncs files regardless of mtime', function (): void {
-    zzCreateCmsSyncTenant();
+    $this->createCmsTenant();
 
     zzWriteFormFixtureYaml($this->formsPath, 'fixture-force.yml', <<<'YAML'
 key: fixture-force
@@ -153,7 +136,7 @@ YAML);
 });
 
 it('reports an error for a yaml file without a key', function (): void {
-    zzCreateCmsSyncTenant();
+    $this->createCmsTenant();
 
     zzWriteFormFixtureYaml($this->formsPath, 'fixture-broken.yml', <<<'YAML'
 title: Broken Fixture Without Key
@@ -191,7 +174,7 @@ it('handles a missing or empty forms directory gracefully', function (): void {
 });
 
 it('does not duplicate rows when syncing repeatedly', function (): void {
-    $tenant = zzCreateCmsSyncTenant();
+    $tenant = $this->createCmsTenant();
 
     zzWriteFormFixtureYaml($this->formsPath, 'fixture-idempotent.yml', <<<'YAML'
 key: fixture-idempotent

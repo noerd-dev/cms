@@ -1,39 +1,15 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+declare(strict_types=1);
 
 /*
-|--------------------------------------------------------------------------
-| Global test helpers
-|--------------------------------------------------------------------------
-|
-| These tests bind Tests\TestCase (the host application's), not
-| Noerd\Tests\TestCase, so the noerd helpers (validDetailPayload,
-| requiredLayoutFields, registerTestLivewireRoute, ...) are not loaded through
-| that class. They are deliberately absent from the production composer
-| autoload, so load them explicitly. HelperLoader resolves the file through the
-| autoloader and therefore works whether noerd is installed as a composer
-| package or as a submodule.
-|
-*/
-
-\Noerd\Tests\HelperLoader::load();
-
-/*
-|--------------------------------------------------------------------------
-| Test Case
-|--------------------------------------------------------------------------
-|
-| The closure you provide to your test functions is always bound to a specific PHPUnit test
-| case class. By default, that class is "PHPUnit\Framework\TestCase". Of course, you may
-| need to change it using the "uses()" function to bind a different classes or traits.
-|
-| There is deliberately NO global fixture here: the single source of the
-| tenant/user/language fixture is the CreatesCmsUser trait. A global
-| beforeEach next to it created a SECOND tenant for every test that also
-| called createUserWithCmsAccess().
-|
-*/
-
-uses(TestCase::class, RefreshDatabase::class)->in(__DIR__);
+ | This file is loaded ONLY when Pest runs from the package root (Pest loads a
+ | single Pest.php at <rootPath>/tests). When the suite runs from a host
+ | application root (php artisan test app-modules/cms/tests), the host's
+ | tests/Pest.php is loaded instead and this file is skipped entirely.
+ |
+ | That is why every test file binds Noerd\Cms\Tests\TestCase itself via
+ | uses() — do not move those bindings here, or host-root runs would lose them.
+ | The global noerd test helpers (validDetailPayload, requiredLayoutFields, …)
+ | are loaded by Noerd\Tests\TestCase, which every file binds.
+ */

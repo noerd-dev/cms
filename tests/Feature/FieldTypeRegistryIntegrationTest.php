@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Noerd\Services\FieldTypeRegistry;
+use Noerd\Services\RelationFieldRegistry;
+
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
+
+it('registers cms field types in the shared field type registry', function (): void {
+    $registry = app(FieldTypeRegistry::class);
+
+    expect($registry->has('collection-select'))->toBeTrue();
+    expect($registry->resolve('collection-select')?->kind)->toBe('include');
+    expect($registry->resolve('collection-select')?->target)->toBe('cms::components.forms.input-collection-select');
+
+    expect($registry->has('pageRelation'))->toBeTrue();
+    expect($registry->resolve('pageRelation')?->kind)->toBe('livewire');
+    expect($registry->resolve('pageRelation')?->target)->toBe('noerd-relation-field');
+});
+
+it('resolves pageRelation props from nested detail data', function (): void {
+    $registry = app(FieldTypeRegistry::class);
+    $definition = $registry->resolve('pageRelation');
+
+    $component = new class {
+        public array $detailData = [
+            'custom_attributes' => [
+                'page_id' => '17',
+            ],
+        ];
+    };
+
+    $props = $definition?->resolveProps([
+        'name' => 'detailData.custom_attributes.page_id',
+        'label' => 'Page',
+        'required' => true,
+    ], $component, null, 99);
+
+    // Only the keys this module contributes are asserted — the rest of the prop
+    // set is the noerd relation-field contract and is proven there.
+    expect($props)->toMatchArray([
+        'relationType' => 'pageRelation',
+        'fieldName' => 'detailData.custom_attributes.page_id',
+        'value' => '17',
+        'modelId' => 99,
+    ]);
+
+    expect($definition?->resolveKey([
+        'name' => 'detailData.custom_attributes.page_id',
+    ], $component, null, 99))->toBe('pageRelation-detailData.custom_attributes.page_id-99');
+});
+
+it('registers pageRelation metadata in the relation field registry', function (): void {
+    $registry = app(RelationFieldRegistry::class);
+    $definition = $registry->resolve('pageRelation');
+
+    expect($definition)->not->toBeNull();
+    expect($definition?->listComponent)->toBe('cms::pages-list');
+    expect($definition?->getDetailComponent())->toBe('cms::page-detail');
+    expect($definition?->getSelectEvent())->toBe('pageSelected');
+});

@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Website\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Collection extends Model
 {
-    protected $table = 'collections';
+    protected $table = 'cms_collections';
 
     protected $guarded = [];
 

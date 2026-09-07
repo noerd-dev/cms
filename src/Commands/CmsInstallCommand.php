@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Commands;
 
 use Exception;
@@ -70,7 +72,7 @@ class CmsInstallCommand extends Command
 
     protected function getAppIcon(): string
     {
-        return 'cms::icons.app';
+        return 'heroicon:outline:rectangle-group';
     }
 
     protected function getAppRoute(): string
@@ -108,6 +110,23 @@ class CmsInstallCommand extends Command
         }
 
         copy($source, $destination);
+        $this->line('<info>Published config file:</info> config/noerd_cms.php');
+    }
+
+    /**
+     * Publish the config file only when the project does not have one yet —
+     * the prompt-free variant for the update command, so a new config key
+     * reaches an existing project without overwriting local changes.
+     */
+    protected function publishConfigIfMissing(): void
+    {
+        $destination = config_path('noerd_cms.php');
+
+        if (file_exists($destination)) {
+            return;
+        }
+
+        copy(__DIR__ . '/../../config/noerd_cms.php', $destination);
         $this->line('<info>Published config file:</info> config/noerd_cms.php');
     }
 

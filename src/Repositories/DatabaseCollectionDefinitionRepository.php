@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Repositories;
 
 use Illuminate\Support\Collection;
@@ -34,7 +36,9 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
             return collect();
         }
 
-        return CollectionDefinition::query()
+        // Memoized per request: the two navigation providers and the lists
+        // ask for the same definitions on one page render.
+        return self::$requestCache['all:' . $tenantId] ??= CollectionDefinition::query()
             ->where('tenant_id', $tenantId)
             ->orderBy('title_list')
             ->get()

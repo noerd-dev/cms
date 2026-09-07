@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Noerd\Cms\Models\CollectionDefinition;
+use Noerd\Models\Tenant;
 
 class CollectionDefinitionFactory extends Factory
 {
@@ -14,7 +17,7 @@ class CollectionDefinitionFactory extends Factory
         $slug = $this->faker->unique()->slug(2);
 
         return [
-            'tenant_id' => 1,
+            'tenant_id' => Tenant::factory(),
             'filename' => $slug,
             'key' => mb_strtoupper(str_replace('-', '_', $slug)),
             'title' => $this->faker->words(2, true),

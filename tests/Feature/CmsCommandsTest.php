@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 
-uses(Tests\TestCase::class, RefreshDatabase::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 
 it('registers the install and update commands', function (): void {
     $commands = Artisan::all();

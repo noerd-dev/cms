@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Website\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +12,7 @@ class Page extends Model
 {
     use HasFactory;
 
-    protected $table = 'pages';
+    protected $table = 'cms_pages';
 
     protected $guarded = [];
 

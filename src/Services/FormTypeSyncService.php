@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Services;
 
 use Carbon\Carbon;
@@ -11,6 +13,9 @@ use Symfony\Component\Yaml\Yaml;
 
 class FormTypeSyncService
 {
+    /** @var \Illuminate\Support\Collection<string, FormType> keyed by \"tenant:key\" */
+    protected \Illuminate\Support\Collection $existingFormTypes;
+
     protected int $synced = 0;
     protected int $skipped = 0;
     protected int $errors = 0;
@@ -44,15 +49,23 @@ class FormTypeSyncService
 
         // Only tenants that actually run the CMS app get form types — syncing
         // for every tenant would create orphan rows.
-        $tenants = $tenantId
-            ? Tenant::where('id', $tenantId)->get()
-            : Tenant::whereHas('tenantApps', fn($query) => $query->where('name', 'CMS'))->get();
+        $tenants = Tenant::query()
+            ->whereHas('tenantApps', fn($query) => $query->where('name', 'CMS'))
+            ->when($tenantId, fn($query) => $query->where('id', $tenantId))
+            ->get();
 
         if ($tenants->isEmpty()) {
             $this->messages[] = 'No tenants found.';
 
             return $this->getResults();
         }
+
+        // One query for every existing form type of the tenants instead of one
+        // per (file × tenant) pair.
+        $this->existingFormTypes = FormType::query()
+            ->whereIn('tenant_id', $tenants->pluck('id'))
+            ->get()
+            ->keyBy(fn(FormType $formType): string => $formType->tenant_id . ':' . $formType->key);
 
         foreach ($ymlFiles as $ymlFile) {
             foreach ($tenants as $tenant) {
@@ -82,9 +95,7 @@ class FormTypeSyncService
             $fileModifiedTime = Carbon::createFromTimestamp(File::lastModified($ymlFile));
 
             // Check if we need to sync
-            $existingFormType = FormType::where('tenant_id', $tenant->id)
-                ->where('key', $key)
-                ->first();
+            $existingFormType = $this->existingFormTypes->get($tenant->id . ':' . $key);
 
             if ($existingFormType && ! $force) {
                 // Skip if file hasn't been modified since last sync
