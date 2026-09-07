@@ -2,6 +2,11 @@ title: Navigation
 actions:
   - label: New Navigation Item
     route: cms.navigation.detail
+defaultSort:
+  field: sort_order
+  direction: asc
+notSortableColumns:
+  - page_name
 disableSearch: false
 columns:
   - field: name
@@ -9,7 +14,7 @@ columns:
     type: colored_text
   - field: navigation_key
     label: Key
-  - field: page_id
+  - field: page_name
     label: Page
   - field: link
     label: Link

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Services;
 
 use Noerd\Cms\Helpers\CollectionHelper;

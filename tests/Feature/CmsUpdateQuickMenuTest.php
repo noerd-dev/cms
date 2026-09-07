@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Yaml\Yaml;
-use Tests\TestCase;
 
-uses(TestCase::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 
 /*
  | The quick-menu writer is driven through the real update command against a

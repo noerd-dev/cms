@@ -1,4 +1,14 @@
 title: 'Form Requests'
+defaultSort:
+  field: created_at
+  direction: desc
+multiSelect: true
+bulkActions:
+  - label: Delete
+    action: deleteSelected
+    heroicon: trash
+    style: danger
+    confirm: Delete the selected form requests?
 disableSearch: false
 columns:
   - field: form

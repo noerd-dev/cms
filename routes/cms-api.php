@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Facades\Route;
 use Noerd\Cms\Http\Controllers\FormRequestController;
 

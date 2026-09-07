@@ -15,11 +15,6 @@ new class extends Component
 
     public $detailComponent = 'cms::redirect-detail';
 
-    public function mount(): void
-    {
-        $this->mountList();
-    }
-
     public function listData(): array
     {
         $rows = $this->listQuery($this->listModel)

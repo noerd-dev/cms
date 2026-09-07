@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,12 +24,16 @@ class CmsSettingFactory extends Factory
         ];
     }
 
+    /**
+     * A homepage of the SAME tenant. Resolved after creating, because inside a
+     * state closure the tenant_id is still the unresolved Tenant factory.
+     */
     public function withHomepage(): static
     {
-        return $this->state(fn(array $attributes): array => [
-            'homepage_page_id' => Page::factory()->state(
-                fn(): array => ['tenant_id' => $attributes['tenant_id']],
-            ),
-        ]);
+        return $this->afterCreating(function (CmsSetting $setting): void {
+            $setting->update([
+                'homepage_page_id' => Page::factory()->create(['tenant_id' => $setting->tenant_id])->id,
+            ]);
+        });
     }
 }

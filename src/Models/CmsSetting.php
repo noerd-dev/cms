@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Noerd\Cms\Database\Factories\CmsSettingFactory;
 
 class CmsSetting extends Model
 {
@@ -45,9 +48,9 @@ class CmsSetting extends Model
             ?: ((int) config('laravel-cookie-consent.cookie_lifetime') ?: self::DEFAULT_COOKIE_LIFETIME_DAYS);
     }
 
-    protected static function newFactory()
+    protected static function newFactory(): CmsSettingFactory
     {
-        return \Noerd\Cms\Database\Factories\CmsSettingFactory::new();
+        return CmsSettingFactory::new();
     }
 
     /**
@@ -56,6 +59,7 @@ class CmsSetting extends Model
     protected function casts(): array
     {
         return [
+            'homepage_page_id' => 'integer',
             'show_cookie_banner' => 'boolean',
             'cookie_lifetime_days' => 'integer',
         ];

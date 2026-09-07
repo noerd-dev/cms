@@ -1,5 +1,8 @@
 <?php
 
+declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Models\Page;
@@ -7,9 +10,8 @@ use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Repositories\ElementAwareCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
-use Tests\TestCase;
 
-uses(TestCase::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {

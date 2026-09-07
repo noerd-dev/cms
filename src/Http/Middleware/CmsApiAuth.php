@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Http\Middleware;
 
 use Closure;
@@ -16,7 +18,9 @@ class CmsApiAuth
      * Expects an API token of a user in either:
      * - Authorization: Bearer <token>
      * - X-API-Key: <token>
-     * - query parameter api_token
+     *
+     * Deliberately NOT in the query string: query parameters end up in access
+     * logs, browser history and Referer headers.
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -28,9 +32,6 @@ class CmsApiAuth
         }
         if (! $token) {
             $token = (string) $request->header('X-API-Key', '');
-        }
-        if (! $token) {
-            $token = (string) $request->query('api_token', '');
         }
 
         // One generic message for every failure mode: the response must not
@@ -46,6 +47,11 @@ class CmsApiAuth
 
         $tenant = Tenant::find($user->selected_tenant_id);
         if (! $tenant) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // A token only unlocks the CMS API for a tenant that runs the CMS app.
+        if (! $tenant->tenantApps()->where('name', 'CMS')->exists()) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 

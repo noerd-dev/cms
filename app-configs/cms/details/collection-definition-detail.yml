@@ -1,4 +1,9 @@
 title: Collection Definition
+actions:
+  - label: Copy
+    action: copy
+    heroicon: document-duplicate
+    confirm: Only the collection structure will be copied, not the entries. Continue?
 fields:
   - name: detailData.filename
     label: Filename

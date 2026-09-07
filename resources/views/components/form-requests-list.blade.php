@@ -11,7 +11,7 @@ new class extends Component {
 
     public ?string $detailRoute = 'cms.form-request.detail';
 
-    public $detailComponent = 'cms::form-request-page';
+    public $detailComponent = 'cms::form-request-detail';
 } ?>
 
 <x-noerd::page>

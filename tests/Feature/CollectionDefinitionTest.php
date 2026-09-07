@@ -1,5 +1,8 @@
 <?php
 
+declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
@@ -7,46 +10,28 @@ use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Cms\Tests\Traits\CreatesCollectionDefinitions;
+use Noerd\Enums\Profile;
 use Noerd\Helpers\NoerdAuth;
 use Noerd\Models\Tenant;
-use Tests\TestCase;
 
-uses(TestCase::class);
-uses(CreatesCmsUser::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
+uses(CreatesCmsUser::class, CreatesCollectionDefinitions::class);
 
 beforeEach(function (): void {
     DatabaseCollectionDefinitionRepository::resetCache();
     app()->forgetInstance(CollectionHelper::class);
 });
 
-/**
- * Create a "contacts" collection definition in the database for the given tenant.
- */
-function createContactsDefinition(int $tenantId): CollectionDefinition
-{
-    return CollectionDefinition::create([
-        'tenant_id' => $tenantId,
-        'filename' => 'contacts',
-        'key' => 'CONTACTS',
-        'title' => 'Kontakt',
-        'title_list' => 'Kontakte',
-        'description' => '',
-        'has_page' => true,
-        'fields' => [
-            ['name' => 'name', 'label' => 'Name', 'type' => 'translatableText', 'colspan' => 6],
-        ],
-    ]);
-}
-
 it('scopes entry counts to the current tenant', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
-    createContactsDefinition($tenant->id);
+    $this->zzContactsDefinition($tenant->id);
     $ownCollection = Collection::create([
         'tenant_id' => $tenant->id,
         'collection_key' => 'CONTACTS',
-        'name' => 'Kontakte',
+        'name' => 'Contacts',
     ]);
     Page::factory()->create(['tenant_id' => $tenant->id, 'collection_id' => $ownCollection->id]);
 
@@ -54,7 +39,7 @@ it('scopes entry counts to the current tenant', function (): void {
     $foreignCollection = Collection::create([
         'tenant_id' => $otherTenant->id,
         'collection_key' => 'CONTACTS',
-        'name' => 'Kontakte',
+        'name' => 'Contacts',
     ]);
     Page::factory()->count(3)->create(['tenant_id' => $otherTenant->id, 'collection_id' => $foreignCollection->id]);
 
@@ -65,10 +50,10 @@ it('scopes entry counts to the current tenant', function (): void {
 });
 
 it('searches definitions by titleList, key, and filename case-insensitively', function (string $term): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
-    createContactsDefinition($tenant->id);
+    $this->zzContactsDefinition($tenant->id);
     CollectionDefinition::create([
         'tenant_id' => $tenant->id,
         'filename' => 'sliders',
@@ -87,16 +72,16 @@ it('searches definitions by titleList, key, and filename case-insensitively', fu
     expect($rows)->toHaveCount(1)
         ->and($rows->first()['key'])->toBe('CONTACTS');
 })->with([
-    'titleList' => 'kontakte',
+    'titleList' => 'peopl',
     'key' => 'conta',
     'filename' => 'CONTACTS',
 ]);
 
 it('filters definitions by has_page', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
-    createContactsDefinition($tenant->id);
+    $this->zzContactsDefinition($tenant->id);
     CollectionDefinition::create([
         'tenant_id' => $tenant->id,
         'filename' => 'sliders',
@@ -120,10 +105,10 @@ it('filters definitions by has_page', function (): void {
 });
 
 it('dispatches modal when listAction is called', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
-    createContactsDefinition($tenant->id);
+    $this->zzContactsDefinition($tenant->id);
 
     Livewire::test('cms::collection-definitions-list')
         ->call('listAction', 'contacts')
@@ -135,22 +120,22 @@ it('dispatches modal when listAction is called', function (): void {
 });
 
 it('loads existing collection definition in detail component', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
-    createContactsDefinition($tenant->id);
+    $this->zzContactsDefinition($tenant->id);
 
     Livewire::test('cms::collection-definition-detail', ['modelId' => 'contacts'])
         ->assertSet('isEditing', true)
         ->assertSet('detailData.filename', 'contacts')
-        ->assertSet('detailData.title', 'Kontakt');
+        ->assertSet('detailData.title', 'Contact');
 });
 
 it('allows renaming the filename of an existing collection definition', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
-    createContactsDefinition($tenant->id);
+    $this->zzContactsDefinition($tenant->id);
 
     Livewire::test('cms::collection-definition-detail', ['modelId' => 'contacts'])
         ->set('detailData.filename', 'contacts-renamed')
@@ -163,10 +148,10 @@ it('allows renaming the filename of an existing collection definition', function
 });
 
 it('prevents renaming to an existing filename', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
-    createContactsDefinition($tenant->id);
+    $this->zzContactsDefinition($tenant->id);
 
     // Create a second definition that we'll try to rename to
     CollectionDefinition::create([
@@ -188,7 +173,7 @@ it('prevents renaming to an existing filename', function (): void {
 });
 
 it('creates a new collection definition with correct structure', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
@@ -208,7 +193,7 @@ it('creates a new collection definition with correct structure', function (): vo
 });
 
 it('prevents duplicate filenames', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     CollectionDefinition::create([
@@ -230,7 +215,7 @@ it('prevents duplicate filenames', function (): void {
 });
 
 it('validates required fields', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+    ['user' => $user] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
@@ -246,7 +231,7 @@ it('validates required fields', function (): void {
 });
 
 it('validates filename format', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+    ['user' => $user] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
@@ -258,7 +243,7 @@ it('validates filename format', function (): void {
 });
 
 it('normalizes filename by lowercasing', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
@@ -272,7 +257,7 @@ it('normalizes filename by lowercasing', function (): void {
 });
 
 it('normalizes underscores to hyphens in filename', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
@@ -286,7 +271,7 @@ it('normalizes underscores to hyphens in filename', function (): void {
 });
 
 it('adds and removes fields', function (): void {
-    ['user' => $user] = $this->createUserWithCmsAccess();
+    ['user' => $user] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
@@ -300,7 +285,7 @@ it('adds and removes fields', function (): void {
 });
 
 it('stores fields in the collection definition', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     Livewire::test('cms::collection-definition-detail')
@@ -322,10 +307,10 @@ it('stores fields in the collection definition', function (): void {
 });
 
 it('copies a collection definition with key, title and titleList all suffixed with 2', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
-    createContactsDefinition($tenant->id);
+    $this->zzContactsDefinition($tenant->id);
 
     Livewire::test('cms::collection-definition-detail', ['modelId' => 'contacts'])
         ->call('copy')
@@ -334,22 +319,22 @@ it('copies a collection definition with key, title and titleList all suffixed wi
     $copy = CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'contacts2')->first();
     expect($copy)->not->toBeNull();
     expect($copy->key)->toBe('CONTACTS2');
-    expect($copy->title)->toBe('Kontakt2');
-    expect($copy->title_list)->toBe('Kontakte2');
+    expect($copy->title)->toBe('Contact2');
+    expect($copy->title_list)->toBe('People2');
     expect($copy->fields)->toHaveCount(1);
 
     // Mirrors into the collections instance table with the current user as creator.
     $instance = Collection::where('tenant_id', $tenant->id)->where('collection_key', 'CONTACTS2')->first();
     expect($instance)->not->toBeNull();
     expect($instance->created_by)->toBe($user->id);
-    expect($instance->name)->toBe('Kontakte2');
+    expect($instance->name)->toBe('People2');
 });
 
 it('prevents copying when target definition already exists', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
-    createContactsDefinition($tenant->id);
+    $this->zzContactsDefinition($tenant->id);
 
     CollectionDefinition::create([
         'tenant_id' => $tenant->id,
@@ -366,28 +351,8 @@ it('prevents copying when target definition already exists', function (): void {
         ->assertHasErrors('detailData.filename');
 });
 
-it('deletes a collection definition', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
-    $this->actingAs($user, NoerdAuth::guardName());
-
-    $definition = CollectionDefinition::create([
-        'tenant_id' => $tenant->id,
-        'filename' => 'test-definition-2',
-        'key' => 'TEST_DEFINITION_2',
-        'title' => 'To Delete',
-        'title_list' => 'To Delete',
-        'has_page' => false,
-        'fields' => [],
-    ]);
-
-    Livewire::test('cms::collection-definition-detail', ['modelId' => 'test-definition-2'])
-        ->call('delete');
-
-    expect(CollectionDefinition::find($definition->id))->toBeNull();
-});
-
 it('deletes associated collection records when deleting a collection definition', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     CollectionDefinition::create([
@@ -420,7 +385,7 @@ it('deletes associated collection records when deleting a collection definition'
 });
 
 it('shows rename confirmation when a field name is changed', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     CollectionDefinition::create([
@@ -443,7 +408,7 @@ it('shows rename confirmation when a field name is changed', function (): void {
 });
 
 it('renames field keys in database entries when confirmed', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     CollectionDefinition::create([
@@ -484,7 +449,7 @@ it('renames field keys in database entries when confirmed', function (): void {
 });
 
 it('skips database rename when user declines', function (): void {
-    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess(Profile::Admin);
     $this->actingAs($user, NoerdAuth::guardName());
 
     CollectionDefinition::create([

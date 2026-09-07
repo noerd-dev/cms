@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +16,8 @@ class Author extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    protected $table = 'cms_authors';
 
     public function articles(): HasMany
     {

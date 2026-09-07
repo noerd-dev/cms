@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Repositories;
 
 use Illuminate\Support\Collection as SupportCollection;
@@ -101,7 +103,7 @@ class ElementAwareCollectionDefinitionRepository implements CollectionDefinition
 
     private function findElement(string $key, ?int $tenantId): ?Collection
     {
-        $tenantId ??= auth()->user()?->selected_tenant_id ?? TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::currentTenantId() ?? TenantHelper::getSelectedTenantId();
 
         if (! $tenantId) {
             return null;

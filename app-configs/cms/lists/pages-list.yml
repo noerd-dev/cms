@@ -2,6 +2,13 @@ title: Pages
 actions:
   - label: New Page
     route: cms.page.detail
+multiSelect: true
+bulkActions:
+  - label: Delete
+    action: deleteSelected
+    heroicon: trash
+    style: danger
+    confirm: Delete the selected pages?
 disableSearch: false
 columns:
   - field: name

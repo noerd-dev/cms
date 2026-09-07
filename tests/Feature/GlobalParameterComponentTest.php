@@ -1,0 +1,149 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Noerd\Cms\Models\GlobalParameter;
+use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Helpers\NoerdAuth;
+
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
+uses(CreatesCmsUser::class);
+
+$testSettings = [
+    'componentName' => 'cms::global-parameter-detail',
+    'listName' => 'cms::global-parameters-list',
+    'id' => 'modelId',
+    'urlParam' => 'globalParameterId',
+];
+
+it('validates the data', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user, NoerdAuth::guardName());
+
+    Livewire::test($testSettings['componentName'])
+        ->set('detailData.key', '')
+        ->set('detailData.value', '')
+        ->call('store')
+        ->assertHasErrors(['detailData.key', 'detailData.value']);
+});
+
+it('successfully stores the data', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user, NoerdAuth::guardName());
+    $parameterKey = fake()->word;
+    $parameterValue = fake()->sentence;
+
+    Livewire::test($testSettings['componentName'])
+        ->set('detailData.key', $parameterKey)
+        ->set('detailData.value', $parameterValue)
+        ->call('store')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('cms_global_parameters', [
+        'key' => $parameterKey,
+        'value' => json_encode($parameterValue),
+        'tenant_id' => $tenant->id,
+    ]);
+});
+
+it('it sets and removes the model id in url', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user, NoerdAuth::guardName());
+    $model = GlobalParameter::factory()->withTenantId($tenant->id)->create();
+
+    Livewire::test($testSettings['listName'])->call('listAction', $model->id)
+        ->assertDispatched(
+            'noerdModal',
+            fn(string $event, array $params): bool => ($params['route'] ?? null) === 'cms.global-parameter.detail'
+                && ($params['arguments']['modelId'] ?? null) === $model->id,
+        );
+
+    Livewire::withUrlParams([$testSettings['urlParam'] => $model->id])
+        ->test($testSettings['componentName'])
+        ->assertSet('detailData.id', $model->id)
+        ->assertHasNoErrors();
+});
+
+it('loads existing string value into component model for editing', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user, NoerdAuth::guardName());
+
+    $existingParameter = GlobalParameter::create([
+        'key' => 'test_key_string',
+        'value' => json_encode('test_value_string'),
+        'tenant_id' => $tenant->id,
+    ]);
+
+    Livewire::withUrlParams([$testSettings['urlParam'] => $existingParameter->id])
+        ->test($testSettings['componentName'])
+        ->assertSet('detailData.key', 'test_key_string')
+        ->assertSet('detailData.value', 'test_value_string');
+});
+
+it('loads existing array value into component model for editing', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user, NoerdAuth::guardName());
+
+    $existingParameter = GlobalParameter::create([
+        'key' => 'test_key_array',
+        'value' => json_encode(['de' => 'Hallo', 'en' => 'Hello']),
+        'is_translatable' => true,
+        'tenant_id' => $tenant->id,
+    ]);
+
+    Livewire::withUrlParams([$testSettings['urlParam'] => $existingParameter->id])
+        ->test($testSettings['componentName'])
+        ->assertSet('detailData.key', 'test_key_array')
+        ->assertSet('detailData.value', fn($value) => is_array($value) && ($value['de'] ?? null) === 'Hallo' && ($value['en'] ?? null) === 'Hello');
+});
+
+it('saves a translatable parameter as a language-keyed JSON object', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user, NoerdAuth::guardName());
+
+    Livewire::test($testSettings['componentName'])
+        ->set('detailData.key', 'opening_hours')
+        ->set('detailData.is_translatable', true)
+        ->set('detailData.value', ['de' => 'Mo–Fr 9–17', 'en' => 'Mon–Fri 9am–5pm'])
+        ->call('store')
+        ->assertHasNoErrors();
+
+    $row = GlobalParameter::where('key', 'opening_hours')->firstOrFail();
+    expect($row->is_translatable)->toBeTrue()
+        ->and(json_decode($row->value, true))->toBe(['de' => 'Mo–Fr 9–17', 'en' => 'Mon–Fri 9am–5pm']);
+});
+
+it('saves a non-translatable parameter as a scalar JSON string', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user, NoerdAuth::guardName());
+
+    Livewire::test($testSettings['componentName'])
+        ->set('detailData.key', 'INSTAGRAM_ACCESS_TOKEN')
+        ->set('detailData.is_translatable', false)
+        ->set('detailData.value', 'EAA-token')
+        ->call('store')
+        ->assertHasNoErrors();
+
+    $row = GlobalParameter::where('key', 'INSTAGRAM_ACCESS_TOKEN')->firstOrFail();
+    expect($row->is_translatable)->toBeFalse()
+        ->and($row->value)->toBe(json_encode('EAA-token'));
+});
+
+it('switches a translatable value to scalar when the toggle is turned off', function () use ($testSettings): void {
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user, NoerdAuth::guardName());
+
+    $existingParameter = GlobalParameter::create([
+        'key' => 'INSTAGRAM_ACCESS_TOKEN',
+        'value' => json_encode(['de' => 'EAA-de']),
+        'is_translatable' => true,
+        'tenant_id' => $tenant->id,
+    ]);
+
+    Livewire::withUrlParams([$testSettings['urlParam'] => $existingParameter->id])
+        ->test($testSettings['componentName'])
+        ->set('detailData.is_translatable', false)
+        ->assertSet('detailData.value', 'EAA-de');
+});

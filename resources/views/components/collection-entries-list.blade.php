@@ -6,13 +6,13 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\CollectionHelper;
-use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
+use Noerd\Services\ColumnFilterParser;
 use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdList;
 
@@ -98,7 +98,7 @@ new class extends Component
         $this->collectionLayout = CollectionHelper::getCollectionFields($this->collectionKey);
 
         if (empty($this->listFilters['language'])) {
-            $this->listFilters['language'] = session('selectedLanguage') ?: $this->getDefaultLanguageCode();
+            $this->listFilters['language'] = session('selectedLanguage') ?: $this->defaultLanguageCode();
         }
 
         if (empty(session('selectedLanguage'))) {
@@ -136,7 +136,7 @@ new class extends Component
         if (! $this->collectionKey) {
             return $this->buildList(collect([]), [
                 'title' => 'Collections',
-                'actions' => [['label' => __('New Entry'), 'action' => 'listAction']],
+                'actions' => [['label' => 'New Entry', 'action' => 'listAction']],
                 'disableSearch' => false,
                 'columns' => [],
             ]);
@@ -168,7 +168,7 @@ new class extends Component
             $query->where(function ($q) use ($languageCodes): void {
                 // Search in standard fields, per configured language
                 foreach ($languageCodes as $code) {
-                    $q->orWhereRaw('JSON_EXTRACT(name, ?) LIKE ?', ['$.' . $code, '%' . $this->search . '%']);
+                    ColumnFilterParser::applyLikeContains($q, "name->{$code}", $this->search, 'or');
                 }
 
                 // Search in dynamic fields from the collection definition
@@ -184,10 +184,12 @@ new class extends Component
                         }
 
                         // Search in translatable fields
+                        // JSON paths are grammar-wrapped (portable across MySQL and
+                        // sqlite) and the search term is LIKE-escaped.
                         foreach ($languageCodes as $code) {
-                            $q->orWhereRaw('JSON_EXTRACT(data, ?) LIKE ?', ['$.' . $fieldKey . '.' . $code, '%' . $this->search . '%']);
+                            ColumnFilterParser::applyLikeContains($q, "data->{$fieldKey}->{$code}", $this->search, 'or');
                         }
-                        $q->orWhereRaw('JSON_EXTRACT(data, ?) LIKE ?', ['$.' . $fieldKey, '%' . $this->search . '%']);
+                        ColumnFilterParser::applyLikeContains($q, "data->{$fieldKey}", $this->search, 'or');
                     }
                 }
             });
@@ -197,7 +199,7 @@ new class extends Component
 
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage')
-            ?? $this->getDefaultLanguageCode();
+            ?? $this->defaultLanguageCode();
 
         // Resolve linked page names for pageRelation fields in one query.
         $pageRelationKeys = collect($this->collectionLayout['fields'] ?? [])
@@ -342,14 +344,6 @@ new class extends Component
         ]);
     }
 
-    private function getDefaultLanguageCode(): string
-    {
-        $defaultLanguage = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
-            ->where('is_default', true)
-            ->first();
-
-        return $defaultLanguage?->code ?? 'de';
-    }
 } ?>
 
 <x-noerd::page>

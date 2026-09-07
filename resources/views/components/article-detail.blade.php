@@ -4,11 +4,14 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Models\Article;
 use Noerd\Cms\Models\Author;
-use Noerd\Cms\Models\CmsLanguage;
+use Noerd\Cms\Services\PageSlugService;
+use Noerd\Cms\Traits\LanguageFilterTrait;
+use Noerd\Helpers\TenantHelper;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component
 {
+    use LanguageFilterTrait;
     use NoerdDetail;
 
     public ?string $detailPrimary = 'articleId';
@@ -26,10 +29,7 @@ new class extends Component
 
         $this->detailData = $article->toArray();
 
-        $activeLangCodes = $this->getActiveTenantLanguageCodes();
-        if (empty($activeLangCodes)) {
-            $activeLangCodes = [$this->getDefaultLanguageCode()];
-        }
+        $activeLangCodes = $this->activeLanguageCodes();
 
         // Initialize title as translatable array
         if (! isset($this->detailData['title']) || ! is_array($this->detailData['title'])) {
@@ -62,37 +62,9 @@ new class extends Component
         }
     }
 
-    public function getDefaultLanguageCode(): string
-    {
-        $defaultLanguage = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
-            ->where('is_default', true)
-            ->first();
-
-        return $defaultLanguage?->code ?? 'en';
-    }
-
-    public function getActiveTenantLanguageCodes(): array
-    {
-        return CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
-            ->where('is_active', true)
-            ->orderBy('is_default', 'desc')
-            ->pluck('code')
-            ->toArray();
-    }
-
     public function generateSlug(string $name, ?string $languageCode = null): string
     {
-        $slug = str_replace(['ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'], ['ae', 'oe', 'ue', 'ss', 'ae', 'oe', 'ue'], $name);
-        $slug = mb_strtolower($slug);
-        $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug);
-        $slug = preg_replace('/[\s-]+/', '-', $slug);
-        $slug = mb_trim($slug, '-');
-
-        if ($languageCode && $languageCode !== $this->getDefaultLanguageCode()) {
-            $slug = $languageCode . '/' . $slug;
-        }
-
-        return '/' . $slug;
+        return app(PageSlugService::class)->generate($name, $languageCode, $this->defaultLanguageCode());
     }
 
     public function updated($propertyName, $value): void
@@ -105,7 +77,7 @@ new class extends Component
 
         if (! empty($value)) {
             if (! isset($this->detailData['slug']) || ! is_array($this->detailData['slug'])) {
-                $this->detailData['slug'] = array_fill_keys($this->getActiveTenantLanguageCodes(), '');
+                $this->detailData['slug'] = array_fill_keys($this->activeLanguageCodes(), '');
             }
 
             if (empty($this->detailData['slug'][$language] ?? '')) {
@@ -127,9 +99,9 @@ new class extends Component
     }
 
     #[On('languageChanged')]
-    public function refresh(): void
+    public function onLanguageChanged(): void
     {
-        $this->dispatch('$refresh');
+        // The roundtrip re-renders the translatable inputs against the new language.
     }
 
     public function store(): void
@@ -145,7 +117,7 @@ new class extends Component
         $data = collect($this->detailData)
             ->except(['created_at', 'updated_at'])
             ->toArray();
-        $data['tenant_id'] = auth()->user()->selected_tenant_id;
+        $data['tenant_id'] = TenantHelper::currentTenantId();
 
         // Clean empty slug values
         $cleanSlugData = [];
@@ -174,9 +146,7 @@ new class extends Component
             {{ __('Article') }}
 
             <div class="ml-auto">
-                <div class="flex items-center gap-4">
-                    <livewire:cms::language-switcher />
-                </div>
+                <livewire:cms::language-switcher />
             </div>
         </x-noerd::modal-title>
     </x-slot:header>

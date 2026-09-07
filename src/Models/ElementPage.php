@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Noerd\Cms\Database\Factories\ElementPageFactory;
 
 class ElementPage extends Model
 {
@@ -12,11 +15,16 @@ class ElementPage extends Model
 
     protected $guarded = [];
 
-    protected $table = 'element_page';
+    protected $table = 'cms_page_elements';
 
     public function page(): BelongsTo
     {
         return $this->belongsTo(Page::class);
+    }
+
+    protected static function newFactory(): ElementPageFactory
+    {
+        return ElementPageFactory::new();
     }
 
     protected static function booted(): void

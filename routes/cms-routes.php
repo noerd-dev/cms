@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('cms')
@@ -20,7 +22,7 @@ Route::prefix('cms')
         Route::livewire('/collection-definitions', 'cms::collection-definitions-list')->name('collection-definitions');
         Route::livewire('/collection-definition/{modelId}', 'cms::collection-definition-detail')->name('collection-definition.detail');
         Route::livewire('/form-requests', 'cms::form-requests-list')->name('form-requests');
-        Route::livewire('/form-request/{modelId}', 'cms::form-request-page')->name('form-request.detail');
+        Route::livewire('/form-request/{modelId}', 'cms::form-request-detail')->name('form-request.detail');
         Route::livewire('/form-types', 'cms::form-types-list')->name('form-types');
         Route::livewire('/form-type/{modelId}', 'cms::form-type-detail')->name('form-type.detail');
 

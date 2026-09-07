@@ -5,7 +5,9 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
+use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Support\CollectionDefinitionData;
+use Noerd\Helpers\TenantHelper;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
@@ -15,6 +17,12 @@ new class extends Component
     public ?string $detailRoute = 'cms.collection-definition.detail';
 
     public $detailComponent = 'cms::collection-definition-detail';
+
+    /**
+     * Repository-backed rows (no $listModel) — the object permission that guards
+     * reading and bulk-deleting this list is declared explicitly.
+     */
+    public ?string $objectPermissionModel = CollectionDefinition::class;
 
     public function mount(): void
     {
@@ -42,16 +50,16 @@ new class extends Component
     {
         $repository = app(CollectionDefinitionRepositoryContract::class);
 
-        $collectionMeta = DB::table('collections')
-            ->leftJoin('pages', 'pages.collection_id', '=', 'collections.id')
-            ->leftJoin('noerd_users', 'collections.created_by', '=', 'noerd_users.id')
-            ->where('collections.tenant_id', auth()->user()->selected_tenant_id)
+        $collectionMeta = DB::table('cms_collections')
+            ->leftJoin('cms_pages', 'cms_pages.collection_id', '=', 'cms_collections.id')
+            ->leftJoin('noerd_users', 'cms_collections.created_by', '=', 'noerd_users.id')
+            ->where('cms_collections.tenant_id', TenantHelper::currentTenantId())
             ->select(
-                'collections.collection_key',
-                DB::raw('count(pages.id) as entry_count'),
+                'cms_collections.collection_key',
+                DB::raw('count(cms_pages.id) as entry_count'),
                 'noerd_users.name as creator_name',
             )
-            ->groupBy('collections.collection_key', 'noerd_users.name')
+            ->groupBy('cms_collections.collection_key', 'noerd_users.name')
             ->get()
             ->keyBy('collection_key');
 
@@ -115,12 +123,12 @@ new class extends Component
                 'disableSearch' => false,
                 'notSortableColumns' => ['titleList', 'key', 'hasPage', 'fieldCount', 'entryCount', 'createdBy'],
                 'columns' => [
-                    ['field' => 'titleList', 'label' => __('Title (Plural)')],
+                    ['field' => 'titleList', 'label' => 'Title (Plural)'],
                     ['field' => 'key', 'label' => 'Key'],
-                    ['field' => 'hasPage', 'label' => __('Has Page')],
-                    ['field' => 'fieldCount', 'label' => __('Fields')],
-                    ['field' => 'entryCount', 'label' => __('Entries')],
-                    ['field' => 'createdBy', 'label' => __('Created by')],
+                    ['field' => 'hasPage', 'label' => 'Has Page'],
+                    ['field' => 'fieldCount', 'label' => 'Fields'],
+                    ['field' => 'entryCount', 'label' => 'Entries'],
+                    ['field' => 'createdBy', 'label' => 'Created by'],
                 ],
             ]),
         ];

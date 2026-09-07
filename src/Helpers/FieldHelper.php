@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Helpers;
 
 use Noerd\Cms\Support\CmsLanguageCodes;
@@ -9,28 +11,36 @@ use Throwable;
 
 class FieldHelper
 {
+    /** @var array<string, array<string, mixed>> element key => parsed definition */
+    private static array $elementFieldsCache = [];
+
+    /** @var array<int, object>|null */
+    private static ?array $allElementsCache = null;
+
+    /**
+     * Element discovery globs the filesystem; the results are memoized for the
+     * request (a page render asks for every element of the page). Test suites
+     * that write throwaway elements clear the memo.
+     */
+    public static function clearCache(): void
+    {
+        self::$elementFieldsCache = [];
+        self::$allElementsCache = null;
+    }
+
     public static function getElementFields(string $element): ?array
     {
-        // Convert element key to kebab-case for yml file lookup (same as blade component naming)
-        $elementFileName = str_replace('_', '-', $element);
-
-        // Search for YML file co-located with blade component in app-modules
-        $livewireElementFiles = glob(base_path('app-modules/*/resources/views/components/elements/' . $elementFileName . '.blade.php'));
-
-        // Also check project-level
-        $projectLevelFile = base_path('resources/views/components/elements/' . $elementFileName . '.blade.php');
-        if (file_exists($projectLevelFile)) {
-            array_unshift($livewireElementFiles, $projectLevelFile);
+        if (isset(self::$elementFieldsCache[$element])) {
+            return self::$elementFieldsCache[$element];
         }
 
-        foreach ($livewireElementFiles as $bladeFile) {
-            $ymlFile = str_replace('.blade.php', '.yml', $bladeFile);
-            if (file_exists($ymlFile)) {
-                return self::parseYamlFile($ymlFile);
-            }
+        $fields = self::discoverElementFields($element);
+
+        if ($fields !== null) {
+            self::$elementFieldsCache[$element] = $fields;
         }
 
-        return null;
+        return $fields;
     }
 
     public static function parseElementToData(string $element, ?array $data): ?array
@@ -93,44 +103,7 @@ class FieldHelper
 
     public static function getAllElements(): array
     {
-        $elements = [];
-
-        // Get all element components from app-modules
-        $livewireElementFiles = glob(base_path('app-modules/*/resources/views/components/elements/*.blade.php'));
-
-        // Also check project-level
-        $projectLevelFiles = glob(base_path('resources/views/components/elements/*.blade.php'));
-        $livewireElementFiles = array_merge($projectLevelFiles, $livewireElementFiles);
-
-        foreach ($livewireElementFiles as $livewireFile) {
-            $fileName = basename($livewireFile, '.blade.php');
-            // Convert kebab-case filename to snake_case for element key
-            $elementKey = str_replace('-', '_', $fileName);
-
-            // Look for YML file co-located with the blade component
-            $ymlFile = str_replace('.blade.php', '.yml', $livewireFile);
-
-            if (file_exists($ymlFile)) {
-                $yaml = self::parseYamlFile($ymlFile) ?? [];
-
-                $elements[] = (object) [
-                    'element_key' => $elementKey,
-                    'name' => ($yaml['title'] ?? '') ?: ucwords(str_replace('_', ' ', $elementKey)),
-                    'description' => $yaml['description'] ?? '',
-                    'group' => $yaml['group'] ?? 'General',
-                ];
-            } else {
-                // If no yml file exists, create a basic element entry
-                $elements[] = (object) [
-                    'element_key' => $elementKey,
-                    'name' => ucwords(str_replace(['_', '-'], ' ', $elementKey)),
-                    'description' => 'Auto-detected from Livewire component',
-                    'group' => 'General',
-                ];
-            }
-        }
-
-        return $elements;
+        return self::$allElementsCache ??= self::discoverAllElements();
     }
 
     public static function getAllElementsGrouped(): array
@@ -181,6 +154,81 @@ class FieldHelper
         }
 
         return $flattened;
+    }
+
+    private static function discoverElementFields(string $element): ?array
+    {
+        // The key is user-supplied through the page editor and ends up in a
+        // filesystem glob — only plain element keys are looked up.
+        if (! preg_match('/^[a-z0-9_]+$/', $element)) {
+            return null;
+        }
+
+        // Convert element key to kebab-case for yml file lookup (same as blade component naming)
+        $elementFileName = str_replace('_', '-', $element);
+
+        // Search for YML file co-located with blade component in app-modules
+        $livewireElementFiles = glob(base_path('app-modules/*/resources/views/components/elements/' . $elementFileName . '.blade.php'));
+
+        // Also check project-level
+        $projectLevelFile = base_path('resources/views/components/elements/' . $elementFileName . '.blade.php');
+        if (file_exists($projectLevelFile)) {
+            array_unshift($livewireElementFiles, $projectLevelFile);
+        }
+
+        foreach ($livewireElementFiles as $bladeFile) {
+            $ymlFile = str_replace('.blade.php', '.yml', $bladeFile);
+            if (file_exists($ymlFile)) {
+                return self::parseYamlFile($ymlFile);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<int, object>
+     */
+    private static function discoverAllElements(): array
+    {
+        $elements = [];
+
+        // Get all element components from app-modules
+        $livewireElementFiles = glob(base_path('app-modules/*/resources/views/components/elements/*.blade.php'));
+
+        // Also check project-level
+        $projectLevelFiles = glob(base_path('resources/views/components/elements/*.blade.php'));
+        $livewireElementFiles = array_merge($projectLevelFiles, $livewireElementFiles);
+
+        foreach ($livewireElementFiles as $livewireFile) {
+            $fileName = basename($livewireFile, '.blade.php');
+            // Convert kebab-case filename to snake_case for element key
+            $elementKey = str_replace('-', '_', $fileName);
+
+            // Look for YML file co-located with the blade component
+            $ymlFile = str_replace('.blade.php', '.yml', $livewireFile);
+
+            if (file_exists($ymlFile)) {
+                $yaml = self::parseYamlFile($ymlFile) ?? [];
+
+                $elements[] = (object) [
+                    'element_key' => $elementKey,
+                    'name' => ($yaml['title'] ?? '') ?: ucwords(str_replace('_', ' ', $elementKey)),
+                    'description' => $yaml['description'] ?? '',
+                    'group' => $yaml['group'] ?? 'General',
+                ];
+            } else {
+                // If no yml file exists, create a basic element entry
+                $elements[] = (object) [
+                    'element_key' => $elementKey,
+                    'name' => ucwords(str_replace(['_', '-'], ' ', $elementKey)),
+                    'description' => 'Auto-detected from Livewire component',
+                    'group' => 'General',
+                ];
+            }
+        }
+
+        return $elements;
     }
 
     /**

@@ -6,22 +6,30 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Helpers\FieldHelper;
-use Noerd\Cms\Models\CmsLanguage;
-use Noerd\Cms\Models\Collection;
-use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
-use Noerd\Cms\Services\FieldTypeConverter;
+use Noerd\Cms\Services\CollectionEntryStore;
+use Noerd\Cms\Services\PageElementEditorService;
+use Noerd\Cms\Services\PageSlugService;
+use Noerd\Cms\Support\PageLayouts;
+use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
+use Noerd\Helpers\TenantHelper;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Services\MediaUploadService;
 use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdDetail;
 
+/*
+ | The page editor: a plain page or a collection entry (when a collectionKey is
+ | given) with the element builder below the form. Slugs, collection entries
+ | and element mutations are delegated to their services; this component only
+ | owns the form state and the editor chrome.
+ */
 new class extends Component
 {
+    use LanguageFilterTrait;
     use NoerdDetail;
     use WithFileUploads;
 
@@ -57,6 +65,10 @@ new class extends Component
         return $this->collectionLayout['hasPage'] ?? true;
     }
 
+    /**
+     * The edited page, resolved through the tenant scope — null for a new
+     * page and for a page of another tenant.
+     */
     #[Computed]
     public function pageModel(): ?Page
     {
@@ -94,180 +106,105 @@ new class extends Component
         }
 
         $this->mountPageDetail($page);
-
-        // For collection entries: Merge data from the data column into detailData for proper wire:model binding
-        if ($this->collectionKey && isset($this->detailData['data']) && is_array($this->detailData['data'])) {
-            $this->collectionData = $this->detailData['data'];
-            foreach ($this->detailData['data'] as $key => $value) {
-                if (! str_starts_with($key, 'detailData.') && ! in_array($key, ['name', 'slug', 'layout', 'sort'], true)) {
-                    $this->detailData[$key] = $value;
-                }
-            }
-        }
+        $this->mergeCollectionData($page);
 
         // Populate relationTitles for saved page relations defined in the collection layout
         foreach ($this->collectionLayout['fields'] ?? [] as $field) {
-            if (($field['type'] ?? null) !== 'relation') {
-                continue;
-            }
-            if (($field['modalComponent'] ?? null) !== 'pages-list') {
+            if (($field['type'] ?? null) !== 'relation' || ($field['modalComponent'] ?? null) !== 'pages-list') {
                 continue;
             }
             $fieldName = str_replace('detailData.', '', $field['name'] ?? '');
-            $relatedId = $this->detailData[$fieldName] ?? null;
-            if (empty($relatedId)) {
-                continue;
+            $relatedPage = ! empty($this->detailData[$fieldName] ?? null) ? Page::find($this->detailData[$fieldName]) : null;
+            if ($relatedPage) {
+                $this->relationTitles[$fieldName] = RelationFieldDefinition::normalizeDisplayValue($relatedPage->name);
             }
-            $relatedPage = Page::find($relatedId);
-            if (! $relatedPage) {
-                continue;
-            }
-            $this->relationTitles[$fieldName] = RelationFieldDefinition::normalizeDisplayValue($relatedPage->name);
         }
-
-        // Ensure sort field is available for collections
-        $this->detailData['sort'] ??= $page->sort ?? 0;
     }
 
     protected function mountPageDetail(?Page $page = null): void
     {
-        if (! $page) {
-            $page = new Page;
-        }
+        $page ??= new Page;
 
         $this->detailData = $page->toArray();
         $this->detailData['custom_attributes'] = $this->detailData['custom_attributes'] ?? [];
 
-        $availableLayouts = $this->layoutOptions();
-        if (! isset($this->detailData['layout']) || empty($this->detailData['layout'])) {
-            $this->detailData['layout'] = array_key_first($availableLayouts);
+        if (empty($this->detailData['layout'])) {
+            $this->detailData['layout'] = PageLayouts::default();
         }
 
-        $activeLangCodes = $this->getActiveTenantLanguageCodes();
-        if (empty($activeLangCodes)) {
-            $activeLangCodes = [$this->getDefaultLanguageCode()];
-        }
+        $activeLangCodes = $this->activeLanguageCodes();
 
         foreach (['name', 'slug'] as $field) {
-            if (isset($this->detailData[$field])) {
-                if (! is_array($this->detailData[$field]) || empty($this->detailData[$field])) {
-                    $this->detailData[$field] = $this->initializeEmptySlugArray();
-                } else {
-                    foreach ($activeLangCodes as $lang) {
-                        if (! isset($this->detailData[$field][$lang]) || ! is_string($this->detailData[$field][$lang])) {
-                            $this->detailData[$field][$lang] = '';
-                        }
-                    }
+            if (! is_array($this->detailData[$field] ?? null) || empty($this->detailData[$field])) {
+                $this->detailData[$field] = array_fill_keys($activeLangCodes, '');
+
+                continue;
+            }
+
+            foreach ($activeLangCodes as $lang) {
+                if (! is_string($this->detailData[$field][$lang] ?? null)) {
+                    $this->detailData[$field][$lang] = '';
                 }
-            } else {
-                $this->detailData[$field] = $this->initializeEmptySlugArray();
             }
         }
 
         $this->lastChangeTime = time();
     }
 
-    public function layoutOptions(): array
+    /**
+     * Collection entries keep their fields in the `data` column — merge them
+     * into $detailData for wire:model binding.
+     */
+    private function mergeCollectionData(Page $page): void
     {
-        $layoutsDirectory = base_path('app-modules/website/resources/views/components/layouts');
-        $options = [];
+        if (! $this->collectionKey || ! is_array($page->data)) {
+            $this->detailData['sort'] ??= $page->sort ?? 0;
 
-        if (is_dir($layoutsDirectory)) {
-            foreach (glob($layoutsDirectory.'/*.blade.php') as $filePath) {
-                $fileName = basename($filePath, '.blade.php');
+            return;
+        }
 
-                if (str_starts_with($fileName, '_')) {
-                    continue;
-                }
-
-                $options[$fileName] = $fileName;
+        $this->collectionData = $page->data;
+        foreach ($page->data as $key => $value) {
+            if (! str_starts_with($key, 'detailData.') && ! in_array($key, ['name', 'slug', 'layout', 'sort'], true)) {
+                $this->detailData[$key] = $value;
             }
         }
 
-        if (empty($options)) {
-            $options['weblayout'] = 'weblayout';
-        }
-
-        return $options;
+        $this->detailData['sort'] ??= $page->sort ?? 0;
     }
 
-    public function getDefaultLanguageCode(): string
+    /**
+     * Options of the YAML `layout` picklist (`picklistField: layoutOptions`).
+     */
+    public function layoutOptions(): array
     {
-        $defaultLanguage = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
-            ->where('is_default', true)
-            ->first();
-
-        return $defaultLanguage?->code ?? 'en';
-    }
-
-    public function getActiveTenantLanguageCodes(): array
-    {
-        return CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
-            ->where('is_active', true)
-            ->orderBy('is_default', 'desc')
-            ->pluck('code')
-            ->toArray();
+        return PageLayouts::options();
     }
 
     public function generateSlug(string $name, ?string $languageCode = null): string
     {
-        $slug = str_replace(['ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'], ['ae', 'oe', 'ue', 'ss', 'ae', 'oe', 'ue'], $name);
-        $slug = mb_strtolower($slug);
-        $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug);
-        $slug = preg_replace('/[\s-]+/', '-', $slug);
-        $slug = mb_trim($slug, '-');
-
-        if ($languageCode && $languageCode !== $this->getDefaultLanguageCode()) {
-            $slug = $languageCode.'/'.$slug;
-        }
-
-        return '/'.$slug;
-    }
-
-    private function ensureUniqueSlug(string $slug, string $languageCode): string
-    {
-        $tenantId = auth()->user()->selected_tenant_id;
-        $originalSlug = $slug;
-        $counter = 2;
-
-        while (true) {
-            $query = Page::where('tenant_id', $tenantId)
-                ->whereJsonContains("slug->{$languageCode}", $slug);
-
-            if ($this->modelId) {
-                $query->where('id', '!=', $this->modelId);
-            }
-
-            if (! $query->exists()) {
-                return $slug;
-            }
-
-            $slug = $originalSlug.'-'.$counter;
-
-            $counter++;
-        }
+        return app(PageSlugService::class)->generate($name, $languageCode, $this->defaultLanguageCode());
     }
 
     public function updated($propertyName, $value): void
     {
-        if (! str_starts_with($propertyName, 'detailData.name.')) {
-            return;
-        }
-
-        if ($this->modelId) {
+        // Only a NEW page derives its slug from the name; saved pages keep their URL.
+        if (! str_starts_with($propertyName, 'detailData.name.') || $this->modelId || empty($value)) {
             return;
         }
 
         $language = str_replace('detailData.name.', '', $propertyName);
 
-        if (! empty($value)) {
-            if (! isset($this->detailData['slug']) || ! is_array($this->detailData['slug'])) {
-                $this->detailData['slug'] = $this->initializeEmptySlugArray();
-            }
-
-            $generatedSlug = $this->generateSlug($value, $language);
-            $this->detailData['slug'][$language] = $this->ensureUniqueSlug($generatedSlug, $language);
+        if (! is_array($this->detailData['slug'] ?? null)) {
+            $this->detailData['slug'] = array_fill_keys($this->activeLanguageCodes(), '');
         }
+
+        $this->detailData['slug'][$language] = app(PageSlugService::class)->uniqueFor(
+            (string) $value,
+            $language,
+            $this->defaultLanguageCode(),
+            (int) TenantHelper::currentTenantId(),
+        );
     }
 
     public function updatedImages(): void
@@ -304,40 +241,6 @@ new class extends Component
         $this->mediaToken = null;
     }
 
-    #[On('elementPicked')]
-    public function addElement($elementKey, $token = 'insert-end'): void
-    {
-        // Tenant guard: only operate on a page the current tenant owns.
-        if (! $this->pageModel) {
-            return;
-        }
-
-        if (str_starts_with($token, 'insert-at-')) {
-            $position = (int) str_replace('insert-at-', '', $token);
-
-            ElementPage::where('page_id', $this->modelId)
-                ->where('sort', '>=', $position)
-                ->increment('sort');
-
-            $sort = $position;
-        } else {
-            $sortElement = ElementPage::where('page_id', $this->modelId)
-                ->orderBy('sort', 'desc')
-                ->first();
-
-            $sort = ($sortElement?->sort ?? 0) + 1;
-        }
-
-        ElementPage::create([
-            'page_id' => $this->modelId,
-            'element_key' => $elementKey,
-            'sort' => $sort,
-            'data' => [],
-        ]);
-
-        $this->lastChangeTime = time();
-    }
-
     #[On('pageSelected')]
     public function pageSelected($value, $context): void
     {
@@ -352,69 +255,54 @@ new class extends Component
         $this->detailData[$fieldName] = $page->id;
     }
 
-    public function elementSort($elementId, $newPosition): void
+    /*
+     | Element builder — every mutation runs through the editor service on the
+     | tenant-scoped page and is guarded like store(): WriteGuardHook only
+     | covers store()/delete(), so these check the write permission themselves.
+     */
+
+    #[On('elementPicked')]
+    public function addElement($elementKey, $token = 'insert-end'): void
     {
-        if (! $this->pageModel) {
+        if (! $this->canSaveObject() || ! $this->pageModel) {
             return;
         }
 
-        $elementId = (int) $elementId;
-        $newPosition = (int) $newPosition;
+        $position = str_starts_with((string) $token, 'insert-at-') ? (int) substr((string) $token, 10) : null;
 
-        $elements = ElementPage::where('page_id', $this->modelId)
-            ->orderBy('sort')
-            ->get();
-        $loop = 0;
-        foreach ($elements as $element) {
-            if ($newPosition === $loop) {
-                $loop++;
-            }
-            if ($element->id === $elementId) {
-                $element->sort = $newPosition;
-                $element->save();
-            } else {
-                $element->sort = $loop++;
-                $element->save();
-            }
+        $this->elementEditor()->addElement($this->pageModel, (string) $elementKey, $position);
+        $this->lastChangeTime = time();
+    }
+
+    public function elementSort($elementId, $newPosition): void
+    {
+        if (! $this->canSaveObject() || ! $this->pageModel) {
+            return;
         }
+
+        $this->elementEditor()->move($this->pageModel, (int) $elementId, (int) $newPosition);
         $this->lastChangeTime = time();
     }
 
     public function duplicateElement(int $elementPageId): void
     {
-        if (! $this->pageModel) {
+        if (! $this->canSaveObject() || ! $this->pageModel) {
             return;
         }
 
-        $element = ElementPage::find($elementPageId);
-        if (! $element || (int) $element->page_id !== (int) $this->modelId) {
-            return;
+        if ($this->elementEditor()->duplicate($this->pageModel, $elementPageId)) {
+            $this->lastChangeTime = time();
+            $this->dispatch('reloadPageComponent');
         }
-
-        ElementPage::where('page_id', $this->modelId)
-            ->where('sort', '>', $element->sort)
-            ->increment('sort');
-
-        ElementPage::create([
-            'page_id' => $this->modelId,
-            'element_key' => $element->element_key,
-            'sort' => $element->sort + 1,
-            'data' => $element->data,
-        ]);
-
-        $this->lastChangeTime = time();
-        $this->dispatch('reloadPageComponent');
     }
 
     public function deleteElement(int $elementPageId): void
     {
-        if (! $this->pageModel) {
+        if (! $this->canSaveObject() || ! $this->pageModel) {
             return;
         }
 
-        $element = ElementPage::find($elementPageId);
-        if ($element && (int) $element->page_id === (int) $this->modelId) {
-            $element->delete();
+        if ($this->elementEditor()->delete($this->pageModel, $elementPageId)) {
             $this->lastChangeTime = time();
             $this->dispatch('reloadPageComponent');
         }
@@ -427,21 +315,33 @@ new class extends Component
     }
 
     #[On('languageChanged')]
-    public function refresh(): void
+    public function onLanguageChanged(): void
     {
-        $this->dispatch('$refresh');
+        // The roundtrip re-renders the translatable inputs against the new language.
     }
 
     public function getPageUrl(): ?string
     {
-        $selectedLanguage = session('selectedLanguage') ?? $this->getDefaultLanguageCode();
-        $slug = $this->detailData['slug'][$selectedLanguage] ?? null;
+        $slug = $this->detailData['slug'][$this->selectedLanguageCode()] ?? null;
 
-        if (! $slug) {
-            return null;
+        return $slug ? url($slug) : null;
+    }
+
+    /**
+     * URLs of the YAML `url:` actions — the "View page" button only appears
+     * once the page has a URL in the selected language.
+     *
+     * @return array<string, string>
+     */
+    public function detailActionUrls(): array
+    {
+        if (! $this->hasPageFeatures) {
+            return [];
         }
 
-        return url($slug);
+        $url = $this->getPageUrl();
+
+        return $url ? ['pageUrl' => $url] : [];
     }
 
     public function store(): void
@@ -456,265 +356,84 @@ new class extends Component
             return;
         }
 
-        $defaultLang = $this->getDefaultLanguageCode();
-
         $this->resetValidation();
-        $hasErrors = false;
+        $errors = app(CollectionEntryStore::class)->requiredFieldErrors($this->detailData, $this->defaultLanguageCode());
 
-        if (empty($this->detailData['name'][$defaultLang] ?? '')) {
-            $this->addError('detailData.name', __('validation.required', ['attribute' => __('Title')]));
-            $hasErrors = true;
+        foreach ($errors as $field => $message) {
+            $this->addError($field, $message);
         }
 
-        if (empty($this->detailData['slug'][$defaultLang] ?? '')) {
-            $this->addError('detailData.slug', __('validation.required', ['attribute' => __('URL')]));
-            $hasErrors = true;
-        }
-
-        if ($hasErrors) {
+        if ($errors !== []) {
             return;
         }
 
         $data = $this->detailData;
-        $data['tenant_id'] = auth()->user()->selected_tenant_id;
-
-        if (empty($data['layout'])) {
-            $data['layout'] = array_key_first($this->layoutOptions());
-        }
-
-        $cleanSlugData = [];
-        if (isset($this->detailData['slug']) && is_array($this->detailData['slug'])) {
-            foreach ($this->detailData['slug'] as $lang => $slug) {
-                if (! empty($slug)) {
-                    $cleanSlugData[$lang] = $slug;
-                }
-            }
-        }
-
-        $data['slug'] = $cleanSlugData;
+        $data['tenant_id'] = TenantHelper::currentTenantId();
+        $data['layout'] = ! empty($data['layout']) ? $data['layout'] : PageLayouts::default();
+        $data['slug'] = array_filter(is_array($this->detailData['slug'] ?? null) ? $this->detailData['slug'] : [], fn($slug): bool => ! empty($slug));
         $data['name'] = $this->detailData['name'];
 
-        $page = Page::updateOrCreate(
-            ['id' => $this->modelId],
-            $data,
-        );
+        $page = Page::updateOrCreate(['id' => $this->modelId], $data);
 
         $this->dispatch('storeElements');
 
         $this->storeProcess($page);
     }
 
+    private function storeCollectionPage(): void
+    {
+        $store = app(CollectionEntryStore::class);
+
+        if ($this->collectionLayout['hasPage'] ?? true) {
+            $this->resetValidation();
+            $errors = $store->requiredFieldErrors($this->detailData, $this->defaultLanguageCode());
+
+            foreach ($errors as $field => $message) {
+                $this->addError($field, $message);
+            }
+
+            if ($errors !== []) {
+                return;
+            }
+        }
+
+        $page = $store->persist(
+            (string) $this->collectionKey,
+            $this->collectionLayout,
+            $this->detailData,
+            $this->modelId ? (int) $this->modelId : null,
+            (int) TenantHelper::currentTenantId(),
+            auth()->id(),
+            $this->defaultLanguageCode(),
+        );
+
+        $this->modelId = $page->id;
+
+        $this->storeProcess($page);
+
+        $this->dispatch('storeElements');
+    }
+
     public function copy(): void
     {
-        if (! $this->canSaveObject()) {
-            return;
-        }
-        $sourcePage = Page::with('elements')->find($this->modelId);
-        if (! $sourcePage) {
+        if (! $this->canSaveObject() || ! $this->pageModel) {
             return;
         }
 
-        $newName = [];
-        foreach ($sourcePage->name ?? [] as $lang => $name) {
-            $newName[$lang] = ! empty($name) ? $name.' 2' : $name;
-        }
-
-        $newSlug = [];
-        foreach ($sourcePage->slug ?? [] as $lang => $slug) {
-            if (! empty($slug)) {
-                $newSlug[$lang] = $this->ensureUniqueSlug($slug.'-2', $lang);
-            }
-        }
-
-        $newPage = $sourcePage->replicate(['id']);
-        $newPage->name = $newName;
-        $newPage->slug = $newSlug;
-
-        if ($this->collectionKey && is_array($newPage->data)) {
-            $newData = $newPage->data;
-            if (isset($newData['title'])) {
-                if (is_array($newData['title'])) {
-                    foreach ($newData['title'] as $lang => $value) {
-                        if (! empty($value)) {
-                            $newData['title'][$lang] = $value.' 2';
-                        }
-                    }
-                } elseif (is_string($newData['title']) && ! empty($newData['title'])) {
-                    $newData['title'] = $newData['title'].' 2';
-                }
-            }
-            $newPage->data = $newData;
-        }
-
-        $newPage->save();
-
-        foreach ($sourcePage->elements as $element) {
-            ElementPage::create([
-                'page_id' => $newPage->id,
-                'element_key' => $element->element_key,
-                'sort' => $element->sort,
-                'data' => $element->data,
-            ]);
-        }
+        $newPage = $this->elementEditor()->copyPage($this->pageModel);
 
         $this->modelId = $newPage->id;
         $this->mountPageDetail($newPage);
-
-        if ($this->collectionKey && isset($newPage->data) && is_array($newPage->data)) {
-            foreach ($newPage->data as $key => $value) {
-                if (! str_starts_with($key, 'detailData.') && ! in_array($key, ['name', 'slug', 'layout', 'sort'], true)) {
-                    $this->detailData[$key] = $value;
-                }
-            }
-        }
-
-        $this->detailData['sort'] ??= $newPage->sort ?? 0;
-        $this->lastChangeTime = time();
+        $this->mergeCollectionData($newPage);
 
         $this->dispatch('listRefresh');
         $this->dispatch('refreshList-pages-list');
         $this->showSuccessIndicator = true;
     }
 
-    /**
-     * Get collection field names from the collection definition (without detailData. prefix).
-     */
-    private function getCollectionFieldNames(): array
+    private function elementEditor(): PageElementEditorService
     {
-        if (! $this->collectionLayout || ! isset($this->collectionLayout['fields'])) {
-            return [];
-        }
-
-        $fieldNames = [];
-        foreach ($this->collectionLayout['fields'] as $field) {
-            $name = $field['name'] ?? '';
-            $name = str_replace('detailData.', '', $name);
-            if (! empty($name)) {
-                $fieldNames[] = $name;
-            }
-        }
-
-        return $fieldNames;
-    }
-
-    /**
-     * Extract only collection-specific fields from detailData.
-     */
-    private function extractCollectionData(): array
-    {
-        $collectionFieldNames = $this->getCollectionFieldNames();
-        $collectionData = [];
-
-        foreach ($collectionFieldNames as $fieldName) {
-            if (array_key_exists($fieldName, $this->detailData)) {
-                $collectionData[$fieldName] = $this->detailData[$fieldName];
-            }
-        }
-
-        return $collectionData;
-    }
-
-    private function storeCollectionPage(): void
-    {
-        // Pull the display name from the definition repository when available
-        // so it matches what the user configured.
-        // The definition's key is authoritative: URL keys are filenames
-        // (hyphenated), while definition keys may use underscores — uppercasing
-        // the filename would create an empty duplicate row next to the real one.
-        $definition = app(CollectionDefinitionRepositoryContract::class)->find($this->collectionKey);
-        $parentCollection = Collection::firstOrCreate([
-            'tenant_id' => auth()->user()->selected_tenant_id,
-            'collection_key' => $definition?->key ?: mb_strtoupper($this->collectionKey),
-        ], [
-            'name' => $definition?->titleList ?: ucfirst($this->collectionKey),
-            'created_by' => auth()->id(),
-        ]);
-
-        $hasPageFeatures = $this->collectionLayout['hasPage'] ?? true;
-
-        $rawCollectionData = $this->extractCollectionData();
-        $convertedCollectionData = FieldTypeConverter::convertCollectionData($rawCollectionData, $this->collectionKey);
-
-        $data = [
-            'tenant_id' => auth()->user()->selected_tenant_id,
-            'collection_id' => $parentCollection->id,
-            'data' => $convertedCollectionData,
-            'sort' => (int) ($this->detailData['sort'] ?? 0),
-        ];
-
-        $availableLayouts = $this->layoutOptions();
-        $data['layout'] = $this->detailData['layout'] ?? array_key_first($availableLayouts);
-
-        if ($hasPageFeatures) {
-            $defaultLang = $this->getDefaultLanguageCode();
-
-            $this->resetValidation();
-            $hasErrors = false;
-
-            if (empty($this->detailData['name'][$defaultLang] ?? '')) {
-                $this->addError('detailData.name', __('validation.required', ['attribute' => __('Title')]));
-                $hasErrors = true;
-            }
-
-            if (empty($this->detailData['slug'][$defaultLang] ?? '')) {
-                $this->addError('detailData.slug', __('validation.required', ['attribute' => __('URL')]));
-                $hasErrors = true;
-            }
-
-            if ($hasErrors) {
-                return;
-            }
-
-            $nameData = [];
-            if (isset($this->detailData['name']) && is_array($this->detailData['name'])) {
-                foreach ($this->detailData['name'] as $lang => $nameValue) {
-                    if (! empty($nameValue)) {
-                        $nameData[$lang] = $nameValue;
-                    }
-                }
-            }
-
-            $slugData = [];
-            if (isset($this->detailData['slug']) && is_array($this->detailData['slug'])) {
-                foreach ($this->detailData['slug'] as $lang => $slug) {
-                    if (! empty($slug)) {
-                        $slugData[$lang] = $slug;
-                    } elseif (! empty($nameData[$lang] ?? '')) {
-                        $slugData[$lang] = $this->ensureUniqueSlug($this->generateSlug($nameData[$lang], $lang), $lang);
-                    }
-                }
-            }
-
-            $data['name'] = $nameData;
-            $data['slug'] = $slugData;
-            $data['is_active'] = true;
-        } else {
-            $data['name'] = null;
-            $data['slug'] = null;
-            $data['is_active'] = true;
-        }
-
-        $modelId = $this->modelId ?: null;
-        if ($modelId) {
-            $page = Page::updateOrCreate(['id' => $modelId], $data);
-        } else {
-            $page = Page::create($data);
-            $this->modelId = $page->id;
-        }
-
-        $this->storeProcess($page);
-
-        $this->dispatch('storeElements');
-    }
-
-    private function initializeEmptySlugArray(): array
-    {
-        $languages = $this->getActiveTenantLanguageCodes();
-        if (empty($languages)) {
-            $languages = [$this->getDefaultLanguageCode()];
-        }
-
-        return array_fill_keys($languages, '');
+        return app(PageElementEditorService::class);
     }
 
     private function urlWithoutDomain(Media $media): string
@@ -733,32 +452,23 @@ new class extends Component
 
             <x-slot:actions>
                 @if($this->pageModel?->id && $this->hasPageFeatures)
-                    <button
+                    <x-noerd::button
+                        variant="secondary"
+                        type="button"
                         x-data
                         x-init="if (!Alpine.store('elements')) Alpine.store('elements', { collapsed: false })"
                         @click="$store.elements.collapsed = !$store.elements.collapsed"
-                        class="px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                         x-text="$store.elements.collapsed ? '{{ __('Expand elements') }}' : '{{ __('Collapse elements') }}'"
-                    ></button>
+                    ></x-noerd::button>
                 @endif
 
                 <livewire:cms::language-switcher/>
-
-                @if($this->pageModel?->id && $this->hasPageFeatures)
-                    @php $pageUrl = $this->getPageUrl(); @endphp
-                    @if($pageUrl)
-                        <a href="{{ $pageUrl }}" target="_blank"
-                           class="px-4 py-2 rounded-md text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors">
-                            {{ __('View page') }}
-                        </a>
-                    @endif
-                @endif
             </x-slot:actions>
         </x-noerd::modal-title>
     </x-slot:header>
     <div>
         @if($collectionLayout)
-            <!-- Sort Field for Collections -->
+            {{-- Sort position of the entry inside its collection --}}
             <div class="flex">
                 <div class="flex ml-auto items-center my-6 space-x-4">
                     <div class="flex ml-auto items-center space-x-2">
@@ -775,7 +485,7 @@ new class extends Component
                 </div>
             </div>
 
-            <!-- Collection Fields (Blue Box) -->
+            {{-- Collection fields --}}
             <div class="p-4 border border-blue-200 mb-4 relative overflow-hidden rounded-lg bg-blue-50 after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:inset-ring after:inset-ring-blue-950/5 bg-[image:radial-gradient(var(--pattern-fg)_1px,_transparent_0)] bg-[size:10px_10px] bg-fixed [--pattern-fg:var(--color-blue-950)]/5">
                 @include('noerd::components.detail.block', array_merge($collectionLayout, ['model' => $detailData]))
             </div>
@@ -786,17 +496,12 @@ new class extends Component
         @endphp
         <x-noerd::tab-content :layout="$effectiveLayout" :showBlock="$this->hasPageFeatures" :model="$detailData">
             <x-slot:tab1>
-                @include('cms::components._page-elements', ['hasPageFeatures' => $this->hasPageFeatures])
+                @include('cms::partials.page-elements', ['hasPageFeatures' => $this->hasPageFeatures])
             </x-slot:tab1>
         </x-noerd::tab-content>
     </div>
 
     <x-slot:footer>
-        @if($modelId)
-            <x-noerd::button variant="secondary" wire:click="copy" wire:confirm="{{ __('Copy this page?') }}">
-                {{ __('Copy') }}
-            </x-noerd::button>
-        @endif
         <x-noerd::delete-save-bar :showDelete="isset($modelId)"/>
     </x-slot:footer>
 

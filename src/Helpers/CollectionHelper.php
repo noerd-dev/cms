@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Helpers;
 
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;

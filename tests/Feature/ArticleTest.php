@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\Article;
 use Noerd\Cms\Models\Author;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
-uses(Tests\TestCase::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {

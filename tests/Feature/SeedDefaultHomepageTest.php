@@ -1,26 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\DefaultHomepageSeeder;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
-uses(Tests\TestCase::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
-uses(RefreshDatabase::class);
 
-it('creates a default homepage for tenants without one', function (): void {
+it('creates a default homepage in the tenant\'s languages for tenants without one', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
+    // The tenant runs English (default, seeded) and Danish.
+    $this->addLanguage('da', 'Dansk', tenantId: $tenant->id);
 
     (new DefaultHomepageSeeder())->seedMissingHomepages();
 
-    $this->assertDatabaseHas('pages', [
+    $this->assertDatabaseHas('cms_pages', [
         'tenant_id' => $tenant->id,
-        'name->de' => 'Startseite',
         'name->en' => 'Homepage',
-        'slug->de' => '/startseite',
+        'name->da' => 'Homepage',
         'slug->en' => '/homepage',
+        'slug->da' => '/da/homepage',
         'is_active' => true,
     ]);
 

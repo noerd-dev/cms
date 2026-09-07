@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace Noerd\Cms\Tests\Traits;
 
 use Illuminate\Support\Facades\File;
+use Noerd\Cms\Helpers\FieldHelper;
 
 /**
  * Element discovery (FieldHelper, HandlesPageElements) globs
  * `app-modules/{star}/resources/views/components/elements/`. The CMS ships no
  * elements of its own, so its tests used to borrow the ones from the optional
  * website module — an invisible cross-module dependency. Instead every test that
- * needs a real element writes its own throwaway fixture into the CMS module's
- * (otherwise empty) elements folder and removes it again afterwards.
+ * needs a real element writes its own throwaway fixture into a throwaway
+ * `app-modules/zz-cms-fixtures` module folder (matched by the same glob, in a
+ * host application and in the testbench skeleton alike) and removes the whole
+ * folder again afterwards — the package tree itself is never touched.
  */
 trait CreatesElementFixtures
 {
@@ -40,7 +43,15 @@ trait CreatesElementFixtures
 
     protected function elementFixtureDir(): string
     {
-        return dirname(__DIR__, 2) . '/resources/views/components/elements';
+        return $this->elementFixtureModuleDir() . '/resources/views/components/elements';
+    }
+
+    /**
+     * The throwaway module folder the fixtures live in.
+     */
+    protected function elementFixtureModuleDir(): string
+    {
+        return base_path('app-modules/zz-cms-fixtures');
     }
 
     /**
@@ -50,10 +61,12 @@ trait CreatesElementFixtures
     {
         $dir = $this->elementFixtureDir();
 
-        if (! is_dir($dir)) {
-            File::ensureDirectoryExists($dir);
+        if (! is_dir($this->elementFixtureModuleDir())) {
             $this->zzElementFixtureDirCreated = true;
         }
+
+        File::ensureDirectoryExists($dir);
+        FieldHelper::clearCache();
 
         $this->writeElementFixture('zz-fixture-text', <<<'YAML'
             title: 'Zz Fixture Text'
@@ -98,9 +111,10 @@ trait CreatesElementFixtures
         }
 
         $this->zzElementFixtureFiles = [];
+        FieldHelper::clearCache();
 
         if ($this->zzElementFixtureDirCreated) {
-            File::deleteDirectory($this->elementFixtureDir());
+            File::deleteDirectory($this->elementFixtureModuleDir());
             $this->zzElementFixtureDirCreated = false;
         }
     }
@@ -117,5 +131,7 @@ trait CreatesElementFixtures
 
         $this->zzElementFixtureFiles[] = $blade;
         $this->zzElementFixtureFiles[] = $definition;
+
+        FieldHelper::clearCache();
     }
 }

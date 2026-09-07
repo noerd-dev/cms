@@ -26,9 +26,13 @@ as its `app-modules/website` frontend module.
   (field types `collection-select`, `element-collection`, `homepage-select`; relation types
   `pageRelation`, `authorRelation`)
 - `database/migrations|factories/`, `tests/` (Pest), `resources/lang/de.json`
-- The tenant app name is `CMS` (uppercase). Content tables are created by the module
-  migrations; `cms_settings` is a tenant singleton (unique `tenant_id`)
-- `skills/cms-website-import/` — the Boost skill that migrates a static Blade site into the CMS
+- The tenant app name is `CMS` (uppercase). Every table carries the `cms_` prefix and is created by
+  the module migrations; `cms_settings` is a tenant singleton (unique `tenant_id`)
+- Settings, languages and collection definitions are admin-only screens, registered through
+  `ComponentAccessGuard::registerAdminComponents()` in the provider — never through the `setup`
+  middleware, which would switch the selected app away from CMS
+- `skills/cms-website-import/` — the Boost skill that migrates a static Blade site into the CMS; its
+  `templates/` hold the element/form/seeder stubs the skill copies
 
 ## Commands
 
@@ -40,9 +44,12 @@ as its `app-modules/website` frontend module.
 
 ## Working on the module
 
-- Tests: `php artisan test --compact app-modules/cms/tests` (Pest; tests prove mechanics,
-  never the current YAML configuration). Run sequentially — never in parallel with other
-  suites when the test database is shared.
+- Tests: `php artisan test --compact app-modules/cms/tests` inside a host (Pest; tests prove
+  mechanics, never the current YAML configuration; run sequentially — never in parallel with
+  other suites when the test database is shared) or standalone with `composer install &&
+  vendor/bin/pest` (Orchestra Testbench + sqlite via `Noerd\Cms\Tests\TestCase`, the setup CI
+  runs). Every test file binds `Noerd\Cms\Tests\TestCase` itself; the fixtures are
+  `CreatesCmsUser`, `CreatesElementFixtures` and `CreatesCollectionDefinitions`
 - Format from the host project root with an explicit path: `vendor/bin/pint app-modules/cms`
   (a plain `--dirty` run silently skips submodule files)
 - Keep the module independent of other optional modules. The ONLY allowed website touchpoint
@@ -60,3 +67,5 @@ as its `app-modules/website` frontend module.
 
 - Tagging a version requires the `composer.json` `"version"` field to equal the tag in the
   tagged commit. A pushed tag is immutable — never move it; ship fixes as the next patch release.
+- The retired `v1.x` tag series (pre-0.1 history) was deleted before the 0.2 release so a plain
+  `composer require noerd/cms` resolves the 0.x line — never recreate tags above the current line.

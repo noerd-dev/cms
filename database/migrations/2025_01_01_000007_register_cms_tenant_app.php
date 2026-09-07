@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +18,7 @@ return new class extends Migration {
             DB::table('tenant_apps')->insert([
                 'title' => 'CMS',
                 'name' => 'CMS',
-                'icon' => 'cms::icons.app',
+                'icon' => 'heroicon:outline:rectangle-group',
                 'route' => 'cms.dashboard',
                 'is_active' => true,
                 'created_at' => now(),

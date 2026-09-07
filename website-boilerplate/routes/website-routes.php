@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Facades\Route;
 use Noerd\Website\Controllers\WebsiteController;
 use Noerd\Website\Middleware\WebsiteMiddleware;

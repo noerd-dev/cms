@@ -13,7 +13,7 @@ use Noerd\Helpers\FormatHelper;
 use Noerd\Models\NoerdSettings;
 use Noerd\Models\Tenant;
 
-uses(Tests\TestCase::class, RefreshDatabase::class);
+uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {
     Mail::fake();
@@ -28,7 +28,7 @@ beforeEach(function (): void {
         'send_email' => true,
         'notification_email' => 'fallback@example.com',
         'email_subject' => 'Ihre Anfrage',
-        'email_body' => '<p>Hallo {{field:name}}, danke fuer Ihre Nachricht.</p>',
+        'email_body' => '<p>Hello {{field:name}}, thanks for your message.</p>',
     ]);
 });
 
@@ -41,7 +41,7 @@ function zzSubmitContactForm(object $context, array $data = []): FormRequest
         'data' => array_merge([
             'name' => 'Max Mustermann',
             'email' => 'absender@example.com',
-            'nachricht' => 'Bitte um Rueckruf.',
+            'message' => 'Please call back.',
         ], $data),
     ]);
 }
@@ -105,7 +105,7 @@ describe('placeholders', function (): void {
     it('substitutes the form title, the submission date and every field placeholder', function (): void {
         $this->formType->update([
             'email_subject' => 'Re: {{form_title}}',
-            'email_body' => '<p>Hallo {{field:name}} ({{field:email}}), eingegangen am {{submission_date}}.</p>',
+            'email_body' => '<p>Hello {{field:name}} ({{field:email}}), eingegangen am {{submission_date}}.</p>',
         ]);
 
         $formRequest = zzSubmitContactForm($this);
@@ -113,7 +113,7 @@ describe('placeholders', function (): void {
         SendFormConfirmationEmail::dispatchSync($formRequest);
 
         Mail::assertSent(FormConfirmation::class, fn(FormConfirmation $mail): bool => $mail->emailSubject === 'Re: Kontaktformular'
-                && $mail->emailBody === '<p>Hallo Max Mustermann (absender@example.com), eingegangen am '
+                && $mail->emailBody === '<p>Hello Max Mustermann (absender@example.com), eingegangen am '
                     . FormatHelper::documentDateTime($formRequest->created_at, $this->tenant->id) . '.</p>');
     });
 
@@ -134,7 +134,7 @@ describe('placeholders', function (): void {
 
     it('escapes submitted values before they reach the html mail body', function (): void {
         $this->formType->update([
-            'email_body' => '<p>Hallo {{field:name}}</p>',
+            'email_body' => '<p>Hello {{field:name}}</p>',
         ]);
 
         SendFormConfirmationEmail::dispatchSync(
@@ -147,17 +147,17 @@ describe('placeholders', function (): void {
 
     it('renders the substituted body into the mail view', function (): void {
         $this->formType->update([
-            'email_body' => '<p>Hallo {{field:name}}</p>',
+            'email_body' => '<p>Hello {{field:name}}</p>',
         ]);
 
         $mail = new FormConfirmation(
             zzSubmitContactForm($this, ['name' => 'Erika']),
             'Ihre Anfrage',
-            '<p>Hallo Erika</p>',
+            '<p>Hello Erika</p>',
         );
 
         $rendered = $mail->render();
 
-        expect($rendered)->toContain('<p>Hallo Erika</p>');
+        expect($rendered)->toContain('<p>Hello Erika</p>');
     });
 });

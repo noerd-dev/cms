@@ -9,6 +9,8 @@ use Noerd\Cms\Models\ElementPage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Facades\Noerd;
+use Noerd\Support\RelationFieldDefinition;
+use Noerd\Helpers\AccessHelper;
 
 new class extends Component
 {
@@ -41,7 +43,8 @@ new class extends Component
      */
     public function manage(): void
     {
-        if (! $this->ownerId) {
+        // Creating the element collection writes to the owning page's data.
+        if (! $this->ownerId || ! AccessHelper::canWriteObject(Page::class)) {
             return;
         }
 
@@ -119,7 +122,7 @@ new class extends Component
         }
 
         $names = is_array($page->name) ? $page->name : [];
-        $entryName = $names['de'] ?? (reset($names) ?: '');
+        $entryName = RelationFieldDefinition::normalizeDisplayValue($names);
 
         return [$page->tenant_id, (string) $entryName];
     }

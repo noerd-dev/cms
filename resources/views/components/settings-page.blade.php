@@ -13,23 +13,12 @@ new class extends Component {
         'detailData' => CmsSetting::class,
     ];
 
-    public function mount(): void
-    {
-        $this->initSettings();
-
-        // The stored value may still be null — the form shows the effective
-        // default (package config fallback, then the built-in default).
-        if (empty($this->detailData['cookie_lifetime_days'])) {
-            $this->detailData['cookie_lifetime_days'] = (new CmsSetting())->cookieLifetimeInDays();
-        }
-    }
-
     public function store(): void
     {
         $this->validate([
             'detailData.homepage_page_id' => [
                 'nullable',
-                Rule::exists('pages', 'id')->where('tenant_id', TenantHelper::getSelectedTenantId()),
+                Rule::exists('cms_pages', 'id')->where('tenant_id', TenantHelper::getSelectedTenantId()),
             ],
             'detailData.google_analytics_id' => ['nullable', 'string', 'max:50'],
             'detailData.show_cookie_banner' => ['boolean'],

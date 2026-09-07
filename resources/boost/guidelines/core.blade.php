@@ -9,9 +9,10 @@ The CMS module is a multi-tenant, multi-language content management system. It p
 - **Data column:** `data` (array cast) stores collection-specific field data
 - **Casts:** `meta_noindex`, `is_active` (boolean; defaults to `true`)
 - **Relationships:** `elements()` hasMany ElementPage, `collection()` belongsTo Collection
-- The page editor is a slim `NoerdDetail` component (`cms::page-detail`): `$detailModel = Page::class`, `$detailPrimary = 'pageId'`, form state in `$detailData` (array — the Eloquent model is never a component property)
+- The page editor is a custom `NoerdDetail` component (`cms::page-detail`): `$detailModel = Page::class`, `$detailPrimary = 'pageId'`, form state in `$detailData` (array — the Eloquent model is never a component property). It overrides `mount()` (collection entry detection), `store()` (plain page vs. collection entry) and `updated()` (slug derivation) and delegates to three services: `PageSlugService` (slug generation + uniqueness), `PageElementEditorService` (add/move/duplicate/delete elements, copy a page) and `CollectionEntryStore` (persist collection entries and element-collection rows)
+- Element mutations are guarded like `store()`: every mutator starts with `canSaveObject()` (the generic `WriteGuardHook` only covers `store`/`delete`)
 - Slugs are auto-generated from the name; non-default languages get a language prefix (e.g., `/en/page-name`)
-- Layouts are discovered from `website/resources/views/components/layouts/`
+- Layouts are discovered from `config('noerd_cms.layout_path')` (`Noerd\Cms\Support\PageLayouts`), default `app-modules/website/resources/views/components/layouts/`
 
 @verbatim
 <code-snippet name="Page Detail Component Pattern" lang="php">
@@ -26,10 +27,11 @@ public function mount(?string $collectionKey = null): void
     $page = $this->modelId ? (Page::find($this->modelId) ?? new Page()) : new Page();
 
     // Translatable fields must be initialized as arrays for every active language
+    // (LanguageFilterTrait::activeLanguageCodes() — never a hard-coded code list)
     $this->detailData = $page->toArray();
     foreach (['name', 'slug'] as $field) {
         if (! is_array($this->detailData[$field] ?? null)) {
-            $this->detailData[$field] = $this->initializeEmptySlugArray();
+            $this->detailData[$field] = array_fill_keys($this->activeLanguageCodes(), '');
         }
     }
 }
@@ -73,8 +75,8 @@ CollectionDefinition::create([
     'tenant_id' => $tenantId,
     'filename' => 'services',          // lowercase, hyphenated identifier (used in URLs)
     'key' => 'SERVICES',               // stable uppercase key referenced by templates
-    'title' => 'cms_service',
-    'title_list' => 'cms_services',
+    'title' => 'Service',
+    'title_list' => 'Services',
     'has_page' => true,                // entries become full pages
     'fields' => [
         ['name' => 'detailData.name', 'label' => 'Name', 'type' => 'translatableText', 'colspan' => 6],
@@ -96,7 +98,7 @@ CollectionDefinition::create([
 
 ### Forms
 
-- YAML definitions in `app-configs/cms/forms/` (e.g., `contact.yml`)
+- YAML definitions in `app-configs/cms/forms/` (e.g., `contact.yml`) — labels, messages and button texts are English translation keys, the German text lives in `de.json`
 - **Model:** `Noerd\Cms\Models\FormType` with `send_email`, `notification_email`, `email_subject`, `email_body`
 - **Sync:** `FormTypeSyncService` syncs YAML to database via `php artisan cms:sync-form-types`
 - Only re-syncs when the YAML file has changed (checks modification time) unless `--force` is used
@@ -106,8 +108,8 @@ CollectionDefinition::create([
 @verbatim
 <code-snippet name="Form YAML Structure" lang="yaml">
 key: contact
-title: Kontaktformular
-description: 'Allgemeines Kontaktformular für Kundenanfragen'
+title: Contact Form
+description: 'General contact form for customer enquiries'
 send_email: true
 fields:
   - name: name
@@ -119,10 +121,10 @@ fields:
       - string
       - 'max:255'
     error_messages:
-      required: 'Der Name ist erforderlich.'
-    placeholder: 'Ihr vollständiger Name'
+      required: 'The name is required.'
+    placeholder: 'Your full name'
   - name: email
-    label: E-Mail
+    label: Email
     type: email
     required: true
     validation:
@@ -130,11 +132,11 @@ fields:
       - email
       - 'max:255'
     error_messages:
-      required: 'Die E-Mail-Adresse ist erforderlich.'
-      email: 'Bitte geben Sie eine gültige E-Mail-Adresse ein.'
-    placeholder: ihre@email.de
-success_message: 'Vielen Dank! Ihre Nachricht wurde erfolgreich gesendet.'
-submit_button_text: 'Nachricht senden'
+      required: 'The email address is required.'
+      email: 'Please enter a valid email address.'
+    placeholder: you@example.com
+success_message: 'Thank you! Your message has been sent successfully.'
+submit_button_text: 'Send message'
 </code-snippet>
 @endverbatim
 
@@ -144,7 +146,7 @@ submit_button_text: 'Nachricht senden'
 - **Translatable fields:** `title`, `slug` (both cast as arrays)
 - **Casts:** `is_active` (boolean), `publication_date` (date)
 - **Scope:** `published()` filters for `is_active = true`, `publication_date` not null, and `publication_date <= today`
-- The article editor is a slim `NoerdDetail` component (`cms::article-detail`) binding `$detailData`
+- The article editor is a custom `NoerdDetail` component (`cms::article-detail`): it overrides `mount()` (translatable title/slug arrays), `updated()` (slug from the title through `PageSlugService`) and `store()`, and reacts to `authorSelected`
 
 @verbatim
 <code-snippet name="Article Published Scope" lang="php">
@@ -166,36 +168,44 @@ $articles = Article::published()->with('author')->latest('publication_date')->ge
 - `ensureDefaultLanguageForTenant(int $tenantId)` ensures exactly one default language per tenant
 - Boot logic: only one default per tenant; if default is deleted, next active becomes default; first language is auto-default
 - Language codes are tenant-configurable through the UI; `Noerd\Cms\Support\CmsLanguageCodes` resolves the active codes per tenant (`active()`) and the recognition baseline (`known()` — built-ins `de,en,fr,es,it,nl` plus every configured code)
-- `LanguageFilterTrait` provides session-based language selection for Livewire components
+- `LanguageFilterTrait` provides session-based language selection for Livewire components plus the code helpers `defaultLanguageCode()`, `activeLanguageCodes()` and `selectedLanguageCode()` — components never query `CmsLanguage` for codes themselves
 
 @verbatim
 <code-snippet name="LanguageFilterTrait Usage" lang="php">
+use Livewire\Attributes\Computed;
 use Noerd\Cms\Traits\LanguageFilterTrait;
+use Noerd\Traits\NoerdList;
 
-class PagesListComponent extends Component
+new class extends Component
 {
     use LanguageFilterTrait;
+    use NoerdList;
+
+    public $listModel = Page::class;
 
     public function mount(): void
     {
-        // Returns session language or tenant default (fallback: 'de')
-        $language = $this->ensureDefaultLanguage();
+        $this->mountList();
 
-        // Check if tenant has multiple active languages
-        if ($this->hasMultipleLanguages()) {
-            // Add language filter to list
-            $this->filters[] = $this->getLanguageListFilter();
-        }
+        // Returns the session language or the tenant default
+        $this->ensureDefaultLanguage();
     }
-}
+
+    // The list's Excel-style filters — a language picklist when the tenant runs several languages
+    #[Computed]
+    public function tableFilters(): array
+    {
+        return $this->hasMultipleLanguages() ? [$this->getLanguageListFilter()] : [];
+    }
+};
 </code-snippet>
 @endverbatim
 
 ### API Authentication
 
 - **Middleware:** `CmsApiAuth` (`cms_api` alias)
-- Token resolution priority: `Authorization: Bearer <token>` → `X-API-Key: <token>` → query param `api_token`
-- Looks up `NoerdUser` by `api_token`, validates `selected_tenant_id`, verifies tenant exists
+- Token resolution: `Authorization: Bearer <token>` → `X-API-Key: <token>` (never the query string)
+- Looks up `NoerdUser` by `api_token`, validates `selected_tenant_id`, verifies the tenant exists and runs the CMS app
 - Attaches `tenant_id`, `tenant`, and `user` to request attributes
 - Returns 401 JSON on any authentication failure
 
@@ -207,6 +217,16 @@ curl -X POST https://example.test/api/cms/form-requests \
   -d '{"form": "contact", "data": {"name": "John", "email": "john@example.com", "message": "Hello"}}'
 </code-snippet>
 @endverbatim
+
+### Redirects
+
+- **Model:** `Noerd\Cms\Models\Redirect` — table `cms_redirects`, unique per tenant and `source_path`; `normalizePath()` is the canonical form (lowercase, no trailing slash, no query/fragment) shared with the website boilerplate's copy
+- Screens: `cms::redirects-list` / `cms::redirect-detail` (`redirects-list.yml`, `redirect-detail.yml`); the detail rejects `/`, an already redirected path and a path that belongs to the target page itself
+
+### Access Control
+
+- Routes carry `['noerd', 'app-access:cms']`. Settings, languages and collection definitions are admin-only through `ComponentAccessGuard::registerAdminComponents()` in the provider — never the `setup` middleware, which would switch the selected app. Every write path outside `store()`/`delete()` (element mutators, `copy()`, `manage()`) checks `canSaveObject()` / `AccessHelper::canWriteObject()` itself
+- `Page` and `Navigation` use `GuardedByObjectPermission`, so hand-built counters (dashboard) honour the object read permission
 
 ### Settings Page
 
@@ -221,6 +241,11 @@ curl -X POST https://example.test/api/cms/form-requests \
 - Only `de.json` needed: `app-modules/cms/resources/lang/de.json`
 - No `en.json` — English works by fallback (key = English text)
 - Use `loadJsonTranslationsFrom()` in the CMS ServiceProvider
+
+### Database
+
+- Every table carries the `cms_` prefix (`cms_pages`, `cms_page_elements`, `cms_collections`, `cms_collection_definitions`, `cms_form_types`, `cms_form_requests`, `cms_global_parameters`, `cms_authors`, `cms_articles`, `cms_navigations`, `cms_redirects`, `cms_languages`, `cms_settings`); an installation from 0.1.x is renamed by the `rename_cms_tables_with_prefix` migration
+- `Collection` and `CollectionDefinition` use `BelongsToTenant` like every other content model; queries for ANOTHER tenant go through explicit helpers (`CmsLanguage::forTenant()`)
 
 ### YAML File Locations
 

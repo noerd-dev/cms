@@ -17,7 +17,7 @@ app-configs/cms/settings/settings-page.yml
 
 Package configuration:
 ```
-app-modules/cms/config/noerd_cms.php
+config/noerd_cms.php
 ```
 
 ## Settings
@@ -50,7 +50,7 @@ The `CmsSetting` model (`cms_settings` table, one row per tenant — enforced by
 ## Configuration File
 
 ```php
-// app-modules/cms/config/noerd_cms.php
+// config/noerd_cms.php
 return [
     'website_url' => env('CMS_WEBSITE_URL', ''),
     'page_elements_path' => env('CMS_PAGE_ELEMENTS_PATH'),

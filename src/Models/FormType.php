@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Models;
 
 use Exception;
@@ -19,7 +21,7 @@ class FormType extends Model
     use BelongsToTenant;
     use HasFactory;
 
-    protected $table = 'form_types';
+    protected $table = 'cms_form_types';
 
     protected $guarded = [];
 
@@ -146,11 +148,14 @@ class FormType extends Model
         return $placeholders;
     }
 
-    protected static function newFactory()
+    protected static function newFactory(): FormTypeFactory
     {
         return FormTypeFactory::new();
     }
 
+    /**
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [

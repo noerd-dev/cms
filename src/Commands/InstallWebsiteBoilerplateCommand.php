@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Commands;
 
 use Exception;
@@ -142,18 +144,10 @@ class InstallWebsiteBoilerplateCommand extends Command
         $this->info('Registering website module...');
 
         try {
-            // Require the copied module through the app-modules path repository
-            $this->requireWebsitePackage();
-
-            // Run composer dump-autoload to ensure the module is discoverable
-            $this->line('<comment>Running composer dump-autoload...</comment>');
-            exec('cd ' . escapeshellarg(base_path()) . ' && composer dump-autoload', $output, $returnCode);
-
-            if ($returnCode !== 0) {
-                $this->warn('Failed to run composer dump-autoload automatically. Please run it manually.');
-            } else {
-                $this->line('<info>Autoloader refreshed successfully.</info>');
-            }
+            // Make sure composer can see the copied module, then leave the
+            // composer run itself to the operator — shelling out to composer
+            // from inside artisan is fragile (PHP binary, memory limit, TTY).
+            $this->ensurePathRepository();
 
             // Clear Laravel's cached services to ensure service provider discovery
             $this->line('<comment>Clearing Laravel caches...</comment>');
@@ -167,44 +161,41 @@ class InstallWebsiteBoilerplateCommand extends Command
                 $this->line('<info>Cleared cached services file.</info>');
             }
 
-            $this->line('<info>Module registered successfully.</info>');
+            $this->line('');
+            $this->info('Finish the registration with:');
+            $this->line('  composer require noerd/website');
         } catch (Exception $e) {
             $this->warn('Module registration may need manual intervention: ' . $e->getMessage());
         }
     }
 
     /**
-     * Require the copied module via composer. This depends on a path repository
-     * covering app-modules/* — ensure one exists before requiring, so the
-     * command also works on hosts installed from a package registry.
+     * The copied module is required through a path repository covering
+     * app-modules/*. Add one to composer.json when missing, so the command also
+     * works on hosts installed from a package registry.
      */
-    private function requireWebsitePackage(): void
+    private function ensurePathRepository(): void
     {
-        $composerJson = json_decode((string) file_get_contents(base_path('composer.json')), true) ?? [];
+        $composerPath = base_path('composer.json');
+        $composerJson = json_decode((string) file_get_contents($composerPath), true) ?? [];
         $hasPathRepository = collect($composerJson['repositories'] ?? [])
             ->contains(fn($repository) => ($repository['type'] ?? null) === 'path'
                 && str_starts_with((string) ($repository['url'] ?? ''), 'app-modules'));
 
-        if (! $hasPathRepository) {
-            $this->line('<comment>Adding app-modules path repository to composer.json...</comment>');
-            exec('cd ' . escapeshellarg(base_path()) . ' && composer config repositories.app-modules path "app-modules/*"', $repoOutput, $repoReturnCode);
-
-            if ($repoReturnCode !== 0) {
-                $this->warn('Could not add the path repository automatically. Add {"type": "path", "url": "app-modules/*"} to composer.json manually.');
-            }
+        if ($hasPathRepository) {
+            return;
         }
 
-        $this->line('<comment>Installing website package via composer...</comment>');
+        $this->line('<comment>Adding app-modules path repository to composer.json...</comment>');
+        $composerJson['repositories'] = [
+            ...array_values($composerJson['repositories'] ?? []),
+            ['type' => 'path', 'url' => 'app-modules/*'],
+        ];
 
-        // Install the website package explicitly to trigger package discovery
-        exec('cd ' . escapeshellarg(base_path()) . ' && composer require noerd/website', $output, $returnCode);
-
-        if ($returnCode !== 0) {
-            $this->warn('Failed to install noerd/website package. Output: ' . implode("\n", $output));
-            $this->warn('You may need to run "composer require noerd/website" manually.');
-        } else {
-            $this->line('<info>Website package installed successfully.</info>');
-        }
+        file_put_contents(
+            $composerPath,
+            json_encode($composerJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n",
+        );
     }
 
     /**

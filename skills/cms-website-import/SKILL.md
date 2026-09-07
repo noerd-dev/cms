@@ -9,7 +9,7 @@ metadata:
 
 # CMS Website Import
 
-Migrate a hand-written Blade website into the Noerd CMS module. The CMS ships as a complete subsystem (Page, ElementPage, Navigation, Collection, FormType, CmsLanguage, WebsiteController, WebsiteMiddleware, weblayout, 13 ready-made element blade+yml pairs) and is multi-tenant + multi-language. This skill produces a deterministic procedure that turns static templates into DB-driven pages.
+Migrate a hand-written Blade website into the Noerd CMS module. The CMS ships as a complete subsystem (Page, ElementPage, Navigation, Collection, FormType, CmsLanguage, WebsiteController, WebsiteMiddleware, weblayout, 12 ready-made element blade+yml pairs) and is multi-tenant + multi-language. This skill produces a deterministic procedure that turns static templates into DB-driven pages.
 
 ## Deliverables
 
@@ -55,7 +55,7 @@ For each section in the inventory, map to an existing CMS element. Discover the 
 | Single image                        | `image_block_1_column`                |
 | Two/three image grid                | `images_block_2_column` / `_3_column` |
 | Slider/carousel from a collection   | `slider`                              |
-| Card grid of collection items       | `collection_cards`                    |
+| Home page hero with text            | `text_block_home_page`                |
 | Map embed                           | `google_map`                          |
 | CTA button / link button            | `button_link`                         |
 
@@ -65,7 +65,7 @@ If no existing element matches, generate a new pair from `templates/element.blad
 
 Produce a written seed plan (table form) before generating SQL. Rules:
 
-- **Pages** — one `pages` row per inventory page. Translatable fields are JSON arrays even with a single language: `name => json_encode(['de' => 'Startseite'])`, `slug => json_encode(['de' => '/startseite'])`. Slugs always start with `/`. `layout` defaults to `null` (resolves to `weblayout` at render). Update `cms_settings.homepage_page_id` for the homepage.
+- **Pages** — one `pages` row per inventory page. Translatable fields are JSON arrays even with a single language: `name => json_encode([$code => 'Startseite'])`, `slug => json_encode([$code => '/startseite'])` — `$code` is the tenant's default language (`CmsLanguageCodes::active()[0]`), never a hard-coded `'de'`. Slugs always start with `/`. `layout` defaults to `null` (resolves to `weblayout` at render). Update `cms_settings.homepage_page_id` for the homepage.
 - **Collections** — for each repeated structure, seed a `collection_definitions` row via the migration's `upsertCollectionDefinition(...)` helper (see `templates/seed_imported_website.php.stub`). Use `hasPage: true` if items get their own URL (services, projects); `hasPage: false` for embedded data (sliders, testimonials, team members). Each collection item is a `pages` row with `collection_id` set.
 - **Navigation** — insert into `cms_navigations` with `navigation_key` `main` or `footer` (lowercase, matching the demo seeder). Set `page_id` for internal links, `link` for external. Use `parent_id` + `sort_order` for nested menus.
 - **Globals** — site-wide values (phone, email, site title) go in `global_parameters` as translatable JSON values keyed by name.
@@ -81,7 +81,7 @@ Every `element_page.data` field that the yml declares as `translatableText` / `t
 ]),
 ```
 
-`HandlesPageElements::localizeArray()` decides translatability by checking whether **all** array keys are language codes (the tenant-configured codes resolved by `CmsLanguageCodes::known()` — built-ins `de, en, fr, es, it, nl` plus every code added through the UI). Anything else stays flat. Element rows must set `sort` (1, 2, 3 …) and the correct snake_case `element_key`.
+`HandlesPageElements::localizeArray()` decides translatability by checking whether **all** array keys are language codes (`CmsLanguageCodes::isLanguageMap()`, built on the recognition baseline `CmsLanguageCodes::known()` — built-ins `de, en, fr, es, it, nl` plus every code added through the UI). Anything else stays flat. Element rows must set `sort` (1, 2, 3 …) and the correct snake_case `element_key`.
 
 ### Phase 5 — Forms
 
@@ -96,7 +96,7 @@ For every `<form>` found:
 
 The CMS module already provides:
 
-- `WebsiteController::slug()` — slug-based lookup with `whereJsonContains('slug->de', …)`.
+- `WebsiteController::slug()` — slug-based lookup with `whereJsonContains('slug->' . $languageCode, …)`, where the code is the request's language.
 - Catch-all route registered in `WebsiteServiceProvider::registerCatchAllRoutes()` (lowest priority via `$this->app->booted()`).
 - `WebsiteMiddleware` — tenant + language resolution.
 
@@ -138,8 +138,8 @@ Run all of these and report results:
 
 ## Common pitfalls
 
-- **Translatable fields must be JSON arrays.** `'name' => 'Startseite'` silently breaks the admin UI — always `['de' => 'Startseite']`.
-- **Slugs always start with `/`.** `whereJsonContains('slug->de', '/foo')` only matches exact strings.
+- **Translatable fields must be JSON arrays.** `'name' => 'Startseite'` silently breaks the admin UI — always `[$code => 'Startseite']` with the tenant's default code.
+- **Slugs always start with `/`.** `whereJsonContains('slug->' . $code, '/foo')` only matches exact strings.
 - **Element keys are snake_case; element files are kebab-case.** Mismatches cause `processPageElements()` to fall back to `text_block_1_column`.
 - **Navigation `navigation_key`** — the `Navigation::navigationKey` mutator uppercases on save, but `WebsiteService::getNavigation()` queries with whatever string is passed (`main`, `footer`). Keep the seeder lowercase to match the demo migration; the mutator handles both.
 - **Don't store images as base64.** Copy assets to `public/storage/...` (or wherever the project keeps uploads) and store the URL string in `data`.

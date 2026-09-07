@@ -1,6 +1,6 @@
 key: contact
-title: Kontaktformular
-description: 'Allgemeines Kontaktformular für Kundenanfragen'
+title: Contact Form
+description: 'General contact form for customer enquiries'
 send_email: true
 fields:
   - name: name
@@ -12,10 +12,10 @@ fields:
       - string
       - 'max:255'
     error_messages:
-      required: 'Der Name ist erforderlich.'
-    placeholder: 'Ihr vollständiger Name'
+      required: 'The name is required.'
+    placeholder: 'Your full name'
   - name: email
-    label: E-Mail
+    label: Email
     type: email
     required: true
     validation:
@@ -23,11 +23,11 @@ fields:
       - email
       - 'max:255'
     error_messages:
-      required: 'Die E-Mail-Adresse ist erforderlich.'
-      email: 'Bitte geben Sie eine gültige E-Mail-Adresse ein.'
-    placeholder: ihre@email.de
+      required: 'The email address is required.'
+      email: 'Please enter a valid email address.'
+    placeholder: you@example.com
   - name: phone
-    label: Telefon
+    label: Phone
     type: tel
     required: false
     validation:
@@ -36,7 +36,7 @@ fields:
       - 'max:255'
     placeholder: '+49 ...'
   - name: message
-    label: Nachricht
+    label: Message
     type: textarea
     required: true
     rows: 4
@@ -45,7 +45,7 @@ fields:
       - string
       - 'max:2000'
     error_messages:
-      required: 'Bitte geben Sie eine Nachricht ein.'
-    placeholder: 'Ihre Nachricht an uns...'
-success_message: 'Vielen Dank! Ihre Nachricht wurde erfolgreich gesendet. Wir werden uns bald bei Ihnen melden.'
-submit_button_text: 'Nachricht senden'
+      required: 'Please enter a message.'
+    placeholder: 'Your message to us...'
+success_message: 'Thank you! Your message has been sent successfully. We will get back to you soon.'
+submit_button_text: 'Send message'

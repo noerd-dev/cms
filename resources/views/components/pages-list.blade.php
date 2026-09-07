@@ -10,7 +10,6 @@ use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
-use Noerd\Scopes\TenantScope;
 use Noerd\Traits\NoerdList;
 
 new class extends Component {
@@ -106,8 +105,7 @@ new class extends Component {
     public function listData(): array
     {
         // Get all collections with hasPage: false to exclude their pages
-        $collectionsWithoutPages = Collection::withoutGlobalScope(TenantScope::class)
-            ->where('tenant_id', Auth::user()->selected_tenant_id)
+        $collectionsWithoutPages = Collection::query()
             ->get()
             ->filter(function ($collection) {
                 $collectionFields = CollectionHelper::getCollectionFields(strtolower($collection->collection_key));

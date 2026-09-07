@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -22,7 +24,7 @@ return new class extends Migration {
             $table->unique(['tenant_id', 'source_path'], 'cms_redirects_tenant_source_unique');
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->cascadeOnDelete();
-            $table->foreign('target_page_id')->references('id')->on('pages')->cascadeOnDelete();
+            $table->foreign('target_page_id')->references('id')->on('cms_pages')->cascadeOnDelete();
         });
     }
 

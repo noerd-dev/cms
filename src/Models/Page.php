@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,13 +11,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Noerd\Cms\Database\Factories\PageFactory;
 use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Traits\BelongsToTenant;
+use Noerd\Traits\GuardedByObjectPermission;
 
 class Page extends Model
 {
     use BelongsToTenant;
+    use GuardedByObjectPermission;
     use HasFactory;
 
     protected $guarded = [];
+
+    protected $table = 'cms_pages';
 
     protected $attributes = [
         'is_active' => true,

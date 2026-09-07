@@ -141,7 +141,7 @@ return new class () extends Migration {
             ];
 
             foreach ($globals as $key => $value) {
-                DB::table('global_parameters')->updateOrInsert(
+                DB::table('cms_global_parameters')->updateOrInsert(
                     ['tenant_id' => $tenantId, 'key' => $key],
                     [
                         'value' => json_encode($value),
@@ -168,13 +168,13 @@ return new class () extends Migration {
             // ─────────────────────────────────────────────────────────────
             // 6. Collection rows (each item is a Page with collection_id set)
             // ─────────────────────────────────────────────────────────────
-            $servicesCollectionId = DB::table('collections')
+            $servicesCollectionId = DB::table('cms_collections')
                 ->where('tenant_id', $tenantId)
                 ->where('collection_key', '{{ SERVICES }}')
                 ->value('id');
 
             if ($servicesCollectionId === null) {
-                $servicesCollectionId = DB::table('collections')->insertGetId([
+                $servicesCollectionId = DB::table('cms_collections')->insertGetId([
                     'tenant_id' => $tenantId,
                     'collection_key' => '{{ SERVICES }}',
                     'name' => '{{ Services }}',
@@ -220,7 +220,7 @@ return new class () extends Migration {
         ?int $collectionId,
         \Carbon\Carbon $now,
     ): int {
-        $existing = DB::table('pages')
+        $existing = DB::table('cms_pages')
             ->where('tenant_id', $tenantId)
             ->whereJsonContains('slug->de', $slug)
             ->first();
@@ -229,7 +229,7 @@ return new class () extends Migration {
             return $existing->id;
         }
 
-        return DB::table('pages')->insertGetId([
+        return DB::table('cms_pages')->insertGetId([
             'tenant_id' => $tenantId,
             'collection_id' => $collectionId,
             'name' => json_encode($names),
@@ -249,7 +249,7 @@ return new class () extends Migration {
      */
     private function upsertElement(int $pageId, int $sort, string $key, array $data): void
     {
-        $exists = DB::table('element_page')
+        $exists = DB::table('cms_page_elements')
             ->where('page_id', $pageId)
             ->where('sort', $sort)
             ->exists();
@@ -258,7 +258,7 @@ return new class () extends Migration {
             return;
         }
 
-        DB::table('element_page')->insert([
+        DB::table('cms_page_elements')->insert([
             'page_id' => $pageId,
             'element_key' => $key,
             'sort' => $sort,
@@ -275,7 +275,7 @@ return new class () extends Migration {
         bool $hasPage,
         \Carbon\Carbon $now,
     ): void {
-        DB::table('collection_definitions')->updateOrInsert(
+        DB::table('cms_collection_definitions')->updateOrInsert(
             ['tenant_id' => $tenantId, 'key' => mb_strtoupper($key)],
             [
                 'fields' => json_encode($fields),

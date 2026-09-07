@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Database\Factories\CmsLanguageFactory;
 use Noerd\Cms\Support\CmsLanguageCodes;
+use Noerd\Scopes\TenantScope;
 use Noerd\Traits\BelongsToTenant;
 
 class CmsLanguage extends Model
@@ -17,17 +21,15 @@ class CmsLanguage extends Model
 
     protected $guarded = [];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-        'is_default' => 'boolean',
-    ];
-
     /**
      * Create default English language for a tenant if none exists
      */
     public static function ensureDefaultLanguageForTenant(int $tenantId): self
     {
-        $existing = static::where('tenant_id', $tenantId)->first();
+        // Explicitly tenant-keyed: this also runs for a tenant OTHER than the
+        // acting user's (Tenant::created hook, install command), where the
+        // global tenant scope would filter the lookup down to nothing.
+        $existing = static::forTenant($tenantId)->first();
 
         if ($existing) {
             return $existing;
@@ -43,7 +45,15 @@ class CmsLanguage extends Model
         ]);
     }
 
-    protected static function newFactory()
+    /**
+     * Query the languages of ONE tenant regardless of the acting user's tenant.
+     */
+    public static function forTenant(int $tenantId): Builder
+    {
+        return static::withoutGlobalScope(TenantScope::class)->where('tenant_id', $tenantId);
+    }
+
+    protected static function newFactory(): CmsLanguageFactory
     {
         return CmsLanguageFactory::new();
     }
@@ -60,7 +70,7 @@ class CmsLanguage extends Model
         // After deleting, ensure there's still a default language
         static::deleted(function (CmsLanguage $language): void {
             if ($language->is_default) {
-                $newDefault = static::where('tenant_id', $language->tenant_id)
+                $newDefault = static::forTenant((int) $language->tenant_id)
                     ->where('is_active', true)
                     ->first();
 
@@ -74,7 +84,7 @@ class CmsLanguage extends Model
         static::saving(function (CmsLanguage $language): void {
             // If this is the first language for the tenant, make it default
             if (! $language->exists) {
-                $existingCount = static::where('tenant_id', $language->tenant_id)->count();
+                $existingCount = static::forTenant((int) $language->tenant_id)->count();
                 if ($existingCount === 0) {
                     $language->is_default = true;
                     $language->is_active = true;
@@ -85,19 +95,19 @@ class CmsLanguage extends Model
         // After saving, ensure only one default per tenant
         static::saved(function (CmsLanguage $language): void {
             if ($language->is_default) {
-                static::where('tenant_id', $language->tenant_id)
+                static::forTenant((int) $language->tenant_id)
                     ->where('id', '!=', $language->id)
                     ->where('is_default', true)
                     ->update(['is_default' => false]);
             }
 
             // If no default exists after save, set one
-            $hasDefault = static::where('tenant_id', $language->tenant_id)
+            $hasDefault = static::forTenant((int) $language->tenant_id)
                 ->where('is_default', true)
                 ->exists();
 
             if (! $hasDefault) {
-                $firstActive = static::where('tenant_id', $language->tenant_id)
+                $firstActive = static::forTenant((int) $language->tenant_id)
                     ->where('is_active', true)
                     ->first();
 
@@ -106,5 +116,16 @@ class CmsLanguage extends Model
                 }
             }
         });
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+            'is_default' => 'boolean',
+        ];
     }
 }

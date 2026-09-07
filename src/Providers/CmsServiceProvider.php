@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Providers;
 
 use Illuminate\Support\ServiceProvider;
@@ -19,10 +21,12 @@ use Noerd\Cms\Navigation\PageCollectionsNavigationProvider;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Repositories\ElementAwareCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
+use Noerd\Cms\Support\CollectionSelectOptions;
 use Noerd\Models\Tenant;
 use Noerd\Services\DynamicNavigationRegistry;
 use Noerd\Services\FieldTypeRegistry;
 use Noerd\Services\RelationFieldRegistry;
+use Noerd\Support\ComponentAccessGuard;
 use Noerd\Support\FieldTypeDefinition;
 use Noerd\Support\RelationFieldDefinition;
 
@@ -69,6 +73,22 @@ class CmsServiceProvider extends ServiceProvider
         $router = $this->app['router'];
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
 
+        $this->publishes([
+            __DIR__ . '/../../config/noerd_cms.php' => config_path('noerd_cms.php'),
+        ], 'cms-config');
+
+        // Tenant-wide configuration screens are admin-only. The guard runs on
+        // every mount (route, noerdModal event, component-page), so the routes
+        // need no extra middleware — and deliberately not `setup`, which would
+        // switch the selected app away from CMS.
+        ComponentAccessGuard::registerAdminComponents([
+            'cms::settings-page',
+            'cms::languages-list',
+            'cms::language-detail',
+            'cms::collection-definitions-list',
+            'cms::collection-definition-detail',
+        ]);
+
         // Register commands
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -86,15 +106,21 @@ class CmsServiceProvider extends ServiceProvider
 
         $fieldTypeRegistry = $this->app->make(FieldTypeRegistry::class);
         $relationFieldRegistry = $this->app->make(RelationFieldRegistry::class);
+        // Both selects resolve their options here (once per render, never in
+        // the template) and render through the active theme's select element.
         $fieldTypeRegistry->register('collection-select', FieldTypeDefinition::include(
             'cms::components.forms.input-collection-select',
-            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => ['field' => $field],
+            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
+                'field' => $field + ['options' => CollectionSelectOptions::collections($field['required_fields'] ?? [])],
+            ],
         ));
 
         // Dynamic page select used by the CMS settings page (homepage picker).
         $fieldTypeRegistry->register('homepage-select', FieldTypeDefinition::include(
             'cms::components.forms.input-homepage-select',
-            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => ['field' => $field],
+            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
+                'field' => $field + ['options' => CollectionSelectOptions::pages(), 'placeholder' => 'None selected'],
+            ],
         ));
 
         $fieldTypeRegistry->register('element-collection', FieldTypeDefinition::livewire(
@@ -114,12 +140,14 @@ class CmsServiceProvider extends ServiceProvider
         $relationFieldRegistry->register('pageRelation', RelationFieldDefinition::model(
             listComponent: 'cms::pages-list',
             detailComponent: 'cms::page-detail',
+            detailRoute: 'cms.page.detail',
             modelClass: Page::class,
             titleResolver: fn(Page $page): string => RelationFieldDefinition::normalizeDisplayValue($page->name),
         ));
         $relationFieldRegistry->register('authorRelation', RelationFieldDefinition::model(
             listComponent: 'cms::authors-list',
             detailComponent: 'cms::author-detail',
+            detailRoute: 'cms.author.detail',
             modelClass: Author::class,
             titleResolver: 'name',
         ));

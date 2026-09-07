@@ -1,18 +1,27 @@
-### macOS
-# Finder metadata
+# Dependencies
+node_modules/
+package-lock.json
+
+# Composer dependencies (excluded to prevent class conflicts when used as path repository)
+vendor/
+composer.lock
+
+# Development files
 .DS_Store
+*.log
+.env
+.env.local
+.env.production
 
-# Thumbnails
-._*
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Custom folder icons
-Icon
+# Temporary files
+*.tmp
+*.temp
 
-# Volume root files
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
+# Standalone test run artifacts
+.phpunit.cache/

@@ -13,4 +13,5 @@ fields:
   - name: detailData.is_active
     label: 'Active?'
     type: checkbox
+    default: true
     colspan: 6

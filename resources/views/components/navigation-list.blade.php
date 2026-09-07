@@ -3,10 +3,10 @@
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
-use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
+use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdList;
 
 new class extends Component
@@ -25,7 +25,7 @@ new class extends Component
         $this->mountList();
 
         if (empty($this->listFilters['language'])) {
-            $this->listFilters['language'] = session('selectedLanguage') ?: $this->getDefaultLanguageCode();
+            $this->listFilters['language'] = session('selectedLanguage') ?: $this->defaultLanguageCode();
         }
 
         if (empty(session('selectedLanguage'))) {
@@ -88,6 +88,7 @@ new class extends Component
         // listQuery() applies search and the read guard; the hierarchical
         // ordering below requires in-memory assembly and manual pagination.
         $allItems = $this->listQuery($this->listModel)
+            ->with('page')
             ->when($this->listFilters['navigation_key'] ?? null, function ($query, $key): void {
                 $query->where('navigation_key', $key);
             })
@@ -126,10 +127,11 @@ new class extends Component
 
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage')
-            ?? $this->getDefaultLanguageCode();
+            ?? $this->defaultLanguageCode();
 
         // decode name json for table output per selected language
         foreach ($rows as $row) {
+            $row->page_name = RelationFieldDefinition::normalizeDisplayValue($row->page?->name) ?: '';
             $oldName = $row->name;
             $decoded = is_string($row->name) ? json_decode($row->name, true) : ($row->name ?? []);
             $displayName = $decoded[$selectedLanguage] ?? array_values($decoded)[0] ?? $oldName;
@@ -148,14 +150,6 @@ new class extends Component
         return $this->buildList($rows);
     }
 
-    private function getDefaultLanguageCode(): string
-    {
-        $defaultLanguage = CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
-            ->where('is_default', true)
-            ->first();
-
-        return $defaultLanguage?->code ?? 'de';
-    }
 }; ?>
 
 <x-noerd::page>

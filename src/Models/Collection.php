@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Noerd\Cms\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -9,14 +11,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Noerd\Cms\Database\Factories\CollectionFactory;
 use Noerd\Models\NoerdUser;
+use Noerd\Traits\BelongsToTenant;
 
 class Collection extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     protected $guarded = [];
 
-    protected $table = 'collections';
+    protected $table = 'cms_collections';
 
     public function rows(): HasMany
     {
@@ -36,11 +40,14 @@ class Collection extends Model
         return $this->belongsTo(Page::class, 'page_id');
     }
 
-    protected static function newFactory()
+    protected static function newFactory(): CollectionFactory
     {
         return CollectionFactory::new();
     }
 
+    /**
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [

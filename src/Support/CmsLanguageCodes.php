@@ -55,7 +55,13 @@ final class CmsLanguageCodes
      */
     public static function active(): array
     {
-        $tenantId = (int) (TenantHelper::currentTenantId() ?? 0);
+        $tenantId = (int) (TenantHelper::currentTenantId() ?? TenantHelper::getSelectedTenantId() ?? 0);
+
+        // Without a tenant context (console, queue) the global tenant scope
+        // stays unscoped — never answer with the union of every tenant's codes.
+        if ($tenantId === 0) {
+            return self::FALLBACK;
+        }
 
         if (isset(self::$activeCache[$tenantId])) {
             return self::$activeCache[$tenantId];
@@ -63,6 +69,7 @@ final class CmsLanguageCodes
 
         $codes = self::query(
             fn(): array => CmsLanguage::query()
+                ->where('tenant_id', $tenantId)
                 ->where('is_active', true)
                 ->orderBy('is_default', 'desc')
                 ->orderBy('sort_order')

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -7,10 +9,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('pages', function (Blueprint $table): void {
+        Schema::create('cms_pages', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
-            $table->foreignId('collection_id')->nullable()->constrained('collections')->onDelete('cascade');
+            $table->foreignId('collection_id')->nullable()->constrained('cms_collections')->onDelete('cascade');
             $table->json('name')->nullable();
             $table->boolean('is_active')->default(true);
             $table->json('slug')->nullable();
@@ -25,24 +27,29 @@ return new class extends Migration {
             $table->timestamps();
 
             $table->index('tenant_id');
+            // Collection entry lists filter by tenant + collection.
+            $table->index(['tenant_id', 'collection_id']);
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
         });
 
-        Schema::create('global_parameters', function (Blueprint $table): void {
+        Schema::create('cms_global_parameters', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
             $table->string('key');
-            $table->string('value');
+            // Translatable values are JSON language maps — far beyond 255 chars.
+            $table->text('value')->nullable();
             $table->boolean('is_translatable')->default(false);
             $table->timestamps();
 
             $table->index('tenant_id');
+            // A parameter key is looked up per tenant and must be unambiguous.
+            $table->unique(['tenant_id', 'key']);
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
         });
 
-        Schema::create('element_page', function (Blueprint $table): void {
+        Schema::create('cms_page_elements', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('page_id');
             $table->string('element_key');
@@ -50,13 +57,14 @@ return new class extends Migration {
             $table->json('data')->nullable();
             $table->timestamps();
 
-            $table->index('page_id');
+            // Page::elements() reads the elements of one page ordered by sort.
+            $table->index(['page_id', 'sort']);
             $table->index('element_key');
 
-            $table->foreign('page_id')->references('id')->on('pages')->onDelete('cascade');
+            $table->foreign('page_id')->references('id')->on('cms_pages')->onDelete('cascade');
         });
 
-        Schema::create('form_requests', function (Blueprint $table): void {
+        Schema::create('cms_form_requests', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
             $table->string('form');
@@ -64,6 +72,8 @@ return new class extends Migration {
             $table->timestamps();
 
             $table->index('tenant_id');
+            // The submissions list shows the newest entries of a tenant first.
+            $table->index(['tenant_id', 'created_at']);
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
         });
@@ -87,8 +97,8 @@ return new class extends Migration {
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
             $table->foreign('parent_id')->references('id')->on('cms_navigations')->onDelete('cascade');
-            $table->foreign('page_id')->references('id')->on('pages')->onDelete('set null');
-            $table->foreign('collection_id')->references('id')->on('collections')->nullOnDelete();
+            $table->foreign('page_id')->references('id')->on('cms_pages')->onDelete('set null');
+            $table->foreign('collection_id')->references('id')->on('cms_collections')->nullOnDelete();
         });
 
         Schema::create('cms_settings', function (Blueprint $table): void {
@@ -106,24 +116,25 @@ return new class extends Migration {
             $table->unique('tenant_id');
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
-            $table->foreign('homepage_page_id')->references('id')->on('pages')->onDelete('set null');
+            $table->foreign('homepage_page_id')->references('id')->on('cms_pages')->onDelete('set null');
         });
 
         // Complete the circular pages <-> collections relationship now that the
-        // pages table exists. On sqlite adding a foreign key to an existing
-        // table is silently skipped by the schema grammar — acceptable, tests
-        // do not rely on this constraint.
-        Schema::table('collections', function (Blueprint $table): void {
-            $table->foreign('page_id')->references('id')->on('pages')->onDelete('cascade');
+        // pages table exists.
+        Schema::table('cms_collections', function (Blueprint $table): void {
+            $table->foreign('page_id')->references('id')->on('cms_pages')->onDelete('cascade');
+            // An element collection owned by a page element disappears with it.
+            $table->foreign('element_page_id')->references('id')->on('cms_page_elements')->onDelete('cascade');
         });
     }
 
     public function down(): void
     {
-        if (Schema::hasTable('collections')) {
+        if (Schema::hasTable('cms_collections')) {
             try {
-                Schema::table('collections', function (Blueprint $table): void {
+                Schema::table('cms_collections', function (Blueprint $table): void {
                     $table->dropForeign(['page_id']);
+                    $table->dropForeign(['element_page_id']);
                 });
             } catch (Throwable) {
                 // sqlite cannot drop foreign keys — the tables are dropped anyway.
@@ -132,9 +143,9 @@ return new class extends Migration {
 
         Schema::dropIfExists('cms_settings');
         Schema::dropIfExists('cms_navigations');
-        Schema::dropIfExists('form_requests');
-        Schema::dropIfExists('element_page');
-        Schema::dropIfExists('global_parameters');
-        Schema::dropIfExists('pages');
+        Schema::dropIfExists('cms_form_requests');
+        Schema::dropIfExists('cms_page_elements');
+        Schema::dropIfExists('cms_global_parameters');
+        Schema::dropIfExists('cms_pages');
     }
 };

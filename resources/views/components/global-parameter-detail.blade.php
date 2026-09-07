@@ -1,12 +1,15 @@
 <?php
 
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\GlobalParameter;
+use Noerd\Cms\Traits\LanguageFilterTrait;
+use Noerd\Helpers\TenantHelper;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
+    use LanguageFilterTrait;
     use NoerdDetail;
 
     public ?string $detailPrimary = 'globalParameterId';
@@ -60,20 +63,27 @@ new class extends Component {
         }
 
         $this->validate([
-            'detailData.key' => ['required', 'string', 'max:255'],
+            'detailData.key' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('cms_global_parameters', 'key')
+                    ->where('tenant_id', TenantHelper::currentTenantId())
+                    ->ignore($this->modelId),
+            ],
             'detailData.value' => ['required'],
         ]);
 
         $data = collect($this->detailData)
             ->except(['created_at', 'updated_at'])
             ->toArray();
-        $data['tenant_id'] = auth()->user()->selected_tenant_id;
+        $data['tenant_id'] = TenantHelper::currentTenantId();
         $data['is_translatable'] = (bool) ($data['is_translatable'] ?? false);
 
         $value = $this->detailData['value'];
 
         if ($data['is_translatable']) {
-            $data['value'] = json_encode(is_array($value) ? $value : [$this->defaultLanguageCode() => (string) $value]);
+            $data['value'] = json_encode(is_array($value) ? $value : [$this->selectedLanguageCode() => (string) $value]);
         } else {
             if (is_array($value)) {
                 $value = $this->normalizeValueForEditing($value, false);
@@ -87,33 +97,30 @@ new class extends Component {
     }
 
     #[On('languageChanged')]
-    public function refresh()
+    public function onLanguageChanged(): void
     {
-        $this->dispatch('$refresh');
+        // The roundtrip re-renders the translatable inputs against the new language.
     }
 
+    /**
+     * The value field is declared in the YAML as a plain text field; whether it
+     * renders as a translatable input depends on the record's own flag, which
+     * no static configuration can express — so only its type is switched here.
+     */
     private function injectValueField(): void
     {
-        $fields = array_values(array_filter(
-            $this->pageLayout['fields'] ?? [],
-            fn ($field) => ($field['name'] ?? null) !== 'detailData.value',
-        ));
-
-        $fields[] = [
-            'name' => 'detailData.value',
-            'label' => 'Value',
-            'type' => $this->detailData['is_translatable'] ? 'translatableText' : 'text',
-            'colspan' => 12,
-        ];
-
-        $this->pageLayout['fields'] = $fields;
+        foreach ($this->pageLayout['fields'] ?? [] as $index => $field) {
+            if (($field['name'] ?? null) === 'detailData.value') {
+                $this->pageLayout['fields'][$index]['type'] = $this->detailData['is_translatable'] ? 'translatableText' : 'text';
+            }
+        }
     }
 
     private function normalizeValueForEditing(mixed $value, bool $isTranslatable): mixed
     {
         if ($isTranslatable) {
             $languageCodes = $this->activeTenantLanguageCodes();
-            $defaultCode = $this->defaultLanguageCode();
+            $defaultCode = $this->selectedLanguageCode();
 
             if (! is_array($value)) {
                 $scalar = is_scalar($value) ? (string) $value : '';
@@ -133,7 +140,7 @@ new class extends Component {
         }
 
         if (is_array($value)) {
-            $code = $this->defaultLanguageCode();
+            $code = $this->selectedLanguageCode();
             if (isset($value[$code]) && $value[$code] !== '') {
                 return (string) $value[$code];
             }
@@ -152,20 +159,7 @@ new class extends Component {
 
     private function activeTenantLanguageCodes(): array
     {
-        return CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
-            ->where('is_active', true)
-            ->orderBy('is_default', 'desc')
-            ->pluck('code')
-            ->all();
-    }
-
-    private function defaultLanguageCode(): string
-    {
-        return session('selectedLanguage')
-            ?? CmsLanguage::where('tenant_id', auth()->user()->selected_tenant_id)
-                ->where('is_default', true)
-                ->value('code')
-            ?? 'de';
+        return $this->activeLanguageCodes();
     }
 } ?>
 
@@ -175,9 +169,7 @@ new class extends Component {
             {{ __('Global Parameter') }}
 
             <div class="ml-auto">
-                <div class="flex bg-white p-1 rounded-lg w-fit border border-gray-200">
-                    <livewire:cms::language-switcher/>
-                </div>
+                <livewire:cms::language-switcher/>
             </div>
         </x-noerd::modal-title>
     </x-slot:header>
@@ -185,6 +177,6 @@ new class extends Component {
     <x-noerd::tab-content :layout="$pageLayout" />
 
     <x-slot:footer>
-        <x-noerd::delete-save-bar :showDelete="false"/>
+        <x-noerd::delete-save-bar :showDelete="isset($modelId)"/>
     </x-slot:footer>
 </x-noerd::page>
