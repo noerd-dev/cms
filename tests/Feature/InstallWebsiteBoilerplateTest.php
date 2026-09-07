@@ -30,7 +30,7 @@ afterEach(function (): void {
 });
 
 it('copies the boilerplate and registers the path repository without shelling out', function (): void {
-    $exitCode = Artisan::call('noerd:install-website');
+    $exitCode = Artisan::call('noerd:install-website', ['--no-interaction' => true]);
 
     expect($exitCode)->toBe(0)
         ->and(file_exists($this->targetDir . '/composer.json'))->toBeTrue()
@@ -45,10 +45,10 @@ it('copies the boilerplate and registers the path repository without shelling ou
 });
 
 it('overwrites an existing copy with --force', function (): void {
-    Artisan::call('noerd:install-website');
+    Artisan::call('noerd:install-website', ['--no-interaction' => true]);
     File::put($this->targetDir . '/zz-local-change.txt', 'local');
 
-    expect(Artisan::call('noerd:install-website', ['--force' => true]))->toBe(0)
+    expect(Artisan::call('noerd:install-website', ['--force' => true, '--no-interaction' => true]))->toBe(0)
         ->and(file_exists($this->targetDir . '/zz-local-change.txt'))->toBeFalse()
         ->and(file_exists($this->targetDir . '/composer.json'))->toBeTrue();
 });
@@ -57,6 +57,6 @@ it('refuses to replace a website module that is its own git repository', functio
     File::ensureDirectoryExists($this->targetDir . '/.git');
     File::put($this->targetDir . '/keep.txt', 'keep');
 
-    expect(Artisan::call('noerd:install-website', ['--force' => true]))->toBe(1)
+    expect(Artisan::call('noerd:install-website', ['--force' => true, '--no-interaction' => true]))->toBe(1)
         ->and(file_exists($this->targetDir . '/keep.txt'))->toBeTrue();
 });
