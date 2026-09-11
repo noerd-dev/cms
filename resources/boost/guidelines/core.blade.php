@@ -38,6 +38,21 @@ public function mount(?string $collectionKey = null): void
 </code-snippet>
 @endverbatim
 
+### Images Store the Media ID
+
+- An image field (`type: image` in an element YAML or a collection definition) stores the MEDIA ID,
+  never a URL: the media disk mirrors the library's folder tree, so a file's path changes the
+  moment it is moved. `page-detail`, `element-page-detail` and `element-collection-row-detail`
+  write `$media->id`
+- The URL is resolved on the way OUT, centrally in `Noerd\Cms\Support\MediaValues` — called from
+  `HandlesPageElements::processPageElements()` and `PageElementService::processCollectionPageData()`
+  (plus the website copies). Element Blades therefore keep reading a plain URL from
+  `$element->image` and no project's element templates have to change. A value that is not
+  a bare integer — a legacy `/storage/…` string, an external URL — is passed through untouched
+- The migration `store_media_ids_in_cms_data` rewrites existing URLs in `cms_pages.data` and
+  `cms_page_elements.data` to ids; it must run BEFORE `media:restructure`, which changes the paths
+  those URLs were built from
+
 ### Elements
 
 - Elements are Blade + YAML pairs in `app-modules/*/resources/views/components/elements/`

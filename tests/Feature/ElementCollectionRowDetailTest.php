@@ -191,12 +191,14 @@ it('stores a picked media file in an image row field only for the matching token
 
     expect($token)->toBeString()->not->toBeEmpty();
 
+    // The id is stored, not a URL: the media disk mirrors the folder tree, so
+    // a path would only be true until the file is moved.
     $component->call('mediaSelected', $media->id, 'logo', $token)
-        ->assertSet('detailData.logo', '/storage/media/logo.svg')
+        ->assertSet('detailData.logo', $media->id)
         ->assertSet('mediaToken', null)
         ->call('store');
 
-    expect($row->fresh()->data['logo'])->toBe('/storage/media/logo.svg');
+    expect($row->fresh()->data['logo'])->toBe($media->id);
 });
 
 it('clears an image row field', function (): void {

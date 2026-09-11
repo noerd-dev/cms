@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -136,20 +135,15 @@ new class extends Component
             return;
         }
 
-        $this->detailData[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
+        // The id is stored, never the URL: the media disk mirrors the folder
+        // tree, so a path is only true until the file is moved.
+        $this->detailData[$fieldName ?? 'image'] = $media->id;
         $this->mediaToken = null;
     }
 
     public function deleteImage(string $fieldName): void
     {
         $this->detailData[$fieldName] = null;
-    }
-
-    private function urlWithoutDomain(Media $media): string
-    {
-        $url = Storage::disk($media->disk)->url($media->path);
-
-        return mb_strstr($url, '/storage');
     }
 
     private function elementCollection(): ?Collection
