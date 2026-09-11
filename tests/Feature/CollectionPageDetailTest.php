@@ -41,7 +41,9 @@ it('uploads an image via images.field binding and stores path into model', funct
 
     Livewire::test('page-detail', ['pageId' => $entry->id, 'collectionKey' => 'projects'])
         ->set('images.image', UploadedFile::fake()->image('photo.jpg', 1200, 800))
-        ->assertSet('detailData.image', fn($value) => is_string($value) && $value !== '');
+        // The id is stored, not a URL: the media disk mirrors the folder tree,
+        // so a path would only be true until the file is moved.
+        ->assertSet('detailData.image', fn($value) => is_numeric($value) && (int) $value > 0);
 
     expect(MediaModel::count())->toBe($before + 1);
 
@@ -110,7 +112,7 @@ it('does not update image on mediaSelected when token mismatches; updates when t
         ->assertSet('detailData.image', 'UNCHANGED');
 
     $component->call('mediaSelected', $media->id, 'image', $token)
-        ->assertSet('detailData.image', fn($value) => is_string($value) && $value !== '' && $value !== 'UNCHANGED')
+        ->assertSet('detailData.image', $media->id)
         ->assertSet('mediaToken', null);
 });
 

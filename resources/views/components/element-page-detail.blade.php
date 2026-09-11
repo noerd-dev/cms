@@ -11,7 +11,6 @@ use Noerd\Cms\Models\ElementPage;
 use Noerd\Facades\Noerd;
 use Noerd\Traits\NoerdDetail;
 use Noerd\Media\Models\Media;
-use Illuminate\Support\Facades\Storage;
 
 new class extends Component {
     use WithFileUploads;
@@ -160,7 +159,9 @@ new class extends Component {
         if (!$media) {
             return;
         }
-        data_set($this->detailData, $fieldName ?? 'image', $this->urlWithoutDomain($media));
+        // The id is stored, never the URL: the media disk mirrors the folder
+        // tree, so a path is only true until the file is moved.
+        data_set($this->detailData, $fieldName ?? 'image', $media->id);
         $this->mediaToken = null;
 
         // Notify parent to refresh live preview after media selection
@@ -183,12 +184,6 @@ new class extends Component {
         return $options;
     }
 
-    private function urlWithoutDomain(Media $media): string
-    {
-        $url = Storage::disk($media->disk)->url($media->path);
-
-        return strstr($url, '/storage');
-    }
 } ?>
 
 <div>

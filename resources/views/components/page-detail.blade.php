@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -212,7 +211,7 @@ new class extends Component
         $mediaUploadService = app()->make(MediaUploadService::class);
         foreach ($this->images as $key => $image) {
             $media = $mediaUploadService->storeFromUploadedFile($image);
-            $this->detailData[$key] = $this->urlWithoutDomain($media);
+            $this->detailData[$key] = $media->id;
         }
     }
 
@@ -237,7 +236,9 @@ new class extends Component
         if (! $media) {
             return;
         }
-        $this->detailData[$fieldName ?? 'image'] = $this->urlWithoutDomain($media);
+        // The id is stored, never the URL: the media disk mirrors the folder
+        // tree, so a path is only true until the file is moved.
+        $this->detailData[$fieldName ?? 'image'] = $media->id;
         $this->mediaToken = null;
     }
 
@@ -436,12 +437,6 @@ new class extends Component
         return app(PageElementEditorService::class);
     }
 
-    private function urlWithoutDomain(Media $media): string
-    {
-        $url = Storage::disk($media->disk)->url($media->path);
-
-        return mb_strstr($url, '/storage');
-    }
 } ?>
 
 <x-noerd::page>

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Noerd\Cms\Services;
 
 use Illuminate\Database\Eloquent\Model;
+use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Support\CmsLanguageCodes;
+use Noerd\Cms\Support\MediaValues;
 use Noerd\Cms\Traits\HandlesPageElements;
 
 class PageElementService
@@ -30,10 +32,33 @@ class PageElementService
         $data = is_string($raw) ? (json_decode($raw, true) ?: []) : (is_array($raw) ? $raw : []);
 
         $data = $this->injectElementCollections($page, $data);
+        $data = $this->handlesLocalizeArray($data, $language);
 
-        return $this->handlesLocalizeArray($data, $language);
+        return MediaValues::resolve($data, $this->collectionFields($page));
     }
 
+
+    /**
+     * The field definition of the collection an entry belongs to — the source of
+     * truth for which of its values are image fields. Unknown or page models
+     * without a collection yield no fields, and every value is passed through.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function collectionFields(Model $page): array
+    {
+        if (! method_exists($page, 'collection')) {
+            return [];
+        }
+
+        $key = $page->collection?->collection_key;
+
+        if (blank($key)) {
+            return [];
+        }
+
+        return CollectionHelper::getCollectionFields(mb_strtolower((string) $key))['fields'] ?? [];
+    }
 
     /**
      * Merge the rows of any element collections owned by this entry back into its
@@ -59,8 +84,11 @@ class PageElementService
                     return;
                 }
 
+                $rowFields = $elementCollection->element_fields ?? [];
+
                 $data[$elementCollection->owner_field] = $elementCollection->rows
                     ->map(fn($row) => is_array($row->data) ? $row->data : [])
+                    ->map(fn(array $row): array => MediaValues::resolve($row, $rowFields))
                     ->all();
             });
 

@@ -41,6 +41,14 @@ trait CreatesElementFixtures
         return 'zz_fixture_collection';
     }
 
+    /**
+     * The element key of the fixture element declaring a plain image field.
+     */
+    protected function zzImageElementKey(): string
+    {
+        return 'zz_fixture_image';
+    }
+
     protected function elementFixtureDir(): string
     {
         return $this->elementFixtureModuleDir() . '/resources/views/components/elements';
@@ -97,6 +105,21 @@ trait CreatesElementFixtures
                     label: Image
                     type: image
                     colspan: 12
+            YAML);
+
+        $this->writeElementFixture('zz-fixture-image', <<<'YAML'
+            title: 'Zz Fixture Image'
+            description: 'Throwaway test element with a plain image field'
+            group: 'Zz Test'
+            fields:
+              - name: detailData.headline
+                label: Headline
+                type: text
+                colspan: 6
+              - name: image
+                label: Image
+                type: image
+                colspan: 12
             YAML);
     }
 

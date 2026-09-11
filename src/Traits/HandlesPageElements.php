@@ -7,6 +7,7 @@ namespace Noerd\Cms\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Support\CmsLanguageCodes;
+use Noerd\Cms\Support\MediaValues;
 
 trait HandlesPageElements
 {
@@ -47,15 +48,26 @@ trait HandlesPageElements
                 if (! $elementCollection->owner_field) {
                     continue;
                 }
+
+                $rowFields = $elementCollection->element_fields ?? [];
+
                 $rawData[$elementCollection->owner_field] = $elementCollection->rows
                     ->map(fn($row) => is_array($row->data) ? $row->data : [])
+                    ->map(fn(array $row): array => MediaValues::resolve($row, $rowFields))
                     ->all();
             }
+
+            // Image fields hold the media id; the URL is resolved on the way
+            // out, so a file that moved in the library still renders.
+            $data = MediaValues::resolveElement(
+                $elementKey,
+                $this->localizeElementData($rawData, $selectedLanguage),
+            );
 
             $elements[] = [
                 'id' => $pageElement->id,
                 'key' => $elementKey,
-                'data' => (object) $this->localizeElementData($rawData, $selectedLanguage),
+                'data' => (object) $data,
             ];
         }
 
