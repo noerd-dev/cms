@@ -97,6 +97,13 @@ abstract class TestCase extends NoerdTestCase
     {
         $moduleTarget = base_path('app-modules/cms');
 
+        // The skeleton outlives checkouts: a link left behind by a moved or deleted
+        // project dangles, or points at a foreign tree whose YAMLs and commands the
+        // suite would then silently read. Replace it instead of trusting is_link().
+        if (is_link($moduleTarget) && realpath($moduleTarget) !== realpath(dirname(__DIR__))) {
+            @unlink($moduleTarget);
+        }
+
         if (file_exists($moduleTarget) || is_link($moduleTarget)) {
             return;
         }
