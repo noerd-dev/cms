@@ -49,6 +49,11 @@ public function mount(?string $collectionKey = null): void
   (plus the website copies). Element Blades therefore keep reading a plain URL from
   `$element->image` and no project's element templates have to change. A value that is not
   a bare integer — a legacy `/storage/…` string, an external URL — is passed through untouched
+- That URL is the DELIVERY URL (`MediaResolverContract::getImageUrl()`): a size-limited, cached
+  variant behind the media module's signed `media.image` route, never the oversized original (an
+  SVG keeps its plain URL). An image field may name another variant of `config('media.variants')`
+  with `variant: teaser` in its YAML; `web` is the default. The URL is relative and carries a query
+  string — element Blades keep prefixing `config('website.media_url')` and never append to it
 - The migration `store_media_ids_in_cms_data` rewrites existing URLs in `cms_pages.data` and
   `cms_page_elements.data` to ids; it must run BEFORE `media:restructure`, which changes the paths
   those URLs were built from

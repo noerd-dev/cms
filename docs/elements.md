@@ -113,6 +113,11 @@ fields:
     colspan: 6
 ```
 
+An `image` field stores the media id. When the page is rendered the id becomes the image's
+**delivery URL**: a size-limited, cached variant from the media library (`web`, 1920px wide by
+default) — an oversized upload is never sent to a visitor in full. Add `variant: teaser` to the
+field to deliver another variant of the project's `config/media.php` `variants` list.
+
 ### 2. Blade Template
 
 ```blade

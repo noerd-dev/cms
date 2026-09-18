@@ -16,11 +16,21 @@ use Noerd\Contracts\MediaResolverContract;
  * centrally, so that every element Blade keeps reading a plain URL and no
  * project's element templates have to change.
  *
+ * The URL is the DELIVERY URL of the image (`getImageUrl()`): a size-limited
+ * variant, never the oversized original. An image field may name another
+ * variant of the media configuration with `variant:` in its YAML; `web` is the
+ * default.
+ *
  * Values that are not an id (a legacy `/storage/...` string, an external URL)
  * are passed through untouched.
  */
 final class MediaValues
 {
+    /**
+     * The variant an image field delivers unless its YAML names another one.
+     */
+    public const DEFAULT_VARIANT = 'web';
+
     /**
      * Resolve the image fields an element declares in its YAML.
      *
@@ -48,12 +58,12 @@ final class MediaValues
      */
     public static function resolve(array $data, array $fields): array
     {
-        foreach (self::imageKeys($fields) as $key) {
+        foreach (self::imageKeys($fields) as $key => $variant) {
             if (! array_key_exists($key, $data)) {
                 continue;
             }
 
-            $url = self::url($data[$key]);
+            $url = self::url($data[$key], $variant);
 
             if ($url !== null) {
                 $data[$key] = $url;
@@ -64,15 +74,16 @@ final class MediaValues
     }
 
     /**
-     * The URL of a stored media reference, or null when the value is not one.
+     * The delivery URL of a stored media reference, or null when the value is
+     * not one.
      */
-    public static function url(mixed $value): ?string
+    public static function url(mixed $value, string $variant = self::DEFAULT_VARIANT): ?string
     {
         if (! self::isReference($value)) {
             return null;
         }
 
-        return app(MediaResolverContract::class)->getRelativeUrl((int) $value);
+        return app(MediaResolverContract::class)->getImageUrl((int) $value, $variant);
     }
 
     /**
@@ -90,10 +101,11 @@ final class MediaValues
 
     /**
      * The data keys of every field declared as an image, with the binding
-     * prefix (`detailData.`) stripped — that is how the values are stored.
+     * prefix (`detailData.`) stripped — that is how the values are stored —,
+     * each with the variant the field delivers.
      *
      * @param  array<int, array<string, mixed>>  $fields
-     * @return array<int, string>
+     * @return array<string, string>
      */
     private static function imageKeys(array $fields): array
     {
@@ -104,7 +116,10 @@ final class MediaValues
                 continue;
             }
 
-            $keys[] = (string) preg_replace('/^\w+\./', '', (string) $field['name']);
+            $key = (string) preg_replace('/^\w+\./', '', (string) $field['name']);
+            $variant = $field['variant'] ?? null;
+
+            $keys[$key] = is_string($variant) && $variant !== '' ? $variant : self::DEFAULT_VARIANT;
         }
 
         return $keys;

@@ -10,6 +10,7 @@ use Noerd\Cms\Services\PageElementService;
 use Noerd\Cms\Support\MediaValues;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Tests\Traits\CreatesElementFixtures;
+use Noerd\Contracts\MediaResolverContract;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Models\MediaFolder;
 
@@ -38,6 +39,27 @@ it('turns a stored media id into a URL', function (): void {
     $resolved = MediaValues::resolve(['image' => $media->id], zzImageFields());
 
     expect($resolved['image'])->toBeString()->toContain('logo.svg');
+});
+
+it('delivers a size-limited variant of a raster image instead of the original', function (): void {
+    $media = Media::factory()->file($this->tenantId, 'photo.jpg')->create();
+
+    $resolved = MediaValues::resolve(['image' => $media->id], zzImageFields());
+
+    expect($resolved['image'])
+        ->toBe(app(MediaResolverContract::class)->getImageUrl($media->id, 'web'))
+        ->not->toContain('photo.jpg');
+});
+
+it('delivers the variant an image field names', function (): void {
+    config(['media.variants' => ['web' => 1920, 'teaser' => 640]]);
+    $media = Media::factory()->file($this->tenantId, 'photo.jpg')->create();
+
+    $fields = [['name' => 'detailData.image', 'label' => 'Image', 'type' => 'image', 'variant' => 'teaser']];
+
+    expect(MediaValues::resolve(['image' => $media->id], $fields)['image'])
+        ->toBe(app(MediaResolverContract::class)->getImageUrl($media->id, 'teaser'))
+        ->toContain('/teaser');
 });
 
 it('follows a file that moved to another folder', function (): void {
