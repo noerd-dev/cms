@@ -22,10 +22,21 @@ beforeEach(function (): void {
     File::ensureDirectoryExists($this->hostPath . '/database/migrations');
     // The module installers refuse to run until noerd itself is installed.
     File::put($this->hostPath . '/config/noerd.php', "<?php\n\nreturn [];\n");
-    // A configured media disk and an existing website module short-circuit the
-    // two optional follow-up installers, so this test covers the CMS only.
+    // A configured media disk, a registered MEDIA app and an existing website
+    // module short-circuit the two follow-up installers, so this test covers the
+    // CMS only. The CMS cannot work without media, so both halves must be there.
     File::put($this->hostPath . '/config/filesystems.php', "<?php\n\nreturn ['disks' => ['media' => []]];\n");
     File::ensureDirectoryExists($this->hostPath . '/app-modules/website');
+
+    $this->mediaApp = TenantApp::firstOrCreate(
+        ['name' => 'MEDIA'],
+        [
+            'title' => 'Media',
+            'icon' => 'media::icons.app',
+            'route' => 'media.dashboard',
+            'is_active' => true,
+        ],
+    );
 
     // The module migration pre-registers the CMS tenant app so a plain
     // `php artisan migrate` works; drop it to reach the fresh-install branch.
@@ -75,4 +86,22 @@ it('stays idempotent when the install is run a second time', function (): void {
 
     expect(TenantApp::where('name', 'CMS')->count())->toBe(1);
     expect(File::exists($this->hostPath . '/app-configs/cms/navigation.yml'))->toBeTrue();
+});
+
+it('gives the media app to every tenant the cms is assigned to', function (): void {
+    // Image fields store a media id and are picked from the media library: a
+    // tenant running the CMS has to run MEDIA too — in the SAME prompt, so the
+    // media installer never asks a tenant question of its own.
+    $tenant = Noerd\Models\Tenant::factory()->create(['name' => 'Zz Cms Tenant']);
+
+    $this->artisan('noerd:install-cms', ['--force' => true])
+        ->expectsConfirmation('Should CMS be installed as a hidden app (not shown in main navigation)?', 'no')
+        ->expectsQuestion('App title', 'CMS')
+        ->expectsConfirmation('Would you like to assign the app to tenants now?', 'yes')
+        ->expectsQuestion("Which tenants should 'CMS' be assigned to?", [$tenant->id])
+        ->expectsConfirmation('Would you like to run php artisan migrate now?', 'no')
+        ->expectsConfirmation('Would you like to run "npm run build" to compile frontend assets?', 'no')
+        ->assertExitCode(0);
+
+    expect($this->mediaApp->fresh()->tenants()->pluck('tenants.id')->all())->toContain($tenant->id);
 });

@@ -7,7 +7,9 @@ namespace Noerd\Cms\Commands;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
 use Noerd\Cms\Services\DefaultHomepageSeeder;
+use Noerd\Models\TenantApp;
 use Noerd\Traits\HasModuleInstallation;
 use Noerd\Traits\RequiresNoerdInstallation;
 
@@ -22,14 +24,17 @@ class CmsInstallCommand extends Command
 
     public function handle(): int
     {
+        // The CMS does not work without the media library (image fields store a
+        // media id). Media is installed BEFORE the CMS, so its app exists by the
+        // time the CMS asks which tenants it should be assigned to — that one
+        // prompt assigns MEDIA along with it (getRequiredAppKeys()).
+        $this->installMediaIfNeeded();
+
         $result = $this->runModuleInstallation();
 
         if ($result === 0) {
             // Publish config file
             $this->publishConfig();
-
-            // Ensure the media filesystem the CMS media pickers rely on
-            $this->installMediaIfNeeded();
 
             // Seed a starter homepage for tenants that don't have one yet
             $this->seedDefaultHomepage();
@@ -83,6 +88,18 @@ class CmsInstallCommand extends Command
     protected function getSourceDir(): string
     {
         return dirname(__DIR__, 2) . '/app-configs/cms';
+    }
+
+    /**
+     * Image fields of pages, elements and collections store a MEDIA id and are
+     * picked through the media library — a tenant running the CMS must run the
+     * media app too.
+     *
+     * @return array<string>
+     */
+    protected function getRequiredAppKeys(): array
+    {
+        return ['MEDIA'];
     }
 
     /**
@@ -179,26 +196,35 @@ class CmsInstallCommand extends Command
     }
 
     /**
-     * Install media module if filesystem is not configured.
+     * Install the media module unless it is fully set up already — both the
+     * `media` disk and the MEDIA tenant app have to exist, because the CMS
+     * assigns that app to its own tenants (getRequiredAppKeys()).
+     *
+     * It runs as a DEPENDENCY: the nested command publishes and registers, but
+     * does not ask its own question about tenants.
      */
     private function installMediaIfNeeded(): void
     {
         $filesystemsPath = base_path('config/filesystems.php');
+        $diskConfigured = file_exists($filesystemsPath)
+            && str_contains((string) file_get_contents($filesystemsPath), "'media' =>");
 
-        if (file_exists($filesystemsPath)) {
-            $content = file_get_contents($filesystemsPath);
-            if (str_contains($content, "'media' =>")) {
-                $this->line('<comment>Media filesystem already configured.</comment>');
+        // The table is missing on a project where noerd itself is not installed
+        // yet — the media command installs the base package before anything else.
+        $appRegistered = Schema::hasTable('tenant_apps')
+            && TenantApp::where('name', 'MEDIA')->exists();
 
-                return;
-            }
+        if ($diskConfigured && $appRegistered) {
+            $this->line('<comment>Media module already installed.</comment>');
+
+            return;
         }
 
         $this->line('');
-        $this->info('Media filesystem not configured, running noerd:install-media...');
+        $this->info('The CMS requires the media library, running noerd:install-media...');
 
         try {
-            $exitCode = Artisan::call('noerd:install-media', [], $this->output);
+            $exitCode = $this->installDependencyModule('noerd:install-media');
 
             if ($exitCode === 0) {
                 $this->line('<info>Media module configured successfully.</info>');
