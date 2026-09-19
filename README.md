@@ -1,44 +1,15 @@
 # noerd/cms
 
-Multi-tenant, multi-language CMS module for Laravel. Provides pages with a
-visual element builder, database-backed collections, hierarchical navigation,
-forms with email notifications, articles, and a REST API for form
-submissions.
-
-## Requirements
-
-- `noerd/noerd` (base framework)
-- `noerd/media` (file/media storage)
-- `noerd/communication` (email delivery for form notifications)
+Multi-tenant, multilingual CMS for Laravel Livewire. Provides content management with a
+visual element builder for pages and custom collections.
 
 ## Installation
 
-Ensure the project is an initialized Git repository, then install dependencies:
-
 ```bash
-composer require noerd/noerd
-php artisan noerd:install
-
-git submodule add git@github.com:noerd-dev/media.git app-modules/media
-composer require noerd/media
-
-git submodule add git@github.com:noerd-dev/communication.git app-modules/communication
-composer require noerd/communication
-```
-
-Install the CMS module:
-
-```bash
-git submodule add git@github.com:noerd-dev/cms.git app-modules/cms
 composer require noerd/cms
 
 php artisan noerd:install-cms
 ```
-
-The install command publishes the YAML configs and the module configuration,
-registers the tenant app, runs the migrations and seeds a starter homepage for
-every tenant. The default tenant language is created automatically whenever a
-tenant is created.
 
 ## Configuration
 
@@ -59,23 +30,6 @@ Set `CMS_WEBSITE_URL` in `.env` for live-preview links; `CMS_PAGE_ELEMENTS_PATH`
 optionally adds an extra page-element directory; `CMS_LAYOUT_PATH` points the
 page editor at the frontend layouts; `collection_field_types` lists the field
 types a collection definition may use.
-
-## Core Features
-
-| Feature | Description | Docs |
-|---|---|---|
-| Pages | Website pages with a drag-and-drop element builder. | [docs/pages.md](docs/pages.md) |
-| Elements | Reusable content blocks (`.blade.php` + `.yml` pair). | [docs/elements.md](docs/elements.md) |
-| Collections | Database-defined content types (services, projects, sliders). | [docs/collections.md](docs/collections.md) |
-| Element Collections | Per-element row lists owned by a page entry or element instance. | see below |
-| Navigation | Hierarchical, multi-language site navigation. | [docs/navigation.md](docs/navigation.md) |
-| Redirects | Managed redirects for retired page paths. | [docs/redirects.md](docs/redirects.md) |
-| Forms | YAML-defined forms with email notifications. | [docs/forms.md](docs/forms.md) |
-| Articles | Blog/news posts with authors and publication dates. | [docs/articles.md](docs/articles.md) |
-| Languages | Per-tenant language configuration. | [docs/languages.md](docs/languages.md) |
-| Global Parameters | Key/value pairs for site-wide settings. | [docs/global-parameters.md](docs/global-parameters.md) |
-| Settings | Homepage selection, Analytics, cookie banner. | [docs/settings.md](docs/settings.md) |
-| REST API | Token-authenticated endpoints for form submissions. | [docs/api.md](docs/api.md) |
 
 ## Element Collections
 
@@ -115,135 +69,3 @@ can iterate the field directly:
     <p>{{ $item['description'] ?? '' }}</p>
 @endforeach
 ```
-
-Key classes:
-
-- `Noerd\Cms\Services\ElementCollectionService` — `ensure()` / `importItems()` / `schemaFor()`
-- `Noerd\Cms\Repositories\ElementAwareCollectionDefinitionRepository` — resolves the schema from the stored `element_fields` column
-- `Noerd\Cms\Traits\HandlesPageElements` — frontend rendering pipeline
-
-## Routes
-
-All CMS routes are prefixed `/cms` and protected by the `noerd` middleware
-group and `app-access:cms`.
-
-| Route | Component |
-|---|---|
-| `/cms/` | Dashboard |
-| `/cms/pages` | Pages list |
-| `/cms/page/{modelId}` | Page editor |
-| `/cms/navigation` | Navigation list |
-| `/cms/redirects` | Redirects list |
-| `/cms/collections` | Collection entries |
-| `/cms/collection-definitions` | Collection definitions |
-| `/cms/form-requests` | Form submissions |
-| `/cms/form-types` | Form type management |
-| `/cms/articles` | Articles list |
-| `/cms/authors` | Authors list |
-| `/cms/languages` | Language management |
-| `/cms/global-parameters` | Global parameters |
-| `/cms/settings` | CMS settings |
-
-## Database Tables
-
-| Table | Purpose |
-|---|---|
-| `cms_pages` | Pages and collection entries |
-| `cms_page_elements` | Page-element associations with JSON data |
-| `cms_collections` | Per-tenant collection instances (including element collections) |
-| `cms_collection_definitions` | Collection definitions (fields, titles, hasPage) |
-| `cms_navigations` | Navigation items with hierarchy |
-| `cms_redirects` | Managed redirects for retired page paths |
-| `cms_form_types` | Form definitions synced from YAML |
-| `cms_form_requests` | Submitted form data |
-| `cms_languages` | Language configuration per tenant |
-| `cms_settings` | CMS settings per tenant |
-| `cms_global_parameters` | Key/value site-wide parameters (unique per tenant and key) |
-| `cms_authors` | Article authors |
-| `cms_articles` | Articles |
-
-Every table carries the `cms_` prefix, so the module never collides with a
-host application's own `pages` or `articles` table.
-
-## File Locations
-
-YAML configurations (project-level):
-
-```
-app-configs/cms/lists/          # *-list.yml
-app-configs/cms/details/        # *-detail.yml
-app-configs/cms/settings/       # settings-page.yml
-app-configs/cms/forms/          # form definitions
-app-configs/cms/navigation.yml  # CMS admin navigation
-```
-
-Module source:
-
-```
-app-modules/cms/src/Models/         # Eloquent models
-app-modules/cms/src/Helpers/        # FieldHelper, CollectionHelper
-app-modules/cms/src/Services/       # FormTypeSyncService, ElementCollectionService, FieldTypeConverter
-app-modules/cms/src/Repositories/   # Collection definition repositories
-app-modules/cms/src/Traits/         # HandlesPageElements, LanguageFilterTrait
-app-modules/cms/routes/             # Web and API routes
-app-modules/cms/resources/views/    # Livewire components and Blade views
-app-modules/cms/config/             # noerd_cms.php (published to config/ by noerd:install-cms)
-app-modules/cms/database/           # Migrations, factories, seeders
-```
-
-## Multi-Tenancy
-
-Content models use the `BelongsToTenant` trait — content is automatically
-scoped to the current tenant (`CmsSetting` is a tenant singleton keyed
-explicitly, `ElementPage` is scoped through its page). When a new tenant is
-created, a default language is set up via
-`CmsLanguage::ensureDefaultLanguageForTenant()`.
-
-## Access Control
-
-Access is governed by the generic noerd app permission — there is no
-module-specific gate. Routes use the `app-access:cms` middleware. The
-tenant-wide configuration screens (settings, languages, collection
-definitions) are admin-only: they are registered with
-`ComponentAccessGuard::registerAdminComponents()`, which rejects every mount
-of those components (route, modal, component page) for a non-admin with 403.
-Tenant-scoped
-chrome such as the "To Website" quick-menu button checks
-`AccessHelper::canUseApp('CMS')` (CMS app assigned to the selected tenant AND
-allowed by the user's app permission). The button is declared in
-`app-configs/quick-menu.yml` with `apps: [CMS]`; `noerd:install-cms` and
-`noerd:update-cms` ensure that entry and migrate a legacy `policy: canCms` line,
-which would otherwise fail closed and hide the button.
-
-## Translations
-
-Translation keys are English text; only `de.json` is shipped at
-`app-modules/cms/resources/lang/de.json`. English works by fallback. Entries
-where English equals German are omitted.
-
-## Testing
-
-Inside a host project (sequentially — the test database is shared):
-
-```bash
-php artisan test --compact app-modules/cms/tests
-```
-
-Standalone (Orchestra Testbench on sqlite, the same suite CI runs):
-
-```bash
-composer install
-vendor/bin/pest --compact
-```
-
-The Pest suite covers the Livewire components, the services, the form API,
-the install/update commands and the access rules. Tests prove mechanics,
-never the current YAML configuration.
-
-## Further Reading
-
-- [docs/overview.md](docs/overview.md) — module overview
-- [docs/pages.md](docs/pages.md), [docs/elements.md](docs/elements.md), [docs/collections.md](docs/collections.md)
-- [docs/forms.md](docs/forms.md), [docs/api.md](docs/api.md)
-- [docs/languages.md](docs/languages.md), [docs/navigation.md](docs/navigation.md)
-- [docs/articles.md](docs/articles.md), [docs/settings.md](docs/settings.md), [docs/global-parameters.md](docs/global-parameters.md)
