@@ -2,7 +2,7 @@
     "name": "noerd/cms",
     "description": "Multi-tenant, multi-language CMS module for the noerd framework: pages with a visual element builder, collections, navigation, forms, articles and languages.",
     "type": "library",
-    "version": "v0.2.4",
+    "version": "v0.2.5",
     "keywords": [
         "laravel",
         "livewire",
