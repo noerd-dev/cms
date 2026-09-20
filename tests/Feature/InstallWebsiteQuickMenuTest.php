@@ -13,7 +13,10 @@ use Symfony\Component\Yaml\Yaml;
 uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 
 /*
- | The website installer writes base_path('app-configs/quick-menu.yml'). The
+ | The website installer ensures the "To Website" button through the shared
+ | writer of the core (WritesHostAppConfigs::ensureQuickMenuButton()) — the same
+ | one the CMS install command uses, so both leave the identical entry. It
+ | writes base_path('app-configs/quick-menu.yml'). The
  | tests therefore run against a THROWAWAY base path, so the real quick-menu
  | config of a host project is never touched.
  */
@@ -51,7 +54,8 @@ function zzCmsRunWebsiteQuickMenuInstall(): void
     $command->setLaravel(app());
     $command->setOutput(new OutputStyle(new ArrayInput([]), new NullOutput()));
 
-    (new ReflectionMethod($command, 'installQuickMenuConfig'))->invoke($command);
+    (new ReflectionMethod($command, 'ensureQuickMenuButton'))
+        ->invoke($command, ['apps' => ['CMS'], 'component' => 'quick-menu.website-link']);
 }
 
 it('creates quick-menu.yml with the website link button when the file does not exist', function (): void {
@@ -66,7 +70,7 @@ it('creates quick-menu.yml with the website link button when the file does not e
     expect(zzCmsWebsiteLinkButtons(Yaml::parseFile($this->configPath)))->toHaveCount(1);
 });
 
-it('appends the website link button to an existing quick-menu.yml', function (): void {
+it('adds the website link button to an existing quick-menu.yml and keeps the other buttons', function (): void {
     File::put($this->configPath, Yaml::dump(['buttons' => [['component' => 'quick-menu.other-button']]], 10, 2));
 
     zzCmsRunWebsiteQuickMenuInstall();
@@ -74,7 +78,7 @@ it('appends the website link button to an existing quick-menu.yml', function ():
     $config = Yaml::parseFile($this->configPath);
 
     expect($config['buttons'])->toHaveCount(2)
-        ->and($config['buttons'][0]['component'])->toBe('quick-menu.other-button')
+        ->and(array_column($config['buttons'], 'component'))->toContain('quick-menu.other-button')
         ->and(zzCmsWebsiteLinkButtons($config))->toHaveCount(1);
 });
 

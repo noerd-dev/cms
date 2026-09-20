@@ -6,58 +6,24 @@ namespace Noerd\Cms\Commands;
 
 use Exception;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Schema;
 use Noerd\Cms\Services\DefaultHomepageSeeder;
-use Noerd\Models\TenantApp;
+use Noerd\Support\ModuleInstallContext;
 use Noerd\Traits\HasModuleInstallation;
-use Noerd\Traits\RequiresNoerdInstallation;
 
 class CmsInstallCommand extends Command
 {
     use HasModuleInstallation;
-    use RequiresNoerdInstallation;
 
-    protected $signature = 'noerd:install-cms {--force : Overwrite existing files without asking}';
+    protected $signature = 'noerd:install-cms
+                            {--force : Overwrite existing files without asking}
+                            {--migrate : Run migrations without asking (required to migrate in non-interactive runs)}
+                            {--build : Run npm build without asking (required to build in non-interactive runs)}';
 
     protected $description = 'Install noerd CMS content and navigation';
 
     public function handle(): int
     {
-        // The CMS does not work without the media library (image fields store a
-        // media id). Media is installed BEFORE the CMS, so its app exists by the
-        // time the CMS asks which tenants it should be assigned to — that one
-        // prompt assigns MEDIA along with it (getRequiredAppKeys()).
-        $this->installMediaIfNeeded();
-
-        $result = $this->runModuleInstallation();
-
-        if ($result === 0) {
-            // Publish config file
-            $this->publishConfig();
-
-            // Seed a starter homepage for tenants that don't have one yet
-            $this->seedDefaultHomepage();
-
-            // Install website module if it doesn't exist
-            $this->installWebsiteIfNeeded();
-
-            // Ensure the quick-menu carries the "To Website" button
-            $this->installQuickMenuConfig();
-        }
-
-        return $result;
-    }
-
-    /**
-     * Ensure the quick-menu config contains the "To Website" button. The shared
-     * writer replaces a same-component entry wholesale, so an installation still
-     * carrying the removed `policy: canCms` gate — which fails closed and hides
-     * the button — migrates to the `apps:` key on every install and update.
-     */
-    protected function installQuickMenuConfig(): void
-    {
-        $this->ensureQuickMenuButton(['apps' => ['CMS'], 'component' => 'quick-menu.website-link']);
+        return $this->runModuleInstallation();
     }
 
     protected function getModuleName(): string
@@ -93,13 +59,13 @@ class CmsInstallCommand extends Command
     /**
      * Image fields of pages, elements and collections store a MEDIA id and are
      * picked through the media library — a tenant running the CMS must run the
-     * media app too.
+     * media app too. A missing media module is installed first, as a dependency.
      *
-     * @return array<string>
+     * @return array<string, string>
      */
-    protected function getRequiredAppKeys(): array
+    protected function getRequiredModules(): array
     {
-        return ['MEDIA'];
+        return ['MEDIA' => 'noerd:install-media'];
     }
 
     /**
@@ -111,46 +77,40 @@ class CmsInstallCommand extends Command
     }
 
     /**
-     * Publish the CMS config file to the project's config directory.
+     * @return array<int, string>
      */
-    protected function publishConfig(): void
+    protected function getConfigFiles(): array
     {
-        $source = __DIR__ . '/../../config/noerd_cms.php';
-        $destination = config_path('noerd_cms.php');
-
-        if (file_exists($destination) && ! $this->option('force')) {
-            if (! $this->confirm('Config file config/noerd_cms.php already exists. Overwrite?', false)) {
-                $this->line('<comment>Skipped publishing config file.</comment>');
-
-                return;
-            }
-        }
-
-        copy($source, $destination);
-        $this->line('<info>Published config file:</info> config/noerd_cms.php');
+        return ['noerd_cms.php'];
     }
 
     /**
-     * Publish the config file only when the project does not have one yet —
-     * the prompt-free variant for the update command, so a new config key
-     * reaches an existing project without overwriting local changes.
+     * The website boilerplate is offered once, by the installation the user
+     * started — and BEFORE the frontend build, which has to see its views.
      */
-    protected function publishConfigIfMissing(): void
+    protected function publishModuleExtras(bool $update): void
     {
-        $destination = config_path('noerd_cms.php');
-
-        if (file_exists($destination)) {
-            return;
+        if (! $update && ! ModuleInstallContext::isDependencyInstall()) {
+            $this->installWebsiteIfNeeded();
         }
+    }
 
-        copy(__DIR__ . '/../../config/noerd_cms.php', $destination);
-        $this->line('<info>Published config file:</info> config/noerd_cms.php');
+    /**
+     * Idempotent: tenants created since the install get their starter homepage,
+     * and the quick-menu keeps the "To Website" button — the shared writer
+     * replaces a same-component entry wholesale, so an installation still
+     * carrying the removed `policy: canCms` gate migrates to the `apps:` key.
+     */
+    protected function ensureModuleSetup(): void
+    {
+        $this->seedDefaultHomepage();
+        $this->ensureQuickMenuButton(['apps' => ['CMS'], 'component' => 'quick-menu.website-link']);
     }
 
     /**
      * Seed a default homepage (page + cms_settings) for every tenant that does
-     * not have one yet. Runs at install time, once tenants have been assigned,
-     * so a fresh installation starts with a usable starter page. Idempotent.
+     * not have one yet. Runs once tenants have been assigned and the migrations
+     * were offered, so a fresh installation starts with a usable starter page.
      */
     protected function seedDefaultHomepage(): void
     {
@@ -163,74 +123,30 @@ class CmsInstallCommand extends Command
     }
 
     /**
-     * Install website module if user confirms.
+     * Install the website boilerplate if the user confirms. It runs as a
+     * dependency: migrations are offered once, by this command.
      */
     private function installWebsiteIfNeeded(): void
     {
-        $websiteDir = base_path('app-modules/website');
-
-        if (is_dir($websiteDir)) {
+        if (is_dir(base_path('app-modules/website'))) {
             $this->line('<comment>Website module already exists.</comment>');
 
             return;
         }
 
         $this->line('');
-        if (! $this->confirm('Would you like to install the website boilerplate?', false)) {
-            $this->line('<comment>Skipping website module installation.</comment>');
+        if (! $this->input->isInteractive() || ! $this->confirm('Would you like to install the website boilerplate?', false)) {
+            $this->line('<comment>Skipping the website boilerplate. Install it later with: php artisan noerd:install-website</comment>');
 
             return;
         }
 
         try {
-            $exitCode = Artisan::call('noerd:install-website', [], $this->output);
-
-            if ($exitCode === 0) {
-                $this->line('<info>Website module installed successfully.</info>');
-            } else {
+            if ($this->installDependencyModule('noerd:install-website') !== self::SUCCESS) {
                 $this->warn('Website module installation failed.');
             }
         } catch (Exception $e) {
             $this->warn('Failed to install website module: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Install the media module unless it is fully set up already — both the
-     * `media` disk and the MEDIA tenant app have to exist, because the CMS
-     * assigns that app to its own tenants (getRequiredAppKeys()).
-     *
-     * It runs as a DEPENDENCY: the nested command publishes and registers, but
-     * does not ask its own question about tenants.
-     */
-    private function installMediaIfNeeded(): void
-    {
-        $filesystemsPath = base_path('config/filesystems.php');
-        $diskConfigured = file_exists($filesystemsPath)
-            && str_contains((string) file_get_contents($filesystemsPath), "'media' =>");
-
-        // The table is missing on a project where noerd itself is not installed
-        // yet — the media command installs the base package before anything else.
-        $appRegistered = Schema::hasTable('tenant_apps')
-            && TenantApp::where('name', 'MEDIA')->exists();
-
-        if ($diskConfigured && $appRegistered) {
-            $this->line('<comment>Media module already installed.</comment>');
-
-            return;
-        }
-
-        $this->line('');
-        $this->info('The CMS requires the media library, running noerd:install-media...');
-
-        try {
-            $exitCode = $this->installDependencyModule('noerd:install-media');
-
-            if ($exitCode === 0) {
-                $this->line('<info>Media module configured successfully.</info>');
-            }
-        } catch (Exception $e) {
-            $this->warn('Failed to configure media: ' . $e->getMessage());
         }
     }
 }

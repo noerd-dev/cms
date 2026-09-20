@@ -40,10 +40,10 @@ public function mount(?string $collectionKey = null): void
 
 ### Images Store the Media ID
 
-- `noerd/media` is a HARD requirement, not an option: `noerd:install-cms` runs
-  `noerd:install-media` as a dependency (no tenant question of its own) BEFORE registering the CMS,
-  and `CmsInstallCommand::getRequiredAppKeys()` returns `['MEDIA']`, so every tenant that gets the
-  CMS gets the media app in the same prompt. Never install the CMS for a tenant without MEDIA
+- `noerd/media` is a HARD requirement, not an option: `CmsInstallCommand::getRequiredModules()`
+  returns `['MEDIA' => 'noerd:install-media']`, so `noerd:install-cms` installs a missing media
+  module first — as a dependency that asks nothing — and every tenant that gets the CMS gets the
+  media app in the same prompt. Never install the CMS for a tenant without MEDIA
 - An image field (`type: image` in an element YAML or a collection definition) stores the MEDIA ID,
   never a URL: the media disk mirrors the library's folder tree, so a file's path changes the
   moment it is moved. `page-detail`, `element-page-detail` and `element-collection-row-detail`

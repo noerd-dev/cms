@@ -22,9 +22,8 @@ beforeEach(function (): void {
     File::ensureDirectoryExists($this->hostPath . '/database/migrations');
     // The module installers refuse to run until noerd itself is installed.
     File::put($this->hostPath . '/config/noerd.php', "<?php\n\nreturn [];\n");
-    // A configured media disk, a registered MEDIA app and an existing website
-    // module short-circuit the two follow-up installers, so this test covers the
-    // CMS only. The CMS cannot work without media, so both halves must be there.
+    // A registered MEDIA app and an existing website module short-circuit the two
+    // follow-up installers, so this test covers the CMS only.
     File::put($this->hostPath . '/config/filesystems.php', "<?php\n\nreturn ['disks' => ['media' => []]];\n");
     File::ensureDirectoryExists($this->hostPath . '/app-modules/website');
 
@@ -38,8 +37,7 @@ beforeEach(function (): void {
         ],
     );
 
-    // The module migration pre-registers the CMS tenant app so a plain
-    // `php artisan migrate` works; drop it to reach the fresh-install branch.
+    // No CMS row: the fresh-install branch (a registered app diverts to update).
     TenantApp::where('name', 'CMS')->delete();
 
     $this->app->setBasePath($this->hostPath);
@@ -53,7 +51,6 @@ afterEach(function (): void {
 function runZzCmsInstall(object $test): Illuminate\Testing\PendingCommand
 {
     return $test->artisan('noerd:install-cms', ['--force' => true])
-        ->expectsConfirmation('Should CMS be installed as a hidden app (not shown in main navigation)?', 'no')
         ->expectsQuestion('App title', 'CMS')
         ->expectsConfirmation('Would you like to assign the app to tenants now?', 'no')
         ->expectsConfirmation('Would you like to run php artisan migrate now?', 'no')
@@ -95,7 +92,6 @@ it('gives the media app to every tenant the cms is assigned to', function (): vo
     $tenant = Noerd\Models\Tenant::factory()->create(['name' => 'Zz Cms Tenant']);
 
     $this->artisan('noerd:install-cms', ['--force' => true])
-        ->expectsConfirmation('Should CMS be installed as a hidden app (not shown in main navigation)?', 'no')
         ->expectsQuestion('App title', 'CMS')
         ->expectsConfirmation('Would you like to assign the app to tenants now?', 'yes')
         ->expectsQuestion("Which tenants should 'CMS' be assigned to?", [$tenant->id])
@@ -104,4 +100,26 @@ it('gives the media app to every tenant the cms is assigned to', function (): vo
         ->assertExitCode(0);
 
     expect($this->mediaApp->fresh()->tenants()->pluck('tenants.id')->all())->toContain($tenant->id);
+});
+
+it('installs a missing media module first — silently, as a dependency', function (): void {
+    $this->mediaApp->delete();
+    $tenant = Noerd\Models\Tenant::factory()->create(['name' => 'Zz Cms Media Tenant']);
+
+    // Every question below belongs to the CMS: media is installed with its
+    // defaults and asks nothing (an unexpected prompt would fail the run).
+    $this->artisan('noerd:install-cms', ['--force' => true])
+        ->expectsOutputToContain('CMS requires MEDIA, running noerd:install-media')
+        ->expectsQuestion('App title', 'CMS')
+        ->expectsConfirmation('Would you like to assign the app to tenants now?', 'yes')
+        ->expectsQuestion("Which tenants should 'CMS' be assigned to?", [$tenant->id])
+        ->expectsConfirmation('Would you like to run php artisan migrate now?', 'no')
+        ->expectsConfirmation('Would you like to run "npm run build" to compile frontend assets?', 'no')
+        ->assertExitCode(0);
+
+    $media = TenantApp::where('name', 'MEDIA')->first();
+
+    expect($media)->not->toBeNull()
+        ->and($media->tenants()->pluck('tenants.id')->all())->toContain($tenant->id)
+        ->and(File::exists($this->hostPath . '/app-configs/media/navigation.yml'))->toBeTrue();
 });

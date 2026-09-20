@@ -38,7 +38,7 @@ it('copies the boilerplate and registers the path repository without shelling ou
         ->and(file_exists($this->targetDir . '/src/Providers/WebsiteServiceProvider.php'))->toBeTrue();
 
     $composer = json_decode((string) file_get_contents(base_path('composer.json')), true);
-    expect($composer['repositories'])->toContain(['type' => 'path', 'url' => 'app-modules/*']);
+    expect($composer['repositories'])->toContain(['type' => 'path', 'url' => 'app-modules/*', 'options' => ['symlink' => true]]);
 
     // The website link lands in the quick menu.
     expect(file_exists(base_path('app-configs/quick-menu.yml')))->toBeTrue();
