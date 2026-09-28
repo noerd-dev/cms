@@ -67,6 +67,36 @@ it('persists an entry with page features and derives a unique slug from the name
         ->and($entry->collection->collection_key)->toBe('PROJECTS');
 });
 
+it('persists the SEO metadata of an entry with page features', function (): void {
+    $this->zzCollectionDefinition($this->tenantId, 'projects', $this->layout['fields']);
+
+    $entry = $this->store->persist('projects', $this->layout, [
+        'name' => ['en' => 'Bridge'],
+        'slug' => ['en' => '/bridge'],
+        'meta_title' => ['en' => 'Bridge | ACME'],
+        'meta_description' => ['en' => 'The big bridge.'],
+        'meta_noindex' => true,
+    ], null, $this->tenantId, $this->user->id, 'en');
+
+    $entry->refresh();
+
+    expect($entry->meta_title)->toBe(['en' => 'Bridge | ACME'])
+        ->and($entry->meta_description)->toBe(['en' => 'The big bridge.'])
+        ->and($entry->meta_noindex)->toBeTrue();
+});
+
+it('persists the active flag of an entry with page features', function (): void {
+    $this->zzCollectionDefinition($this->tenantId, 'projects', $this->layout['fields']);
+
+    $entry = $this->store->persist('projects', $this->layout, [
+        'name' => ['en' => 'Bridge'],
+        'slug' => ['en' => '/bridge'],
+        'is_active' => false,
+    ], null, $this->tenantId, $this->user->id, 'en');
+
+    expect($entry->refresh()->is_active)->toBeFalse();
+});
+
 it('persists a data-only entry without name and slug', function (): void {
     $this->zzCollectionDefinition($this->tenantId, 'faq', $this->layout['fields'], hasPage: false);
     $layout = ['hasPage' => false] + $this->layout;

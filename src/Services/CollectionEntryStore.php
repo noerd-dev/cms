@@ -16,6 +16,12 @@ use Noerd\Cms\Support\PageLayouts;
  */
 final class CollectionEntryStore
 {
+    /**
+     * Page columns from the page editor's SEO tab that an entry with page
+     * features persists next to its collection data.
+     */
+    private const PAGE_SEO_FIELDS = ['meta_title', 'meta_description', 'og_image', 'meta_noindex'];
+
     public function __construct(
         private readonly CollectionDefinitionRepositoryContract $definitions,
         private readonly PageSlugService $slugs,
@@ -147,6 +153,13 @@ final class CollectionEntryStore
 
             $data['name'] = $names;
             $data['slug'] = $slugs;
+            $data['is_active'] = (bool) ($detailData['is_active'] ?? true);
+
+            foreach (self::PAGE_SEO_FIELDS as $field) {
+                if (array_key_exists($field, $detailData)) {
+                    $data[$field] = $detailData[$field];
+                }
+            }
         }
 
         return $modelId
