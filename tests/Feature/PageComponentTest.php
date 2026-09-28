@@ -60,6 +60,21 @@ it('successfully stores the data', function () use ($testSettings): void {
     ]);
 });
 
+it('initializes empty SEO metadata as one value per active language', function (): void {
+    $this->useOnlyLanguage('de');
+    $model = Page::factory()->create([
+        'tenant_id' => $this->user->selected_tenant_id,
+        'meta_title' => null,
+        'meta_description' => null,
+    ]);
+
+    // The browser can only bind `detailData.meta_title.de` below an object —
+    // a null parent silently drops every keystroke.
+    Livewire::test('cms::page-detail', ['modelId' => $model->id])
+        ->assertSet('detailData.meta_title', ['de' => ''])
+        ->assertSet('detailData.meta_description', ['de' => '']);
+});
+
 it('successfully deletes a page', function () use ($testSettings): void {
     $user = $this->user;
     $model = Page::factory()->create([

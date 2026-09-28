@@ -133,7 +133,7 @@ new class extends Component
 
         $activeLangCodes = $this->activeLanguageCodes();
 
-        foreach (['name', 'slug'] as $field) {
+        foreach (['name', 'slug', 'meta_title', 'meta_description'] as $field) {
             if (! is_array($this->detailData[$field] ?? null) || empty($this->detailData[$field])) {
                 $this->detailData[$field] = array_fill_keys($activeLangCodes, '');
 
