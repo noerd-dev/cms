@@ -181,7 +181,7 @@ new class extends Component
             originalFilename: $this->isEditing ? $this->modelId : null,
         );
 
-        // Update collections table collection_key on rename (per-tenant scope)
+        // Update cms_collections table collection_key on rename (per-tenant scope)
         if ($isRenaming) {
             Collection::where('tenant_id', Auth::user()->selected_tenant_id)
                 ->where('collection_key', mb_strtoupper(str_replace('-', '_', $this->modelId)))

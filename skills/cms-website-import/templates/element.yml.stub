@@ -11,7 +11,7 @@ group: '{{ Text | Image | Interactive | Layout | Custom }}'
 #   select                  — dropdown (requires `options:`)
 #
 # Field name MUST start with `detailData.` — the form binds via wire:model on detailData.<name>
-# and the saving boot of Page maps detailData.<name> → element_page.data.<name>.
+# and the saving boot of Page maps detailData.<name> → cms_page_elements.data.<name>.
 #
 # colspan: 1–12 (Bootstrap-style 12-grid)
 

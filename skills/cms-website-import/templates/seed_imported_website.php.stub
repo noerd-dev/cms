@@ -244,7 +244,7 @@ return new class () extends Migration {
     }
 
     /**
-     * Insert an element_page row if no row with this (page_id, sort) already exists.
+     * Insert a cms_page_elements row if no row with this (page_id, sort) already exists.
      * Translatable fields must be wrapped per-language inside $data.
      */
     private function upsertElement(int $pageId, int $sort, string $key, array $data): void

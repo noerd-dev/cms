@@ -19,7 +19,7 @@ app-modules/cms/resources/views/components/collection-entries-list.blade.php
 
 ## Collection Definitions
 
-Each collection is defined by a per-tenant row in the `collection_definitions` table (model: `Noerd\Cms\Models\CollectionDefinition`) and resolved at runtime through the `CollectionDefinitionRepositoryContract`.
+Each collection is defined by a per-tenant row in the `cms_collection_definitions` table (model: `Noerd\Cms\Models\CollectionDefinition`) and resolved at runtime through the `CollectionDefinitionRepositoryContract`.
 
 | Column | Description |
 |--------|-------------|

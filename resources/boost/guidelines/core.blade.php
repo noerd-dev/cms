@@ -85,7 +85,7 @@ fields:
 
 ### Collections
 
-- Definitions are per-tenant rows in the `collection_definitions` table (**model:** `Noerd\Cms\Models\CollectionDefinition`), managed via the `/cms/collection-definitions` UI
+- Definitions are per-tenant rows in the `cms_collection_definitions` table (**model:** `Noerd\Cms\Models\CollectionDefinition`), managed via the `/cms/collection-definitions` UI
 - Resolved at runtime through `CollectionDefinitionRepositoryContract` (database-backed, decorated by `ElementAwareCollectionDefinitionRepository` for element collections)
 - `hasPage: true` — entries are full pages with URL, layout, and element builder
 - `hasPage: false` — entries are data-only records without dedicated pages

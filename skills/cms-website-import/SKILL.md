@@ -65,14 +65,14 @@ If no existing element matches, generate a new pair from `templates/element.blad
 
 Produce a written seed plan (table form) before generating SQL. Rules:
 
-- **Pages** — one `pages` row per inventory page. Translatable fields are JSON arrays even with a single language: `name => json_encode([$code => 'Startseite'])`, `slug => json_encode([$code => '/startseite'])` — `$code` is the tenant's default language (`CmsLanguageCodes::active()[0]`), never a hard-coded `'de'`. Slugs always start with `/`. `layout` defaults to `null` (resolves to `weblayout` at render). Update `cms_settings.homepage_page_id` for the homepage.
-- **Collections** — for each repeated structure, seed a `collection_definitions` row via the migration's `upsertCollectionDefinition(...)` helper (see `templates/seed_imported_website.php.stub`). Use `hasPage: true` if items get their own URL (services, projects); `hasPage: false` for embedded data (sliders, testimonials, team members). Each collection item is a `pages` row with `collection_id` set.
+- **Pages** — one `cms_pages` row per inventory page. Translatable fields are JSON arrays even with a single language: `name => json_encode([$code => 'Startseite'])`, `slug => json_encode([$code => '/startseite'])` — `$code` is the tenant's default language (`CmsLanguageCodes::active()[0]`), never a hard-coded `'de'`. Slugs always start with `/`. `layout` defaults to `null` (resolves to `weblayout` at render). Update `cms_settings.homepage_page_id` for the homepage.
+- **Collections** — for each repeated structure, seed a `cms_collection_definitions` row via the migration's `upsertCollectionDefinition(...)` helper (see `templates/seed_imported_website.php.stub`). Use `hasPage: true` if items get their own URL (services, projects); `hasPage: false` for embedded data (sliders, testimonials, team members). Each collection item is a `cms_pages` row with `collection_id` set.
 - **Navigation** — insert into `cms_navigations` with `navigation_key` `main` or `footer` (lowercase, matching the demo seeder). Set `page_id` for internal links, `link` for external. Use `parent_id` + `sort_order` for nested menus.
-- **Globals** — site-wide values (phone, email, site title) go in `global_parameters` as translatable JSON values keyed by name.
+- **Globals** — site-wide values (phone, email, site title) go in `cms_global_parameters` as translatable JSON values keyed by name.
 
 ### Phase 4 — Element data shape (CRITICAL)
 
-Every `element_page.data` field that the yml declares as `translatableText` / `translatableRichText` **must be wrapped per language**, even with one language:
+Every `cms_page_elements.data` field that the yml declares as `translatableText` / `translatableRichText` **must be wrapped per language**, even with one language:
 
 ```php
 'data' => json_encode([

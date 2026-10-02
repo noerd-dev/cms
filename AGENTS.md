@@ -39,7 +39,7 @@ as its `app-modules/website` frontend module.
 - `php artisan noerd:install-cms` — first installation (asks for the tenant assignment)
 - `php artisan noerd:update-cms` — idempotent YAML update + starter-homepage seeding,
   discovered by `noerd:update-all`
-- `php artisan cms:sync-form-types` — sync `app-configs/cms/forms/*.yml` into `form_types`
+- `php artisan cms:sync-form-types` — sync `app-configs/cms/forms/*.yml` into `cms_form_types`
 - `php artisan noerd:install-website` — copy the website boilerplate into the project
 
 ## Working on the module

@@ -155,7 +155,7 @@ The `FormTypeSyncService` handles synchronization:
 
 ## Form Requests
 
-Submitted form data is stored in the `form_requests` table. Each request contains:
+Submitted form data is stored in the `cms_form_requests` table. Each request contains:
 
 | Column | Description |
 |--------|-------------|

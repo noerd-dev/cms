@@ -8,7 +8,7 @@ new class extends Component {
 }; ?>
 
 {{-- {{ ELEMENT_NAME }} --}}
-{{-- File name (kebab-case) must match the snake_case element key used in element_page.element_key. --}}
+{{-- File name (kebab-case) must match the snake_case element key used in cms_page_elements.element_key. --}}
 {{-- Translatable fields are already localized by HandlesPageElements::localizeArray() --}}
 {{-- and reach this view as plain strings on $element. Non-translatable fields stay flat. --}}
 

@@ -7,7 +7,7 @@ Elements are reusable content blocks that can be added to pages via a drag-and-d
 1. Elements are discovered automatically from `resources/views/components/elements/` in any app-module
 2. Each element has a `.blade.php` file and a matching `.yml` file
 3. The YAML file defines the element's title, description, group, and editable fields
-4. When added to a page, element data is stored in the `element_page` table as JSON
+4. When added to a page, element data is stored in the `cms_page_elements` table as JSON
 
 ## File Locations
 
@@ -134,7 +134,7 @@ The element will be automatically discovered and available in the element picker
 
 ## Data Storage
 
-Element data is stored in the `element_page` table via the `ElementPage` model:
+Element data is stored in the `cms_page_elements` table via the `ElementPage` model:
 
 | Column | Description |
 |--------|-------------|
