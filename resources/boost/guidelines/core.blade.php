@@ -58,9 +58,6 @@ public function mount(?string $collectionKey = null): void
   SVG keeps its plain URL). An image field may name another variant of `config('media.variants')`
   with `variant: teaser` in its YAML; `web` is the default. The URL is relative and carries a query
   string — element Blades keep prefixing `config('website.media_url')` and never append to it
-- The migration `store_media_ids_in_cms_data` rewrites existing URLs in `cms_pages.data` and
-  `cms_page_elements.data` to ids; it must run BEFORE `media:restructure`, which changes the paths
-  those URLs were built from
 
 ### Elements
 
@@ -268,7 +265,7 @@ curl -X POST https://example.test/api/cms/form-requests \
 
 ### Database
 
-- Every table carries the `cms_` prefix (`cms_pages`, `cms_page_elements`, `cms_collections`, `cms_collection_definitions`, `cms_form_types`, `cms_form_requests`, `cms_global_parameters`, `cms_authors`, `cms_articles`, `cms_navigations`, `cms_redirects`, `cms_languages`, `cms_settings`); an installation from 0.1.x is renamed by the `rename_cms_tables_with_prefix` migration
+- Every table carries the `cms_` prefix (`cms_pages`, `cms_page_elements`, `cms_collections`, `cms_collection_definitions`, `cms_form_types`, `cms_form_requests`, `cms_global_parameters`, `cms_authors`, `cms_articles`, `cms_navigations`, `cms_redirects`, `cms_languages`, `cms_settings`)
 - `Collection` and `CollectionDefinition` use `BelongsToTenant` like every other content model; queries for ANOTHER tenant go through explicit helpers (`CmsLanguage::forTenant()`)
 
 ### YAML File Locations

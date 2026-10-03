@@ -9,6 +9,34 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        // pages <-> collections reference each other: the collections table is
+        // created first, its page foreign keys are added at the end.
+        Schema::create('cms_collections', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('tenant_id');
+            $table->unsignedBigInteger('page_id')->nullable();
+            $table->unsignedBigInteger('element_page_id')->nullable();
+            $table->string('collection_key');
+            $table->string('owner_field')->nullable();
+            $table->json('element_fields')->nullable();
+            $table->boolean('is_element_collection')->default(false);
+            $table->integer('sort')->default(0);
+            $table->string('name')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->timestamps();
+
+            $table->index('tenant_id');
+            $table->index('page_id');
+            $table->index('element_page_id');
+            $table->index('collection_key');
+            $table->index('is_element_collection');
+            $table->index('sort');
+            $table->unique(['tenant_id', 'collection_key']);
+
+            $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
+            $table->foreign('created_by')->references('id')->on('noerd_users')->nullOnDelete();
+        });
+
         Schema::create('cms_pages', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
@@ -64,9 +92,29 @@ return new class extends Migration {
             $table->foreign('page_id')->references('id')->on('cms_pages')->onDelete('cascade');
         });
 
+        Schema::create('cms_form_types', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('tenant_id');
+            $table->string('key');
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->boolean('send_email')->default(false);
+            $table->string('email_subject')->nullable();
+            $table->text('email_body')->nullable();
+            $table->string('notification_email')->nullable();
+            $table->string('yml_path');
+            $table->timestamp('yml_synced_at')->nullable();
+            $table->timestamps();
+
+            $table->unique(['tenant_id', 'key']);
+
+            $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
+        });
+
         Schema::create('cms_form_requests', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
+            $table->unsignedBigInteger('form_type_id')->nullable();
             $table->string('form');
             $table->json('data')->nullable();
             $table->timestamps();
@@ -74,8 +122,10 @@ return new class extends Migration {
             $table->index('tenant_id');
             // The submissions list shows the newest entries of a tenant first.
             $table->index(['tenant_id', 'created_at']);
+            $table->index('form_type_id');
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
+            $table->foreign('form_type_id')->references('id')->on('cms_form_types')->nullOnDelete();
         });
 
         Schema::create('cms_navigations', function (Blueprint $table): void {
@@ -119,8 +169,7 @@ return new class extends Migration {
             $table->foreign('homepage_page_id')->references('id')->on('cms_pages')->onDelete('set null');
         });
 
-        // Complete the circular pages <-> collections relationship now that the
-        // pages table exists.
+        // Complete the circular pages <-> collections relationship.
         Schema::table('cms_collections', function (Blueprint $table): void {
             $table->foreign('page_id')->references('id')->on('cms_pages')->onDelete('cascade');
             // An element collection owned by a page element disappears with it.
@@ -144,8 +193,10 @@ return new class extends Migration {
         Schema::dropIfExists('cms_settings');
         Schema::dropIfExists('cms_navigations');
         Schema::dropIfExists('cms_form_requests');
+        Schema::dropIfExists('cms_form_types');
         Schema::dropIfExists('cms_page_elements');
         Schema::dropIfExists('cms_global_parameters');
         Schema::dropIfExists('cms_pages');
+        Schema::dropIfExists('cms_collections');
     }
 };
