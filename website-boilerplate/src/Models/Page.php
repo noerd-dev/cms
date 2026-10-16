@@ -6,10 +6,16 @@ namespace Noerd\Website\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Noerd\Cms\Concerns\ExtendsContent;
 use Noerd\Website\Database\Factories\PageFactory;
 
+/**
+ * Read model of a website page. The name and the elements live on the page's
+ * content (`contents` / `content_elements`), reached through ExtendsContent.
+ */
 class Page extends Model
 {
+    use ExtendsContent;
     use HasFactory;
 
     protected $table = 'cms_pages';
@@ -17,14 +23,13 @@ class Page extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'name' => 'json',
         'slug' => 'json',
         'is_active' => 'boolean',
     ];
 
-    public function elements()
+    public static function contentType(): string
     {
-        return $this->hasMany(ElementPage::class)->orderBy('sort');
+        return 'cms.page';
     }
 
     protected static function newFactory()

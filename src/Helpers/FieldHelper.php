@@ -11,6 +11,13 @@ use Throwable;
 
 class FieldHelper
 {
+    /**
+     * The content type an element serves when its YAML declares no
+     * `contentTypes:` — the website page, so website elements stay out of
+     * every other kind of content.
+     */
+    public const DEFAULT_CONTENT_TYPE = 'cms.page';
+
     /** @var array<string, array<string, mixed>> element key => parsed definition */
     private static array $elementFieldsCache = [];
 
@@ -106,9 +113,15 @@ class FieldHelper
         return self::$allElementsCache ??= self::discoverAllElements();
     }
 
-    public static function getAllElementsGrouped(): array
+    /**
+     * The elements of the given content type (null = every element), grouped
+     * by their YAML `group`.
+     */
+    public static function getAllElementsGrouped(?string $contentType = null): array
     {
-        $elements = self::getAllElements();
+        $elements = $contentType === null
+            ? self::getAllElements()
+            : array_filter(self::getAllElements(), fn(object $element): bool => in_array($contentType, $element->content_types, true));
         $groupedElements = [];
 
         foreach ($elements as $element) {
@@ -216,6 +229,7 @@ class FieldHelper
                     'name' => ($yaml['title'] ?? '') ?: ucwords(str_replace('_', ' ', $elementKey)),
                     'description' => $yaml['description'] ?? '',
                     'group' => $yaml['group'] ?? 'General',
+                    'content_types' => self::contentTypesOf($yaml),
                 ];
             } else {
                 // If no yml file exists, create a basic element entry
@@ -224,11 +238,29 @@ class FieldHelper
                     'name' => ucwords(str_replace(['_', '-'], ' ', $elementKey)),
                     'description' => 'Auto-detected from Livewire component',
                     'group' => 'General',
+                    'content_types' => [self::DEFAULT_CONTENT_TYPE],
                 ];
             }
         }
 
         return $elements;
+    }
+
+    /**
+     * The content types an element YAML serves (`contentTypes:`), the website
+     * page when it names none.
+     *
+     * @param  array<string, mixed>  $yaml
+     * @return array<int, string>
+     */
+    private static function contentTypesOf(array $yaml): array
+    {
+        $types = array_values(array_filter(
+            (array) ($yaml['contentTypes'] ?? []),
+            fn(mixed $type): bool => is_string($type) && $type !== '',
+        ));
+
+        return $types === [] ? [self::DEFAULT_CONTENT_TYPE] : $types;
     }
 
     /**

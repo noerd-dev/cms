@@ -5,15 +5,14 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Collection;
-use Noerd\Cms\Models\ElementPage;
+use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Facades\Noerd;
-use Noerd\Support\RelationFieldDefinition;
 use Noerd\Helpers\AccessHelper;
+use Noerd\Support\RelationFieldDefinition;
 
-new class extends Component
-{
+new class extends Component {
     public string $ownerType = ElementCollectionService::OWNER_PAGE;
 
     public mixed $ownerId = null;
@@ -104,15 +103,16 @@ new class extends Component
     private function resolveOwnerContext(): array
     {
         if ($this->ownerType === ElementCollectionService::OWNER_ELEMENT_PAGE) {
-            $elementPage = ElementPage::find($this->ownerId);
+            $element = ContentElement::find($this->ownerId);
 
-            if (! $elementPage) {
+            if (! $element) {
                 return [null, ''];
             }
 
-            $title = FieldHelper::getElementFields($elementPage->element_key)['title'] ?? $elementPage->element_key;
+            $title = FieldHelper::getElementFields($element->element_key)['title'] ?? $element->element_key;
 
-            return [$elementPage->page?->tenant_id, (string) $title];
+            // Tenant guard: the owning content resolves through the tenant scope.
+            return [$element->content?->tenant_id, (string) $title];
         }
 
         $page = Page::find($this->ownerId);

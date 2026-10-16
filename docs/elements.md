@@ -7,7 +7,7 @@ Elements are reusable content blocks that can be added to pages via a drag-and-d
 1. Elements are discovered automatically from `resources/views/components/elements/` in any app-module
 2. Each element has a `.blade.php` file and a matching `.yml` file
 3. The YAML file defines the element's title, description, group, and editable fields
-4. When added to a page, element data is stored in the `cms_page_elements` table as JSON
+4. When added to a page, element data is stored in the `content_elements` table as JSON
 
 ## File Locations
 
@@ -132,13 +132,34 @@ field to deliver another variant of the project's `config/media.php` `variants` 
 
 The element will be automatically discovered and available in the element picker.
 
+## Content Types
+
+An element serves the website pages (`cms.page`) unless its YAML names other content types:
+
+```yaml
+title: 'Markdown Text'
+group: 'Text'
+contentTypes:
+  - uki.page
+  - uki.article
+fields:
+  - name: detailData.text
+    label: Text
+    type: translatableTextarea
+    colspan: 12
+```
+
+The element picker only offers the elements of the content being edited.
+
 ## Data Storage
 
-Element data is stored in the `cms_page_elements` table via the `ElementPage` model:
+Element data is stored in the `content_elements` table via the `ContentElement` model. Elements
+belong to a CONTENT (`contents`), not to a page: a website page, an intranet page and an article
+are each an extension of a content and share the same element builder.
 
 | Column | Description |
 |--------|-------------|
-| `page_id` | Reference to the page |
+| `content_id` | Reference to the content |
 | `element_key` | Element type identifier (snake_case, e.g., `text_block_1_column`) |
 | `data` | JSON object containing field values |
 | `sort` | Sort order on the page |

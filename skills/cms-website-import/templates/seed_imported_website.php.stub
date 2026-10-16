@@ -229,10 +229,19 @@ return new class () extends Migration {
             return $existing->id;
         }
 
+        // The name lives on the page's content (contents), the page row points at it.
+        $contentId = DB::table('contents')->insertGetId([
+            'tenant_id' => $tenantId,
+            'type' => 'cms.page',
+            'name' => json_encode($names),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
         return DB::table('cms_pages')->insertGetId([
             'tenant_id' => $tenantId,
+            'content_id' => $contentId,
             'collection_id' => $collectionId,
-            'name' => json_encode($names),
             'slug' => json_encode($slugs),
             'meta_title' => $metaTitle ? json_encode($metaTitle) : null,
             'meta_description' => $metaDescription ? json_encode($metaDescription) : null,
@@ -244,13 +253,15 @@ return new class () extends Migration {
     }
 
     /**
-     * Insert a cms_page_elements row if no row with this (page_id, sort) already exists.
-     * Translatable fields must be wrapped per-language inside $data.
+     * Insert a content_elements row into the page's content if no row with this
+     * sort position exists yet. Translatable fields must be wrapped per-language inside $data.
      */
     private function upsertElement(int $pageId, int $sort, string $key, array $data): void
     {
-        $exists = DB::table('cms_page_elements')
-            ->where('page_id', $pageId)
+        $contentId = DB::table('cms_pages')->where('id', $pageId)->value('content_id');
+
+        $exists = DB::table('content_elements')
+            ->where('content_id', $contentId)
             ->where('sort', $sort)
             ->exists();
 
@@ -258,8 +269,8 @@ return new class () extends Migration {
             return;
         }
 
-        DB::table('cms_page_elements')->insert([
-            'page_id' => $pageId,
+        DB::table('content_elements')->insert([
+            'content_id' => $contentId,
             'element_key' => $key,
             'sort' => $sort,
             'data' => json_encode($data),

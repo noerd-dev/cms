@@ -32,8 +32,9 @@ The CMS module creates the following tables:
 
 | Table | Description |
 |-------|-------------|
-| `cms_pages` | Website pages and collection entries |
-| `cms_page_elements` | Page-element associations with JSON data |
+| `contents` | Shared base of website pages, intranet pages and articles: type, name |
+| `content_elements` | Elements of a content with JSON data |
+| `cms_pages` | Website pages and collection entries (extension of a content) |
 | `cms_collections` | Per-tenant collection instances (including element collections) |
 | `cms_collection_definitions` | Collection definitions (fields, titles, hasPage) |
 | `cms_navigations` | Navigation items with hierarchy |
@@ -105,7 +106,7 @@ Set `CMS_WEBSITE_URL` in your `.env` file to configure the website URL used for 
 
 ## Multi-Tenancy
 
-Content models use the `BelongsToTenant` trait (`CmsSetting` is a tenant singleton keyed explicitly; `ElementPage` is scoped through its page). Content is automatically scoped to the current tenant. When a new tenant is created, a default English language is automatically set up via `CmsLanguage::ensureDefaultLanguageForTenant()`.
+Content models use the `BelongsToTenant` trait (`CmsSetting` is a tenant singleton keyed explicitly; `ContentElement` is scoped through its content). Content is automatically scoped to the current tenant. When a new tenant is created, a default English language is automatically set up via `CmsLanguage::ensureDefaultLanguageForTenant()`.
 
 ## Access Control
 

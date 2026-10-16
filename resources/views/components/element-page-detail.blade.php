@@ -7,19 +7,19 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\FieldHelper;
-use Noerd\Cms\Models\ElementPage;
+use Noerd\Cms\Models\ContentElement;
 use Noerd\Facades\Noerd;
-use Noerd\Traits\NoerdDetail;
 use Noerd\Media\Models\Media;
+use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
-    use WithFileUploads;
     use NoerdDetail;
+    use WithFileUploads;
 
-    public $detailModel = ElementPage::class;
+    public $detailModel = ContentElement::class;
 
     /**
-     * Nested inside the page editor (which binds ?pageId) — a dedicated alias
+     * Nested inside a content editor (the page editor binds ?pageId) — a dedicated alias
      * keeps the two ids apart.
      */
     public ?string $detailPrimary = 'elementId';
@@ -46,12 +46,12 @@ new class extends Component {
     {
         $this->initDetail();
 
-        $elementPage = new ElementPage;
+        $elementPage = new ContentElement();
         if ($this->modelId) {
-            // Tenant guard: the owning page resolves through the tenant scope,
-            // so an element of another tenant's page renders as a blank one.
-            $found = ElementPage::find($this->modelId);
-            $elementPage = ($found && $found->page) ? $found : new ElementPage;
+            // Tenant guard: the owning content resolves through the tenant scope,
+            // so an element of another tenant's content renders as a blank one.
+            $found = ContentElement::find($this->modelId);
+            $elementPage = ($found && $found->content) ? $found : new ContentElement();
         }
 
         $this->elementKey = (string) ($elementPage->element_key ?: 'text_block_1_column');
@@ -63,9 +63,10 @@ new class extends Component {
         $this->detailData = FieldHelper::parseElementToData($this->elementKey, $elementData) ?? [];
 
         // Send initial data to a parent component for live preview
-        $this->dispatch('updateLiveElementData',
+        $this->dispatch(
+            'updateLiveElementData',
             elementPageId: $this->modelId,
-            data: $this->detailData
+            data: $this->detailData,
         );
     }
 
@@ -80,9 +81,9 @@ new class extends Component {
     #[On('storeElements')]
     public function store(): void
     {
-        $elementPage = ElementPage::find($this->modelId);
-        // Tenant guard: the owning page resolves through the tenant scope.
-        if (! $elementPage || ! $elementPage->page) {
+        $elementPage = ContentElement::find($this->modelId);
+        // Tenant guard: the owning content resolves through the tenant scope.
+        if (! $elementPage || ! $elementPage->content) {
             return;
         }
         $elementPage->data = $this->detailData;
@@ -94,17 +95,18 @@ new class extends Component {
     {
         // When any model property changes, dispatch the live data to parent
         if (str_starts_with($propertyName, 'detailData.')) {
-            $this->dispatch('updateLiveElementData',
+            $this->dispatch(
+                'updateLiveElementData',
                 elementPageId: $this->modelId,
-                data: $this->detailData
+                data: $this->detailData,
             );
         }
     }
 
     public function delete(): void
     {
-        $elementPage = ElementPage::find($this->modelId);
-        if (! $elementPage || ! $elementPage->page) {
+        $elementPage = ContentElement::find($this->modelId);
+        if (! $elementPage || ! $elementPage->content) {
             return;
         }
         $elementPage->delete();
@@ -112,7 +114,7 @@ new class extends Component {
         $this->dispatch('reloadPageComponent');
     }
 
-    public function updatedImages()
+    public function updatedImages(): void
     {
         foreach ($this->images as $key => $image) {
             $link = $image->storePublicly(path: 'uploads', options: 'public');
@@ -120,25 +122,27 @@ new class extends Component {
         }
 
         // Notify parent to refresh live preview with updated image paths
-        $this->dispatch('updateLiveElementData',
+        $this->dispatch(
+            'updateLiveElementData',
             elementPageId: $this->modelId,
-            data: $this->detailData
+            data: $this->detailData,
         );
     }
 
-    public function deleteImage($key)
+    public function deleteImage($key): void
     {
         data_set($this->detailData, $key, null);
 
         // Notify parent to refresh live preview after deletion
-        $this->dispatch('updateLiveElementData',
+        $this->dispatch(
+            'updateLiveElementData',
             elementPageId: $this->modelId,
-            data: $this->detailData
+            data: $this->detailData,
         );
     }
 
     #[On('languageChanged')]
-    public function languageChanged()
+    public function languageChanged(): void
     {
         $this->dispatch('$refresh');
     }
@@ -156,7 +160,7 @@ new class extends Component {
             return; // ignore events not intended for this instance
         }
         $media = Media::find($mediaId);
-        if (!$media) {
+        if (! $media) {
             return;
         }
         // The id is stored, never the URL: the media disk mirrors the folder
@@ -165,9 +169,10 @@ new class extends Component {
         $this->mediaToken = null;
 
         // Notify parent to refresh live preview after media selection
-        $this->dispatch('updateLiveElementData',
+        $this->dispatch(
+            'updateLiveElementData',
             elementPageId: $this->modelId,
-            data: $this->detailData
+            data: $this->detailData,
         );
     }
 

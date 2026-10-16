@@ -7,34 +7,39 @@ namespace Noerd\Cms\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Noerd\Cms\Database\Factories\ElementPageFactory;
+use Noerd\Cms\Database\Factories\ContentElementFactory;
 
-class ElementPage extends Model
+/**
+ * One element of a content (text block, image, …): the element key names the
+ * Blade + YAML pair, `data` holds the field values. The row carries no tenant —
+ * it is reached through its content, whose tenant scope guards it.
+ */
+class ContentElement extends Model
 {
     use HasFactory;
 
     protected $guarded = [];
 
-    protected $table = 'cms_page_elements';
+    protected $table = 'content_elements';
 
-    public function page(): BelongsTo
+    public function content(): BelongsTo
     {
-        return $this->belongsTo(Page::class);
+        return $this->belongsTo(Content::class);
     }
 
-    protected static function newFactory(): ElementPageFactory
+    protected static function newFactory(): ContentElementFactory
     {
-        return ElementPageFactory::new();
+        return ContentElementFactory::new();
     }
 
     protected static function booted(): void
     {
         // Remove element collections owned by this element instance. Their row
         // pages cascade away via the pages.collection_id foreign key.
-        static::deleting(function (self $elementPage): void {
+        static::deleting(function (self $element): void {
             Collection::query()
                 ->where('is_element_collection', true)
-                ->where('element_page_id', $elementPage->id)
+                ->where('element_page_id', $element->id)
                 ->get()
                 ->each
                 ->delete();

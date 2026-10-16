@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace Noerd\Website\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Noerd\Cms\Models\Content;
 
 class ElementPage extends Model
 {
-    protected $table = 'cms_page_elements';
+    protected $table = 'content_elements';
 
     protected $guarded = [];
 
-    public function page()
+    public function content()
     {
-        return $this->belongsTo(Page::class);
+        return $this->belongsTo(Content::class);
     }
 }

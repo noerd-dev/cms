@@ -9,13 +9,13 @@ metadata:
 
 # CMS Website Import
 
-Migrate a hand-written Blade website into the Noerd CMS module. The CMS ships as a complete subsystem (Page, ElementPage, Navigation, Collection, FormType, CmsLanguage, WebsiteController, WebsiteMiddleware, weblayout, 12 ready-made element blade+yml pairs) and is multi-tenant + multi-language. This skill produces a deterministic procedure that turns static templates into DB-driven pages.
+Migrate a hand-written Blade website into the Noerd CMS module. The CMS ships as a complete subsystem (Page, Content, ContentElement, Navigation, Collection, FormType, CmsLanguage, WebsiteController, WebsiteMiddleware, weblayout, 12 ready-made element blade+yml pairs) and is multi-tenant + multi-language. This skill produces a deterministic procedure that turns static templates into DB-driven pages.
 
 ## Deliverables
 
 A successful run produces:
 
-- One timestamped Laravel migration in `database/migrations/` that seeds **Pages**, **ElementPage** rows, **Navigation**, **GlobalParameters**, **CollectionDefinitions** and **Collection** rows for every tenant. Idempotent. Empty `down()`.
+- One timestamped Laravel migration in `database/migrations/` that seeds **Pages**, **Content** + **ContentElement** rows, **Navigation**, **GlobalParameters**, **CollectionDefinitions** and **Collection** rows for every tenant. Idempotent. Empty `down()`.
 - New element `*.blade.php` + `*.yml` pairs in `resources/views/components/elements/` for any section that has no matching CMS element.
 - New form YAMLs in `app-configs/cms/forms/`, synced via `php artisan cms:sync-form-types`.
 - A verification checklist proving every migrated URL renders with no browser errors.
@@ -72,7 +72,7 @@ Produce a written seed plan (table form) before generating SQL. Rules:
 
 ### Phase 4 — Element data shape (CRITICAL)
 
-Every `cms_page_elements.data` field that the yml declares as `translatableText` / `translatableRichText` **must be wrapped per language**, even with one language:
+Every `content_elements.data` field that the yml declares as `translatableText` / `translatableRichText` **must be wrapped per language**, even with one language:
 
 ```php
 'data' => json_encode([

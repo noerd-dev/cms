@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use Noerd\Cms\Models\ElementPage;
+use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\PageElementService;
 use Noerd\Cms\Support\MediaValues;
@@ -103,8 +103,8 @@ it('resolves an element image field when a page is rendered', function (): void 
         $media = Media::factory()->file($this->tenantId, 'logo.svg')->create();
 
         $page = Page::factory()->create(['tenant_id' => $this->tenantId]);
-        ElementPage::factory()->create([
-            'page_id' => $page->id,
+        ContentElement::factory()->create([
+            'content_id' => $page->content_id,
             'element_key' => $this->zzImageElementKey(),
             'data' => ['image' => $media->id, 'headline' => 'Hello'],
         ]);

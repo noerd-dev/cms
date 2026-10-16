@@ -121,10 +121,11 @@ Below the page fields, the page detail view shows the element builder. Elements 
 
 The `Page` model stores pages and collection entries:
 
-- `name`, `slug`, `meta_title`, `meta_description` are cast to arrays for multi-language support
+- A page extends a content (`contents`, `ExtendsContent`): `name` and the elements live on the content, `content_id` points at it
+- `name` (on the content), `slug`, `meta_title`, `meta_description` are arrays for multi-language support
 - `is_active` defaults to `true`
 - `data` is cast to an array (used by collection entries)
-- Relations: `elements()` (hasMany ElementPage), `collection()` (belongsTo Collection)
+- Relations: `content()`, `elements()` (the content's `ContentElement`s), `collection()` (belongsTo Collection)
 
 When saving a page that belongs to a collection, the `FieldTypeConverter` automatically converts field data between translatable and non-translatable formats based on the collection definition.
 

@@ -9,10 +9,16 @@ new class extends Component {
 
     public ?string $token = null;
 
+    /**
+     * The type of the content the element is added to — only elements made
+     * for that type are offered (element YAML `contentTypes:`).
+     */
+    public ?string $contentType = null;
+
     #[Computed]
     public function groupedElements()
     {
-        return FieldHelper::getAllElementsGrouped();
+        return FieldHelper::getAllElementsGrouped($this->contentType ?? FieldHelper::DEFAULT_CONTENT_TYPE);
     }
 
     public function pick(string $elementKey): void

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Noerd\Cms\Models\Collection;
-use Noerd\Cms\Models\ElementPage;
+use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Tests\Traits\CreatesElementFixtures;
@@ -54,9 +54,13 @@ it('successfully stores the data', function () use ($testSettings): void {
 
     $this->assertDatabaseHas('cms_pages', [
         'tenant_id' => $user->selected_tenant_id,
+        'layout' => 'weblayout',
+    ]);
+    $this->assertDatabaseHas('contents', [
+        'tenant_id' => $user->selected_tenant_id,
+        'type' => 'cms.page',
         'name->en' => 'Test Page',
         'name->de' => 'Test Seite',
-        'layout' => 'weblayout',
     ]);
 });
 
@@ -108,8 +112,8 @@ it('opens and stores existing page', function () use ($testSettings): void {
         ->call('store')
         ->assertOk();
 
-    $this->assertDatabaseHas('cms_pages', [
-        'id' => $model->id,
+    $this->assertDatabaseHas('contents', [
+        'id' => $model->content_id,
         'name->en' => 'New Page',
         'name->de' => 'Neue Seite',
     ]);
@@ -138,8 +142,8 @@ it('copies a page with elements', function () use ($testSettings): void {
         'slug' => ['en' => '/original-page', 'de' => '/original-seite'],
     ]);
 
-    ElementPage::create([
-        'page_id' => $model->id,
+    ContentElement::create([
+        'content_id' => $model->content_id,
         'element_key' => $this->zzTextElementKey(),
         'sort' => 1,
         'data' => ['text' => ['en' => 'Hello']],
@@ -159,7 +163,7 @@ it('copies a page with elements', function () use ($testSettings): void {
     expect($copiedPage->slug['en'])->toContain('/original-page-2');
     expect($copiedPage->slug['de'])->toContain('/original-seite-2');
 
-    $copiedElements = ElementPage::where('page_id', $copiedPage->id)->get();
+    $copiedElements = ContentElement::where('content_id', $copiedPage->content_id)->get();
     expect($copiedElements)->toHaveCount(1);
     expect($copiedElements->first()->getRawOriginal('element_key'))->toBe($this->zzTextElementKey());
 });

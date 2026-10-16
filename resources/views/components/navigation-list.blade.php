@@ -9,8 +9,7 @@ use Noerd\Facades\Noerd;
 use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdList;
 
-new class extends Component
-{
+new class extends Component {
     use LanguageFilterTrait;
     use NoerdList;
 
@@ -88,7 +87,7 @@ new class extends Component
         // listQuery() applies search and the read guard; the hierarchical
         // ordering below requires in-memory assembly and manual pagination.
         $allItems = $this->listQuery($this->listModel)
-            ->with('page')
+            ->with('page.content')
             ->when($this->listFilters['navigation_key'] ?? null, function ($query, $key): void {
                 $query->where('navigation_key', $key);
             })

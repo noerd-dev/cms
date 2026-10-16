@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\CollectionDefinition;
-use Noerd\Cms\Models\ElementPage;
+use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
@@ -62,7 +62,7 @@ it('creates a page-owned element collection and opens the modal on manage()', fu
 
 it('creates an element_page-owned element collection on manage()', function (): void {
     $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Page']]);
-    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'team_section', 'data' => [], 'sort' => 0]);
+    $element = ContentElement::create(['content_id' => $page->content_id, 'element_key' => 'team_section', 'data' => [], 'sort' => 0]);
 
     Livewire::test('element-collection-field', [
         'ownerType' => ElementCollectionService::OWNER_ELEMENT_PAGE,
@@ -139,7 +139,7 @@ it('renders the element-collection field through the entry editor instead of [ob
 
 it('resolves the element-collection owner to the element page inside the element editor', function (): void {
     $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Startseite']]);
-    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'gallery_grid', 'data' => [], 'sort' => 0]);
+    $element = ContentElement::create(['content_id' => $page->content_id, 'element_key' => 'gallery_grid', 'data' => [], 'sort' => 0]);
 
     $editor = Livewire::test('element-page-detail', ['modelId' => $element->id])->instance();
 
@@ -160,7 +160,7 @@ it('counts existing element-collection entries in the element editor', function 
     // The module's own throwaway fixture element declares an `element-collection`
     // field (`items`); a key without a matching .blade.php renders the
     // "component not found" box instead of the editor.
-    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => $this->zzCollectionElementKey(), 'data' => [], 'sort' => 0]);
+    $element = ContentElement::create(['content_id' => $page->content_id, 'element_key' => $this->zzCollectionElementKey(), 'data' => [], 'sort' => 0]);
 
     $elementCollection = app(ElementCollectionService::class)->ensure(
         ElementCollectionService::OWNER_ELEMENT_PAGE,

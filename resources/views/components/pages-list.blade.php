@@ -10,6 +10,7 @@ use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
+use Noerd\Services\ColumnFilterParser;
 use Noerd\Traits\NoerdList;
 
 new class extends Component {
@@ -32,39 +33,6 @@ new class extends Component {
         }
 
         $this->openCollectionFromRequest();
-    }
-
-    /**
-     * Deep link: /cms/pages?collection={id|key}[&entry={id}] opens the matching
-     * collection entries list (and optionally one element-collection entry).
-     */
-    private function openCollectionFromRequest(): void
-    {
-        $collectionParam = (string) request()->collection;
-        if ($collectionParam === '') {
-            return;
-        }
-
-        $collection = is_numeric($collectionParam)
-            ? Collection::query()->find((int) $collectionParam)
-            : Collection::query()->where('collection_key', mb_strtoupper($collectionParam))->first();
-
-        if ($collection === null) {
-            return;
-        }
-
-        Noerd::modal('cms::collection-entries-list', [
-            'collectionKey' => $collection->id,
-            'elementCollection' => (bool) $collection->is_element_collection,
-        ]);
-
-        $entryId = (int) request()->entry;
-        if ($entryId && $collection->is_element_collection && Page::query()->where('collection_id', $collection->id)->whereKey($entryId)->exists()) {
-            Noerd::modal('cms::element-collection-row-detail', [
-                'modelId' => $entryId,
-                'collectionKey' => strtolower($collection->collection_key),
-            ]);
-        }
     }
 
     #[Computed]
@@ -108,18 +76,39 @@ new class extends Component {
         $collectionsWithoutPages = Collection::query()
             ->get()
             ->filter(function ($collection) {
-                $collectionFields = CollectionHelper::getCollectionFields(strtolower($collection->collection_key));
+                $collectionFields = CollectionHelper::getCollectionFields(mb_strtolower($collection->collection_key));
 
                 return $collectionFields === null || ! ($collectionFields['hasPage'] ?? true);
             })
             ->pluck('id')
             ->toArray();
 
-        // listQuery() applies search, sort and the YAML column filters — the
-        // page-specific constraints are chained on top.
-        $rows = $this->listQuery($this->listModel)
-            ->with('collection')
-            ->where(function ($query) use ($collectionsWithoutPages) {
+        // listQuery() applies sort and the YAML column filters — the
+        // page-specific constraints are chained on top. The name lives on the
+        // page's content, so the search runs here: name OR slug.
+        $search = (string) $this->search;
+        $this->search = '';
+        $query = $this->listQuery($this->listModel);
+        $this->search = $search;
+
+        $selectedLanguage = $this->listFilters['language']
+            ?? session('selectedLanguage')
+            ?? $this->defaultLanguageCode();
+
+        if ($search !== '') {
+            $query->where(function ($query) use ($search): void {
+                $query->whereContentNameContains($search);
+                ColumnFilterParser::applyLikeContains($query, 'slug', $search, 'or');
+            });
+        }
+
+        if ($this->sortField === 'name') {
+            $query->reorder()->orderByContentName((string) $selectedLanguage, $this->sortAsc ? 'asc' : 'desc');
+        }
+
+        $rows = $query
+            ->with(['collection', 'content'])
+            ->where(function ($query) use ($collectionsWithoutPages): void {
                 // Show pages that don't belong to any collection
                 $query->whereNull('collection_id')
                     // OR pages that belong to collections with hasPage: true (exclude hasPage: false collections)
@@ -135,9 +124,6 @@ new class extends Component {
             ->paginate($this->perPage);
 
         // Parse JSON attributes to show only current language values
-        $selectedLanguage = $this->listFilters['language']
-            ?? session('selectedLanguage');
-
         foreach ($rows->items() as $row) {
             if (is_array($row->name)) {
                 $row->name = $row->name[$selectedLanguage] ?? array_values($row->name)[0] ?? '';
@@ -149,6 +135,39 @@ new class extends Component {
         }
 
         return $this->buildList($rows);
+    }
+
+    /**
+     * Deep link: /cms/pages?collection={id|key}[&entry={id}] opens the matching
+     * collection entries list (and optionally one element-collection entry).
+     */
+    private function openCollectionFromRequest(): void
+    {
+        $collectionParam = (string) request()->collection;
+        if ($collectionParam === '') {
+            return;
+        }
+
+        $collection = is_numeric($collectionParam)
+            ? Collection::query()->find((int) $collectionParam)
+            : Collection::query()->where('collection_key', mb_strtoupper($collectionParam))->first();
+
+        if ($collection === null) {
+            return;
+        }
+
+        Noerd::modal('cms::collection-entries-list', [
+            'collectionKey' => $collection->id,
+            'elementCollection' => (bool) $collection->is_element_collection,
+        ]);
+
+        $entryId = (int) request()->entry;
+        if ($entryId && $collection->is_element_collection && Page::query()->where('collection_id', $collection->id)->whereKey($entryId)->exists()) {
+            Noerd::modal('cms::element-collection-row-detail', [
+                'modelId' => $entryId,
+                'collectionKey' => mb_strtolower($collection->collection_key),
+            ]);
+        }
     }
 
 } ?>

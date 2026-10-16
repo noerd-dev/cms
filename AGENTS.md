@@ -27,7 +27,9 @@ as its `app-modules/website` frontend module.
   `pageRelation`, `authorRelation`)
 - `database/migrations|factories/`, `tests/` (Pest), `resources/lang/de.json`
 - The tenant app name is `CMS` (uppercase). Every table carries the `cms_` prefix and is created by
-  the module migrations; `cms_settings` is a tenant singleton (unique `tenant_id`)
+  the module migrations; `cms_settings` is a tenant singleton (unique `tenant_id`). The exception
+  is the shared base `contents` / `content_elements`: other modules (UKI) extend it with their
+  own tables (`ExtendsContent`, `ContentTypeRegistry`) and need the package, not the CMS app
 - Settings, languages and collection definitions are admin-only screens, registered through
   `ComponentAccessGuard::registerAdminComponents()` in the provider — never through the `setup`
   middleware, which would switch the selected app away from CMS

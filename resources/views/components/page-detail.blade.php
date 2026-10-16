@@ -7,11 +7,13 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Helpers\FieldHelper;
+use Noerd\Cms\Models\Content;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\CollectionEntryStore;
-use Noerd\Cms\Services\PageElementEditorService;
+use Noerd\Cms\Services\PageCopyService;
 use Noerd\Cms\Services\PageSlugService;
 use Noerd\Cms\Support\PageLayouts;
+use Noerd\Cms\Traits\EditsContentElements;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
 use Noerd\Helpers\TenantHelper;
@@ -26,8 +28,8 @@ use Noerd\Traits\NoerdDetail;
  | and element mutations are delegated to their services; this component only
  | owns the form state and the editor chrome.
  */
-new class extends Component
-{
+new class extends Component {
+    use EditsContentElements;
     use LanguageFilterTrait;
     use NoerdDetail;
     use WithFileUploads;
@@ -52,8 +54,6 @@ new class extends Component
     #[Locked]
     public ?string $mediaToken = null;
 
-    public $lastChangeTime;
-
     #[Computed]
     public function hasPageFeatures(): bool
     {
@@ -75,7 +75,12 @@ new class extends Component
             return null;
         }
 
-        return Page::with('elements')->find($this->modelId);
+        return Page::with('content.elements')->find($this->modelId);
+    }
+
+    public function editableContent(): ?Content
+    {
+        return $this->pageModel?->content;
     }
 
     #[Computed]
@@ -90,9 +95,9 @@ new class extends Component
 
         $this->collectionKey = $collectionKey ?? $this->collectionKey;
 
-        $page = new Page;
+        $page = new Page();
         if ($this->modelId) {
-            $page = Page::find($this->modelId) ?? new Page;
+            $page = Page::find($this->modelId) ?? new Page();
         }
 
         // Auto-detect collectionKey from page's collection if not explicitly provided
@@ -118,58 +123,6 @@ new class extends Component
                 $this->relationTitles[$fieldName] = RelationFieldDefinition::normalizeDisplayValue($relatedPage->name);
             }
         }
-    }
-
-    protected function mountPageDetail(?Page $page = null): void
-    {
-        $page ??= new Page;
-
-        $this->detailData = $page->toArray();
-        $this->detailData['custom_attributes'] = $this->detailData['custom_attributes'] ?? [];
-
-        if (empty($this->detailData['layout'])) {
-            $this->detailData['layout'] = PageLayouts::default();
-        }
-
-        $activeLangCodes = $this->activeLanguageCodes();
-
-        foreach (['name', 'slug', 'meta_title', 'meta_description'] as $field) {
-            if (! is_array($this->detailData[$field] ?? null) || empty($this->detailData[$field])) {
-                $this->detailData[$field] = array_fill_keys($activeLangCodes, '');
-
-                continue;
-            }
-
-            foreach ($activeLangCodes as $lang) {
-                if (! is_string($this->detailData[$field][$lang] ?? null)) {
-                    $this->detailData[$field][$lang] = '';
-                }
-            }
-        }
-
-        $this->lastChangeTime = time();
-    }
-
-    /**
-     * Collection entries keep their fields in the `data` column — merge them
-     * into $detailData for wire:model binding.
-     */
-    private function mergeCollectionData(Page $page): void
-    {
-        if (! $this->collectionKey || ! is_array($page->data)) {
-            $this->detailData['sort'] ??= $page->sort ?? 0;
-
-            return;
-        }
-
-        $this->collectionData = $page->data;
-        foreach ($page->data as $key => $value) {
-            if (! str_starts_with($key, 'detailData.') && ! in_array($key, ['name', 'slug', 'layout', 'sort'], true)) {
-                $this->detailData[$key] = $value;
-            }
-        }
-
-        $this->detailData['sort'] ??= $page->sort ?? 0;
     }
 
     /**
@@ -256,65 +209,6 @@ new class extends Component
         $this->detailData[$fieldName] = $page->id;
     }
 
-    /*
-     | Element builder — every mutation runs through the editor service on the
-     | tenant-scoped page and is guarded like store(): WriteGuardHook only
-     | covers store()/delete(), so these check the write permission themselves.
-     */
-
-    #[On('elementPicked')]
-    public function addElement($elementKey, $token = 'insert-end'): void
-    {
-        if (! $this->canSaveObject() || ! $this->pageModel) {
-            return;
-        }
-
-        $position = str_starts_with((string) $token, 'insert-at-') ? (int) substr((string) $token, 10) : null;
-
-        $this->elementEditor()->addElement($this->pageModel, (string) $elementKey, $position);
-        $this->lastChangeTime = time();
-    }
-
-    public function elementSort($elementId, $newPosition): void
-    {
-        if (! $this->canSaveObject() || ! $this->pageModel) {
-            return;
-        }
-
-        $this->elementEditor()->move($this->pageModel, (int) $elementId, (int) $newPosition);
-        $this->lastChangeTime = time();
-    }
-
-    public function duplicateElement(int $elementPageId): void
-    {
-        if (! $this->canSaveObject() || ! $this->pageModel) {
-            return;
-        }
-
-        if ($this->elementEditor()->duplicate($this->pageModel, $elementPageId)) {
-            $this->lastChangeTime = time();
-            $this->dispatch('reloadPageComponent');
-        }
-    }
-
-    public function deleteElement(int $elementPageId): void
-    {
-        if (! $this->canSaveObject() || ! $this->pageModel) {
-            return;
-        }
-
-        if ($this->elementEditor()->delete($this->pageModel, $elementPageId)) {
-            $this->lastChangeTime = time();
-            $this->dispatch('reloadPageComponent');
-        }
-    }
-
-    #[On('reloadPageComponent')]
-    public function reloadPage(): void
-    {
-        $this->lastChangeTime = time();
-    }
-
     #[On('languageChanged')]
     public function onLanguageChanged(): void
     {
@@ -381,6 +275,75 @@ new class extends Component
         $this->storeProcess($page);
     }
 
+    public function copy(): void
+    {
+        if (! $this->canSaveObject() || ! $this->pageModel) {
+            return;
+        }
+
+        $newPage = app(PageCopyService::class)->copy($this->pageModel);
+
+        $this->modelId = $newPage->id;
+        $this->mountPageDetail($newPage);
+        $this->mergeCollectionData($newPage);
+
+        $this->dispatch('listRefresh');
+        $this->dispatch('refreshList-pages-list');
+        $this->showSuccessIndicator = true;
+    }
+
+    protected function mountPageDetail(?Page $page = null): void
+    {
+        $page ??= new Page();
+
+        $this->detailData = $page->toArray();
+        $this->detailData['custom_attributes'] ??= [];
+
+        if (empty($this->detailData['layout'])) {
+            $this->detailData['layout'] = PageLayouts::default();
+        }
+
+        $activeLangCodes = $this->activeLanguageCodes();
+
+        foreach (['name', 'slug', 'meta_title', 'meta_description'] as $field) {
+            if (! is_array($this->detailData[$field] ?? null) || empty($this->detailData[$field])) {
+                $this->detailData[$field] = array_fill_keys($activeLangCodes, '');
+
+                continue;
+            }
+
+            foreach ($activeLangCodes as $lang) {
+                if (! is_string($this->detailData[$field][$lang] ?? null)) {
+                    $this->detailData[$field][$lang] = '';
+                }
+            }
+        }
+
+        $this->lastChangeTime = time();
+    }
+
+    /**
+     * Collection entries keep their fields in the `data` column — merge them
+     * into $detailData for wire:model binding.
+     */
+    private function mergeCollectionData(Page $page): void
+    {
+        if (! $this->collectionKey || ! is_array($page->data)) {
+            $this->detailData['sort'] ??= $page->sort ?? 0;
+
+            return;
+        }
+
+        $this->collectionData = $page->data;
+        foreach ($page->data as $key => $value) {
+            if (! str_starts_with($key, 'detailData.') && ! in_array($key, ['name', 'slug', 'layout', 'sort'], true)) {
+                $this->detailData[$key] = $value;
+            }
+        }
+
+        $this->detailData['sort'] ??= $page->sort ?? 0;
+    }
+
     private function storeCollectionPage(): void
     {
         $store = app(CollectionEntryStore::class);
@@ -413,28 +376,6 @@ new class extends Component
         $this->storeProcess($page);
 
         $this->dispatch('storeElements');
-    }
-
-    public function copy(): void
-    {
-        if (! $this->canSaveObject() || ! $this->pageModel) {
-            return;
-        }
-
-        $newPage = $this->elementEditor()->copyPage($this->pageModel);
-
-        $this->modelId = $newPage->id;
-        $this->mountPageDetail($newPage);
-        $this->mergeCollectionData($newPage);
-
-        $this->dispatch('listRefresh');
-        $this->dispatch('refreshList-pages-list');
-        $this->showSuccessIndicator = true;
-    }
-
-    private function elementEditor(): PageElementEditorService
-    {
-        return app(PageElementEditorService::class);
     }
 
 } ?>
@@ -491,7 +432,7 @@ new class extends Component
         @endphp
         <x-noerd::tab-content :layout="$effectiveLayout" :showBlock="$this->hasPageFeatures" :model="$detailData">
             <x-slot:tab1>
-                @include('cms::partials.page-elements', ['hasPageFeatures' => $this->hasPageFeatures])
+                @include('cms::partials.content-elements', ['content' => $this->editableContent(), 'show' => $this->hasPageFeatures])
             </x-slot:tab1>
         </x-noerd::tab-content>
     </div>

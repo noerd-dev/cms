@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use Noerd\Cms\Models\ElementPage;
+use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -37,7 +37,7 @@ function zzRowDetailElementId(int $tenantId): int
 {
     $page = Page::factory()->create(['tenant_id' => $tenantId, 'name' => ['de' => 'Owner']]);
 
-    return ElementPage::create(['page_id' => $page->id, 'element_key' => 'testimonials', 'data' => [], 'sort' => 0])->id;
+    return ContentElement::create(['content_id' => $page->content_id, 'element_key' => 'testimonials', 'data' => [], 'sort' => 0])->id;
 }
 
 it('loads the row data on first mount', function (): void {

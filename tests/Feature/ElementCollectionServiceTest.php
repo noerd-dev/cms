@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\Collection;
-use Noerd\Cms\Models\ElementPage;
+use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -55,7 +55,7 @@ it('ensures a page-owned element collection with flags and a detailData-prefixed
 
 it('ensures an element_page-owned element collection on the element_page_id column', function (): void {
     $page = Page::factory()->create(['tenant_id' => $this->tenant->id]);
-    $element = ElementPage::create(['page_id' => $page->id, 'element_key' => 'team_section', 'data' => [], 'sort' => 0]);
+    $element = ContentElement::create(['content_id' => $page->content_id, 'element_key' => 'team_section', 'data' => [], 'sort' => 0]);
 
     $elementCollection = app(ElementCollectionService::class)->ensure(
         ElementCollectionService::OWNER_ELEMENT_PAGE,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use Noerd\Cms\Models\ElementPage;
+use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Tests\Traits\CreatesElementFixtures;
@@ -37,7 +37,7 @@ it('appends exactly one element to the page for a pick', function (): void {
         ->test('cms::page-detail')
         ->call('addElement', $this->zzTextElementKey(), 'insert-end');
 
-    $elements = ElementPage::where('page_id', $page->id)->get();
+    $elements = ContentElement::where('content_id', $page->content_id)->get();
     expect($elements)->toHaveCount(1)
         ->and($elements->first()->element_key)->toBe($this->zzTextElementKey());
 });

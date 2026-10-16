@@ -81,6 +81,25 @@ final class CmsLanguageCodes
     }
 
     /**
+     * Default language code of the given tenant — for headless callers (queue,
+     * indexing) that carry the tenant explicitly instead of a signed-in user.
+     */
+    public static function defaultFor(int $tenantId): string
+    {
+        $codes = self::query(
+            fn(): array => CmsLanguage::withoutGlobalScopes()
+                ->where('tenant_id', $tenantId)
+                ->where('is_active', true)
+                ->orderBy('is_default', 'desc')
+                ->orderBy('sort_order')
+                ->pluck('code')
+                ->all(),
+        );
+
+        return $codes[0] ?? self::FALLBACK[0];
+    }
+
+    /**
      * Every code configured anywhere, unioned with the built-in baseline. Used as
      * the heuristic for "is this array a language map?" while rendering stored
      * page data — that check must also recognise codes of other tenants and of

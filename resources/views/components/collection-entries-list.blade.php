@@ -16,8 +16,7 @@ use Noerd\Services\ColumnFilterParser;
 use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdList;
 
-new class extends Component
-{
+new class extends Component {
     use LanguageFilterTrait;
     use NoerdList;
 
@@ -59,28 +58,6 @@ new class extends Component
         }
 
         $this->resetPage();
-    }
-
-    /**
-     * Resolve collection key from ID or string
-     */
-    protected function resolveCollectionKey(string|int|null $input): ?string
-    {
-        if ($input === null) {
-            return null;
-        }
-
-        // If it's a numeric string or integer, treat as ID
-        if (is_numeric($input)) {
-            $collection = Collection::where('tenant_id', auth()->user()->selected_tenant_id)
-                ->where('id', (int) $input)
-                ->first();
-
-            return $collection?->collection_key ? strtolower($collection->collection_key) : null;
-        }
-
-        // If it's a string, return as-is
-        return (string) $input;
     }
 
     public function mount(): void
@@ -159,6 +136,7 @@ new class extends Component
         // Get collection entries (pages); listQuery() carries the read guard.
         $languageCodes = CmsLanguageCodes::active();
         $query = $this->listQuery($this->listModel)
+            ->with('content')
             ->where('collection_id', $parentCollection?->id ?? 0)
             ->reorder('sort', 'asc')
             ->orderBy('created_at', 'desc');
@@ -167,9 +145,7 @@ new class extends Component
         if (! empty($this->search)) {
             $query->where(function ($q) use ($languageCodes): void {
                 // Search in standard fields, per configured language
-                foreach ($languageCodes as $code) {
-                    ColumnFilterParser::applyLikeContains($q, "name->{$code}", $this->search, 'or');
-                }
+                $q->whereContentNameContains($this->search, 'or');
 
                 // Search in dynamic fields from the collection definition
                 if ($this->collectionLayout && isset($this->collectionLayout['fields'])) {
@@ -203,19 +179,19 @@ new class extends Component
 
         // Resolve linked page names for pageRelation fields in one query.
         $pageRelationKeys = collect($this->collectionLayout['fields'] ?? [])
-            ->filter(fn ($field) => ($field['type'] ?? '') === 'pageRelation')
-            ->map(fn ($field) => str_replace('detailData.', '', $field['name'] ?? ''))
+            ->filter(fn($field) => ($field['type'] ?? '') === 'pageRelation')
+            ->map(fn($field) => str_replace('detailData.', '', $field['name'] ?? ''))
             ->filter()
             ->values();
 
         $linkedPageNames = [];
         if ($pageRelationKeys->isNotEmpty()) {
             $linkedPageIds = $rows->getCollection()
-                ->flatMap(fn ($page) => $pageRelationKeys->map(fn ($key) => data_get($page->data, $key)))
-                ->filter(fn ($id) => is_numeric($id))
+                ->flatMap(fn($page) => $pageRelationKeys->map(fn($key) => data_get($page->data, $key)))
+                ->filter(fn($id) => is_numeric($id))
                 ->unique();
-            $linkedPageNames = Page::whereIn('id', $linkedPageIds)->pluck('name', 'id')
-                ->map(fn ($name) => RelationFieldDefinition::normalizeDisplayValue($name))
+            $linkedPageNames = Page::with('content')->whereIn('id', $linkedPageIds)->get()
+                ->mapWithKeys(fn(Page $page) => [$page->id => RelationFieldDefinition::normalizeDisplayValue($page->name)])
                 ->all();
         }
 
@@ -245,7 +221,7 @@ new class extends Component
                             ->where('is_element_collection', true)
                             ->first();
                         $count = $elementCollection ? $elementCollection->rows()->count() : 0;
-                        $value = $count > 0 ? $count.' '.trans_choice('Entry|Entries', $count) : '';
+                        $value = $count > 0 ? $count . ' ' . trans_choice('Entry|Entries', $count) : '';
                     } elseif (isset($data[$fieldKey])) {
                         $fieldData = $data[$fieldKey];
 
@@ -342,6 +318,28 @@ new class extends Component
             'disableSearch' => false,
             'columns' => $columns,
         ]);
+    }
+
+    /**
+     * Resolve collection key from ID or string
+     */
+    protected function resolveCollectionKey(string|int|null $input): ?string
+    {
+        if ($input === null) {
+            return null;
+        }
+
+        // If it's a numeric string or integer, treat as ID
+        if (is_numeric($input)) {
+            $collection = Collection::where('tenant_id', auth()->user()->selected_tenant_id)
+                ->where('id', (int) $input)
+                ->first();
+
+            return $collection?->collection_key ? mb_strtolower($collection->collection_key) : null;
+        }
+
+        // If it's a string, return as-is
+        return (string) $input;
     }
 
 } ?>

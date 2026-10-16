@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use Noerd\Cms\Models\ElementPage;
+use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Tests\Traits\CreatesElementFixtures;
@@ -31,8 +31,8 @@ beforeEach(function (): void {
     ]);
 
     $this->page = $page;
-    $this->elementPage = ElementPage::create([
-        'page_id' => $page->id,
+    $this->elementPage = ContentElement::create([
+        'content_id' => $page->content_id,
         'element_key' => $this->zzTextElementKey(),
         'data' => ['content' => 'Test content'],
         'sort' => 1,
@@ -55,7 +55,7 @@ it('can delete element page', function () use ($testSettings): void {
         ->call('delete')
         ->assertHasNoErrors();
 
-    $this->assertDatabaseMissing('cms_page_elements', [
+    $this->assertDatabaseMissing('content_elements', [
         'id' => $this->elementPage->id,
     ]);
 });
@@ -78,12 +78,12 @@ it('delete handles non-existent element page gracefully', function () use ($test
         ->assertHasNoErrors();
 
     // Original element should still exist
-    $this->assertDatabaseHas('cms_page_elements', ['id' => $this->elementPage->id]);
+    $this->assertDatabaseHas('content_elements', ['id' => $this->elementPage->id]);
 });
 
 it('shows a content error when element layout is missing', function () use ($testSettings): void {
-    $elementPage = ElementPage::create([
-        'page_id' => $this->page->id,
+    $elementPage = ContentElement::create([
+        'content_id' => $this->page->content_id,
         'element_key' => '____missing____',
         'data' => ['foo' => 'bar'],
         'sort' => 2,

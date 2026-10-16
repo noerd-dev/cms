@@ -18,10 +18,13 @@ it('creates a default homepage in the tenant\'s languages for tenants without on
 
     (new DefaultHomepageSeeder())->seedMissingHomepages();
 
-    $this->assertDatabaseHas('cms_pages', [
+    $this->assertDatabaseHas('contents', [
         'tenant_id' => $tenant->id,
         'name->en' => 'Homepage',
         'name->da' => 'Homepage',
+    ]);
+    $this->assertDatabaseHas('cms_pages', [
+        'tenant_id' => $tenant->id,
         'slug->en' => '/homepage',
         'slug->da' => '/da/homepage',
         'is_active' => true,

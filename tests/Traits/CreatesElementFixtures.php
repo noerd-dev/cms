@@ -124,6 +124,42 @@ trait CreatesElementFixtures
     }
 
     /**
+     * The element key of the fixture element that serves ONLY the content type
+     * `zz.intranet` (YAML `contentTypes:`).
+     */
+    protected function zzScopedElementKey(): string
+    {
+        return 'zz_fixture_scoped';
+    }
+
+    /**
+     * Write the fixture element scoped to the `zz.intranet` content type.
+     */
+    protected function createScopedElementFixture(): void
+    {
+        $this->writeElementFixture('zz-fixture-scoped', <<<'YAML'
+            title: 'Zz Fixture Scoped'
+            description: 'Throwaway test element for one content type'
+            group: 'Zz Test'
+            contentTypes:
+              - zz.intranet
+            fields:
+              - name: detailData.headline
+                label: Headline
+                type: translatableText
+                colspan: 12
+              - name: detailData.body
+                label: Body
+                type: translatableTextarea
+                colspan: 12
+              - name: detailData.image
+                label: Image
+                type: image
+                colspan: 12
+            YAML);
+    }
+
+    /**
      * Remove every fixture file this test wrote (and the folder, when the test
      * created it), so the module tree is left exactly as it was found.
      */

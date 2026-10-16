@@ -2,14 +2,47 @@
 
 The CMS module is a multi-tenant, multi-language content management system. It provides pages with a visual element builder, collections for structured data, hierarchical navigation, forms with email notifications, articles with publication scheduling, and language management.
 
+### Contents — the shared base of pages, intranet pages, articles
+
+- `Noerd\Cms\Models\Content` (`contents`, `BelongsToTenant`, NO object read guard — permissions are
+  checked on the record that extends it) carries what every page-like record shares: `type` (a
+  `ContentTypeRegistry` key), `name` (language map) and the elements (`ContentElement`,
+  `content_elements`: `content_id`, `element_key`, `sort`, `data`). The table is installed by
+  the CMS migrations as soon as `noerd/cms` is required — a module using contents needs the
+  package, NOT the CMS tenant app
+- A kind of content is an EXTENSION table with `tenant_id` + `content_id` (unique, FK cascade)
+  whose model uses `Noerd\Cms\Concerns\ExtendsContent` and implements `contentType()`: the
+  content is created on `creating`, `name` (`contentAttributes()`) reads and writes like a
+  column of the model (`toArray()` included, never a `content` key), `elements()` goes through
+  the content, `replicate()` gives the copy a content of its own with copied elements, and the
+  content goes with the record (a soft-deleting record keeps it until the force delete). The
+  name is no column of the extension table: lists search and sort it through
+  `scopeWhereContentNameContains()` / `scopeOrderByContentName()` — a NoerdList on such a model
+  uses `Noerd\Cms\Traits\ListsContentRecords` (`contentRecordRows()` in `listData()`)
+- Register every type in the owning provider's `boot()`:
+  `app(ContentTypeRegistry::class)->register(key:, label:, modelClass:, detailRoute:, detailComponent:)`
+  (`cms.page` = website page; `uki.page`, `uki.article` from noerd/uki). The registry is the one
+  place a type maps to its record (`Content::extension()`) and to the screen that opens it
+  (`recordUrl()`)
+- The element builder works on ANY content: a detail uses `Noerd\Cms\Traits\EditsContentElements`
+  (`editableContent(): ?Content`, guarded mutators, dispatches `storeElements` from its `store()`)
+  and renders `@@include('cms::partials.content-elements', ['content' => $this->editableContent()])`;
+  the writes go through `ContentElementEditorService`
+- An element YAML may name the types it serves (`contentTypes:` list); without it the element
+  serves `cms.page` only, so website elements never appear in another kind of content
+  (`FieldHelper::getAllElementsGrouped($contentType)`, the picker receives `contentType`)
+- `Noerd\Cms\Support\ContentText::markdown($content)` is the readable text of a content (name +
+  the text fields of every element, per the element YAML, in the tenant's default language) — the
+  knowledge assistant indexes it; never read element data by hand for that
+
 ### Pages
 
-- **Model:** `Noerd\Cms\Models\Page` with traits `BelongsToTenant`, `HasFactory`
-- **Translatable fields** (cast as arrays): `name`, `slug`, `meta_title`, `meta_description`
+- **Model:** `Noerd\Cms\Models\Page` (`cms_pages`) with traits `BelongsToTenant`, `ExtendsContent`, `HasFactory` — the website extension of a content (`cms.page`); `name` and the elements live on the content
+- **Translatable fields** (cast as arrays): `name` (on the content), `slug`, `meta_title`, `meta_description`
 - **Data column:** `data` (array cast) stores collection-specific field data
 - **Casts:** `meta_noindex`, `is_active` (boolean; defaults to `true`)
-- **Relationships:** `elements()` hasMany ElementPage, `collection()` belongsTo Collection
-- The page editor is a custom `NoerdDetail` component (`cms::page-detail`): `$detailModel = Page::class`, `$detailPrimary = 'pageId'`, form state in `$detailData` (array — the Eloquent model is never a component property). It overrides `mount()` (collection entry detection), `store()` (plain page vs. collection entry) and `updated()` (slug derivation) and delegates to three services: `PageSlugService` (slug generation + uniqueness), `PageElementEditorService` (add/move/duplicate/delete elements, copy a page) and `CollectionEntryStore` (persist collection entries and element-collection rows)
+- **Relationships:** `content()`, `elements()` (through the content), `collection()` belongsTo Collection
+- The page editor is a custom `NoerdDetail` component (`cms::page-detail`): `$detailModel = Page::class`, `$detailPrimary = 'pageId'`, form state in `$detailData` (array — the Eloquent model is never a component property). It overrides `mount()` (collection entry detection), `store()` (plain page vs. collection entry) and `updated()` (slug derivation) and delegates to three services: `PageSlugService` (slug generation + uniqueness), `EditsContentElements` / `ContentElementEditorService` (add/move/duplicate/delete elements), `PageCopyService` (copy a page) and `CollectionEntryStore` (persist collection entries and element-collection rows)
 - Element mutations are guarded like `store()`: every mutator starts with `canSaveObject()` (the generic `WriteGuardHook` only covers `store`/`delete`)
 - Slugs are auto-generated from the name; non-default languages get a language prefix (e.g., `/en/page-name`)
 - Layouts are discovered from `config('noerd_cms.layout_path')` (`Noerd\Cms\Support\PageLayouts`), default `app-modules/website/resources/views/components/layouts/`
@@ -64,7 +97,7 @@ public function mount(?string $collectionKey = null): void
 - Elements are Blade + YAML pairs in `app-modules/*/resources/views/components/elements/`
 - File naming: kebab-case files (e.g., `text-block-1-column.blade.php`) map to snake_case element keys (`text_block_1_column`)
 - `FieldHelper::getAllElements()` discovers all elements across modules
-- `FieldHelper::getAllElementsGrouped()` groups elements by their `group` YAML property
+- `FieldHelper::getAllElementsGrouped(?string $contentType)` groups elements by their `group` YAML property, narrowed to the content type (`contentTypes:`, default `cms.page`)
 - Translatable fields are auto-initialized with empty values for each active language
 
 @verbatim
@@ -265,7 +298,8 @@ curl -X POST https://example.test/api/cms/form-requests \
 
 ### Database
 
-- Every table carries the `cms_` prefix (`cms_pages`, `cms_page_elements`, `cms_collections`, `cms_collection_definitions`, `cms_form_types`, `cms_form_requests`, `cms_global_parameters`, `cms_authors`, `cms_articles`, `cms_navigations`, `cms_redirects`, `cms_languages`, `cms_settings`)
+- `contents` and `content_elements` are the shared base tables of every module's contents — the only tables without the prefix
+- Every other table carries the `cms_` prefix (`cms_pages`, `cms_collections`, `cms_collection_definitions`, `cms_form_types`, `cms_form_requests`, `cms_global_parameters`, `cms_authors`, `cms_articles`, `cms_navigations`, `cms_redirects`, `cms_languages`, `cms_settings`)
 - `Collection` and `CollectionDefinition` use `BelongsToTenant` like every other content model; queries for ANOTHER tenant go through explicit helpers (`CmsLanguage::forTenant()`)
 
 ### YAML File Locations

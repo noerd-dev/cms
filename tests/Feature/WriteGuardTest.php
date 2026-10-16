@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Noerd\Cms\Models\Collection;
-use Noerd\Cms\Models\ElementPage;
+use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -29,8 +29,8 @@ beforeEach(function (): void {
         'name' => ['en' => 'Guarded'],
         'slug' => ['en' => '/guarded'],
     ]);
-    $this->element = ElementPage::create([
-        'page_id' => $this->page->id,
+    $this->element = ContentElement::create([
+        'content_id' => $this->page->content_id,
         'element_key' => $this->zzTextElementKey(),
         'sort' => 1,
         'data' => ['text' => ['en' => 'Original']],
@@ -50,7 +50,7 @@ it('blocks every element mutation of the page editor for a read-only user', func
     $component->call('deleteElement', $this->element->id);
     $component->call('copy');
 
-    expect(ElementPage::count())->toBe(1)
+    expect(ContentElement::count())->toBe(1)
         ->and(Page::count())->toBe(1)
         ->and($this->element->fresh()->sort)->toBe(1);
 });

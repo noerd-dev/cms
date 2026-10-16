@@ -54,13 +54,14 @@ final class CollectionSelectOptions
     public static function pages(): array
     {
         return Page::query()
+            ->with('content')
             ->whereNull('collection_id')
-            ->orderBy('name')
             ->get()
             ->map(fn(Page $page): array => [
                 'value' => $page->id,
                 'label' => RelationFieldDefinition::normalizeDisplayValue($page->name),
             ])
+            ->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE)
             ->values()
             ->all();
     }

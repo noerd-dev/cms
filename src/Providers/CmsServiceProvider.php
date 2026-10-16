@@ -22,6 +22,7 @@ use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Repositories\ElementAwareCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Support\CollectionSelectOptions;
+use Noerd\Cms\Support\ContentTypeRegistry;
 use Noerd\Models\Tenant;
 use Noerd\Services\DynamicNavigationRegistry;
 use Noerd\Services\FieldTypeRegistry;
@@ -43,6 +44,8 @@ class CmsServiceProvider extends ServiceProvider
             new DatabaseCollectionDefinitionRepository(),
             $app->make(ElementCollectionService::class),
         ));
+
+        $this->app->singleton(ContentTypeRegistry::class);
 
         // Register CollectionHelper as singleton for mockability in tests
         $this->app->singleton(CollectionHelper::class, fn($app) => new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class)));
@@ -151,6 +154,14 @@ class CmsServiceProvider extends ServiceProvider
             modelClass: Author::class,
             titleResolver: 'name',
         ));
+
+        $this->app->make(ContentTypeRegistry::class)->register(
+            key: Page::contentType(),
+            label: 'Website Page',
+            modelClass: Page::class,
+            detailRoute: 'cms.page.detail',
+            detailComponent: 'cms::page-detail',
+        );
 
         // Create default English language when a new tenant is created
         Tenant::created(function (Tenant $tenant): void {

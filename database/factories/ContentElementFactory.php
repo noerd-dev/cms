@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace Noerd\Cms\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Noerd\Cms\Models\ElementPage;
-use Noerd\Cms\Models\Page;
+use Noerd\Cms\Models\Content;
+use Noerd\Cms\Models\ContentElement;
 
 /**
- * @extends Factory<ElementPage>
+ * @extends Factory<ContentElement>
  */
-class ElementPageFactory extends Factory
+class ContentElementFactory extends Factory
 {
-    protected $model = ElementPage::class;
+    protected $model = ContentElement::class;
 
     public function definition(): array
     {
         return [
-            'page_id' => Page::factory(),
+            'content_id' => Content::factory(),
             'element_key' => 'text_block_1_column',
             'sort' => 0,
             'data' => [],

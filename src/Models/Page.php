@@ -7,15 +7,20 @@ namespace Noerd\Cms\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Noerd\Cms\Concerns\ExtendsContent;
 use Noerd\Cms\Database\Factories\PageFactory;
 use Noerd\Cms\Services\FieldTypeConverter;
 use Noerd\Traits\BelongsToTenant;
 use Noerd\Traits\GuardedByObjectPermission;
 
+/**
+ * A website page: the content (name + elements) extended by what only the
+ * website needs — slug, layout, meta data, the collection it belongs to.
+ */
 class Page extends Model
 {
     use BelongsToTenant;
+    use ExtendsContent;
     use GuardedByObjectPermission;
     use HasFactory;
 
@@ -27,9 +32,9 @@ class Page extends Model
         'is_active' => true,
     ];
 
-    public function elements(): HasMany
+    public static function contentType(): string
     {
-        return $this->hasMany(ElementPage::class)->orderBy('sort');
+        return 'cms.page';
     }
 
     public function collection(): BelongsTo
@@ -82,7 +87,6 @@ class Page extends Model
             'meta_noindex' => 'boolean',
             'is_active' => 'boolean',
             'data' => 'array',
-            'name' => 'array',
             'slug' => 'array',
             'meta_title' => 'array',
             'meta_description' => 'array',

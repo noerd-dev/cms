@@ -91,8 +91,8 @@ describe('processPageElements', function (): void {
         ['tenant' => $tenant] = $this->createUserWithCmsAccess();
         $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => ['de' => 'Datenschutz']]);
 
-        DB::table('cms_page_elements')->insert([
-            'page_id' => $page->id,
+        DB::table('content_elements')->insert([
+            'content_id' => $page->content_id,
             'element_key' => 'header2',
             'sort' => 0,
             'data' => json_encode(json_encode(['headline' => ['de' => 'Datenschutzerklärung']])),
@@ -110,8 +110,8 @@ describe('processPageElements', function (): void {
         ['tenant' => $tenant] = $this->createUserWithCmsAccess();
         $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => ['de' => 'Impressum']]);
 
-        DB::table('cms_page_elements')->insert([
-            'page_id' => $page->id,
+        DB::table('content_elements')->insert([
+            'content_id' => $page->content_id,
             'element_key' => 'header2',
             'sort' => 0,
             'data' => json_encode('[]'),
