@@ -8,7 +8,7 @@ files by `php artisan boost:update` (add `noerd/cms` to the `packages` array in 
 
 ## What this module is
 
-A multi-tenant, multi-language CMS on the noerd framework: Pages with a visual element builder,
+A multi-tenant, multi-language CMS on the noerd framework: Pages with a Notion-like document editor (running text with elements),
 database-backed Collections, hierarchical Navigation, Forms with email notifications, Articles
 with authors, per-tenant Languages, Global Parameters and a token-authenticated form API. The
 `website-boilerplate/` folder is a template that `noerd:install-website` copies into a project
@@ -26,9 +26,14 @@ as its `app-modules/website` frontend module.
   (field types `collection-select`, `element-collection`, `homepage-select`; relation types
   `pageRelation`, `authorRelation`)
 - `database/migrations|factories/`, `tests/` (Pest), `resources/lang/de.json`
+- `resources/js/` + `resources/css/cms-editor.css` — the document editor bundle (Tiptap 3, Alpine
+  `cmsDocumentEditor`). Build with `npm install && npm run build` inside the module and commit
+  `dist/build`; `npm run dev` writes `public/vendor/cms/hot`. The bundle is served by the route
+  `cms.asset` (`Http\Controllers\AssetController`, only files of the manifest), nothing is copied
+  into `public/`
 - The tenant app name is `CMS` (uppercase). Every table carries the `cms_` prefix and is created by
   the module migrations; `cms_settings` is a tenant singleton (unique `tenant_id`). The exception
-  is the shared base `contents` / `content_elements`: other modules (UKI) extend it with their
+  is the shared base `contents` / `content_elements`: other modules extend it with their
   own tables (`ExtendsContent`, `ContentTypeRegistry`) and need the package, not the CMS app
 - Settings, languages and collection definitions are admin-only screens, registered through
   `ComponentAccessGuard::registerAdminComponents()` in the provider — never through the `setup`

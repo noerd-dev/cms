@@ -1,0 +1,9 @@
+title: 'Text'
+description: 'Running text of the document editor'
+group: 'Text'
+pickable: false
+fields:
+  - name: detailData.text
+    label: Text
+    type: translatableRichText
+    colspan: 12

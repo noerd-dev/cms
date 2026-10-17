@@ -44,7 +44,7 @@ trait ExtendsContent
     protected ?int $replicatedFromContentId = null;
 
     /**
-     * The registry key of this kind of content (`cms.page`, `uki.article`, …).
+     * The registry key of this kind of content (`cms.page`, `blog.post`, …).
      */
     abstract public static function contentType(): string;
 

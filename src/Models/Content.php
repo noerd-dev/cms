@@ -13,9 +13,9 @@ use Noerd\Traits\BelongsToTenant;
 
 /**
  * The shared base of every page-like record: a name and the elements. What only
- * one kind of content needs lives in its extension table (cms_pages, uki_pages,
- * uki_articles, …), which points here through content_id and uses the
- * ExtendsContent concern. `type` is the key of the ContentTypeRegistry.
+ * one kind of content needs lives in its extension table (cms_pages, or a
+ * table of the module that adds the type), which points here through
+ * content_id and uses the ExtendsContent concern. `type` is the key of the ContentTypeRegistry.
  *
  * Object permissions are checked on the EXTENSION model (a page, an article),
  * never on the content: a content is never edited on its own.
@@ -35,7 +35,7 @@ class Content extends Model
     }
 
     /**
-     * The extension record of this content (a cms Page, a uki Article, …), or
+     * The extension record of this content (a cms Page, a record of another module, …), or
      * null when the type is not registered or the record is gone.
      */
     public function extension(): ?Model

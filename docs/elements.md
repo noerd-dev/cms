@@ -63,12 +63,15 @@ The element picker is powered by `FieldHelper::getAllElementsGrouped()`, which s
 
 ## Adding Elements to Pages
 
-On the page detail view, use the element builder section to:
+The page detail view is one document editor:
 
-1. **Add** — Click the add button to open the element picker modal
-2. **Sort** — Drag and drop elements to reorder them
-3. **Edit** — Click an element to open its field editor
-4. **Delete** — Remove an element from the page
+1. **Insert** — type `//` (after a space or at the start of a line) or click "+ Element" in the toolbar; the menu filters while you type, arrow keys and Enter pick an element. It is inserted at the cursor and splits the text there
+2. **Edit** — the element's fields are edited inline in the document (text, rich text, select, checkbox, image via the media library, element collections once the page is saved)
+3. **Move** — drag an element by its handle
+4. **Duplicate / Delete** — buttons in the element's header; undo (Cmd+Z) restores a deleted element
+5. **Write between elements** — there is always running text before, between and after elements
+
+An element with `pickable: false` in its YAML (the running text `rich_text`) is part of documents but never offered in the menu.
 
 ## Live Preview
 
@@ -140,8 +143,8 @@ An element serves the website pages (`cms.page`) unless its YAML names other con
 title: 'Markdown Text'
 group: 'Text'
 contentTypes:
-  - uki.page
-  - uki.article
+  - cms.page
+  - blog.post
 fields:
   - name: detailData.text
     label: Text

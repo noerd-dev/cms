@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Noerd\Cms\Providers;
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Noerd\Cms\Commands\CmsInstallCommand;
@@ -12,6 +13,7 @@ use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
 use Noerd\Cms\Commands\SyncFormTypesCommand;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\CollectionHelper;
+use Noerd\Cms\Http\Controllers\AssetController;
 use Noerd\Cms\Http\Middleware\CmsApiAuth;
 use Noerd\Cms\Models\Author;
 use Noerd\Cms\Models\CmsLanguage;
@@ -72,6 +74,7 @@ class CmsServiceProvider extends ServiceProvider
         $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-routes.php');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-api.php');
+        $this->registerAssetRoute();
 
         $router = $this->app['router'];
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
@@ -167,5 +170,17 @@ class CmsServiceProvider extends ServiceProvider
         Tenant::created(function (Tenant $tenant): void {
             CmsLanguage::ensureDefaultLanguageForTenant($tenant->id);
         });
+    }
+
+    /**
+     * The prebuilt document editor bundle is served straight from the package
+     * (dist/build), nothing is copied into public/. No middleware: a static
+     * asset needs neither a session nor CSRF.
+     */
+    private function registerAssetRoute(): void
+    {
+        Route::get('/cms-assets/{file}', AssetController::class)
+            ->where('file', '[A-Za-z0-9._-]+')
+            ->name('cms.asset');
     }
 }

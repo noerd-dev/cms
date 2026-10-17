@@ -115,7 +115,7 @@ Each `.blade.php` file in that directory becomes an available layout option in t
 
 ## Page Elements
 
-Below the page fields, the page detail view shows the element builder. Elements are reusable content blocks that can be added, sorted, and edited on each page. See [Elements](elements.md) for details.
+Below the page fields, the page detail view shows ONE document editor, similar to Notion: you write running text right away (headings, bold, italic, lists, quotes, links — via the toolbar, the bubble menu on a selection or Markdown shortcuts such as `# `), and `//` opens a menu that inserts an element at the cursor. An element's fields are edited inline in the document; text can be written above, between and below elements. Running text is stored as the element `rich_text`. See [Elements](elements.md) for details.
 
 ## Page Model
 

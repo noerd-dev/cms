@@ -41,28 +41,27 @@ afterEach(function (): void {
     $this->removeElementFixtures();
 });
 
-it('blocks every element mutation of the page editor for a read-only user', function (): void {
+it('blocks every document change of the page editor for a read-only user', function (): void {
     $component = Livewire::withUrlParams(['pageId' => $this->page->id])->test('cms::page-detail');
+    $uid = 'r' . $this->element->id;
 
-    $component->call('addElement', $this->zzTextElementKey());
-    $component->call('duplicateElement', $this->element->id);
-    $component->call('elementSort', $this->element->id, 0);
-    $component->call('deleteElement', $this->element->id);
-    $component->call('copy');
+    $component
+        ->set('contentDocumentDraft', [
+            'language' => 'en',
+            'sections' => [
+                ['kind' => 'text', 'uid' => 'nnew', 'html' => '<p>Injected</p>'],
+                ['kind' => 'element', 'uid' => $uid, 'key' => $this->zzTextElementKey(), 'data' => ['text' => ['en' => 'Changed']]],
+            ],
+        ])
+        ->call('store')
+        ->call('pickContentDocumentMedia', 'cmsdocabc')
+        ->call('manageContentDocumentCollection', $uid, 'items')
+        ->call('copy');
 
     expect(ContentElement::count())->toBe(1)
         ->and(Page::count())->toBe(1)
-        ->and($this->element->fresh()->sort)->toBe(1);
-});
-
-it('blocks storing and deleting element data for a read-only user', function (): void {
-    Livewire::test('cms::element-page-detail', ['modelId' => $this->element->id])
-        ->set('detailData.text.en', 'Changed')
-        ->call('store')
-        ->call('delete');
-
-    expect($this->element->fresh())->not->toBeNull()
-        ->and($this->element->fresh()->data['text']['en'])->toBe('Original');
+        ->and($this->element->fresh()->data['text']['en'])->toBe('Original')
+        ->and(Collection::count())->toBe(0);
 });
 
 it('does not create an element collection on manage() for a read-only user', function (): void {

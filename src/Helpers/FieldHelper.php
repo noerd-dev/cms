@@ -115,13 +115,13 @@ class FieldHelper
 
     /**
      * The elements of the given content type (null = every element), grouped
-     * by their YAML `group`.
+     * by their YAML `group`. An element whose YAML says `pickable: false` (the
+     * running text `rich_text`) is part of a document but never offered.
      */
     public static function getAllElementsGrouped(?string $contentType = null): array
     {
-        $elements = $contentType === null
-            ? self::getAllElements()
-            : array_filter(self::getAllElements(), fn(object $element): bool => in_array($contentType, $element->content_types, true));
+        $elements = array_filter(self::getAllElements(), fn(object $element): bool => $element->pickable
+            && ($contentType === null || in_array($contentType, $element->content_types, true)));
         $groupedElements = [];
 
         foreach ($elements as $element) {
@@ -230,6 +230,7 @@ class FieldHelper
                     'description' => $yaml['description'] ?? '',
                     'group' => $yaml['group'] ?? 'General',
                     'content_types' => self::contentTypesOf($yaml),
+                    'pickable' => ($yaml['pickable'] ?? true) !== false,
                 ];
             } else {
                 // If no yml file exists, create a basic element entry
@@ -239,6 +240,7 @@ class FieldHelper
                     'description' => 'Auto-detected from Livewire component',
                     'group' => 'General',
                     'content_types' => [self::DEFAULT_CONTENT_TYPE],
+                    'pickable' => true,
                 ];
             }
         }

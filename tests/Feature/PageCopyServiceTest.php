@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Models\Page;
-use Noerd\Cms\Services\ContentElementEditorService;
 use Noerd\Cms\Services\PageCopyService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 
@@ -15,7 +14,6 @@ uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
     $this->actingAsCmsUser();
-    $this->editor = app(ContentElementEditorService::class);
     $this->page = Page::factory()->create(['tenant_id' => $this->tenantId, 'name' => ['en' => 'Home'], 'slug' => ['en' => '/home']]);
     $this->other = Page::factory()->create(['tenant_id' => $this->tenantId, 'name' => ['en' => 'Other'], 'slug' => ['en' => '/other']]);
 
@@ -28,42 +26,6 @@ function zzSortedKeys(Page $page): array
 {
     return ContentElement::where('content_id', $page->content_id)->orderBy('sort')->pluck('data')->map(fn(array $data): string => $data['text'] ?? 'new')->all();
 }
-
-it('appends an element after the last one or inserts it at a position', function (): void {
-    $appended = $this->editor->addElement($this->page->content, 'text');
-    expect($appended->sort)->toBe(3);
-
-    $inserted = $this->editor->addElement($this->page->content, 'text', 1);
-    expect($inserted->sort)->toBe(1)
-        ->and($this->first->fresh()->sort)->toBe(2)
-        ->and($this->second->fresh()->sort)->toBe(3)
-        ->and($appended->fresh()->sort)->toBe(4);
-});
-
-it('re-sequences the elements on move', function (): void {
-    $this->editor->move($this->page->content, $this->second->id, 0);
-
-    expect(zzSortedKeys($this->page))->toBe(['second', 'first']);
-});
-
-it('duplicates an element right after the original', function (): void {
-    $copy = $this->editor->duplicate($this->page->content, $this->first->id);
-
-    expect($copy)->not->toBeNull()
-        ->and($copy->data)->toBe(['text' => 'first'])
-        ->and(zzSortedKeys($this->page))->toBe(['first', 'first', 'second']);
-});
-
-it('refuses to duplicate or delete an element of another content', function (): void {
-    expect($this->editor->duplicate($this->page->content, $this->foreign->id))->toBeNull()
-        ->and($this->editor->delete($this->page->content, $this->foreign->id))->toBeFalse()
-        ->and($this->foreign->fresh())->not->toBeNull();
-});
-
-it('deletes an element of the page', function (): void {
-    expect($this->editor->delete($this->page->content, $this->first->id))->toBeTrue()
-        ->and(zzSortedKeys($this->page))->toBe(['second']);
-});
 
 it('copies a page with its elements and unique slugs', function (): void {
     $copy = app(PageCopyService::class)->copy($this->page);

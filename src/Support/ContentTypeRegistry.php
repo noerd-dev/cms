@@ -13,11 +13,11 @@ use Noerd\Cms\Models\Content;
  * its type in its provider's boot():
  *
  *     app(ContentTypeRegistry::class)->register(
- *         key: 'uki.page',
- *         label: 'Intranet Page',
- *         modelClass: Page::class,
- *         detailRoute: 'uki.page.detail',
- *         detailComponent: 'uki::page-detail',
+ *         key: 'blog.post',
+ *         label: 'Blog Post',
+ *         modelClass: Post::class,
+ *         detailRoute: 'blog.post.detail',
+ *         detailComponent: 'blog::post-detail',
  *     );
  *
  * It is the single place a content's `type` maps to its extension model and

@@ -1,0 +1,11 @@
+{
+  "resources/js/cms-editor.js": {
+    "file": "assets/cms-editor-duJU6bbS.js",
+    "name": "cms-editor",
+    "src": "resources/js/cms-editor.js",
+    "isEntry": true,
+    "css": [
+      "assets/cms-editor-Rw9cyjVY.css"
+    ]
+  }
+}

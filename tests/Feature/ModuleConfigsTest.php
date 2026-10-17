@@ -31,7 +31,7 @@ it('ships a list and a detail YAML for every list and detail component', functio
     $missing = $components
         ->filter(fn(string $name): bool => str_ends_with($name, '-list') || str_ends_with($name, '-detail'))
         // Runtime layouts (repository/element schema) and the read-only submission view.
-        ->reject(fn(string $name): bool => in_array($name, ['collection-definitions-list', 'collection-entries-list', 'element-page-detail', 'element-collection-row-detail', 'form-request-detail'], true))
+        ->reject(fn(string $name): bool => in_array($name, ['collection-definitions-list', 'collection-entries-list', 'element-collection-row-detail', 'form-request-detail'], true))
         ->reject(fn(string $name): bool => file_exists($moduleConfigs . (str_ends_with($name, '-list') ? '/lists/' : '/details/') . $name . '.yml'))
         ->values()
         ->all();

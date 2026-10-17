@@ -12,7 +12,6 @@ use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Tests\Traits\CreatesElementFixtures;
-use Noerd\Services\FieldTypeRegistry;
 
 uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class, CreatesElementFixtures::class);
@@ -137,29 +136,8 @@ it('renders the element-collection field through the entry editor instead of [ob
         ->assertDontSee('[object Object]');
 });
 
-it('resolves the element-collection owner to the element page inside the element editor', function (): void {
+it('counts the element-collection entries of a saved element for the document editor', function (): void {
     $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Startseite']]);
-    $element = ContentElement::create(['content_id' => $page->content_id, 'element_key' => 'gallery_grid', 'data' => [], 'sort' => 0]);
-
-    $editor = Livewire::test('element-page-detail', ['modelId' => $element->id])->instance();
-
-    $props = app(FieldTypeRegistry::class)
-        ->resolve('element-collection')
-        ->resolveProps(
-            ['name' => 'detailData.images', 'label' => 'Bilder', 'fields' => []],
-            $editor,
-            [],
-            $element->id,
-        );
-
-    expect($props['ownerType'])->toBe(ElementCollectionService::OWNER_ELEMENT_PAGE);
-});
-
-it('counts existing element-collection entries in the element editor', function (): void {
-    $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Startseite']]);
-    // The module's own throwaway fixture element declares an `element-collection`
-    // field (`items`); a key without a matching .blade.php renders the
-    // "component not found" box instead of the editor.
     $element = ContentElement::create(['content_id' => $page->content_id, 'element_key' => $this->zzCollectionElementKey(), 'data' => [], 'sort' => 0]);
 
     $elementCollection = app(ElementCollectionService::class)->ensure(
@@ -180,6 +158,30 @@ it('counts existing element-collection entries in the element editor', function 
         ]);
     }
 
-    Livewire::test('element-page-detail', ['modelId' => $element->id])
-        ->assertSee('2 ' . trans_choice('Entry|Entries', 2));
+    $config = Livewire::withUrlParams(['pageId' => $page->id])->test('cms::page-detail')->instance()->contentDocumentConfig();
+
+    expect((array) $config['collectionCounts'])->toBe(['r' . $element->id => ['items' => 2]]);
+});
+
+it('opens the entries of an element collection from the document editor', function (): void {
+    $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Startseite']]);
+    $element = ContentElement::create(['content_id' => $page->content_id, 'element_key' => $this->zzCollectionElementKey(), 'data' => [], 'sort' => 0]);
+
+    Livewire::withUrlParams(['pageId' => $page->id])->test('cms::page-detail')
+        ->call('manageContentDocumentCollection', 'r' . $element->id, 'items')
+        ->assertDispatched('noerdModal');
+
+    expect(Collection::query()->where('element_page_id', $element->id)->where('owner_field', 'items')->exists())->toBeTrue();
+});
+
+it('opens no element collection for an element of another page', function (): void {
+    $own = Page::factory()->create(['tenant_id' => $this->tenant->id]);
+    $other = Page::factory()->create(['tenant_id' => $this->tenant->id]);
+    $foreign = ContentElement::create(['content_id' => $other->content_id, 'element_key' => $this->zzCollectionElementKey(), 'data' => [], 'sort' => 0]);
+
+    Livewire::withUrlParams(['pageId' => $own->id])->test('cms::page-detail')
+        ->call('manageContentDocumentCollection', 'r' . $foreign->id, 'items')
+        ->assertNotDispatched('noerdModal');
+
+    expect(Collection::query()->where('element_page_id', $foreign->id)->exists())->toBeFalse();
 });

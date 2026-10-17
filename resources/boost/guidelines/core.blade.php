@@ -1,6 +1,6 @@
 ## CMS Module
 
-The CMS module is a multi-tenant, multi-language content management system. It provides pages with a visual element builder, collections for structured data, hierarchical navigation, forms with email notifications, articles with publication scheduling, and language management.
+The CMS module is a multi-tenant, multi-language content management system. It provides pages with a Notion-like document editor (running text with elements), collections for structured data, hierarchical navigation, forms with email notifications, articles with publication scheduling, and language management.
 
 ### Contents — the shared base of pages, intranet pages, articles
 
@@ -21,13 +21,32 @@ The CMS module is a multi-tenant, multi-language content management system. It p
   uses `Noerd\Cms\Traits\ListsContentRecords` (`contentRecordRows()` in `listData()`)
 - Register every type in the owning provider's `boot()`:
   `app(ContentTypeRegistry::class)->register(key:, label:, modelClass:, detailRoute:, detailComponent:)`
-  (`cms.page` = website page; `uki.page`, `uki.article` from noerd/uki). The registry is the one
+  (`cms.page` = website page; other modules add their own, e.g. `blog.post`). The registry is the one
   place a type maps to its record (`Content::extension()`) and to the screen that opens it
   (`recordUrl()`)
-- The element builder works on ANY content: a detail uses `Noerd\Cms\Traits\EditsContentElements`
-  (`editableContent(): ?Content`, guarded mutators, dispatches `storeElements` from its `store()`)
-  and renders `@@include('cms::partials.content-elements', ['content' => $this->editableContent()])`;
-  the writes go through `ContentElementEditorService`
+@verbatim
+- The editor of a content is ONE document (Notion-like): running text and elements in between,
+  with H1–H3, bold, italic, lists, quote and link anywhere (toolbar, bubble menu, Markdown input
+  rules), and `//` opens the insert menu (text blocks + the elements of the content type). An
+  element's fields are edited INLINE in the document. The storage stays one `content_elements`
+  row per block: the running text between two elements is the element `rich_text` (YAML
+  `pickable: false`, field `text` `translatableRichText`, rendered by the CMS itself and sanitized)
+  - A detail uses `Noerd\Cms\Traits\EditsContentDocument` (`editableContent()`,
+    `contentDocumentType()`), renders `<x-cms::content-document :config="$this->contentDocumentConfig()" />`
+    inside `@assets <x-cms::editor-assets /> @endassets`, and calls
+    `persistContentDocument($record->content)` at the end of `store()` — also for a NEW record
+  - The editor writes `contentDocumentDraft` (`{language, sections}`, untrusted, no round trip);
+    `Noerd\Cms\Services\ContentDocumentService` merges it (`apply()`: sections matched by `uid`,
+    never by a client row id; an element needs a key the type offers or one the document already
+    holds; data reduced to the YAML fields; all HTML through `HtmlSanitizer`) and writes it
+    (`persist()`: sort = position, missing rows deleted through the model). The structure is
+    shared by every language, the running text is per language: a split keeps the other
+    languages on the first part, a merge (`absorbed`) appends them
+  - The JavaScript is the CMS's OWN bundle (Tiptap 3, `resources/js/`, `npm run build` in the
+    module, `dist/build` is committed), served by the route `cms.asset`; field renderers of the
+    inline form live in `resources/js/document/fields.js` — a new YAML field type used by an
+    element needs a renderer there (unknown types show a notice)
+@endverbatim
 - An element YAML may name the types it serves (`contentTypes:` list); without it the element
   serves `cms.page` only, so website elements never appear in another kind of content
   (`FieldHelper::getAllElementsGrouped($contentType)`, the picker receives `contentType`)
@@ -42,8 +61,8 @@ The CMS module is a multi-tenant, multi-language content management system. It p
 - **Data column:** `data` (array cast) stores collection-specific field data
 - **Casts:** `meta_noindex`, `is_active` (boolean; defaults to `true`)
 - **Relationships:** `content()`, `elements()` (through the content), `collection()` belongsTo Collection
-- The page editor is a custom `NoerdDetail` component (`cms::page-detail`): `$detailModel = Page::class`, `$detailPrimary = 'pageId'`, form state in `$detailData` (array — the Eloquent model is never a component property). It overrides `mount()` (collection entry detection), `store()` (plain page vs. collection entry) and `updated()` (slug derivation) and delegates to three services: `PageSlugService` (slug generation + uniqueness), `EditsContentElements` / `ContentElementEditorService` (add/move/duplicate/delete elements), `PageCopyService` (copy a page) and `CollectionEntryStore` (persist collection entries and element-collection rows)
-- Element mutations are guarded like `store()`: every mutator starts with `canSaveObject()` (the generic `WriteGuardHook` only covers `store`/`delete`)
+- The page editor is a custom `NoerdDetail` component (`cms::page-detail`): `$detailModel = Page::class`, `$detailPrimary = 'pageId'`, form state in `$detailData` (array — the Eloquent model is never a component property). It overrides `mount()` (collection entry detection), `store()` (plain page vs. collection entry) and `updated()` (slug derivation) and delegates to `PageSlugService` (slug generation + uniqueness), the document editor (`EditsContentDocument`), `PageCopyService` (copy a page) and `CollectionEntryStore` (persist collection entries and element-collection rows)
+- Every document write path (`persistContentDocument()`, the media picker, element collections) checks `canSaveObject()` itself (the generic `WriteGuardHook` only covers `store`/`delete`)
 - Slugs are auto-generated from the name; non-default languages get a language prefix (e.g., `/en/page-name`)
 - Layouts are discovered from `config('noerd_cms.layout_path')` (`Noerd\Cms\Support\PageLayouts`), default `app-modules/website/resources/views/components/layouts/`
 
@@ -79,7 +98,7 @@ public function mount(?string $collectionKey = null): void
   media app in the same prompt. Never install the CMS for a tenant without MEDIA
 - An image field (`type: image` in an element YAML or a collection definition) stores the MEDIA ID,
   never a URL: the media disk mirrors the library's folder tree, so a file's path changes the
-  moment it is moved. `page-detail`, `element-page-detail` and `element-collection-row-detail`
+  moment it is moved. `page-detail`, the document editor and `element-collection-row-detail`
   write `$media->id`
 - The URL is resolved on the way OUT, centrally in `Noerd\Cms\Support\MediaValues` — called from
   `HandlesPageElements::processPageElements()` and `PageElementService::processCollectionPageData()`

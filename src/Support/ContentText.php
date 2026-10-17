@@ -34,7 +34,7 @@ final class ContentText
 
     /**
      * @param  bool  $withName  false leaves the name out — for a caller that
-     *                          carries the title on its own (the UKI index)
+     *                          carries the title on its own (a search index)
      */
     public static function markdown(Content $content, bool $withName = true): string
     {

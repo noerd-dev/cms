@@ -13,7 +13,7 @@ use Noerd\Cms\Services\CollectionEntryStore;
 use Noerd\Cms\Services\PageCopyService;
 use Noerd\Cms\Services\PageSlugService;
 use Noerd\Cms\Support\PageLayouts;
-use Noerd\Cms\Traits\EditsContentElements;
+use Noerd\Cms\Traits\EditsContentDocument;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
 use Noerd\Helpers\TenantHelper;
@@ -29,7 +29,7 @@ use Noerd\Traits\NoerdDetail;
  | owns the form state and the editor chrome.
  */
 new class extends Component {
-    use EditsContentElements;
+    use EditsContentDocument;
     use LanguageFilterTrait;
     use NoerdDetail;
     use WithFileUploads;
@@ -76,6 +76,11 @@ new class extends Component {
         }
 
         return Page::with('content.elements')->find($this->modelId);
+    }
+
+    public function contentDocumentType(): string
+    {
+        return Page::contentType();
     }
 
     public function editableContent(): ?Content
@@ -270,7 +275,7 @@ new class extends Component {
 
         $page = Page::updateOrCreate(['id' => $this->modelId], $data);
 
-        $this->dispatch('storeElements');
+        $this->persistContentDocument($page->content);
 
         $this->storeProcess($page);
     }
@@ -286,6 +291,8 @@ new class extends Component {
         $this->modelId = $newPage->id;
         $this->mountPageDetail($newPage);
         $this->mergeCollectionData($newPage);
+        unset($this->pageModel);
+        $this->reloadContentDocument();
 
         $this->dispatch('listRefresh');
         $this->dispatch('refreshList-pages-list');
@@ -318,8 +325,6 @@ new class extends Component {
                 }
             }
         }
-
-        $this->lastChangeTime = time();
     }
 
     /**
@@ -373,12 +378,18 @@ new class extends Component {
 
         $this->modelId = $page->id;
 
-        $this->storeProcess($page);
+        if ($this->hasPageFeatures) {
+            $this->persistContentDocument($page->content);
+        }
 
-        $this->dispatch('storeElements');
+        $this->storeProcess($page);
     }
 
 } ?>
+
+@assets
+    <x-cms::editor-assets />
+@endassets
 
 <x-noerd::page>
 
@@ -387,17 +398,6 @@ new class extends Component {
             {{ $collectionLayout['title'] ?? __('Page') }}
 
             <x-slot:actions>
-                @if($this->pageModel?->id && $this->hasPageFeatures)
-                    <x-noerd::button
-                        variant="secondary"
-                        type="button"
-                        x-data
-                        x-init="if (!Alpine.store('elements')) Alpine.store('elements', { collapsed: false })"
-                        @click="$store.elements.collapsed = !$store.elements.collapsed"
-                        x-text="$store.elements.collapsed ? '{{ __('Expand elements') }}' : '{{ __('Collapse elements') }}'"
-                    ></x-noerd::button>
-                @endif
-
                 <livewire:cms::language-switcher/>
             </x-slot:actions>
         </x-noerd::modal-title>
@@ -432,7 +432,11 @@ new class extends Component {
         @endphp
         <x-noerd::tab-content :layout="$effectiveLayout" :showBlock="$this->hasPageFeatures" :model="$detailData">
             <x-slot:tab1>
-                @include('cms::partials.content-elements', ['content' => $this->editableContent(), 'show' => $this->hasPageFeatures])
+                @if ($this->hasPageFeatures)
+                    <div class="mt-6">
+                        <x-cms::content-document :config="$this->contentDocumentConfig()" />
+                    </div>
+                @endif
             </x-slot:tab1>
         </x-noerd::tab-content>
     </div>
