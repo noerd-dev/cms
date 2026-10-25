@@ -14,6 +14,7 @@ export class ElementBlockView {
         this.editor = editor;
         this.host = host;
         this.fields = [];
+        host.elementViews.add(this);
 
         this.dom = document.createElement('div');
         this.dom.className = 'cms-doc-element';
@@ -152,9 +153,17 @@ export class ElementBlockView {
         }
 
         this.node = node;
-        this.fields.forEach((field) => field.sync());
+        this.syncFields();
 
         return true;
+    }
+
+    /**
+     * Re-read every field value — after a node update and after a language
+     * switch (the node is unchanged then, only the editor's language moved).
+     */
+    syncFields() {
+        this.fields.forEach((field) => field.sync());
     }
 
     selectNode() {
@@ -186,6 +195,7 @@ export class ElementBlockView {
     }
 
     destroy() {
+        this.host.elementViews.delete(this);
         this.fields.forEach((field) => field.destroy());
     }
 }

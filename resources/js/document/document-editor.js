@@ -35,6 +35,7 @@ export function documentEditor(config) {
         linkUrl: '',
         showLinkInput: false,
         cleanups: [],
+        elementViews: new Set(),
 
         init() {
             const host = this;
@@ -151,6 +152,11 @@ export function documentEditor(config) {
             this.previews = { ...this.previews, ...(next.previews || {}) };
             this.collectionCounts = next.collectionCounts || {};
             this.raw().commands.setContent(this.documentJson(next.sections), { emitUpdate: false });
+
+            // An element's data holds every language, so its node is equal
+            // before and after the switch — ProseMirror keeps the node view
+            // without calling update(). Re-read the fields in the new language.
+            window.Alpine.raw(this.elementViews).forEach((view) => view.syncFields());
         },
 
         /**
