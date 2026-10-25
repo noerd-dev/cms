@@ -20,6 +20,10 @@ export class ElementBlockView {
         this.dom.className = 'cms-doc-element';
         this.dom.contentEditable = 'false';
 
+        // ProseMirror makes the whole card draggable (the node is `draggable`)
+        // right after this constructor — only the handle may start a drag.
+        queueMicrotask(() => this.dom.removeAttribute('draggable'));
+
         const header = document.createElement('div');
         header.className = 'cms-doc-element-header';
 
@@ -29,6 +33,11 @@ export class ElementBlockView {
         handle.dataset.dragHandle = '';
         handle.title = host.strings.drag;
         handle.textContent = '⠿';
+        // The drag starts on the handle, but the whole card follows the pointer.
+        handle.addEventListener('dragstart', (event) => {
+            const card = this.dom.getBoundingClientRect();
+            event.dataTransfer?.setDragImage(this.dom, event.clientX - card.left, event.clientY - card.top);
+        });
 
         this.title = document.createElement('span');
         this.title.className = 'cms-doc-element-title';
@@ -177,7 +186,8 @@ export class ElementBlockView {
     /**
      * The form is the node view's own business — ProseMirror must not treat a
      * keystroke in an input as typing into the document. Only a drag that
-     * starts on the handle is ProseMirror's (it moves the element).
+     * starts on the handle is ProseMirror's (it moves the element) — and while
+     * it runs, the card is a drop target like the text around it.
      */
     stopEvent(event) {
         const handle = event.target instanceof Element && event.target.closest('[data-drag-handle]');
@@ -185,6 +195,9 @@ export class ElementBlockView {
             return false;
         }
         if (handle && event.type === 'mousedown') {
+            return false;
+        }
+        if ((event.type.startsWith('drag') || event.type === 'drop') && this.editor.view.dragging) {
             return false;
         }
         return true;

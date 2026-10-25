@@ -147,6 +147,25 @@
     border-color: var(--cms-doc-accent);
 }
 
+/* Language-dependent fields carry the light blue frame of noerd's translatable inputs
+   (border-sky-300, border-b-sky-400/70, bg-sky-50/30). */
+.cms-doc-field--translatable .cms-doc-input,
+.cms-doc-field--translatable .cms-doc-richtext {
+    border-color: #7dd3fc;
+    border-bottom-color: rgb(56 189 248 / 0.7);
+    background: rgb(240 249 255 / 0.3);
+}
+
+.cms-doc-field--translatable .cms-doc-input:focus {
+    outline: 2px solid #7dd3fc;
+    outline-offset: 2px;
+    border-color: #7dd3fc;
+}
+
+.cms-doc-field--translatable .cms-doc-richtext-toolbar {
+    border-bottom-color: #bae6fd;
+}
+
 .cms-doc-textarea {
     resize: vertical;
     min-height: 5rem;

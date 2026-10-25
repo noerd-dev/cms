@@ -29,7 +29,7 @@ function el(tag, className, attrs = {}) {
  * an external change (undo), without touching a field that has the focus.
  */
 export function createField(field, ctx) {
-    const wrapper = el('div', 'cms-doc-field');
+    const wrapper = el('div', 'cms-doc-field' + (isTranslatable(field.type) ? ' cms-doc-field--translatable' : ''));
     wrapper.style.gridColumn = `span ${field.colspan || 12} / span ${field.colspan || 12}`;
 
     if (field.type === 'spacer') {
@@ -37,7 +37,7 @@ export function createField(field, ctx) {
     }
 
     if (field.label) {
-        const label = el('div', 'cms-doc-label' + (TRANSLATABLE.includes(field.type) ? ' cms-doc-label--translatable' : ''));
+        const label = el('div', 'cms-doc-label' + (isTranslatable(field.type) ? ' cms-doc-label--translatable' : ''));
         label.textContent = field.label;
         wrapper.append(label);
     }
