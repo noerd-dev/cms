@@ -59,7 +59,7 @@ it('excludes element collections from the collection-select field options', func
 
     // The options are resolved by the registered field type, never in the template.
     $props = app(FieldTypeRegistry::class)
-        ->resolve('collection-select')
+        ->get('collection-select')
         ->resolveProps(['name' => 'rel', 'label' => 'Relation', 'type' => 'collection-select']);
     $labels = collect($props['field']['options'])->pluck('label')->all();
 

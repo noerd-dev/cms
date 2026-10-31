@@ -10,8 +10,7 @@ use Noerd\Cms\Support\CollectionDefinitionData;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Traits\NoerdList;
 
-new class extends Component
-{
+new class extends Component {
     use NoerdList;
 
     public ?string $detailRoute = 'cms.collection-definition.detail';
@@ -46,7 +45,7 @@ new class extends Component
         ];
     }
 
-    public function with(): array
+    public function listData(): array
     {
         $repository = app(CollectionDefinitionRepositoryContract::class);
 
@@ -104,7 +103,7 @@ new class extends Component
         }
 
         // Sort by titleList
-        usort($items, fn ($a, $b) => strcasecmp($a['titleList'], $b['titleList']));
+        usort($items, fn($a, $b) => strcasecmp($a['titleList'], $b['titleList']));
 
         $page = $this->getPage();
         $perPage = $this->perPage;
@@ -116,22 +115,20 @@ new class extends Component
             $page,
         );
 
-        return [
-            'listConfig' => $this->buildList($rows, [
-                'title' => 'Collection Definitions',
-                'actions' => [['label' => 'New Collection', 'action' => 'listAction']],
-                'disableSearch' => false,
-                'notSortableColumns' => ['titleList', 'key', 'hasPage', 'fieldCount', 'entryCount', 'createdBy'],
-                'columns' => [
-                    ['field' => 'titleList', 'label' => 'Title (Plural)'],
-                    ['field' => 'key', 'label' => 'Key'],
-                    ['field' => 'hasPage', 'label' => 'Has Page'],
-                    ['field' => 'fieldCount', 'label' => 'Fields'],
-                    ['field' => 'entryCount', 'label' => 'Entries'],
-                    ['field' => 'createdBy', 'label' => 'Created by'],
-                ],
-            ]),
-        ];
+        return $this->buildList($rows, [
+            'title' => 'Collection Definitions',
+            'actions' => [['label' => 'New Collection', 'action' => 'listAction']],
+            'disableSearch' => false,
+            'notSortableColumns' => ['titleList', 'key', 'hasPage', 'fieldCount', 'entryCount', 'createdBy'],
+            'columns' => [
+                ['field' => 'titleList', 'label' => 'Title (Plural)'],
+                ['field' => 'key', 'label' => 'Key'],
+                ['field' => 'hasPage', 'label' => 'Has Page'],
+                ['field' => 'fieldCount', 'label' => 'Fields'],
+                ['field' => 'entryCount', 'label' => 'Entries'],
+                ['field' => 'createdBy', 'label' => 'Created by'],
+            ],
+        ]);
     }
 } ?>
 

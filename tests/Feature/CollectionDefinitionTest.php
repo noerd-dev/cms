@@ -44,7 +44,7 @@ it('scopes entry counts to the current tenant', function (): void {
     Page::factory()->count(3)->create(['tenant_id' => $otherTenant->id, 'collection_id' => $foreignCollection->id]);
 
     $component = Livewire::test('cms::collection-definitions-list');
-    $row = collect($component->viewData('listConfig')['rows']->items())->firstWhere('key', 'CONTACTS');
+    $row = collect($component->instance()->listData()['rows']->items())->firstWhere('key', 'CONTACTS');
 
     expect($row['entryCount'])->toBe(1);
 });
@@ -67,7 +67,7 @@ it('searches definitions by titleList, key, and filename case-insensitively', fu
     $component = Livewire::test('cms::collection-definitions-list')
         ->set('search', $term);
 
-    $rows = collect($component->viewData('listConfig')['rows']->items());
+    $rows = collect($component->instance()->listData()['rows']->items());
 
     expect($rows)->toHaveCount(1)
         ->and($rows->first()['key'])->toBe('CONTACTS');
@@ -94,11 +94,11 @@ it('filters definitions by has_page', function (): void {
 
     $pageRows = collect(Livewire::test('cms::collection-definitions-list')
         ->set('listFilters.has_page', 'page')
-        ->viewData('listConfig')['rows']->items());
+        ->instance()->listData()['rows']->items());
 
     $dataRows = collect(Livewire::test('cms::collection-definitions-list')
         ->set('listFilters.has_page', 'data')
-        ->viewData('listConfig')['rows']->items());
+        ->instance()->listData()['rows']->items());
 
     expect($pageRows->pluck('key')->all())->toBe(['CONTACTS'])
         ->and($dataRows->pluck('key')->all())->toBe(['SLIDERS']);

@@ -12,17 +12,17 @@ it('registers cms field types in the shared field type registry', function (): v
     $registry = app(FieldTypeRegistry::class);
 
     expect($registry->has('collection-select'))->toBeTrue();
-    expect($registry->resolve('collection-select')?->kind)->toBe('include');
-    expect($registry->resolve('collection-select')?->target)->toBe('cms::components.forms.input-collection-select');
+    expect($registry->get('collection-select')?->kind)->toBe('include');
+    expect($registry->get('collection-select')?->target)->toBe('cms::components.forms.input-collection-select');
 
     expect($registry->has('pageRelation'))->toBeTrue();
-    expect($registry->resolve('pageRelation')?->kind)->toBe('livewire');
-    expect($registry->resolve('pageRelation')?->target)->toBe('noerd::noerd-relation-field');
+    expect($registry->get('pageRelation')?->kind)->toBe('livewire');
+    expect($registry->get('pageRelation')?->target)->toBe('noerd::noerd-relation-field');
 });
 
 it('resolves pageRelation props from nested detail data', function (): void {
     $registry = app(FieldTypeRegistry::class);
-    $definition = $registry->resolve('pageRelation');
+    $definition = $registry->get('pageRelation');
 
     $component = new class {
         public array $detailData = [
@@ -54,7 +54,7 @@ it('resolves pageRelation props from nested detail data', function (): void {
 
 it('registers pageRelation metadata in the relation field registry', function (): void {
     $registry = app(RelationFieldRegistry::class);
-    $definition = $registry->resolve('pageRelation');
+    $definition = $registry->get('pageRelation');
 
     expect($definition)->not->toBeNull();
     expect($definition?->listComponent)->toBe('cms::pages-list');

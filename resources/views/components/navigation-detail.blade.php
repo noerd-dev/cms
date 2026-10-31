@@ -25,12 +25,12 @@ new class extends Component {
     {
         $this->initDetail();
 
-        $navigation = new Navigation;
+        $navigation = new Navigation();
         if ($this->modelId) {
-            $navigation = Navigation::find($this->modelId) ?? new Navigation;
+            $navigation = Navigation::find($this->modelId) ?? new Navigation();
         }
 
-        $this->detailData = FieldHelper::parseComponentToData($this->getComponentName(), $navigation->toArray());
+        $this->detailData = FieldHelper::parseComponentToData($this->componentName(), $navigation->toArray());
 
         if (! $this->modelId && ! empty($this->relations['parent_id'])) {
             $this->detailData['parent_id'] = $this->relations['parent_id'];
@@ -114,8 +114,8 @@ new class extends Component {
 
         $data['collection_id'] = !empty($data['collection_id']) ? (int) $data['collection_id'] : null;
 
-        if (!empty(trim((string) ($data['link'] ?? '')))) {
-            $data['link'] = trim((string) $data['link']);
+        if (!empty(mb_trim((string) ($data['link'] ?? '')))) {
+            $data['link'] = mb_trim((string) $data['link']);
             $data['page_id'] = null;
         } else {
             $data['link'] = null;

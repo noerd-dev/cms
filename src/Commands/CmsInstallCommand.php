@@ -7,8 +7,8 @@ namespace Noerd\Cms\Commands;
 use Exception;
 use Illuminate\Console\Command;
 use Noerd\Cms\Services\DefaultHomepageSeeder;
+use Noerd\Commands\Concerns\HasModuleInstallation;
 use Noerd\Support\ModuleInstallContext;
-use Noerd\Traits\HasModuleInstallation;
 
 class CmsInstallCommand extends Command
 {
