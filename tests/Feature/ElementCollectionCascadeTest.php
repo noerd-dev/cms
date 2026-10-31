@@ -13,7 +13,9 @@ uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
-    ['user' => $this->user, 'tenant' => $this->tenant] = $this->createUserWithCmsAccess();
+    // Element collections are maintained inside backend requests of a signed-in
+    // user (page editor, collection entries).
+    $this->actingAsCmsUser();
 });
 
 it('deletes page-owned element collections and their rows when the owner entry is deleted', function (): void {

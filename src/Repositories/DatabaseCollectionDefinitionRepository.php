@@ -39,7 +39,7 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
         // Memoized per request: the two navigation providers and the lists
         // ask for the same definitions on one page render.
         return self::$requestCache['all:' . $tenantId] ??= CollectionDefinition::query()
-            ->where('tenant_id', $tenantId)
+            ->ofTenant($tenantId)
             ->orderBy('title_list')
             ->get()
             ->map(fn(CollectionDefinition $m) => $this->toData($m));
@@ -61,7 +61,7 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
         }
 
         $model = CollectionDefinition::query()
-            ->where('tenant_id', $tenantId)
+            ->ofTenant($tenantId)
             ->where('key', mb_strtoupper($key))
             ->first();
 
@@ -166,7 +166,7 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
     private function resolveFieldsUncached(string $filename, int $tenantId): ?array
     {
         $query = CollectionDefinition::query()
-            ->where('tenant_id', $tenantId);
+            ->ofTenant($tenantId);
 
         $model = (clone $query)->where('filename', $filename)->first();
 
@@ -214,7 +214,7 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
         }
 
         return CollectionDefinition::query()
-            ->where('tenant_id', $tenantId)
+            ->ofTenant($tenantId)
             ->where('filename', $filename)
             ->first();
     }

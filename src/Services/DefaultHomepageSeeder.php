@@ -9,6 +9,7 @@ use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Models\Tenant;
+use Noerd\Support\TenantContext;
 
 class DefaultHomepageSeeder
 {
@@ -29,35 +30,42 @@ class DefaultHomepageSeeder
             ->whereNotIn('id', $tenantIdsWithHomepage)
             ->pluck('id');
 
+        // Headless (install/update command): each tenant's homepage is written
+        // inside its own tenant context.
         foreach ($tenantsWithoutHomepage as $tenantId) {
-            // One slot per language the tenant runs (the default language first,
-            // without a language prefix) — never a hard-coded language list.
-            $codes = CmsLanguage::forTenant((int) $tenantId)
-                ->where('is_active', true)
-                ->orderBy('is_default', 'desc')
-                ->orderBy('sort_order')
-                ->pluck('code')
-                ->all() ?: CmsLanguageCodes::FALLBACK;
-
-            $name = [];
-            $slug = [];
-            foreach ($codes as $index => $code) {
-                $name[$code] = 'Homepage';
-                $slug[$code] = $index === 0 ? '/homepage' : '/' . $code . '/homepage';
-            }
-
-            $page = Page::create([
-                'tenant_id' => $tenantId,
-                'name' => $name,
-                'slug' => $slug,
-                'is_active' => true,
-                'layout' => null,
-            ]);
-
-            CmsSetting::updateOrCreate(
-                ['tenant_id' => $tenantId],
-                ['homepage_page_id' => $page->id],
-            );
+            TenantContext::run((int) $tenantId, fn() => $this->seedHomepage((int) $tenantId));
         }
+    }
+
+    private function seedHomepage(int $tenantId): void
+    {
+        // One slot per language the tenant runs (the default language first,
+        // without a language prefix) — never a hard-coded language list.
+        $codes = CmsLanguage::forTenant($tenantId)
+            ->where('is_active', true)
+            ->orderBy('is_default', 'desc')
+            ->orderBy('sort_order')
+            ->pluck('code')
+            ->all() ?: CmsLanguageCodes::FALLBACK;
+
+        $name = [];
+        $slug = [];
+        foreach ($codes as $index => $code) {
+            $name[$code] = 'Homepage';
+            $slug[$code] = $index === 0 ? '/homepage' : '/' . $code . '/homepage';
+        }
+
+        $page = Page::create([
+            'tenant_id' => $tenantId,
+            'name' => $name,
+            'slug' => $slug,
+            'is_active' => true,
+            'layout' => null,
+        ]);
+
+        CmsSetting::updateOrCreate(
+            ['tenant_id' => $tenantId],
+            ['homepage_page_id' => $page->id],
+        );
     }
 }

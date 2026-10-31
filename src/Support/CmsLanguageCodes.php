@@ -69,7 +69,7 @@ final class CmsLanguageCodes
 
         $codes = self::query(
             fn(): array => CmsLanguage::query()
-                ->where('tenant_id', $tenantId)
+                ->ofTenant($tenantId)
                 ->where('is_active', true)
                 ->orderBy('is_default', 'desc')
                 ->orderBy('sort_order')

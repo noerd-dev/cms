@@ -6,6 +6,7 @@ namespace Noerd\Cms\Services;
 
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
+use Noerd\Support\TenantContext;
 
 /**
  * Manages "element" collections: hidden collections that back one repeater-like
@@ -42,7 +43,8 @@ class ElementCollectionService
         $field = $this->normalizeFieldName($ownerField);
         $ownerColumn = $ownerType === self::OWNER_ELEMENT_PAGE ? 'element_page_id' : 'page_id';
 
-        return Collection::firstOrCreate(
+        // The owner's tenant is passed explicitly — also by headless callers.
+        return TenantContext::run($tenantId, fn(): Collection => Collection::firstOrCreate(
             [
                 'tenant_id' => $tenantId,
                 'collection_key' => $this->keyFor($ownerType, $ownerId, $field),
@@ -55,7 +57,7 @@ class ElementCollectionService
                 'name' => $name,
                 'created_by' => auth()->id(),
             ],
-        );
+        ));
     }
 
     /**
@@ -70,19 +72,7 @@ class ElementCollectionService
     {
         $elementCollection = $this->ensure($ownerType, $ownerId, $tenantId, $ownerField, $rowFields, $name);
 
-        if ($elementCollection->rows()->count() === 0) {
-            foreach (array_values($items) as $sort => $item) {
-                Page::create([
-                    'tenant_id' => $tenantId,
-                    'collection_id' => $elementCollection->id,
-                    'name' => null,
-                    'slug' => null,
-                    'is_active' => true,
-                    'data' => is_array($item) ? $item : ['text' => $item],
-                    'sort' => $sort,
-                ]);
-            }
-        }
+        TenantContext::run($tenantId, fn() => $this->importRows($elementCollection, $tenantId, $items));
 
         return $elementCollection;
     }
@@ -114,6 +104,26 @@ class ElementCollectionService
         $label = mb_trim((string) (preg_split('/[—–-]/u', $fieldLabel)[0] ?? $fieldLabel));
 
         return mb_trim($label . ' ' . $ownerName);
+    }
+
+    /**
+     * @param  array<int, mixed>  $items
+     */
+    private function importRows(Collection $elementCollection, int $tenantId, array $items): void
+    {
+        if ($elementCollection->rows()->count() === 0) {
+            foreach (array_values($items) as $sort => $item) {
+                Page::create([
+                    'tenant_id' => $tenantId,
+                    'collection_id' => $elementCollection->id,
+                    'name' => null,
+                    'slug' => null,
+                    'is_active' => true,
+                    'data' => is_array($item) ? $item : ['text' => $item],
+                    'sort' => $sort,
+                ]);
+            }
+        }
     }
 
     /**

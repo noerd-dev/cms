@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Noerd\Models\NoerdUser;
 use Noerd\Models\Tenant;
+use Noerd\Support\TenantContext;
 use Symfony\Component\HttpFoundation\Response;
 
 class CmsApiAuth
@@ -55,7 +56,10 @@ class CmsApiAuth
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        // Attach user and tenant context to request
+        // Attach user and tenant context to request. There is no signed-in
+        // noerd user: every tenant-scoped query of the request (and every job it
+        // dispatches) works in the token's tenant.
+        TenantContext::set((int) $tenant->id);
         $request->attributes->set('tenant_id', $tenant->id);
         $request->attributes->set('tenant', $tenant);
         $request->attributes->set('user', $user);

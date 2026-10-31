@@ -39,10 +39,10 @@ class FormRequestController extends Controller
             return response()->json(['message' => 'Unauthorized tenant'], 401);
         }
 
-        // This request carries no noerd session, so the tenant scope does not
-        // apply — the tenant filter must be explicit.
+        // This request carries no noerd session: CmsApiAuth sets the token's
+        // tenant as the tenant context, and the lookup names it explicitly too.
         $formType = FormType::query()
-            ->where('tenant_id', $tenantId)
+            ->ofTenant($tenantId)
             ->where('key', (string) $request->string('form'))
             ->first();
 

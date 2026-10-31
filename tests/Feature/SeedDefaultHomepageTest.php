@@ -34,7 +34,7 @@ it('creates a default homepage in the tenant\'s languages for tenants without on
     expect($setting)->not->toBeNull();
     expect($setting->homepage_page_id)->not->toBeNull();
 
-    $page = Page::find($setting->homepage_page_id);
+    $page = Page::query()->ofTenant($tenant->id)->find($setting->homepage_page_id);
     expect($page)->not->toBeNull();
     expect($page->tenant_id)->toBe($tenant->id);
 });
@@ -58,7 +58,7 @@ it('does not overwrite an existing homepage', function (): void {
     expect($setting->homepage_page_id)->toBe($existingPage->id);
 
     // No additional page should have been created for this tenant
-    expect(Page::where('tenant_id', $tenant->id)->count())->toBe(1);
+    expect(Page::query()->ofTenant($tenant->id)->count())->toBe(1);
 });
 
 it('creates homepage for tenant with cms_settings but no homepage_page_id', function (): void {
@@ -74,7 +74,7 @@ it('creates homepage for tenant with cms_settings but no homepage_page_id', func
     $setting = CmsSetting::where('tenant_id', $tenant->id)->first();
     expect($setting->homepage_page_id)->not->toBeNull();
 
-    $page = Page::find($setting->homepage_page_id);
+    $page = Page::query()->ofTenant($tenant->id)->find($setting->homepage_page_id);
     expect($page)->not->toBeNull();
     expect($page->tenant_id)->toBe($tenant->id);
 });

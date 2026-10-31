@@ -42,7 +42,7 @@ it('persists a new definition via save with current user as creator', function (
     $filename = $repo->save($data);
 
     expect($filename)->toBe('contacts');
-    $model = CollectionDefinition::where('tenant_id', $tenant->id)->first();
+    $model = CollectionDefinition::query()->ofTenant($tenant->id)->first();
     expect($model->key)->toBe('CONTACTS');
     expect($model->created_by)->toBe($user->id);
 });
@@ -58,11 +58,11 @@ it('updates an existing definition identified by originalFilename', function ():
     $updated = new CollectionDefinitionData('contacts', 'CONTACTS', 'New', 'News', 'updated', true, []);
     $repo->save($updated, originalFilename: 'contacts');
 
-    $model = CollectionDefinition::where('tenant_id', $tenant->id)->first();
+    $model = CollectionDefinition::query()->ofTenant($tenant->id)->first();
     expect($model->title)->toBe('New');
     expect($model->description)->toBe('updated');
     expect($model->has_page)->toBeTrue();
-    expect(CollectionDefinition::where('tenant_id', $tenant->id)->count())->toBe(1);
+    expect(CollectionDefinition::query()->ofTenant($tenant->id)->count())->toBe(1);
 });
 
 it('copies a definition with filename, key, title and title_list all suffixed with 2', function (): void {
@@ -77,7 +77,7 @@ it('copies a definition with filename, key, title and title_list all suffixed wi
     $newFilename = $repo->copy('contacts');
 
     expect($newFilename)->toBe('contacts2');
-    $copy = CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'contacts2')->first();
+    $copy = CollectionDefinition::query()->ofTenant($tenant->id)->where('filename', 'contacts2')->first();
     expect($copy->key)->toBe('CONTACTS2');
     expect($copy->title)->toBe('Kontakt2');
     expect($copy->title_list)->toBe('Kontakte2');
@@ -107,7 +107,7 @@ it('deletes a definition and invalidates cache', function (): void {
     $repo->delete('contacts');
 
     expect($repo->resolveFields('contacts'))->toBeNull();
-    expect(CollectionDefinition::where('tenant_id', $tenant->id)->where('filename', 'contacts')->exists())->toBeFalse();
+    expect(CollectionDefinition::query()->ofTenant($tenant->id)->where('filename', 'contacts')->exists())->toBeFalse();
 });
 
 it('treats deleting a nonexistent definition as a no-op', function (): void {
@@ -119,7 +119,7 @@ it('treats deleting a nonexistent definition as a no-op', function (): void {
 
     $repo->delete('does-not-exist');
 
-    expect(CollectionDefinition::where('tenant_id', $tenant->id)->count())->toBe(1);
+    expect(CollectionDefinition::query()->ofTenant($tenant->id)->count())->toBe(1);
 });
 
 it('returns the resolved definition payload from resolveFields', function (): void {

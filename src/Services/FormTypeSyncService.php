@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Support\Facades\File;
 use Noerd\Cms\Models\FormType;
 use Noerd\Models\Tenant;
+use Noerd\Support\TenantContext;
 use Symfony\Component\Yaml\Yaml;
 
 class FormTypeSyncService
@@ -63,13 +64,14 @@ class FormTypeSyncService
         // One query for every existing form type of the tenants instead of one
         // per (file × tenant) pair.
         $this->existingFormTypes = FormType::query()
+            ->acrossTenants()
             ->whereIn('tenant_id', $tenants->pluck('id'))
             ->get()
             ->keyBy(fn(FormType $formType): string => $formType->tenant_id . ':' . $formType->key);
 
         foreach ($ymlFiles as $ymlFile) {
             foreach ($tenants as $tenant) {
-                $this->syncFormTypeForTenant($ymlFile, $tenant, $force);
+                TenantContext::run((int) $tenant->id, fn() => $this->syncFormTypeForTenant($ymlFile, $tenant, $force));
             }
         }
 

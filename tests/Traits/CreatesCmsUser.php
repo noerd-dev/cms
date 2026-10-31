@@ -113,7 +113,7 @@ trait CreatesCmsUser
     {
         $tenantId ??= $this->tenantId ?? TenantHelper::getSelectedTenantId();
 
-        $language = CmsLanguage::updateOrCreate(
+        $language = CmsLanguage::query()->ofTenant((int) $tenantId)->updateOrCreate(
             ['tenant_id' => $tenantId, 'code' => $code],
             ['name' => $name, 'is_active' => true, 'is_default' => $default],
         );

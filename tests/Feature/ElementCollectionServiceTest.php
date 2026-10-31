@@ -13,7 +13,9 @@ uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
-    ['user' => $this->user, 'tenant' => $this->tenant] = $this->createUserWithCmsAccess();
+    // Element collections are maintained inside backend requests of a signed-in
+    // user (page editor, collection entries).
+    $this->actingAsCmsUser();
 });
 
 it('builds a deterministic, uppercased, prefix-stripped key per owner type', function (): void {

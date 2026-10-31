@@ -110,7 +110,7 @@ class ElementAwareCollectionDefinitionRepository implements CollectionDefinition
         }
 
         return Collection::query()
-            ->where('tenant_id', $tenantId)
+            ->ofTenant((int) $tenantId)
             ->where('is_element_collection', true)
             ->where('collection_key', mb_strtoupper($key))
             ->first();

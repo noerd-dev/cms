@@ -88,7 +88,9 @@ describe('processPageElements', function (): void {
         // A write that pushed an already encoded string through the array cast
         // of ElementPage stored the payload as a JSON string. The editor
         // preview must recover it instead of raising a TypeError.
-        ['tenant' => $tenant] = $this->createUserWithCmsAccess();
+        // The editor preview renders inside a backend request of a signed-in user.
+        $this->actingAsCmsUser();
+        $tenant = $this->tenant;
         $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => ['de' => 'Datenschutz']]);
 
         DB::table('content_elements')->insert([
@@ -107,7 +109,9 @@ describe('processPageElements', function (): void {
     });
 
     it('falls back to empty data when the stored JSON is not an element payload', function (): void {
-        ['tenant' => $tenant] = $this->createUserWithCmsAccess();
+        // The editor preview renders inside a backend request of a signed-in user.
+        $this->actingAsCmsUser();
+        $tenant = $this->tenant;
         $page = Page::factory()->create(['tenant_id' => $tenant->id, 'name' => ['de' => 'Impressum']]);
 
         DB::table('content_elements')->insert([

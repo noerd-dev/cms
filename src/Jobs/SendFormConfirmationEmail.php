@@ -10,6 +10,7 @@ use Noerd\Cms\Mail\FormConfirmation;
 use Noerd\Cms\Models\CmsSetting;
 use Noerd\Cms\Models\FormRequest;
 use Noerd\Communication\Services\Communicator;
+use Noerd\Support\TenantContext;
 use Throwable;
 
 class SendFormConfirmationEmail implements ShouldQueue
@@ -26,6 +27,21 @@ class SendFormConfirmationEmail implements ShouldQueue
     ) {}
 
     public function handle(Communicator $communicator): void
+    {
+        // The submission knows its tenant: the job runs in it, wherever it was
+        // dispatched from (public API, queue worker).
+        TenantContext::run((int) $this->formRequest->tenant_id, fn() => $this->send($communicator));
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        logger()->error('Form confirmation email failed permanently', [
+            'form_request_id' => $this->formRequest->id,
+            'error' => $exception?->getMessage(),
+        ]);
+    }
+
+    private function send(Communicator $communicator): void
     {
         // Load form type relationship
         $this->formRequest->loadMissing('formType');
@@ -101,13 +117,5 @@ class SendFormConfirmationEmail implements ShouldQueue
                 'form_type_id' => $formType->id,
             ]);
         }
-    }
-
-    public function failed(?Throwable $exception): void
-    {
-        logger()->error('Form confirmation email failed permanently', [
-            'form_request_id' => $this->formRequest->id,
-            'error' => $exception?->getMessage(),
-        ]);
     }
 }
