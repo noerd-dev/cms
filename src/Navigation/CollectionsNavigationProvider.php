@@ -34,7 +34,7 @@ class CollectionsNavigationProvider implements DynamicNavigationProviderContract
             ->map(fn(CollectionDefinitionData $d) => [
                 'title' => $d->titleList,
                 'link' => route('cms.collections', ['key' => $d->filename], absolute: false),
-                'icon' => 'icons.list-bullet',
+                'heroicon' => 'list-bullet',
             ])
             ->values()
             ->toArray();

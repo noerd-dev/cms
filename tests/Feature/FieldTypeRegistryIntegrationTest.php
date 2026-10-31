@@ -17,7 +17,7 @@ it('registers cms field types in the shared field type registry', function (): v
 
     expect($registry->has('pageRelation'))->toBeTrue();
     expect($registry->resolve('pageRelation')?->kind)->toBe('livewire');
-    expect($registry->resolve('pageRelation')?->target)->toBe('noerd-relation-field');
+    expect($registry->resolve('pageRelation')?->target)->toBe('noerd::noerd-relation-field');
 });
 
 it('resolves pageRelation props from nested detail data', function (): void {
