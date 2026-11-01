@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Enums\Profile;
 use Noerd\Helpers\NoerdAuth;
@@ -53,8 +54,8 @@ it('keeps the tenant-wide configuration screens admin-only', function (string $u
     $this->get($uri)->assertStatus(403);
     expect(ComponentAccessGuard::allows($component))->toBeFalse();
 
-    // The generic component page is one of the dynamic-mount seams the guard closes.
-    $this->get('/noerd/component-page/' . $component)->assertStatus(403);
+    // The modal stack mounts by name without the route middleware — the guard closes it.
+    Livewire::test($component)->assertForbidden();
 })->with([
     'settings' => ['/cms/settings', 'cms::settings-page'],
     'languages' => ['/cms/languages', 'cms::languages-list'],

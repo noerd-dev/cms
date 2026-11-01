@@ -150,7 +150,7 @@ class CmsServiceProvider extends NoerdModuleServiceProvider
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
 
         // Tenant-wide configuration screens are admin-only. The guard runs on
-        // every mount (route, noerdModal event, component-page), so the routes
+        // every mount (route, noerdModal event), so the routes
         // need no extra middleware — and deliberately not `setup`, which would
         // switch the selected app away from CMS.
         ComponentAccessGuard::registerAdminComponents([

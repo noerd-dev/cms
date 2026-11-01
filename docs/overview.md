@@ -112,7 +112,7 @@ Content models use the `BelongsToTenant` trait (`CmsSetting` is a tenant singlet
 
 Access to the CMS is governed by the generic noerd app permission: the backend routes use the `app-access:cms` middleware, and tenant-scoped chrome (e.g. the "To Website" quick-menu button) checks `AccessHelper::canUseApp('CMS')` — the CMS app must be assigned to the selected tenant AND the user's app permission must allow it. There is no module-specific gate.
 
-The tenant-wide configuration screens — settings, languages and collection definitions — are admin-only. They are registered with `ComponentAccessGuard::registerAdminComponents()`, so every mount (route, modal stack, component page) is rejected with 403 for a non-admin. Content screens (pages, navigation, redirects, forms, articles, global parameters) stay open to every user of the tenant, subject to the object permissions.
+The tenant-wide configuration screens — settings, languages and collection definitions — are admin-only. They are registered with `ComponentAccessGuard::registerAdminComponents()`, so every mount (route, modal stack) is rejected with 403 for a non-admin. Content screens (pages, navigation, redirects, forms, articles, global parameters) stay open to every user of the tenant, subject to the object permissions.
 
 ## Next Steps
 
