@@ -7,6 +7,7 @@ namespace Noerd\Website\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
+use Noerd\Support\TenantContext;
 use Noerd\Website\Models\Language;
 use Noerd\Website\Models\Tenant;
 use Symfony\Component\HttpFoundation\Response;
@@ -44,6 +45,11 @@ class WebsiteMiddleware
             }
             $tenantId = $tenant->id;
         }
+
+        // A visitor has no noerd user: every tenant-scoped query of the website
+        // works in the resolved tenant (registered as persistent middleware, so
+        // Livewire updates of the contact form get it as well).
+        TenantContext::set((int) $tenantId);
 
         // Handle language parameter
         if ($request->has('language')) {

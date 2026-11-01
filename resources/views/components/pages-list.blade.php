@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -10,7 +11,8 @@ use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
-use Noerd\Services\ColumnFilterParser;
+use Noerd\Support\ColumnFilterParser;
+use Noerd\Support\ListFilter;
 use Noerd\Traits\NoerdList;
 
 new class extends Component {
@@ -22,6 +24,8 @@ new class extends Component {
     public ?string $detailRoute = 'cms.page.detail';
 
     public $detailComponent = 'cms::page-detail';
+
+    protected array $listWith = ['collection', 'content'];
 
     public function mount(): void
     {
@@ -44,16 +48,7 @@ new class extends Component {
             $filters[] = $this->getLanguageListFilter();
         }
 
-        $filters[] = [
-            'label' => __('Page Type'),
-            'column' => 'page_type',
-            'type' => 'Picklist',
-            'options' => [
-                '' => __('All Pages'),
-                'collection' => __('Collection Pages'),
-                'single' => __('Single Pages'),
-            ],
-        ];
+        $filters[] = $this->getPageTypeListFilter();
 
         return $filters;
     }
@@ -106,22 +101,14 @@ new class extends Component {
             $query->reorder()->orderByContentName((string) $selectedLanguage, $this->sortAsc ? 'asc' : 'desc');
         }
 
-        $rows = $query
-            ->with(['collection', 'content'])
-            ->where(function ($query) use ($collectionsWithoutPages): void {
-                // Show pages that don't belong to any collection
-                $query->whereNull('collection_id')
-                    // OR pages that belong to collections with hasPage: true (exclude hasPage: false collections)
-                    ->orWhereNotIn('collection_id', $collectionsWithoutPages);
-            })
-            ->when($this->listFilters['page_type'] ?? null, function ($query, $pageType): void {
-                if ($pageType === 'collection') {
-                    $query->whereNotNull('collection_id');
-                } elseif ($pageType === 'single') {
-                    $query->whereNull('collection_id');
-                }
-            })
-            ->paginate($this->perPage);
+        $query->where(function ($query) use ($collectionsWithoutPages): void {
+            // Show pages that don't belong to any collection
+            $query->whereNull('collection_id')
+                // OR pages that belong to collections with hasPage: true (exclude hasPage: false collections)
+                ->orWhereNotIn('collection_id', $collectionsWithoutPages);
+        });
+
+        $rows = $this->paginateList($query);
 
         // Parse JSON attributes to show only current language values
         foreach ($rows->items() as $row) {
@@ -135,6 +122,22 @@ new class extends Component {
         }
 
         return $this->buildList($rows);
+    }
+
+    /**
+     * Collection entries vs. single pages — a virtual column, applied by
+     * listQuery() through the closure.
+     */
+    protected function getPageTypeListFilter(): ListFilter
+    {
+        return ListFilter::options(__('Page Type'), 'page_type', [
+            'collection' => __('Collection Pages'),
+            'single' => __('Single Pages'),
+        ])->apply(fn(Builder $query, string $pageType) => match ($pageType) {
+            'collection' => $query->whereNotNull('collection_id'),
+            'single' => $query->whereNull('collection_id'),
+            default => $query,
+        });
     }
 
     /**

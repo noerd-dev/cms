@@ -13,7 +13,7 @@ use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Services\ContentElementEditorService;
 use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Helpers\TenantHelper;
-use Noerd\Services\ColumnFilterParser;
+use Noerd\Support\ColumnFilterParser;
 
 /**
  * Makes a model an EXTENSION of a content: the model's table carries what only

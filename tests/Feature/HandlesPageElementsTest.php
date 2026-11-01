@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Livewire\Livewire;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Services\PageElementService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
@@ -51,6 +52,15 @@ describe('getComponentMapping', function (): void {
     it('maps a discovered element file to its snake_case element key', function (): void {
         expect($this->service->getComponentMapping())
             ->toHaveKey($this->zzTextElementKey(), 'elements.zz-fixture-text');
+    });
+
+    it('mounts an element through the Livewire namespace that owns its module folder', function (): void {
+        // Modules register their components under a namespace only — a bare
+        // `elements.x` name would not resolve for a module element.
+        Livewire::addNamespace('zzcmsfixtures', viewPath: dirname($this->elementFixtureDir()));
+
+        expect($this->service->getComponentMapping())
+            ->toHaveKey($this->zzTextElementKey(), 'zzcmsfixtures::elements.zz-fixture-text');
     });
 
     it('never maps a traversing element key', function (): void {

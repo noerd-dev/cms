@@ -50,6 +50,13 @@
             "providers": [
                 "Noerd\\Cms\\Providers\\CmsServiceProvider"
             ]
+        },
+        "noerd": {
+            "boundary": {
+                "allowed": {
+                    "noerd/website": "the provider binds the website PageElementService purely by container KEY (a string, never a class load) as a fallback"
+                }
+            }
         }
     },
     "config": {

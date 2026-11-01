@@ -5,8 +5,7 @@ use Noerd\Cms\Models\Redirect;
 use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdList;
 
-new class extends Component
-{
+new class extends Component {
     use NoerdList;
 
     public $listModel = Redirect::class;
@@ -15,11 +14,11 @@ new class extends Component
 
     public $detailComponent = 'cms::redirect-detail';
 
+    protected array $listWith = ['targetPage'];
+
     public function listData(): array
     {
-        $rows = $this->listQuery($this->listModel)
-            ->with('targetPage')
-            ->paginate($this->perPage);
+        $rows = $this->paginateList($this->listQuery($this->listModel));
 
         foreach ($rows->items() as $row) {
             $row->target_page_name = RelationFieldDefinition::normalizeDisplayValue($row->targetPage?->name) ?: '';

@@ -1,12 +1,10 @@
 <?php
 
 use Illuminate\Validation\Rule;
-use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Models\Redirect;
 use Noerd\Helpers\TenantHelper;
-use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
@@ -15,22 +13,6 @@ new class extends Component {
     public ?string $detailPrimary = 'redirectId';
 
     public $detailModel = Redirect::class;
-
-    public function mount(): void
-    {
-        $this->initDetail();
-
-        $redirect = new Redirect;
-        if ($this->modelId) {
-            $redirect = Redirect::find($this->modelId) ?? new Redirect;
-        }
-
-        $this->detailData = $redirect->toArray();
-
-        if ($redirect->target_page_id) {
-            $this->pageSelected($redirect->target_page_id, 'detailData.target_page_id');
-        }
-    }
 
     public function store(): void
     {
@@ -61,7 +43,7 @@ new class extends Component {
 
         $duplicate = Redirect::where('tenant_id', $tenantId)
             ->where('source_path', $path)
-            ->when($this->modelId, fn ($query) => $query->where('id', '!=', $this->modelId))
+            ->when($this->modelId, fn($query) => $query->where('id', '!=', $this->modelId))
             ->exists();
 
         if ($duplicate) {
@@ -72,7 +54,7 @@ new class extends Component {
 
         $targetPage = Page::find($this->detailData['target_page_id']);
         $targetSlugs = array_map(
-            fn ($slug): string => Redirect::normalizePath((string) $slug),
+            fn($slug): string => Redirect::normalizePath((string) $slug),
             array_filter((array) ($targetPage?->slug ?? []), 'is_scalar'),
         );
 
@@ -92,22 +74,6 @@ new class extends Component {
         $redirect = Redirect::updateOrCreate(['id' => $this->modelId], $data);
 
         $this->storeProcess($redirect);
-    }
-
-    #[On('pageSelected')]
-    public function pageSelected($value, mixed $context = 'detailData.target_page_id'): void
-    {
-        if ($context !== 'detailData.target_page_id') {
-            return;
-        }
-
-        $page = Page::find($value);
-        if (! $page) {
-            return;
-        }
-
-        $this->detailData['target_page_id'] = $page->id;
-        $this->relationTitles['target_page_id'] = RelationFieldDefinition::normalizeDisplayValue($page->name);
     }
 }; ?>
 

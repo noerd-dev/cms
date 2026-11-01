@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+uses(Noerd\Cms\Tests\TestCase::class);
 
-uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
+/*
+ | Architecture guard: every module the code uses is declared in composer.json,
+ | and nothing the module must never reference appears anywhere in it.
+ | Allowances (with their reason — the website container key) and forbidden
+ | namespaces are declared in composer.json under extra.noerd.boundary — never
+ | in this file.
+ */
 
-it('declares every module dependency it uses', function (): void {
-    // Allowed: the provider binds the website PageElementService purely by
-    // container KEY (string, never a class load) as a fallback.
-    assertModuleDependenciesDeclared(dirname(__DIR__, 2), ['noerd/website']);
+it('keeps its module boundary', function (): void {
+    assertModuleBoundary(dirname(__DIR__, 2));
 });

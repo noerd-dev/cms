@@ -12,7 +12,7 @@ use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
-use Noerd\Services\ColumnFilterParser;
+use Noerd\Support\ColumnFilterParser;
 use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdList;
 
@@ -171,7 +171,7 @@ new class extends Component {
             });
         }
 
-        $rows = $query->paginate($this->perPage);
+        $rows = $this->paginateList($query);
 
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage')

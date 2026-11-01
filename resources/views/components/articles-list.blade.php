@@ -6,8 +6,7 @@ use Noerd\Cms\Models\Article;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Traits\NoerdList;
 
-new class extends Component
-{
+new class extends Component {
     use LanguageFilterTrait;
     use NoerdList;
 
@@ -16,6 +15,8 @@ new class extends Component
     public ?string $detailRoute = 'cms.article.detail';
 
     public $detailComponent = 'cms::article-detail';
+
+    protected array $listWith = ['author'];
 
     public function mount(): void
     {
@@ -53,9 +54,7 @@ new class extends Component
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage');
 
-        $rows = $this->listQuery($this->listModel)
-            ->with('author')
-            ->paginate($this->perPage);
+        $rows = $this->paginateList($this->listQuery($this->listModel));
 
         foreach ($rows->items() as $row) {
             if (is_array($row->title)) {

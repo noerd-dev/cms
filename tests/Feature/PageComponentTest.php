@@ -267,7 +267,7 @@ describe('slug generation', function (): void {
 
         // Open existing page and change title
         $component = Livewire::withUrlParams(['pageId' => $page->id])
-            ->test('page-detail')
+            ->test('cms::page-detail')
             ->set('detailData.name.de', 'Neuer Titel');
 
         // Slug should remain unchanged
@@ -284,7 +284,7 @@ describe('slug generation', function (): void {
         ]);
 
         Livewire::withUrlParams(['pageId' => $page->id])
-            ->test('page-detail')
+            ->test('cms::page-detail')
             ->set('detailData.slug.de', '/manuell-geaendert')
             ->call('store')
             ->assertOk();

@@ -41,7 +41,7 @@ function zzRowDetailElementId(int $tenantId): int
 }
 
 it('loads the row data on first mount', function (): void {
-    Livewire::test('element-collection-row-detail', [
+    Livewire::test('cms::element-collection-row-detail', [
         'modelId' => $this->row->id,
         'collectionKey' => $this->elementCollection->collection_key,
     ])
@@ -52,7 +52,7 @@ it('loads the row data on first mount', function (): void {
 
 it('initializes the row from the entryId query parameter', function (): void {
     Livewire::withQueryParams(['entryId' => $this->row->id])
-        ->test('element-collection-row-detail', [
+        ->test('cms::element-collection-row-detail', [
             'collectionKey' => $this->elementCollection->collection_key,
         ])
         ->assertSet('modelId', $this->row->id)
@@ -60,13 +60,13 @@ it('initializes the row from the entryId query parameter', function (): void {
 });
 
 it('persists changes to the row and keeps the modal open', function (): void {
-    Livewire::test('element-collection-row-detail', [
+    Livewire::test('cms::element-collection-row-detail', [
         'modelId' => $this->row->id,
         'collectionKey' => $this->elementCollection->collection_key,
     ])
         ->set('detailData.text.de', 'Geänderter Text')
         ->call('store')
-        ->assertDispatched('refreshList-collection-entries-list')
+        ->assertDispatched('refreshList-cms::collection-entries-list')
         ->assertDispatched('refreshList-element-collection-field')
         ->assertNotDispatched('closeTopModal');
 
@@ -76,13 +76,13 @@ it('persists changes to the row and keeps the modal open', function (): void {
 it('creates a new row when opened without a modelId and keeps the modal open', function (): void {
     $before = $this->elementCollection->rows()->count();
 
-    Livewire::test('element-collection-row-detail', [
+    Livewire::test('cms::element-collection-row-detail', [
         'modelId' => null,
         'collectionKey' => $this->elementCollection->collection_key,
     ])
         ->set('detailData.text.de', 'Neuer Eintrag')
         ->call('store')
-        ->assertDispatched('refreshList-collection-entries-list')
+        ->assertDispatched('refreshList-cms::collection-entries-list')
         ->assertDispatched('refreshList-element-collection-field')
         ->assertNotDispatched('closeTopModal');
 
@@ -90,7 +90,7 @@ it('creates a new row when opened without a modelId and keeps the modal open', f
 });
 
 it('persists a changed sort value', function (): void {
-    Livewire::test('element-collection-row-detail', [
+    Livewire::test('cms::element-collection-row-detail', [
         'modelId' => $this->row->id,
         'collectionKey' => $this->elementCollection->collection_key,
     ])
@@ -101,12 +101,12 @@ it('persists a changed sort value', function (): void {
 });
 
 it('renders the copy button only for existing rows', function (): void {
-    Livewire::test('element-collection-row-detail', [
+    Livewire::test('cms::element-collection-row-detail', [
         'modelId' => $this->row->id,
         'collectionKey' => $this->elementCollection->collection_key,
     ])->assertSee(__('Copy this entry?'));
 
-    Livewire::test('element-collection-row-detail', [
+    Livewire::test('cms::element-collection-row-detail', [
         'modelId' => null,
         'collectionKey' => $this->elementCollection->collection_key,
     ])->assertDontSee(__('Copy this entry?'));
@@ -123,12 +123,12 @@ it('copies the row, inserts it after the original and switches to the copy', fun
 
     $before = $this->elementCollection->rows()->count();
 
-    $component = Livewire::test('element-collection-row-detail', [
+    $component = Livewire::test('cms::element-collection-row-detail', [
         'modelId' => $this->row->id,
         'collectionKey' => $this->elementCollection->collection_key,
     ])
         ->call('copy')
-        ->assertDispatched('refreshList-collection-entries-list')
+        ->assertDispatched('refreshList-cms::collection-entries-list')
         ->assertDispatched('refreshList-element-collection-field')
         ->assertNotDispatched('closeTopModal');
 
@@ -146,7 +146,7 @@ it('copies the row, inserts it after the original and switches to the copy', fun
 it('deletes the row', function (): void {
     $rowId = $this->row->id;
 
-    Livewire::test('element-collection-row-detail', [
+    Livewire::test('cms::element-collection-row-detail', [
         'modelId' => $rowId,
         'collectionKey' => $this->elementCollection->collection_key,
     ])
@@ -177,7 +177,7 @@ it('stores a picked media file in an image row field only for the matching token
         'disk' => 'media',
     ]);
 
-    $component = Livewire::test('element-collection-row-detail', [
+    $component = Livewire::test('cms::element-collection-row-detail', [
         'modelId' => $row->id,
         'collectionKey' => $collection->collection_key,
     ]);
@@ -216,7 +216,7 @@ it('clears an image row field', function (): void {
     );
     $row = $collection->rows()->first();
 
-    Livewire::test('element-collection-row-detail', [
+    Livewire::test('cms::element-collection-row-detail', [
         'modelId' => $row->id,
         'collectionKey' => $collection->collection_key,
     ])

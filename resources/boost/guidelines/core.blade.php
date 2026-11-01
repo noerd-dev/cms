@@ -115,6 +115,7 @@ public function mount(?string $collectionKey = null): void
 
 - Elements are Blade + YAML pairs in `app-modules/*/resources/views/components/elements/`
 - File naming: kebab-case files (e.g., `text-block-1-column.blade.php`) map to snake_case element keys (`text_block_1_column`)
+- `HandlesPageElements::getComponentMapping()` mounts a module's element through the Livewire namespace that owns its components folder (`cms::elements.rich-text`, `website::elements.slider`) — modules register no bare component names; only an element of the project's `resources/views/components/elements/` or of `noerd_cms.page_elements_path` keeps the bare `elements.{file}` name
 - `FieldHelper::getAllElements()` discovers all elements across modules
 - `FieldHelper::getAllElementsGrouped(?string $contentType)` groups elements by their `group` YAML property, narrowed to the content type (`contentTypes:`, default `cms.page`)
 - Translatable fields are auto-initialized with empty values for each active language
@@ -306,7 +307,7 @@ curl -X POST https://example.test/api/cms/form-requests \
 - `/cms/settings` is a noerd settings page: `cms::settings-page` uses the `NoerdSettingsPage` trait with `public array $settingsModels = ['detailData' => CmsSetting::class];`
 - Layout comes exclusively from `settings/settings-page.yml`; the custom `store()` override adds the validation the YAML cannot express and ends with `validateFromLayout()` / `persistSettings()`
 - The dynamic homepage picker is the CMS-registered `homepage-select` field type (`cms::components.forms.input-homepage-select`)
-- `CmsSetting` is the tenant singleton (`cms_settings`, unique `tenant_id`); `formRecipientsForTenant()` parses the comma-separated recipients, `cookieLifetimeInDays()` resolves the consent duration with config fallback
+- `CmsSetting` is the tenant singleton (`cms_settings`, unique `tenant_id`, `TenantSingleton`: read through `CmsSetting::forTenant()`, `tenantDefaults()` before the first save); `formRecipientsForTenant()` parses the comma-separated recipients, `cookieLifetimeInDays()` resolves the consent duration with config fallback
 
 ### Translations
 

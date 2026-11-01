@@ -7,6 +7,7 @@ namespace Noerd\Cms\Traits;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Helpers\TenantHelper;
+use Noerd\Support\ListFilter;
 
 trait LanguageFilterTrait
 {
@@ -76,25 +77,19 @@ trait LanguageFilterTrait
             ->count() > 1;
     }
 
-    protected function getLanguageListFilter(): array
+    /**
+     * The language dropdown of a list: one option per active language of the
+     * tenant, the default language first. No CMS table has a `language` column —
+     * the language picks which translation a list shows, so the filter is
+     * manual: the list reads `$this->listFilters['language']` itself.
+     */
+    protected function getLanguageListFilter(): ListFilter
     {
-        $filter = [
-            'label' => __('Language'),
-            'column' => 'language',
-            'type' => 'Picklist',
-            'options' => [],
-        ];
-
-        $languages = CmsLanguage::where('tenant_id', TenantHelper::currentTenantId())
+        return ListFilter::options(__('Language'), 'language', fn(): array => CmsLanguage::where('tenant_id', TenantHelper::currentTenantId())
             ->where('is_active', true)
             ->orderBy('is_default', 'desc')
             ->orderBy('name', 'asc')
-            ->get();
-
-        foreach ($languages as $language) {
-            $filter['options'][$language->code] = $language->name;
-        }
-
-        return $filter;
+            ->pluck('name', 'code')
+            ->all())->manual();
     }
 }

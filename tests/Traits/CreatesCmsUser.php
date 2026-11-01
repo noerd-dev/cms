@@ -11,28 +11,36 @@ use Noerd\Helpers\NoerdAuth;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Models\NoerdUser;
 use Noerd\Models\Tenant;
-use Noerd\Models\TenantApp;
 
 /**
- * The single tenant/user/language fixture of the CMS suite. Every test that
- * needs a tenant running the CMS app builds it here — never by hand.
+ * The CMS-specific part of the suite's fixtures on top of the core's
+ * createNoerdUserForApp(): the tenant's default language and the language
+ * helpers. Every test that needs a tenant running the CMS app builds it here —
+ * never by hand.
  */
 trait CreatesCmsUser
 {
     /**
-     * A tenant running the CMS app plus a user on it (optionally with a
-     * profile); tenant and app are selected, the default language exists.
+     * The tenant_apps row of the CMS in its canonical shape.
+     */
+    private const array CMS_APP_ATTRIBUTES = [
+        'title' => 'CMS',
+        'icon' => 'heroicon:outline:rectangle-group',
+        'route' => 'cms.dashboard',
+    ];
+
+    /**
+     * createNoerdUserForApp('CMS') (a tenant running the CMS app plus a user on
+     * it, optionally with a profile; tenant and app selected) with the tenant's
+     * default language in place.
      */
     protected function withCmsModule(?Profile $profile = null): NoerdUser
     {
-        $tenant = $this->createCmsTenant();
+        $user = createNoerdUserForApp('CMS', profile: $profile, appAttributes: self::CMS_APP_ATTRIBUTES);
 
-        $user = NoerdUser::factory()->create();
-        $user->tenants()->attach($tenant->id, $profile ? ['profile_key' => $profile->value] : []);
-        $user->update(['selected_tenant_id' => $tenant->id]);
-
-        TenantHelper::setSelectedTenantId($tenant->id);
-        TenantHelper::setSelectedApp('CMS');
+        // The Tenant::created hook seeds the default language; make sure it
+        // exists even when the provider hook did not run.
+        CmsLanguage::ensureDefaultLanguageForTenant((int) $user->selected_tenant_id);
         CmsLanguageCodes::clearCache();
 
         return $user;
@@ -64,17 +72,7 @@ trait CreatesCmsUser
     protected function createCmsTenant(): Tenant
     {
         $tenant = Tenant::factory()->create();
-
-        $cmsApp = TenantApp::firstOrCreate(
-            ['name' => 'CMS'],
-            [
-                'title' => 'CMS',
-                'icon' => 'heroicon:outline:rectangle-group',
-                'route' => 'cms.dashboard',
-                'is_active' => true,
-            ],
-        );
-        $tenant->tenantApps()->syncWithoutDetaching([$cmsApp->id]);
+        $tenant->assignApp(ensureTenantApp('CMS', self::CMS_APP_ATTRIBUTES));
 
         // The Tenant::created hook seeds the default language; make sure it
         // exists even when the provider hook did not run.

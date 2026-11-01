@@ -47,7 +47,7 @@ it('creates quick-menu.yml with the website link button when the file does not e
     expect($config['buttons'])->toHaveCount(1)
         ->and($config['buttons'][0])->toBe([
             'apps' => ['CMS'],
-            'component' => 'quick-menu.website-link',
+            'component' => 'cms::quick-menu.website-link',
         ]);
 });
 
@@ -66,13 +66,29 @@ it('migrates a legacy policy entry so the removed canCms gate no longer hides th
         ->and($config['buttons'][0])->toBe(['policy' => 'canOther', 'component' => 'quick-menu.other-link'])
         ->and($config['buttons'][1])->toBe([
             'apps' => ['CMS'],
-            'component' => 'quick-menu.website-link',
+            'component' => 'cms::quick-menu.website-link',
         ]);
+});
+
+it('renames an entry still naming the former bare component', function (): void {
+    File::put($this->quickMenuPath, Yaml::dump([
+        'buttons' => [
+            ['apps' => ['CMS'], 'component' => 'quick-menu.website-link'],
+            ['apps' => ['HR'], 'component' => 'hr::quick-menu.pending-absences'],
+        ],
+    ], 10, 2));
+
+    runZzCmsQuickMenuUpdate();
+
+    expect(Yaml::parseFile($this->quickMenuPath)['buttons'])->toBe([
+        ['apps' => ['CMS'], 'component' => 'cms::quick-menu.website-link'],
+        ['apps' => ['HR'], 'component' => 'hr::quick-menu.pending-absences'],
+    ]);
 });
 
 it('leaves an already migrated entry untouched', function (): void {
     $buttons = [
-        ['apps' => ['CMS'], 'component' => 'quick-menu.website-link'],
+        ['apps' => ['CMS'], 'component' => 'cms::quick-menu.website-link'],
     ];
     File::put($this->quickMenuPath, Yaml::dump(['buttons' => $buttons], 10, 2));
 

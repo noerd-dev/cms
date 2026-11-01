@@ -6,12 +6,7 @@ namespace Noerd\Cms\Commands;
 
 class CmsUpdateCommand extends CmsInstallCommand
 {
-    protected $signature = 'noerd:update-cms {--force : Overwrite existing files without asking}';
+    protected $signature = 'noerd:update-cms';
 
     protected $description = 'Update CMS YML configuration files';
-
-    public function handle(): int
-    {
-        return $this->runModuleUpdate();
-    }
 }

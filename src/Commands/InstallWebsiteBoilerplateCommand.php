@@ -7,9 +7,10 @@ namespace Noerd\Cms\Commands;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Noerd\Cms\Commands\Concerns\EnsuresWebsiteLinkButton;
 use Noerd\Commands\Concerns\PreparesModuleWorkspace;
 use Noerd\Commands\Concerns\WritesHostAppConfigs;
-use Noerd\Support\ModuleInstallContext;
+use Noerd\Commands\Support\ModuleInstallContext;
 
 /**
  * Copies the website boilerplate the CMS ships into app-modules/website, where
@@ -18,6 +19,7 @@ use Noerd\Support\ModuleInstallContext;
  */
 class InstallWebsiteBoilerplateCommand extends Command
 {
+    use EnsuresWebsiteLinkButton;
     use PreparesModuleWorkspace;
     use WritesHostAppConfigs;
 
@@ -69,7 +71,7 @@ class InstallWebsiteBoilerplateCommand extends Command
             // the composer run itself is left to the operator — shelling out to
             // composer from inside artisan is fragile (PHP binary, memory limit, TTY).
             $this->prepareModuleWorkspace();
-            $this->ensureQuickMenuButton(['apps' => ['CMS'], 'component' => 'quick-menu.website-link']);
+            $this->ensureWebsiteLinkButton();
 
             $this->info('Website boilerplate successfully installed!');
             $this->line('');

@@ -12,8 +12,7 @@ use Noerd\Facades\Noerd;
 use Noerd\Media\Models\Media;
 use Noerd\Traits\NoerdDetail;
 
-new class extends Component
-{
+new class extends Component {
     use LanguageFilterTrait;
     use NoerdDetail;
 
@@ -74,7 +73,7 @@ new class extends Component
         $this->modelId = $page->id;
 
         $this->storeProcess($page);
-        $this->dispatch('refreshList-collection-entries-list');
+        $this->dispatch('refreshList-cms::collection-entries-list');
         $this->dispatch('refreshList-element-collection-field');
     }
 
@@ -95,7 +94,7 @@ new class extends Component
         $this->modelId = $newRow->id;
         $this->detailData['sort'] = $newRow->sort;
 
-        $this->dispatch('refreshList-collection-entries-list');
+        $this->dispatch('refreshList-cms::collection-entries-list');
         $this->dispatch('refreshList-element-collection-field');
         $this->showSuccessIndicator = true;
     }
@@ -107,7 +106,7 @@ new class extends Component
         }
 
         $this->dispatch('refreshList-element-collection-field');
-        $this->closeModalProcess('collection-entries-list');
+        $this->closeModalProcess('cms::collection-entries-list');
     }
 
     /**

@@ -75,7 +75,12 @@ trait HandlesPageElements
     }
 
     /**
-     * Get component mapping for element keys to Volt component paths
+     * Element key → Livewire component name. A module's elements are mounted
+     * through the Livewire namespace that owns its components folder
+     * (`cms::elements.rich-text`) — modules register no bare component names.
+     * An element in a folder no namespace owns (the project's
+     * resources/views/components, the configured custom path) keeps its bare
+     * name (`elements.text-block`), which Livewire resolves there itself.
      */
     public function getComponentMapping(): array
     {
@@ -100,9 +105,14 @@ trait HandlesPageElements
             $uniqueFiles[$fileName] = $filePath;
         }
 
+        $namespaces = $this->livewireNamespacesByPath();
+
         foreach ($uniqueFiles as $fileName => $filePath) {
             $elementKey = str_replace('-', '_', $fileName);
-            $mapping[$elementKey] = 'elements.' . $fileName;
+            $componentsDir = realpath(dirname($filePath, 2)) ?: dirname($filePath, 2);
+            $prefix = isset($namespaces[$componentsDir]) ? $namespaces[$componentsDir] . '::' : '';
+
+            $mapping[$elementKey] = $prefix . 'elements.' . $fileName;
         }
 
         return $mapping;
@@ -195,5 +205,29 @@ trait HandlesPageElements
         // Derived from the configured CMS languages, so a tenant-added language
         // (e.g. Danish) is recognised without touching the framework.
         return CmsLanguageCodes::isLanguageMap($array);
+    }
+
+    /**
+     * The registered Livewire view namespaces keyed by their (real) folder.
+     * Livewire's finder offers no getter for them, so the map is read from it.
+     *
+     * @return array<string, string>
+     */
+    private function livewireNamespacesByPath(): array
+    {
+        if (! app()->bound('livewire.finder')) {
+            return [];
+        }
+
+        $viewNamespaces = (fn(): array => $this->viewNamespaces ?? [])->call(app('livewire.finder'));
+
+        $byPath = [];
+        foreach ($viewNamespaces as $namespace => $viewPath) {
+            if (is_string($viewPath)) {
+                $byPath[realpath($viewPath) ?: mb_rtrim($viewPath, '/')] = (string) $namespace;
+            }
+        }
+
+        return $byPath;
     }
 }

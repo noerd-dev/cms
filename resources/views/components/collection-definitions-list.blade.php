@@ -2,12 +2,12 @@
 
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Support\CollectionDefinitionData;
 use Noerd\Helpers\TenantHelper;
+use Noerd\Support\ListFilter;
 use Noerd\Traits\NoerdList;
 
 new class extends Component {
@@ -22,28 +22,6 @@ new class extends Component {
      * reading and bulk-deleting this list is declared explicitly.
      */
     public ?string $objectPermissionModel = CollectionDefinition::class;
-
-    public function mount(): void
-    {
-        $this->mountList();
-    }
-
-    #[Computed]
-    public function tableFilters(): array
-    {
-        return [
-            [
-                'label' => __('Type'),
-                'column' => 'has_page',
-                'type' => 'Picklist',
-                'options' => [
-                    '' => __('All types'),
-                    'page' => __('With page'),
-                    'data' => __('Data only'),
-                ],
-            ],
-        ];
-    }
 
     public function listData(): array
     {
@@ -129,6 +107,18 @@ new class extends Component {
                 ['field' => 'createdBy', 'label' => 'Created by'],
             ],
         ]);
+    }
+
+    /**
+     * Collections whose entries are pages vs. data-only collections — the rows
+     * come from the repository, so listData() reads the selection itself.
+     */
+    protected function getHasPageListFilter(): ListFilter
+    {
+        return ListFilter::options(__('Type'), 'has_page', [
+            'page' => __('With page'),
+            'data' => __('Data only'),
+        ])->manual();
     }
 } ?>
 

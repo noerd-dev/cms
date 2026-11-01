@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Noerd\Cms\Providers;
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\ServiceProvider;
-use Livewire\Livewire;
 use Noerd\Cms\Commands\CmsInstallCommand;
 use Noerd\Cms\Commands\CmsUpdateCommand;
 use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
@@ -26,20 +24,28 @@ use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Support\CollectionSelectOptions;
 use Noerd\Cms\Support\ContentTypeRegistry;
 use Noerd\Models\Tenant;
+use Noerd\Providers\NoerdModuleServiceProvider;
 use Noerd\Services\DynamicNavigationRegistry;
-use Noerd\Services\FieldTypeRegistry;
-use Noerd\Services\RelationFieldRegistry;
 use Noerd\Support\ComponentAccessGuard;
 use Noerd\Support\FieldTypeDefinition;
 use Noerd\Support\RelationFieldDefinition;
 
-class CmsServiceProvider extends ServiceProvider
+class CmsServiceProvider extends NoerdModuleServiceProvider
 {
-    public function register(): void
-    {
-        // Merge configuration early so container bindings can read it during resolution.
-        $this->mergeConfigFrom(__DIR__ . '/../../config/noerd_cms.php', 'noerd_cms');
+    protected string $moduleKey = 'cms';
 
+    protected array $commands = [
+        CmsInstallCommand::class,
+        CmsUpdateCommand::class,
+        InstallWebsiteBoilerplateCommand::class,
+        SyncFormTypesCommand::class,
+    ];
+
+    /** Merged before registerModule(), so the container bindings can read it. */
+    protected array $configs = ['noerd_cms'];
+
+    protected function registerModule(): void
+    {
         // Decorated so element collections resolve their schema from the owning
         // DB collection's stored element_fields.
         $this->app->singleton(CollectionDefinitionRepositoryContract::class, fn($app) => new ElementAwareCollectionDefinitionRepository(
@@ -65,23 +71,83 @@ class CmsServiceProvider extends ServiceProvider
         }
     }
 
-    public function boot(): void
+    /**
+     * @return list<string>
+     */
+    protected function routeFiles(): array
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
-        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'cms');
-        Livewire::addNamespace('cms', viewPath: __DIR__ . '/../../resources/views/components');
-        Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/components');
-        $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
-        $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-routes.php');
-        $this->loadRoutesFrom(__DIR__ . '/../../routes/cms-api.php');
+        return [
+            $this->modulePath('routes/cms-routes.php'),
+            $this->modulePath('routes/cms-api.php'),
+        ];
+    }
+
+    /**
+     * @return array<string, FieldTypeDefinition>
+     */
+    protected function fieldTypes(): array
+    {
+        return [
+            // Both selects resolve their options here (once per render, never in
+            // the template) and render through the active theme's select element.
+            'collection-select' => FieldTypeDefinition::include(
+                'cms::components.forms.input-collection-select',
+                resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
+                    'field' => $field + ['options' => CollectionSelectOptions::collections($field['required_fields'] ?? [])],
+                ],
+            ),
+            // Dynamic page select used by the CMS settings page (homepage picker).
+            'homepage-select' => FieldTypeDefinition::include(
+                'cms::components.forms.input-homepage-select',
+                resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
+                    'field' => $field + ['options' => CollectionSelectOptions::pages(), 'placeholder' => 'None selected'],
+                ],
+            ),
+            'element-collection' => FieldTypeDefinition::livewire(
+                'cms::element-collection-field',
+                resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
+                    // A page-element editor exposes an `elementKey` property; a collection
+                    // entry editor (page-detail, element-collection-row-detail) does not.
+                    'ownerType' => (is_object($component) && property_exists($component, 'elementKey')) ? 'element_page' : 'page',
+                    'ownerId' => $modelId,
+                    'fieldName' => str_replace('detailData.', '', (string) ($field['name'] ?? '')),
+                    'label' => (string) ($field['label'] ?? ''),
+                    'rowFields' => $field['fields'] ?? [],
+                ],
+                keyResolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): string => 'element-' . str_replace('detailData.', '', (string) ($field['name'] ?? '')) . '-' . ($modelId ?? 'new'),
+            ),
+        ];
+    }
+
+    /**
+     * @return array<string, RelationFieldDefinition>
+     */
+    protected function relationFields(): array
+    {
+        return [
+            'pageRelation' => RelationFieldDefinition::model(
+                listComponent: 'cms::pages-list',
+                detailComponent: 'cms::page-detail',
+                detailRoute: 'cms.page.detail',
+                modelClass: Page::class,
+                titleResolver: fn(Page $page): string => RelationFieldDefinition::normalizeDisplayValue($page->name),
+            ),
+            'authorRelation' => RelationFieldDefinition::model(
+                listComponent: 'cms::authors-list',
+                detailComponent: 'cms::author-detail',
+                detailRoute: 'cms.author.detail',
+                modelClass: Author::class,
+                titleResolver: 'name',
+            ),
+        ];
+    }
+
+    protected function bootModule(): void
+    {
         $this->registerAssetRoute();
 
         $router = $this->app['router'];
         $router->aliasMiddleware('cms_api', CmsApiAuth::class);
-
-        $this->publishes([
-            __DIR__ . '/../../config/noerd_cms.php' => config_path('noerd_cms.php'),
-        ], 'cms-config');
 
         // Tenant-wide configuration screens are admin-only. The guard runs on
         // every mount (route, noerdModal event, component-page), so the routes
@@ -95,68 +161,10 @@ class CmsServiceProvider extends ServiceProvider
             'cms::collection-definition-detail',
         ]);
 
-        // Register commands
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                CmsInstallCommand::class,
-                CmsUpdateCommand::class,
-                InstallWebsiteBoilerplateCommand::class,
-                SyncFormTypesCommand::class,
-            ]);
-        }
-
         // Register dynamic navigation providers (resolved via container for constructor injection)
         $registry = $this->app->make(DynamicNavigationRegistry::class);
         $registry->register($this->app->make(CollectionsNavigationProvider::class));
         $registry->register($this->app->make(PageCollectionsNavigationProvider::class));
-
-        $fieldTypeRegistry = $this->app->make(FieldTypeRegistry::class);
-        $relationFieldRegistry = $this->app->make(RelationFieldRegistry::class);
-        // Both selects resolve their options here (once per render, never in
-        // the template) and render through the active theme's select element.
-        $fieldTypeRegistry->register('collection-select', FieldTypeDefinition::include(
-            'cms::components.forms.input-collection-select',
-            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
-                'field' => $field + ['options' => CollectionSelectOptions::collections($field['required_fields'] ?? [])],
-            ],
-        ));
-
-        // Dynamic page select used by the CMS settings page (homepage picker).
-        $fieldTypeRegistry->register('homepage-select', FieldTypeDefinition::include(
-            'cms::components.forms.input-homepage-select',
-            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
-                'field' => $field + ['options' => CollectionSelectOptions::pages(), 'placeholder' => 'None selected'],
-            ],
-        ));
-
-        $fieldTypeRegistry->register('element-collection', FieldTypeDefinition::livewire(
-            'cms::element-collection-field',
-            resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
-                // A page-element editor exposes an `elementKey` property; a collection
-                // entry editor (page-detail, element-collection-row-detail) does not.
-                'ownerType' => (is_object($component) && property_exists($component, 'elementKey')) ? 'element_page' : 'page',
-                'ownerId' => $modelId,
-                'fieldName' => str_replace('detailData.', '', (string) ($field['name'] ?? '')),
-                'label' => (string) ($field['label'] ?? ''),
-                'rowFields' => $field['fields'] ?? [],
-            ],
-            keyResolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): string => 'element-' . str_replace('detailData.', '', (string) ($field['name'] ?? '')) . '-' . ($modelId ?? 'new'),
-        ));
-
-        $relationFieldRegistry->register('pageRelation', RelationFieldDefinition::model(
-            listComponent: 'cms::pages-list',
-            detailComponent: 'cms::page-detail',
-            detailRoute: 'cms.page.detail',
-            modelClass: Page::class,
-            titleResolver: fn(Page $page): string => RelationFieldDefinition::normalizeDisplayValue($page->name),
-        ));
-        $relationFieldRegistry->register('authorRelation', RelationFieldDefinition::model(
-            listComponent: 'cms::authors-list',
-            detailComponent: 'cms::author-detail',
-            detailRoute: 'cms.author.detail',
-            modelClass: Author::class,
-            titleResolver: 'name',
-        ));
 
         $this->app->make(ContentTypeRegistry::class)->register(
             key: Page::contentType(),

@@ -44,7 +44,7 @@ function zzCmsWebsiteLinkButtons(array $config): array
 {
     return array_values(array_filter(
         $config['buttons'] ?? [],
-        fn(array $button): bool => ($button['component'] ?? null) === 'quick-menu.website-link',
+        fn(array $button): bool => ($button['component'] ?? null) === 'cms::quick-menu.website-link',
     ));
 }
 
@@ -54,8 +54,7 @@ function zzCmsRunWebsiteQuickMenuInstall(): void
     $command->setLaravel(app());
     $command->setOutput(new OutputStyle(new ArrayInput([]), new NullOutput()));
 
-    (new ReflectionMethod($command, 'ensureQuickMenuButton'))
-        ->invoke($command, ['apps' => ['CMS'], 'component' => 'quick-menu.website-link']);
+    (new ReflectionMethod($command, 'ensureWebsiteLinkButton'))->invoke($command);
 }
 
 it('creates quick-menu.yml with the website link button when the file does not exist', function (): void {
@@ -90,7 +89,8 @@ it('migrates a legacy policy-gated entry to the apps key', function (): void {
     $buttons = zzCmsWebsiteLinkButtons(Yaml::parseFile($this->configPath));
 
     expect($buttons)->toHaveCount(1)
-        ->and($buttons[0])->toBe(['apps' => ['CMS'], 'component' => 'quick-menu.website-link']);
+        ->and($buttons[0])->toBe(['apps' => ['CMS'], 'component' => 'cms::quick-menu.website-link'])
+        ->and(Yaml::parseFile($this->configPath)['buttons'])->toHaveCount(1);
 });
 
 it('handles an existing file without a buttons key', function (): void {

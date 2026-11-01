@@ -19,6 +19,8 @@ as its `app-modules/website` frontend module.
 - `app-configs/cms/` — YAML templates (lists/, details/, settings/, forms/, navigation.yml);
   the installed copy lives in the host's `app-configs/cms/` — change both
 - `resources/views/components/` — Livewire single-file components, flat, Livewire namespace `cms::`
+  only (the provider is a `NoerdModuleServiceProvider` and registers no bare names — reference
+  every component as `cms::…`, the quick-menu button as `cms::quick-menu.website-link`)
 - `src/Models/`, `src/Services/`, `src/Repositories/` (collection definitions),
   `src/Helpers/` (FieldHelper, CollectionHelper), `src/Http/` (form API),
   `src/Commands/` (`CmsInstallCommand`, `CmsUpdateCommand`, `SyncFormTypesCommand`,
@@ -54,9 +56,11 @@ as its `app-modules/website` frontend module.
 - Tests: `php artisan test --compact app-modules/cms/tests` inside a host (Pest; tests prove
   mechanics, never the current YAML configuration; run sequentially — never in parallel with
   other suites when the test database is shared) or standalone with `composer install &&
-  vendor/bin/pest` (Orchestra Testbench + sqlite via `Noerd\Cms\Tests\TestCase`, the setup CI
+  vendor/bin/pest` (Orchestra Testbench + sqlite via `Noerd\Cms\Tests\TestCase`, a
+  `Noerd\Tests\ModuleTestCase` with the media, communication and CMS providers — the setup CI
   runs). Every test file binds `Noerd\Cms\Tests\TestCase` itself; the fixtures are
-  `CreatesCmsUser`, `CreatesElementFixtures` and `CreatesCollectionDefinitions`
+  `CreatesCmsUser` (the core's `createNoerdUserForApp('CMS')` plus the tenant's languages),
+  `CreatesElementFixtures` and `CreatesCollectionDefinitions`
 - Format from the host project root with an explicit path: `vendor/bin/pint app-modules/cms`
   (a plain `--dirty` run silently skips submodule files)
 - Keep the module independent of other optional modules. The ONLY allowed website touchpoint

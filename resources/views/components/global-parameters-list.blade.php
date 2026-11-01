@@ -6,8 +6,7 @@ use Noerd\Cms\Models\GlobalParameter;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Traits\NoerdList;
 
-new class extends Component
-{
+new class extends Component {
     use LanguageFilterTrait;
     use NoerdList;
 
@@ -53,7 +52,7 @@ new class extends Component
 
     public function listData(): array
     {
-        $rows = $this->listQuery($this->listModel)->paginate($this->perPage);
+        $rows = $this->paginateList($this->listQuery($this->listModel));
 
         $selectedLanguage = $this->listFilters['language']
             ?? session('selectedLanguage')

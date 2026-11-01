@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Models\Article;
@@ -9,58 +10,13 @@ use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Traits\NoerdDetail;
 
-new class extends Component
-{
+new class extends Component {
     use LanguageFilterTrait;
     use NoerdDetail;
 
     public ?string $detailPrimary = 'articleId';
 
     public $detailModel = Article::class;
-
-    public function mount(): void
-    {
-        $this->initDetail();
-
-        $article = new Article;
-        if ($this->modelId) {
-            $article = Article::find($this->modelId) ?? new Article;
-        }
-
-        $this->detailData = $article->toArray();
-
-        $activeLangCodes = $this->activeLanguageCodes();
-
-        // Initialize title as translatable array
-        if (! isset($this->detailData['title']) || ! is_array($this->detailData['title'])) {
-            $this->detailData['title'] = array_fill_keys($activeLangCodes, '');
-        } else {
-            foreach ($activeLangCodes as $lang) {
-                if (! isset($this->detailData['title'][$lang])) {
-                    $this->detailData['title'][$lang] = '';
-                }
-            }
-        }
-
-        // Initialize slug as translatable array
-        if (! isset($this->detailData['slug']) || ! is_array($this->detailData['slug'])) {
-            $this->detailData['slug'] = array_fill_keys($activeLangCodes, '');
-        } else {
-            foreach ($activeLangCodes as $lang) {
-                if (! isset($this->detailData['slug'][$lang])) {
-                    $this->detailData['slug'][$lang] = '';
-                }
-            }
-        }
-
-        // Load author relation title
-        if (! empty($this->detailData['author_id'])) {
-            $author = Author::find($this->detailData['author_id']);
-            if ($author) {
-                $this->relationTitles['author_id'] = $author->name;
-            }
-        }
-    }
 
     public function generateSlug(string $name, ?string $languageCode = null): string
     {
@@ -137,6 +93,22 @@ new class extends Component
         );
 
         $this->storeProcess($article);
+    }
+
+    /**
+     * Title and slug are translatable: every active language gets its key.
+     */
+    protected function detailLoaded(Model $article): void
+    {
+        foreach (['title', 'slug'] as $field) {
+            $values = is_array($this->detailData[$field] ?? null) ? $this->detailData[$field] : [];
+
+            foreach ($this->activeLanguageCodes() as $lang) {
+                $values[$lang] ??= '';
+            }
+
+            $this->detailData[$field] = $values;
+        }
     }
 } ?>
 

@@ -129,7 +129,7 @@ it('renders the detail form with the selected target page', function (): void {
 
     Livewire::test('cms::redirect-detail', ['modelId' => $redirect->id])
         ->assertSet('detailData.source_path', '/agentur')
-        ->assertSet('relationTitles.target_page_id', 'Über uns')
-        // the pageRelation field shows the resolved page name
+        ->assertSet('detailData.target_page_id', $this->targetPage->id)
+        // the pageRelation field resolves and shows the page name itself
         ->assertSee('Über uns');
 });

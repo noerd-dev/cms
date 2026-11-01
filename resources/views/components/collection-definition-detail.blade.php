@@ -14,8 +14,7 @@ use Noerd\Facades\Noerd;
 use Noerd\Helpers\AccessHelper;
 use Noerd\Traits\NoerdDetail;
 
-new class extends Component
-{
+new class extends Component {
     use NoerdDetail;
 
     public ?string $detailPrimary = 'collectionDefinitionId';
@@ -74,7 +73,7 @@ new class extends Component
                 $this->detailData['hasPage'] = $definition->hasPage;
 
                 $this->fields = array_map(
-                    fn (array $field): array => $field + ['_key' => uniqid('field_', true)],
+                    fn(array $field): array => $field + ['_key' => uniqid('field_', true)],
                     $definition->fields,
                 );
                 foreach ($this->fields as $index => $field) {
@@ -173,7 +172,7 @@ new class extends Component
             titleList: $this->detailData['titleList'],
             description: $this->detailData['description'] ?: null,
             hasPage: (bool) $this->detailData['hasPage'],
-            fields: array_values(array_map(fn (array $field): array => Arr::except($field, ['_key']), $this->fields)),
+            fields: array_values(array_map(fn(array $field): array => Arr::except($field, ['_key']), $this->fields)),
         );
 
         $repository->save(
@@ -208,7 +207,7 @@ new class extends Component
         $this->showRenameConfirmation = false;
 
         $this->dispatch('listRefresh');
-        $this->dispatch('refreshList-collection-definitions-list');
+        $this->dispatch('refreshList-cms::collection-definitions-list');
         $this->showSuccessIndicator = true;
     }
 
@@ -228,6 +227,59 @@ new class extends Component
         $this->showRenameConfirmation = false;
         $this->syncOriginalFieldNames();
         $this->store();
+    }
+
+    public function copy(): void
+    {
+        // copy() is not covered by the generic store/delete guard.
+        if (! $this->modelId || ! AccessHelper::canCreateObject(CollectionDefinition::class)) {
+            return;
+        }
+
+        $repository = app(CollectionDefinitionRepositoryContract::class);
+
+        try {
+            $newFilename = $repository->copy($this->modelId);
+        } catch (\RuntimeException $e) {
+            $this->addError('detailData.filename', __('A file with this name already exists.'));
+
+            return;
+        }
+
+        // Mirror the new definition into the collections instance table so it
+        // shows up with the correct creator in lists.
+        $newDefinition = $repository->find($newFilename);
+        if ($newDefinition) {
+            Collection::firstOrCreate([
+                'tenant_id' => Auth::user()->selected_tenant_id,
+                'collection_key' => $newDefinition->key,
+            ], [
+                'name' => $newDefinition->titleList,
+                'created_by' => Auth::id(),
+            ]);
+        }
+
+        $this->dispatch('listRefresh');
+        $this->dispatch('refreshList-cms::collection-definitions-list');
+        $this->closeModalProcess('cms::collection-definitions-list');
+    }
+
+    public function delete(): void
+    {
+        if (! $this->modelId) {
+            return;
+        }
+
+        $repository = app(CollectionDefinitionRepositoryContract::class);
+
+        $collectionKey = mb_strtoupper(str_replace('-', '_', $this->modelId));
+        Collection::where('tenant_id', Auth::user()->selected_tenant_id)
+            ->where('collection_key', $collectionKey)
+            ->delete();
+
+        $repository->delete($this->modelId);
+
+        $this->closeModalProcess('cms::collection-definitions-list');
     }
 
     private function syncOriginalFieldNames(): void
@@ -272,59 +324,6 @@ new class extends Component
         }
 
         $this->pendingRenames = [];
-    }
-
-    public function copy(): void
-    {
-        // copy() is not covered by the generic store/delete guard.
-        if (! $this->modelId || ! AccessHelper::canCreateObject(CollectionDefinition::class)) {
-            return;
-        }
-
-        $repository = app(CollectionDefinitionRepositoryContract::class);
-
-        try {
-            $newFilename = $repository->copy($this->modelId);
-        } catch (\RuntimeException $e) {
-            $this->addError('detailData.filename', __('A file with this name already exists.'));
-
-            return;
-        }
-
-        // Mirror the new definition into the collections instance table so it
-        // shows up with the correct creator in lists.
-        $newDefinition = $repository->find($newFilename);
-        if ($newDefinition) {
-            Collection::firstOrCreate([
-                'tenant_id' => Auth::user()->selected_tenant_id,
-                'collection_key' => $newDefinition->key,
-            ], [
-                'name' => $newDefinition->titleList,
-                'created_by' => Auth::id(),
-            ]);
-        }
-
-        $this->dispatch('listRefresh');
-        $this->dispatch('refreshList-collection-definitions-list');
-        $this->closeModalProcess('collection-definitions-list');
-    }
-
-    public function delete(): void
-    {
-        if (! $this->modelId) {
-            return;
-        }
-
-        $repository = app(CollectionDefinitionRepositoryContract::class);
-
-        $collectionKey = mb_strtoupper(str_replace('-', '_', $this->modelId));
-        Collection::where('tenant_id', Auth::user()->selected_tenant_id)
-            ->where('collection_key', $collectionKey)
-            ->delete();
-
-        $repository->delete($this->modelId);
-
-        $this->closeModalProcess('collection-definitions-list');
     }
 } ?>
 

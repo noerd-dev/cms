@@ -295,7 +295,7 @@ new class extends Component {
         $this->reloadContentDocument();
 
         $this->dispatch('listRefresh');
-        $this->dispatch('refreshList-pages-list');
+        $this->dispatch('refreshList-cms::pages-list');
         $this->showSuccessIndicator = true;
     }
 

@@ -28,7 +28,7 @@ afterEach(function (): void {
 });
 
 it('shows a save-first hint when the owner is not yet saved', function (): void {
-    Livewire::test('element-collection-field', [
+    Livewire::test('cms::element-collection-field', [
         'ownerType' => ElementCollectionService::OWNER_PAGE,
         'ownerId' => null,
         'fieldName' => 'triggers_items',
@@ -40,7 +40,7 @@ it('shows a save-first hint when the owner is not yet saved', function (): void 
 it('creates a page-owned element collection and opens the modal on manage()', function (): void {
     $owner = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Demo']]);
 
-    Livewire::test('element-collection-field', [
+    Livewire::test('cms::element-collection-field', [
         'ownerType' => ElementCollectionService::OWNER_PAGE,
         'ownerId' => $owner->id,
         'fieldName' => 'triggers_items',
@@ -63,7 +63,7 @@ it('creates an element_page-owned element collection on manage()', function (): 
     $page = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Page']]);
     $element = ContentElement::create(['content_id' => $page->content_id, 'element_key' => 'team_section', 'data' => [], 'sort' => 0]);
 
-    Livewire::test('element-collection-field', [
+    Livewire::test('cms::element-collection-field', [
         'ownerType' => ElementCollectionService::OWNER_ELEMENT_PAGE,
         'ownerId' => $element->id,
         'fieldName' => 'members',
@@ -129,7 +129,7 @@ it('renders the element-collection field through the entry editor instead of [ob
     // has to arrive as a query param — as a mount arg the editor would open blank and
     // the element-collection field would only show its "save first" hint.
     Livewire::withQueryParams(['pageId' => $entry->id])
-        ->test('page-detail', ['collectionKey' => 'services'])
+        ->test('cms::page-detail', ['collectionKey' => 'services'])
         ->assertSee('Titel')
         ->assertSee('Triggers')
         ->assertSee(__('Manage'))

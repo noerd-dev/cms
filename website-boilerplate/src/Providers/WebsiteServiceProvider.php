@@ -4,37 +4,41 @@ declare(strict_types=1);
 
 namespace Noerd\Website\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Noerd\Providers\NoerdModuleServiceProvider;
 use Noerd\Website\Controllers\WebsiteController;
 use Noerd\Website\Middleware\WebsiteMiddleware;
 use Noerd\Website\Models\Navigation;
 use Noerd\Website\Services\PageElementService;
 use Noerd\Website\Services\WebsiteService;
 
-class WebsiteServiceProvider extends ServiceProvider
+/**
+ * Views, the `website::` Livewire namespace, translations and
+ * routes/website-routes.php are loaded by the base class from the module key.
+ */
+class WebsiteServiceProvider extends NoerdModuleServiceProvider
 {
-    public function register(): void
+    protected string $moduleKey = 'website';
+
+    /**
+     * The config is merged at runtime only — never published — so it is
+     * merged here instead of through $configs (which would publish it).
+     */
+    protected function registerModule(): void
     {
         $this->app->singleton(WebsiteService::class, fn() => new WebsiteService());
         $this->app->singleton(PageElementService::class, fn() => new PageElementService());
 
-        // Register website configuration
-        $this->mergeConfigFrom(__DIR__ . '/../../config/website.php', 'website');
+        $this->mergeConfigFrom($this->modulePath('config/website.php'), 'website');
+
+        // The middleware alias exists before the route files are loaded.
+        $this->app['router']->aliasMiddleware('website', WebsiteMiddleware::class);
     }
 
-    public function boot(): void
+    protected function bootModule(): void
     {
-        // Register middleware alias BEFORE loading routes
-        $router = $this->app['router'];
-        $router->aliasMiddleware('website', WebsiteMiddleware::class);
-
-        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'website');
-        $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
-        $this->loadRoutesFrom(__DIR__ . '/../../routes/website-routes.php');
-
-        Livewire::addNamespace('website', viewPath: __DIR__ . '/../../resources/views/components');
-        Livewire::addLocation(viewPath: __DIR__ . '/../../resources/views/components');
+        // Livewire updates (the contact form) work in the visitor's tenant too.
+        Livewire::addPersistentMiddleware(WebsiteMiddleware::class);
 
         // Register route loading after all providers have been registered
         $this->app->booted(function (): void {

@@ -7,10 +7,18 @@ namespace Noerd\Cms\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Database\Factories\CmsSettingFactory;
+use Noerd\Contracts\TenantSingletonContract;
+use Noerd\Traits\TenantSingleton;
 
-class CmsSetting extends Model
+/**
+ * The CMS settings of a tenant: ONE row per tenant (unique `tenant_id`), read
+ * through CmsSetting::forTenant() (TenantSingleton) and edited on the settings
+ * page (cms::settings-page).
+ */
+class CmsSetting extends Model implements TenantSingletonContract
 {
     use HasFactory;
+    use TenantSingleton;
 
     public const DEFAULT_COOKIE_LIFETIME_DAYS = 182;
 
@@ -19,15 +27,25 @@ class CmsSetting extends Model
     protected $guarded = [];
 
     /**
+     * The values a tenant without a settings row behaves with.
+     *
+     * @return array<string, mixed>
+     */
+    public static function tenantDefaults(): array
+    {
+        return ['show_cookie_banner' => false];
+    }
+
+    /**
      * Parsed list of form notification recipients for a tenant.
      *
      * @return list<string>
      */
     public static function formRecipientsForTenant(int $tenantId): array
     {
-        $setting = self::query()->where('tenant_id', $tenantId)->first();
+        $setting = self::forTenant($tenantId);
 
-        if (! $setting || ! is_string($setting->form_recipients) || $setting->form_recipients === '') {
+        if (! is_string($setting->form_recipients) || $setting->form_recipients === '') {
             return [];
         }
 

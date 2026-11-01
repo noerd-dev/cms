@@ -7,7 +7,7 @@ namespace Noerd\Cms\Traits;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
 use Noerd\Models\SetupLanguage;
-use Noerd\Services\ColumnFilterParser;
+use Noerd\Support\ColumnFilterParser;
 
 /**
  * The list of records that extend a content (ExtendsContent): the `name`
@@ -54,7 +54,7 @@ trait ListsContentRecords
             $query->reorder()->orderByContentName($language, $this->sortAsc ? 'asc' : 'desc');
         }
 
-        $rows = $query->with('content')->paginate($this->perPage);
+        $rows = $this->paginateList($query->with('content'));
 
         foreach ($rows->items() as $row) {
             $row->name = $row->content?->localizedName($language) ?? '';

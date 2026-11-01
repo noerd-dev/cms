@@ -39,7 +39,7 @@ it('uploads an image via images.field binding and stores path into model', funct
 
     $before = MediaModel::count();
 
-    Livewire::test('page-detail', ['pageId' => $entry->id, 'collectionKey' => 'projects'])
+    Livewire::test('cms::page-detail', ['pageId' => $entry->id, 'collectionKey' => 'projects'])
         ->set('images.image', UploadedFile::fake()->image('photo.jpg', 1200, 800))
         // The id is stored, not a URL: the media disk mirrors the folder tree,
         // so a path would only be true until the file is moved.
@@ -68,7 +68,7 @@ it('deletes an image value from model', function (): void {
         'sort' => 0,
     ]);
 
-    Livewire::test('page-detail', ['pageId' => $entry->id, 'collectionKey' => 'projects'])
+    Livewire::test('cms::page-detail', ['pageId' => $entry->id, 'collectionKey' => 'projects'])
         ->call('deleteImage', 'image')
         ->assertSet('detailData.image', null);
 });
@@ -99,7 +99,7 @@ it('does not update image on mediaSelected when token mismatches; updates when t
         'size' => 1,
     ]);
 
-    $component = Livewire::test('page-detail', ['pageId' => $entry->id, 'collectionKey' => 'projects'])
+    $component = Livewire::test('cms::page-detail', ['pageId' => $entry->id, 'collectionKey' => 'projects'])
         ->set('detailData.image', 'UNCHANGED');
 
     // The token is minted server-side when the picker modal opens; it lives in
@@ -122,7 +122,7 @@ it('handles collections without page features (hasPage: false)', function (): vo
         ['name' => 'detailData.description', 'label' => 'Description', 'type' => 'translatableText', 'colspan' => 6],
     ], hasPage: false);
 
-    Livewire::test('page-detail', ['collectionKey' => 'customers'])
+    Livewire::test('cms::page-detail', ['collectionKey' => 'customers'])
         ->assertSet('collectionKey', 'customers')
         ->assertSet('collectionLayout.hasPage', false)
         ->assertSet('hasPageFeatures', false)
@@ -143,7 +143,7 @@ it('creates a page with generated, uniquified slug when the definition has hasPa
         ['name' => 'detailData.title', 'label' => 'Name', 'type' => 'text', 'colspan' => 6],
     ]);
 
-    Livewire::test('page-detail', ['collectionKey' => 'contacts'])
+    Livewire::test('cms::page-detail', ['collectionKey' => 'contacts'])
         ->assertSet('hasPageFeatures', true)
         ->set('detailData.name.en', 'Max Mustermann')
         ->call('store')
@@ -154,7 +154,7 @@ it('creates a page with generated, uniquified slug when the definition has hasPa
         ->and($first->slug['en'])->toContain('max-mustermann')
         ->and($first->is_active)->toBeTruthy();
 
-    Livewire::test('page-detail', ['collectionKey' => 'contacts'])
+    Livewire::test('cms::page-detail', ['collectionKey' => 'contacts'])
         ->set('detailData.name.en', 'Max Mustermann')
         ->call('store')
         ->assertHasNoErrors();
@@ -170,7 +170,7 @@ it('requires a name for the default language when the definition has hasPage: tr
         ['name' => 'detailData.title', 'label' => 'Name', 'type' => 'text', 'colspan' => 6],
     ]);
 
-    Livewire::test('page-detail', ['collectionKey' => 'contacts'])
+    Livewire::test('cms::page-detail', ['collectionKey' => 'contacts'])
         ->call('store')
         ->assertHasErrors();
 
@@ -193,7 +193,7 @@ it('preserves manually edited slug when saving collection page', function (): vo
     ]);
 
     Livewire::withUrlParams(['pageId' => $page->id])
-        ->test('page-detail', ['collectionKey' => 'staff'])
+        ->test('cms::page-detail', ['collectionKey' => 'staff'])
         ->set('detailData.slug.en', '/gerit-woerner-updated')
         ->call('store')
         ->assertOk();
@@ -219,7 +219,7 @@ it('stores only collection-specific fields in data column', function (): void {
     ]);
 
     Livewire::withUrlParams(['pageId' => $page->id])
-        ->test('page-detail', ['collectionKey' => 'staff'])
+        ->test('cms::page-detail', ['collectionKey' => 'staff'])
         ->set('detailData.title', 'New Title')
         ->set('detailData.title2', 'New Subtitle')
         ->set('detailData.phone', '+49 123 456')
@@ -260,7 +260,7 @@ it('does not overwrite slug column or core page fields from stale data on mount'
     ]);
 
     $detailData = Livewire::withUrlParams(['pageId' => $page->id])
-        ->test('page-detail', ['collectionKey' => 'staff'])
+        ->test('cms::page-detail', ['collectionKey' => 'staff'])
         ->get('detailData');
 
     expect($detailData['name']['en'])->toBe('Correct Name')
@@ -277,7 +277,7 @@ it('stores entries under the definition key even when the URL key is hyphenated'
 
     expect($collection->collection_key)->toBe('TEAM_MEMBERS');
 
-    Livewire::test('page-detail', ['collectionKey' => 'team-members'])
+    Livewire::test('cms::page-detail', ['collectionKey' => 'team-members'])
         ->set('detailData.title', 'Erster Eintrag')
         ->call('store')
         ->assertHasNoErrors();

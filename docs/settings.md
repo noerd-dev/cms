@@ -36,7 +36,7 @@ The component keeps a custom `store()` override for the validation the YAML cann
 
 ## CmsSetting Model
 
-The `CmsSetting` model (`cms_settings` table, one row per tenant — enforced by a unique index on `tenant_id`):
+The `CmsSetting` model (`cms_settings` table, one row per tenant — enforced by a unique index on `tenant_id`) is a tenant singleton (`Noerd\Traits\TenantSingleton`): `CmsSetting::forTenant($tenantId)` answers the tenant's row, or an unsaved instance with `tenantDefaults()` before the first save.
 
 | Column | Type | Description |
 |--------|------|-------------|

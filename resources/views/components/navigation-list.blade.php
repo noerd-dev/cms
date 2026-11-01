@@ -6,6 +6,7 @@ use Livewire\Component;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
+use Noerd\Support\ListFilter;
 use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdList;
 
@@ -18,6 +19,8 @@ new class extends Component {
     public ?string $detailRoute = 'cms.navigation.detail';
 
     public $detailComponent = 'cms::navigation-detail';
+
+    protected array $listWith = ['page.content'];
 
     public function mount(): void
     {
@@ -41,22 +44,7 @@ new class extends Component {
             $filters[] = $this->getLanguageListFilter();
         }
 
-        $keys = Navigation::distinct()
-            ->pluck('navigation_key')
-            ->sort()
-            ->values();
-
-        $options = ['' => __('All entries')];
-        foreach ($keys as $key) {
-            $options[$key] = $key;
-        }
-
-        $filters[] = [
-            'label' => __('Navigation Key'),
-            'column' => 'navigation_key',
-            'type' => 'Picklist',
-            'options' => $options,
-        ];
+        $filters[] = $this->getNavigationKeyListFilter();
 
         return $filters;
     }
@@ -87,10 +75,6 @@ new class extends Component {
         // listQuery() applies search and the read guard; the hierarchical
         // ordering below requires in-memory assembly and manual pagination.
         $allItems = $this->listQuery($this->listModel)
-            ->with('page.content')
-            ->when($this->listFilters['navigation_key'] ?? null, function ($query, $key): void {
-                $query->where('navigation_key', $key);
-            })
             ->reorder('sort_order')
             ->get();
 
@@ -147,6 +131,18 @@ new class extends Component {
         }
 
         return $this->buildList($rows);
+    }
+
+    /**
+     * One option per navigation group the tenant uses; listQuery() narrows the
+     * real `navigation_key` column itself.
+     */
+    protected function getNavigationKeyListFilter(): ListFilter
+    {
+        return ListFilter::options(__('Navigation Key'), 'navigation_key', fn(): array => Navigation::distinct()
+            ->orderBy('navigation_key')
+            ->pluck('navigation_key', 'navigation_key')
+            ->all());
     }
 
 }; ?>

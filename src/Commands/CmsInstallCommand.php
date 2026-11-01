@@ -6,25 +6,19 @@ namespace Noerd\Cms\Commands;
 
 use Exception;
 use Illuminate\Console\Command;
+use Noerd\Cms\Commands\Concerns\EnsuresWebsiteLinkButton;
 use Noerd\Cms\Services\DefaultHomepageSeeder;
 use Noerd\Commands\Concerns\HasModuleInstallation;
-use Noerd\Support\ModuleInstallContext;
+use Noerd\Commands\Support\ModuleInstallContext;
 
 class CmsInstallCommand extends Command
 {
+    use EnsuresWebsiteLinkButton;
     use HasModuleInstallation;
 
-    protected $signature = 'noerd:install-cms
-                            {--force : Overwrite existing files without asking}
-                            {--migrate : Run migrations without asking (required to migrate in non-interactive runs)}
-                            {--build : Run npm build without asking (required to build in non-interactive runs)}';
+    protected $signature = 'noerd:install-cms';
 
     protected $description = 'Install noerd CMS content and navigation';
-
-    public function handle(): int
-    {
-        return $this->runModuleInstallation();
-    }
 
     protected function getModuleName(): string
     {
@@ -34,11 +28,6 @@ class CmsInstallCommand extends Command
     protected function getModuleKey(): string
     {
         return 'cms';
-    }
-
-    protected function getDefaultAppTitle(): string
-    {
-        return 'CMS';
     }
 
     protected function getAppIcon(): string
@@ -99,12 +88,13 @@ class CmsInstallCommand extends Command
      * Idempotent: tenants created since the install get their starter homepage,
      * and the quick-menu keeps the "To Website" button — the shared writer
      * replaces a same-component entry wholesale, so an installation still
-     * carrying the removed `policy: canCms` gate migrates to the `apps:` key.
+     * carrying the removed `policy: canCms` gate migrates to the `apps:` key,
+     * and a former bare component name is renamed to the namespaced one.
      */
     protected function ensureModuleSetup(): void
     {
         $this->seedDefaultHomepage();
-        $this->ensureQuickMenuButton(['apps' => ['CMS'], 'component' => 'quick-menu.website-link']);
+        $this->ensureWebsiteLinkButton();
     }
 
     /**
