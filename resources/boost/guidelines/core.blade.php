@@ -113,7 +113,7 @@ public function mount(?string $collectionKey = null): void
 
 ### Elements
 
-- Elements are Blade + YAML pairs in `app-modules/*/resources/views/components/elements/`
+- Elements are Blade + YAML pairs in a module's `resources/views/components/elements/` — below `app-modules/` or in `vendor/` alike; `Noerd\Cms\Support\ElementDirectories` is the ONE place the folders are found (through the module's Livewire namespace, plus `app-modules/*` and the project folder, which shadows a module element) — never glob `app-modules/*` for elements again
 - File naming: kebab-case files (e.g., `text-block-1-column.blade.php`) map to snake_case element keys (`text_block_1_column`)
 - `HandlesPageElements::getComponentMapping()` mounts a module's element through the Livewire namespace that owns its components folder (`cms::elements.rich-text`, `website::elements.slider`) — modules register no bare component names; only an element of the project's `resources/views/components/elements/` or of `noerd_cms.page_elements_path` keeps the bare `elements.{file}` name
 - `FieldHelper::getAllElements()` discovers all elements across modules

@@ -7,6 +7,7 @@ namespace Noerd\Cms\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Support\CmsLanguageCodes;
+use Noerd\Cms\Support\ElementDirectories;
 use Noerd\Cms\Support\MediaValues;
 
 trait HandlesPageElements
@@ -94,10 +95,7 @@ trait HandlesPageElements
             $bladeFiles = array_merge($bladeFiles, $customFiles);
         }
 
-        $fallbackFiles = glob(base_path('app-modules/*/resources/views/components/elements/*.blade.php')) ?: [];
-        $projectLevelFiles = glob(base_path('resources/views/components/elements/*.blade.php')) ?: [];
-        $fallbackFiles = array_merge($fallbackFiles, $projectLevelFiles);
-        $allFiles = array_merge($fallbackFiles, $bladeFiles);
+        $allFiles = array_merge(ElementDirectories::files('*.blade.php'), $bladeFiles);
 
         $uniqueFiles = [];
         foreach ($allFiles as $filePath) {
@@ -105,7 +103,7 @@ trait HandlesPageElements
             $uniqueFiles[$fileName] = $filePath;
         }
 
-        $namespaces = $this->livewireNamespacesByPath();
+        $namespaces = ElementDirectories::livewireNamespacesByPath();
 
         foreach ($uniqueFiles as $fileName => $filePath) {
             $elementKey = str_replace('-', '_', $fileName);
@@ -126,14 +124,8 @@ trait HandlesPageElements
         $parts = explode('.', $componentName);
         $fileBase = end($parts) ?: $componentName;
 
-        $bladeMatches = array_merge(
-            glob(base_path('app-modules/*/resources/views/components/elements/' . $fileBase . '.blade.php')) ?: [],
-            glob(base_path('resources/views/components/elements/' . $fileBase . '.blade.php')) ?: [],
-        );
-        $ymlMatches = array_merge(
-            glob(base_path('app-modules/*/resources/views/components/elements/' . $fileBase . '.yml')) ?: [],
-            glob(base_path('resources/views/components/elements/' . $fileBase . '.yml')) ?: [],
-        );
+        $bladeMatches = ElementDirectories::files($fileBase . '.blade.php');
+        $ymlMatches = ElementDirectories::files($fileBase . '.yml');
 
         return ! empty($bladeMatches) && ! empty($ymlMatches);
     }
@@ -205,29 +197,5 @@ trait HandlesPageElements
         // Derived from the configured CMS languages, so a tenant-added language
         // (e.g. Danish) is recognised without touching the framework.
         return CmsLanguageCodes::isLanguageMap($array);
-    }
-
-    /**
-     * The registered Livewire view namespaces keyed by their (real) folder.
-     * Livewire's finder offers no getter for them, so the map is read from it.
-     *
-     * @return array<string, string>
-     */
-    private function livewireNamespacesByPath(): array
-    {
-        if (! app()->bound('livewire.finder')) {
-            return [];
-        }
-
-        $viewNamespaces = (fn(): array => $this->viewNamespaces ?? [])->call(app('livewire.finder'));
-
-        $byPath = [];
-        foreach ($viewNamespaces as $namespace => $viewPath) {
-            if (is_string($viewPath)) {
-                $byPath[realpath($viewPath) ?: mb_rtrim($viewPath, '/')] = (string) $namespace;
-            }
-        }
-
-        return $byPath;
     }
 }

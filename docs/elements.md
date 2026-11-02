@@ -4,17 +4,17 @@ Elements are reusable content blocks that can be added to pages via a drag-and-d
 
 ## How Elements Work
 
-1. Elements are discovered automatically from `resources/views/components/elements/` in any app-module
+1. Elements are discovered automatically from `resources/views/components/elements/` of every module — below `app-modules/` or installed into `vendor/` (found through the Livewire namespace the module registers for its components folder) — and of the project; a project element shadows a module element of the same name (`Noerd\Cms\Support\ElementDirectories`)
 2. Each element has a `.blade.php` file and a matching `.yml` file
 3. The YAML file defines the element's title, description, group, and editable fields
 4. When added to a page, element data is stored in the `content_elements` table as JSON
 
 ## File Locations
 
-Element definitions (paired files):
+Element definitions (paired files), in the module wherever it is installed (`app-modules/{module}/` or `vendor/{vendor}/{module}/`):
 ```
-app-modules/{module}/resources/views/components/elements/{element-name}.blade.php
-app-modules/{module}/resources/views/components/elements/{element-name}.yml
+{module}/resources/views/components/elements/{element-name}.blade.php
+{module}/resources/views/components/elements/{element-name}.yml
 ```
 
 Website boilerplate elements:

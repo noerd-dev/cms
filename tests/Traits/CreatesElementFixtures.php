@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\File;
 use Noerd\Cms\Helpers\FieldHelper;
 
 /**
- * Element discovery (FieldHelper, HandlesPageElements) globs
- * `app-modules/{star}/resources/views/components/elements/`. The CMS ships no
- * elements of its own, so its tests used to borrow the ones from the optional
+ * Element discovery (ElementDirectories) also scans
+ * `app-modules/{star}/resources/views/components/elements/`. The CMS ships only
+ * its running text `rich_text`, so its tests used to borrow elements from the optional
  * website module — an invisible cross-module dependency. Instead every test that
  * needs a real element writes its own throwaway fixture into a throwaway
  * `app-modules/zz-cms-fixtures` module folder (matched by the same glob, in a

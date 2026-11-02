@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Noerd\Cms\Helpers;
 
 use Noerd\Cms\Support\CmsLanguageCodes;
+use Noerd\Cms\Support\ElementDirectories;
 use Noerd\Helpers\StaticConfigHelper;
 use Symfony\Component\Yaml\Yaml;
 use Throwable;
@@ -180,16 +181,8 @@ class FieldHelper
         // Convert element key to kebab-case for yml file lookup (same as blade component naming)
         $elementFileName = str_replace('_', '-', $element);
 
-        // Search for YML file co-located with blade component in app-modules
-        $livewireElementFiles = glob(base_path('app-modules/*/resources/views/components/elements/' . $elementFileName . '.blade.php'));
-
-        // Also check project-level
-        $projectLevelFile = base_path('resources/views/components/elements/' . $elementFileName . '.blade.php');
-        if (file_exists($projectLevelFile)) {
-            array_unshift($livewireElementFiles, $projectLevelFile);
-        }
-
-        foreach ($livewireElementFiles as $bladeFile) {
+        // Highest precedence first: a project element shadows a module element.
+        foreach (array_reverse(ElementDirectories::files($elementFileName . '.blade.php')) as $bladeFile) {
             $ymlFile = str_replace('.blade.php', '.yml', $bladeFile);
             if (file_exists($ymlFile)) {
                 return self::parseYamlFile($ymlFile);
@@ -206,12 +199,12 @@ class FieldHelper
     {
         $elements = [];
 
-        // Get all element components from app-modules
-        $livewireElementFiles = glob(base_path('app-modules/*/resources/views/components/elements/*.blade.php'));
-
-        // Also check project-level
-        $projectLevelFiles = glob(base_path('resources/views/components/elements/*.blade.php'));
-        $livewireElementFiles = array_merge($projectLevelFiles, $livewireElementFiles);
+        // One element per file name, the one of highest precedence (a project
+        // element shadows a module element of the same name).
+        $livewireElementFiles = [];
+        foreach (ElementDirectories::files('*.blade.php') as $file) {
+            $livewireElementFiles[basename($file)] = $file;
+        }
 
         foreach ($livewireElementFiles as $livewireFile) {
             $fileName = basename($livewireFile, '.blade.php');
