@@ -2,7 +2,7 @@
   name: cms
   hidden: true
   route: cms
-  block_menus:
+  blockMenus:
     - title: CMS
       navigations:
         - title: Pages

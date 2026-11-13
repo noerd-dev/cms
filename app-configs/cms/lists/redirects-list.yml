@@ -14,5 +14,5 @@ columns:
     label: 'Target Page'
   - field: is_active
     label: 'Active?'
-    type: boolean
+    type: bool
     width: 0.5

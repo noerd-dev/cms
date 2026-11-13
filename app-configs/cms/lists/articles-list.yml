@@ -19,4 +19,4 @@ columns:
     type: date
   - field: is_active
     label: 'Active?'
-    type: boolean
+    type: bool

@@ -10,9 +10,9 @@ columns:
     label: Name
   - field: is_active
     label: 'Active?'
-    type: boolean
+    type: bool
   - field: is_default
     label: Default
-    type: boolean
+    type: bool
   - field: sort_order
     label: Sort Order

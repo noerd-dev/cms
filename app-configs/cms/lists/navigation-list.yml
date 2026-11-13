@@ -11,7 +11,7 @@ disableSearch: false
 columns:
   - field: name
     label: Name
-    type: colored_text
+    type: coloredText
   - field: navigation_key
     label: Key
   - field: page_name

@@ -9,4 +9,4 @@ columns:
     label: Name
   - field: is_active
     label: 'Active?'
-    type: boolean
+    type: bool
