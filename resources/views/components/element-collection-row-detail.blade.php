@@ -10,6 +10,7 @@ use Noerd\Cms\Services\CollectionEntryStore;
 use Noerd\Cms\Traits\LanguageFilterTrait;
 use Noerd\Facades\Noerd;
 use Noerd\Media\Models\Media;
+use Noerd\Support\LayoutFields;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
@@ -143,6 +144,26 @@ new class extends Component {
     public function deleteImage(string $fieldName): void
     {
         $this->detailData[$fieldName] = null;
+    }
+
+    /**
+     * The inputs this form renders outside its layout: the sort position and
+     * the collection fields ($collectionLayout, resolved at runtime from the
+     * collection definition). The client may only change what is declared.
+     *
+     * @return list<string>
+     */
+    protected function additionalDetailFields(): array
+    {
+        $fields = ['detailData.sort'];
+
+        LayoutFields::walk($this->collectionLayout['fields'] ?? [], function (array $field) use (&$fields): void {
+            if (is_string($field['name'] ?? null)) {
+                $fields[] = $field['name'];
+            }
+        });
+
+        return $fields;
     }
 
     private function elementCollection(): ?Collection

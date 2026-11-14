@@ -8,23 +8,23 @@
         - title: Pages
           route: cms.pages
           heroicon: document
-          newRoute: cms.page.detail
-          newComponent: cms::page-detail
+          newModalRoute: cms.page.detail
+          newModalComponent: cms::page-detail
         - title: Navigation
           route: cms.navigation
           heroicon: list-bullet
-          newRoute: cms.navigation.detail
-          newComponent: cms::navigation-detail
+          newModalRoute: cms.navigation.detail
+          newModalComponent: cms::navigation-detail
         - title: Redirects
           route: cms.redirects
           heroicon: arrows-right-left
-          newRoute: cms.redirect.detail
-          newComponent: cms::redirect-detail
+          newModalRoute: cms.redirect.detail
+          newModalComponent: cms::redirect-detail
         - title: Global Parameters
           route: cms.global-parameters
           heroicon: globe-alt
-          newRoute: cms.global-parameter.detail
-          newComponent: cms::global-parameter-detail
+          newModalRoute: cms.global-parameter.detail
+          newModalComponent: cms::global-parameter-detail
         - title: Form Requests
           route: cms.form-requests
           heroicon: inbox-arrow-down
@@ -34,20 +34,20 @@
         - title: Collection Definitions
           route: cms.collection-definitions
           heroicon: rectangle-stack
-          newRoute: cms.collection-definition.detail
-          newComponent: cms::collection-definition-detail
+          newModalRoute: cms.collection-definition.detail
+          newModalComponent: cms::collection-definition-detail
     - title: Blog
       navigations:
         - title: Articles
           route: cms.articles
           heroicon: newspaper
-          newRoute: cms.article.detail
-          newComponent: cms::article-detail
+          newModalRoute: cms.article.detail
+          newModalComponent: cms::article-detail
         - title: Authors
           route: cms.authors
           heroicon: user-group
-          newRoute: cms.author.detail
-          newComponent: cms::author-detail
+          newModalRoute: cms.author.detail
+          newModalComponent: cms::author-detail
     - title: Page Collections
       dynamic: page-collections
     - title: Collections
@@ -60,5 +60,5 @@
         - title: Languages
           route: cms.languages
           heroicon: language
-          newRoute: cms.language.detail
-          newComponent: cms::language-detail
+          newModalRoute: cms.language.detail
+          newModalComponent: cms::language-detail

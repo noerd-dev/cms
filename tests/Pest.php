@@ -11,5 +11,5 @@ declare(strict_types=1);
  | That is why every test file binds Noerd\Cms\Tests\TestCase itself via
  | uses() — do not move those bindings here, or host-root runs would lose them.
  | The global noerd test helpers (validDetailPayload, requiredLayoutFields, …)
- | are loaded by Noerd\Tests\TestCase, which every file binds.
+ | are loaded by Noerd\Testing\TestCase (through Noerd\Cms\Tests\TestCase), which every file binds.
  */

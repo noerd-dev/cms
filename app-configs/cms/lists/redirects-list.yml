@@ -5,7 +5,7 @@ searchableColumns:
   - source_path
 actions:
   - label: New Redirect
-    route: cms.redirect.detail
+    modalRoute: cms.redirect.detail
 disableSearch: false
 columns:
   - field: source_path

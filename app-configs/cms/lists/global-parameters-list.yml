@@ -1,7 +1,7 @@
 title: Global Parameters
 actions:
   - label: New Parameter
-    route: cms.global-parameter.detail
+    modalRoute: cms.global-parameter.detail
 disableSearch: false
 columns:
   - field: key

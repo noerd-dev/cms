@@ -10,7 +10,7 @@ use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Communication\Providers\CommunicationServiceProvider;
 use Noerd\Media\Providers\MediaServiceProvider;
-use Noerd\Tests\ModuleTestCase;
+use Noerd\Testing\ModuleTestCase;
 
 /**
  * The standalone testbench setup of the core (providers, noerd guard, sqlite

@@ -6,7 +6,7 @@ use Noerd\Cms\Models\FormType;
 use Noerd\Traits\HasEmailPreview;
 use Noerd\Traits\NoerdDetail;
 
-new class () extends Component {
+new class extends Component {
     use HasEmailPreview;
     use NoerdDetail;
 
@@ -15,41 +15,6 @@ new class () extends Component {
     public $detailModel = FormType::class;
 
     public ?array $ymlConfig = null;
-
-    protected function getEmailData(): array
-    {
-        return $this->detailData;
-    }
-
-    protected function getEmailRateLimitPrefix(): string
-    {
-        return 'form-type:' . ($this->modelId ?? 'new');
-    }
-
-    protected function getEmailViewName(): string
-    {
-        return 'cms::emails.form-confirmation';
-    }
-
-    public function getSampleEmailData(): array
-    {
-        $sampleData = [
-            '{{form_title}}' => $this->detailData['title'] ?? __('Form Type'),
-            '{{submission_date}}' => \Noerd\Helpers\FormatHelper::documentDateTime(now()),
-        ];
-
-        if ($this->modelId) {
-            $formType = FormType::find($this->modelId);
-            if ($formType) {
-                $fieldPlaceholders = $formType->getFieldPlaceholders();
-                foreach ($fieldPlaceholders as $placeholder => $description) {
-                    $sampleData[$placeholder] = __('Example') . ': ' . __($description);
-                }
-            }
-        }
-
-        return $sampleData;
-    }
 
     #[Computed]
     public function emailPlaceholders(): array
@@ -71,9 +36,9 @@ new class () extends Component {
     {
         $this->initDetail();
 
-        $formType = new FormType;
+        $formType = new FormType();
         if ($this->modelId) {
-            $formType = FormType::find($this->modelId) ?? new FormType;
+            $formType = FormType::find($this->modelId) ?? new FormType();
         }
 
         $this->detailData = $formType->toArray();
@@ -107,6 +72,51 @@ new class () extends Component {
         ]);
 
         $this->storeProcess($formType);
+    }
+
+    protected function getEmailData(): array
+    {
+        return $this->detailData;
+    }
+
+    protected function getEmailRateLimitPrefix(): string
+    {
+        return 'form-type:' . ($this->modelId ?? 'new');
+    }
+
+    protected function getEmailViewName(): string
+    {
+        return 'cms::emails.form-confirmation';
+    }
+
+    protected function getSampleEmailData(): array
+    {
+        $sampleData = [
+            '{{form_title}}' => $this->detailData['title'] ?? __('Form Type'),
+            '{{submission_date}}' => \Noerd\Helpers\FormatHelper::documentDateTime(now()),
+        ];
+
+        if ($this->modelId) {
+            $formType = FormType::find($this->modelId);
+            if ($formType) {
+                $fieldPlaceholders = $formType->getFieldPlaceholders();
+                foreach ($fieldPlaceholders as $placeholder => $description) {
+                    $sampleData[$placeholder] = __('Example') . ': ' . __($description);
+                }
+            }
+        }
+
+        return $sampleData;
+    }
+
+    /**
+     * The mail body is a rich-text editor outside the YAML form.
+     *
+     * @return list<string>
+     */
+    protected function additionalDetailFields(): array
+    {
+        return ['detailData.email_body'];
     }
 } ?>
 

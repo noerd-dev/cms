@@ -57,7 +57,7 @@ as its `app-modules/website` frontend module.
   mechanics, never the current YAML configuration; run sequentially — never in parallel with
   other suites when the test database is shared) or standalone with `composer install &&
   vendor/bin/pest` (Orchestra Testbench + sqlite via `Noerd\Cms\Tests\TestCase`, a
-  `Noerd\Tests\ModuleTestCase` with the media, communication and CMS providers — the setup CI
+  `Noerd\Testing\ModuleTestCase` with the media, communication and CMS providers — the setup CI
   runs). Every test file binds `Noerd\Cms\Tests\TestCase` itself; the fixtures are
   `CreatesCmsUser` (the core's `createNoerdUserForApp('CMS')` plus the tenant's languages),
   `CreatesElementFixtures` and `CreatesCollectionDefinitions`

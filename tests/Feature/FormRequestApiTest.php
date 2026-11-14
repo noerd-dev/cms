@@ -25,7 +25,7 @@ it('stores a form request via API using user api token', function (): void {
     $user = NoerdUser::factory()->create([
         'api_token' => 'test_token_123',
     ]);
-    TenantHelper::setSelectedTenantId($tenant->id);
+    $user->setting->update(['selected_tenant_id' => $tenant->id]);
 
     $payload = [
         'form' => 'contact',
@@ -51,8 +51,8 @@ it('stores a form request via API using user api token', function (): void {
 
 it('rejects a submission for an unknown form type', function (): void {
     $tenant = $this->createCmsTenant();
-    NoerdUser::factory()->create(['api_token' => 'unknown_form_token']);
-    TenantHelper::setSelectedTenantId($tenant->id);
+    $user = NoerdUser::factory()->create(['api_token' => 'unknown_form_token']);
+    $user->setting->update(['selected_tenant_id' => $tenant->id]);
 
     $this->withHeader('Authorization', 'Bearer unknown_form_token')
         ->postJson('/api/cms/form-requests', [
@@ -93,8 +93,8 @@ it('validates the submission against the form YAML and dispatches the email job'
         'send_email' => true,
         'yml_path' => $ymlPath,
     ]);
-    NoerdUser::factory()->create(['api_token' => 'yaml_validation_token']);
-    TenantHelper::setSelectedTenantId($tenant->id);
+    $user = NoerdUser::factory()->create(['api_token' => 'yaml_validation_token']);
+    $user->setting->update(['selected_tenant_id' => $tenant->id]);
 
     // Invalid per the YAML rules: no email field
     $this->withHeader('Authorization', 'Bearer yaml_validation_token')
@@ -128,26 +128,26 @@ it('validates the submission against the form YAML and dispatches the email job'
     File::deleteDirectory($fixtureDir);
 });
 
-it('stores the form request under the tenant resolved for the token user', function (): void {
-    // CmsApiAuth reads $user->selected_tenant_id, which on NoerdUser is a
-    // session-backed ACCESSOR (TenantHelper::getSelectedTenantId()) — noerd_users
-    // carries no column of its own and the persisted copy on the user's settings
-    // row is only the starting point restored at login. The stored form request
-    // must carry the tenant the middleware resolved, not a stale persisted value.
-    $resolvedTenant = $this->createCmsTenant();
-    $stalePersistedTenant = $this->createCmsTenant();
+it('stores the form request under the tenant the token user persisted', function (): void {
+    // Nobody is signed in on a token request: CmsApiAuth reads the token user's
+    // PERSISTED selection (the settings row), never a session tenant of the
+    // request — a session belongs to the signed-in user only.
+    $persistedTenant = $this->createCmsTenant();
+    $sessionTenant = $this->createCmsTenant();
     FormType::factory()->create([
-        'tenant_id' => $resolvedTenant->id,
+        'tenant_id' => $persistedTenant->id,
+        'key' => 'contact',
+    ]);
+    FormType::factory()->create([
+        'tenant_id' => $sessionTenant->id,
         'key' => 'contact',
     ]);
 
     $user = NoerdUser::factory()->create(['api_token' => 'tenant_precedence_token']);
+    $user->setting->update(['selected_tenant_id' => $persistedTenant->id]);
 
-    // Plant a DIFFERENT tenant id in the persisted settings row. Nobody is
-    // authenticated here, so TenantHelper only writes the session and leaves it.
-    $user->setting->update(['selected_tenant_id' => $stalePersistedTenant->id]);
-
-    TenantHelper::setSelectedTenantId($resolvedTenant->id);
+    // A session selection of nobody in particular must not decide the tenant.
+    TenantHelper::setSelectedTenantId($sessionTenant->id);
 
     $response = $this->withHeader('Authorization', 'Bearer tenant_precedence_token')
         ->postJson('/api/cms/form-requests', [
@@ -158,11 +158,11 @@ it('stores the form request under the tenant resolved for the token user', funct
     $response->assertCreated();
     $this->assertDatabaseHas('cms_form_requests', [
         'id' => $response->json('id'),
-        'tenant_id' => $resolvedTenant->id,
+        'tenant_id' => $persistedTenant->id,
     ]);
     $this->assertDatabaseMissing('cms_form_requests', [
         'id' => $response->json('id'),
-        'tenant_id' => $stalePersistedTenant->id,
+        'tenant_id' => $sessionTenant->id,
     ]);
 });
 
@@ -177,8 +177,8 @@ it('rejects a form key that belongs to another tenant', function (): void {
         'key' => 'foreign-contact',
     ]);
 
-    NoerdUser::factory()->create(['api_token' => 'cross_tenant_token']);
-    TenantHelper::setSelectedTenantId($tenantA->id);
+    $user = NoerdUser::factory()->create(['api_token' => 'cross_tenant_token']);
+    $user->setting->update(['selected_tenant_id' => $tenantA->id]);
 
     $this->withHeader('Authorization', 'Bearer cross_tenant_token')
         ->postJson('/api/cms/form-requests', [

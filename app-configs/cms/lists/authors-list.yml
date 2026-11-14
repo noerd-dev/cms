@@ -3,7 +3,7 @@ searchableColumns:
   - name
 actions:
   - label: New Author
-    route: cms.author.detail
+    modalRoute: cms.author.detail
 columns:
   - field: name
     label: Name

@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Noerd\Cms\Models\FormType;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
-use Noerd\Helpers\TenantHelper;
 use Noerd\Models\NoerdUser;
 
 uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
@@ -14,8 +13,8 @@ uses(CreatesCmsUser::class);
 beforeEach(function (): void {
     $tenant = $this->createCmsTenant();
     FormType::factory()->create(['tenant_id' => $tenant->id, 'key' => 'contact']);
-    NoerdUser::factory()->create(['api_token' => 'limits_token']);
-    TenantHelper::setSelectedTenantId($tenant->id);
+    $user = NoerdUser::factory()->create(['api_token' => 'limits_token']);
+    $user->setting->update(['selected_tenant_id' => $tenant->id]);
 });
 
 it('rejects a payload above the byte limit without storing a row', function (): void {

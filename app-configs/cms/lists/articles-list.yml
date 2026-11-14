@@ -8,7 +8,7 @@ searchableColumns:
   - title
 actions:
   - label: New Article
-    route: cms.article.detail
+    modalRoute: cms.article.detail
 columns:
   - field: title
     label: Title

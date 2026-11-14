@@ -19,6 +19,7 @@ use Noerd\Facades\Noerd;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Media\Models\Media;
 use Noerd\Media\Services\MediaUploadService;
+use Noerd\Support\LayoutFields;
 use Noerd\Support\RelationFieldDefinition;
 use Noerd\Traits\NoerdDetail;
 
@@ -297,6 +298,26 @@ new class extends Component {
         $this->dispatch('listRefresh');
         $this->dispatch('refreshList-cms::pages-list');
         $this->showSuccessIndicator = true;
+    }
+
+    /**
+     * The inputs this form renders outside its layout: the sort position and
+     * the collection fields ($collectionLayout, resolved at runtime from the
+     * collection definition). The client may only change what is declared.
+     *
+     * @return list<string>
+     */
+    protected function additionalDetailFields(): array
+    {
+        $fields = ['detailData.sort'];
+
+        LayoutFields::walk($this->collectionLayout['fields'] ?? [], function (array $field) use (&$fields): void {
+            if (is_string($field['name'] ?? null)) {
+                $fields[] = $field['name'];
+            }
+        });
+
+        return $fields;
     }
 
     protected function mountPageDetail(?Page $page = null): void
