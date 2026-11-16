@@ -6,7 +6,6 @@ namespace Noerd\Website\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Noerd\Cms\Helpers\CollectionHelper;
-use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Cms\Support\RichTextValues;
 
 class Collection extends Model

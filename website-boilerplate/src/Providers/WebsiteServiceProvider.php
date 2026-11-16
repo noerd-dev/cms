@@ -6,7 +6,6 @@ namespace Noerd\Website\Providers;
 
 use Illuminate\View\View;
 use Livewire\Livewire;
-use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Providers\NoerdModuleServiceProvider;
 use Noerd\Website\Commands\WebsiteUpdateCommand;
 use Noerd\Website\Controllers\WebsiteController;
