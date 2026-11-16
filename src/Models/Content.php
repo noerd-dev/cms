@@ -46,9 +46,19 @@ class Content extends Model
             return null;
         }
 
-        $query = $type->modelClass::query()->withoutGlobalScopes();
+        $query = $type->modelClass::query();
+        $model = $query->getModel();
 
-        return $query->where('content_id', $this->getKey())->first();
+        // Only a record of the content's own tenant extends it — named
+        // explicitly, so it resolves outside that tenant's context too. Only the
+        // tenant filter is lifted: a trashed record extends nothing.
+        $query = method_exists($model, 'scopeOfTenant')
+            ? $query->ofTenant((int) $this->tenant_id)
+            : $query->withoutGlobalScopes()->where($model->qualifyColumn('tenant_id'), $this->tenant_id);
+
+        return $query
+            ->where($model->qualifyColumn('content_id'), $this->getKey())
+            ->first();
     }
 
     /**

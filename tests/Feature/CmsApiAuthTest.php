@@ -34,7 +34,7 @@ function zzRegisterCmsApiAuthProbeRoute(array &$captured): void
 it('authenticates the same user via bearer header and x-api-key header', function (): void {
     $tenant = $this->createCmsTenant();
     $user = NoerdUser::factory()->create(['api_token' => 'multi_channel_token']);
-    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+    $this->selectTenantForToken($user, $tenant);
 
     $captured = [];
     zzRegisterCmsApiAuthProbeRoute($captured);
@@ -59,7 +59,7 @@ it('authenticates the same user via bearer header and x-api-key header', functio
 it('never reads the token from the query string', function (): void {
     $tenant = $this->createCmsTenant();
     $user = NoerdUser::factory()->create(['api_token' => 'query_token']);
-    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+    $this->selectTenantForToken($user, $tenant);
 
     $captured = [];
     zzRegisterCmsApiAuthProbeRoute($captured);
@@ -74,7 +74,7 @@ it('never reads the token from the query string', function (): void {
 it('rejects a token whose tenant does not run the CMS app', function (): void {
     $tenant = Tenant::factory()->create();
     $user = NoerdUser::factory()->create(['api_token' => 'crm_only_token']);
-    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+    $this->selectTenantForToken($user, $tenant);
 
     $captured = [];
     zzRegisterCmsApiAuthProbeRoute($captured);
@@ -89,7 +89,7 @@ it('rejects a token whose tenant does not run the CMS app', function (): void {
 it('rejects an unknown token with 401', function (): void {
     $tenant = $this->createCmsTenant();
     $user = NoerdUser::factory()->create(['api_token' => 'known_token']);
-    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+    $this->selectTenantForToken($user, $tenant);
 
     $captured = [];
     zzRegisterCmsApiAuthProbeRoute($captured);
@@ -129,7 +129,7 @@ it('rejects a valid token when no tenant is selected for the user', function ():
 it('rejects a valid token when the selected tenant row no longer exists', function (): void {
     $tenant = $this->createCmsTenant();
     $user = NoerdUser::factory()->create(['api_token' => 'stale_tenant_token']);
-    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+    $this->selectTenantForToken($user, $tenant);
 
     $tenant->delete();
     TenantHelper::clearCache();
@@ -147,7 +147,7 @@ it('rejects a valid token when the selected tenant row no longer exists', functi
 it('attaches tenant_id, tenant and user to the request on success', function (): void {
     $tenant = $this->createCmsTenant();
     $user = NoerdUser::factory()->create(['api_token' => 'attribute_probe_token']);
-    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+    $this->selectTenantForToken($user, $tenant);
 
     $captured = [];
     zzRegisterCmsApiAuthProbeRoute($captured);

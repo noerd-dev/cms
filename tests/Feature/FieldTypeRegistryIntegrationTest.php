@@ -11,9 +11,15 @@ uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 it('registers cms field types in the shared field type registry', function (): void {
     $registry = app(FieldTypeRegistry::class);
 
-    expect($registry->has('collection-select'))->toBeTrue();
-    expect($registry->get('collection-select')?->kind)->toBe('include');
-    expect($registry->get('collection-select')?->target)->toBe('cms::components.forms.input-collection-select');
+    expect($registry->has('homepageSelect'))->toBeTrue();
+    expect($registry->get('homepageSelect')?->kind)->toBe('include');
+    expect($registry->get('homepageSelect')?->target)->toBe('cms::components.forms.input-homepage-select');
+    expect($registry->get('elementCollection')?->kind)->toBe('livewire');
+
+    // 0.6 names the types in camelCase; the earlier kebab-case names are gone.
+    foreach (['collection-select', 'homepage-select', 'element-collection'] as $removed) {
+        expect($registry->has($removed))->toBeFalse();
+    }
 
     expect($registry->has('pageRelation'))->toBeTrue();
     expect($registry->get('pageRelation')?->kind)->toBe('livewire');

@@ -2,7 +2,7 @@ title: Settings
 fields:
   - name: detailData.homepage_page_id
     label: Homepage
-    type: homepage-select
+    type: homepageSelect
   - name: detailData.form_recipients
     label: Form Recipients
     type: text
@@ -10,7 +10,7 @@ fields:
   - name: detailData.show_cookie_banner
     label: Show Cookie Banner
     type: checkbox
-    helpText: Required to use Analytics
+    helpText: Required for the Google tag
   - name: detailData.cookie_lifetime_days
     label: Cookie Consent Duration
     type: select
@@ -27,7 +27,7 @@ fields:
       - value: 365
         label: 12 months
   - name: detailData.google_analytics_id
-    label: Google Analytics
+    label: Google Tag
     type: text
     showIf: detailData.show_cookie_banner
-    helpText: Google Analytics Measurement ID (e.g. G-XXXXXXXXXX)
+    helpText: A Google Tag Manager container (GTM-XXXXXXX) or a Google tag ID (G-XXXXXXXXXX). It loads only after the visitor's consent, and only on a website domain that is not the backend's.

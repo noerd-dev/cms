@@ -15,3 +15,4 @@ columns:
     label: Form
   - field: created_at
     label: 'Created At'
+    type: datetime

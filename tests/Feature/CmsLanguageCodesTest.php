@@ -15,7 +15,8 @@ uses(CreatesCmsUser::class);
  * These tests pin that contract: the resolved codes follow the database.
  */
 beforeEach(function (): void {
-    ['tenant' => $this->tenant] = $this->createUserWithCmsAccess();
+    ['user' => $user, 'tenant' => $this->tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
     CmsLanguageCodes::clearCache();
 });
 

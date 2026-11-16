@@ -10,7 +10,7 @@ use Noerd\Cms\Services\FormTypeSyncService;
 class SyncFormTypesCommand extends Command
 {
     protected $signature = 'cms:sync-form-types
-                            {--tenant-id= : Sync for a specific tenant ID}
+                            {--tenant= : Sync for one tenant (id)}
                             {--force : Force sync even if files haven\'t changed}';
 
     protected $description = 'Sync form types from YML files to database';
@@ -20,7 +20,7 @@ class SyncFormTypesCommand extends Command
         $this->info('Syncing form types from YML files...');
         $this->newLine();
 
-        $tenantId = $this->option('tenant-id') ? (int) $this->option('tenant-id') : null;
+        $tenantId = $this->option('tenant') ? (int) $this->option('tenant') : null;
         $force = (bool) $this->option('force');
 
         $results = $syncService->sync($tenantId, $force);
@@ -34,12 +34,16 @@ class SyncFormTypesCommand extends Command
             $this->comment("Skipped: {$results['skipped']} form type(s) (no changes)");
         }
 
+        if ($results['deactivated'] > 0) {
+            $this->comment("Deactivated: {$results['deactivated']} form type(s) whose YML file is gone");
+        }
+
         if ($results['errors'] > 0) {
             $this->error("Errors: {$results['errors']}");
         }
 
         // Display detailed messages if verbose
-        if ($this->option('verbose') && ! empty($results['messages'])) {
+        if (($this->option('verbose') || $results['errors'] > 0) && ! empty($results['messages'])) {
             $this->newLine();
             $this->line('Detailed messages:');
             foreach ($results['messages'] as $message) {

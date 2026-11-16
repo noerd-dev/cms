@@ -22,15 +22,6 @@ class CollectionHelper
     }
 
     /**
-     * Get collection table configuration.
-     * Static method delegates to the container-resolved instance for mockability.
-     */
-    public static function getCollectionTable(string $collection): array
-    {
-        return app(self::class)->resolveCollectionTable($collection);
-    }
-
-    /**
      * Get normalized field names for a collection (without 'detailData.' prefix).
      */
     public static function getCollectionFieldNames(string $collectionKey): array
@@ -53,27 +44,5 @@ class CollectionHelper
         }
 
         return $this->repository->resolveFields($collection);
-    }
-
-    /**
-     * Instance method: resolve collection table configuration.
-     */
-    public function resolveCollectionTable(string $collection): array
-    {
-        $table = [];
-        $collectionFields = $this->resolveCollectionFields($collection);
-
-        foreach ($collectionFields['fields'] ?? [] as $collectionField) {
-            $tableColumn = [];
-
-            $tableColumn['width'] = $collectionField['width'] ?? 10;
-            $tableColumn['label'] = $collectionField['label'] ?? $collectionField['name'];
-            $tableColumn['field'] = str_replace('detailData.', '', $collectionField['name']);
-            if ($tableColumn['field'] !== 'page_id') {
-                $table[] = $tableColumn;
-            }
-        }
-
-        return $table;
     }
 }

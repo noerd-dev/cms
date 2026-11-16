@@ -115,7 +115,7 @@ new class extends Component {
      */
     protected function getHasPageListFilter(): ListFilter
     {
-        return ListFilter::options(__('Type'), 'has_page', [
+        return ListFilter::options(__('Collection type'), 'has_page', [
             'page' => __('With page'),
             'data' => __('Data only'),
         ])->manual();

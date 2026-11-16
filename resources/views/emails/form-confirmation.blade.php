@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ isset($formRequest) ? \Noerd\Cms\Support\CmsLanguageCodes::defaultFor((int) $formRequest->tenant_id) : str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

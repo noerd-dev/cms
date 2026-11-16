@@ -1,10 +1,12 @@
 <?php
 
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Support\CmsLanguageCodes;
 
 new class extends Component {
+    #[Locked]
     public array $languages = [];
 
     public function mount(): void
@@ -23,6 +25,11 @@ new class extends Component {
 
     public function setLanguage(string $code): void
     {
+        // Only an active language of the tenant becomes the editing language.
+        if (! in_array($code, CmsLanguageCodes::active(), true)) {
+            return;
+        }
+
         session(['selectedLanguage' => $code]);
         $this->dispatch('languageChanged');
     }
@@ -36,7 +43,7 @@ new class extends Component {
                     'cursor-pointer text-sm',
                     'text-black underline' => session('selectedLanguage') === $language['code'],
                     'text-gray-500' => session('selectedLanguage') !== $language['code'],
-                ]) wire:click="setLanguage('{{ $language['code'] }}')">
+                ]) wire:click="setLanguage({{ \Illuminate\Support\Js::from($language['code']) }})">
                     {{ mb_strtoupper($language['code']) }}
                 </a>
             @endforeach

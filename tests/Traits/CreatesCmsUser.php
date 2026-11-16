@@ -38,8 +38,8 @@ trait CreatesCmsUser
     {
         $user = createNoerdUserForApp('CMS', profile: $profile, appAttributes: self::CMS_APP_ATTRIBUTES);
 
-        // The Tenant::created hook seeds the default language; make sure it
-        // exists even when the provider hook did not run.
+        // Assigning the CMS app seeds the default language
+        // (EnsureDefaultCmsLanguage); make sure it exists either way.
         CmsLanguage::ensureDefaultLanguageForTenant((int) $user->selected_tenant_id);
         CmsLanguageCodes::clearCache();
 
@@ -74,11 +74,22 @@ trait CreatesCmsUser
         $tenant = Tenant::factory()->create();
         $tenant->assignApp(ensureTenantApp('CMS', self::CMS_APP_ATTRIBUTES));
 
-        // The Tenant::created hook seeds the default language; make sure it
-        // exists even when the provider hook did not run.
+        // Assigning the CMS app seeds the default language
+        // (EnsureDefaultCmsLanguage); make sure it exists either way.
         CmsLanguage::ensureDefaultLanguageForTenant($tenant->id);
 
         return $tenant;
+    }
+
+    /**
+     * The token API resolves the tenant from the user's PERSISTED selection
+     * and accepts it only for a tenant the user may work in: make the user a
+     * member and store the selection.
+     */
+    protected function selectTenantForToken(NoerdUser $user, Tenant $tenant): void
+    {
+        $tenant->addMember($user, Profile::User->value);
+        $user->setting->update(['selected_tenant_id' => $tenant->id]);
     }
 
     /**

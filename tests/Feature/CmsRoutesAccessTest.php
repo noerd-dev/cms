@@ -57,7 +57,7 @@ it('keeps the tenant-wide configuration screens admin-only', function (string $u
     // The modal stack mounts by name without the route middleware — the guard closes it.
     Livewire::test($component)->assertForbidden();
 })->with([
-    'settings' => ['/cms/settings', 'cms::settings-page'],
+    'settings' => ['/cms/settings', 'cms::cms-settings-page'],
     'languages' => ['/cms/languages', 'cms::languages-list'],
     'collection definitions' => ['/cms/collection-definitions', 'cms::collection-definitions-list'],
 ]);
@@ -70,7 +70,7 @@ it('opens the configuration screens for an admin', function (string $uri, string
         ->assertSeeLivewire($component);
     expect(ComponentAccessGuard::allows($component))->toBeTrue();
 })->with([
-    'settings' => ['/cms/settings', 'cms::settings-page'],
+    'settings' => ['/cms/settings', 'cms::cms-settings-page'],
     'languages' => ['/cms/languages', 'cms::languages-list'],
     'collection definitions' => ['/cms/collection-definitions', 'cms::collection-definitions-list'],
 ]);

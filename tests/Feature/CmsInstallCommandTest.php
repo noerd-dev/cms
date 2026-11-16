@@ -70,7 +70,7 @@ it('registers the tenant app and publishes the cms app-configs and config file',
         ->and(File::files($this->hostPath . '/app-configs/cms/details'))->not->toBeEmpty()
         // getAdditionalSubdirectories() adds the form YAML folder.
         ->and(File::files($this->hostPath . '/app-configs/cms/forms'))->not->toBeEmpty()
-        ->and(File::exists($this->hostPath . '/config/noerd_cms.php'))->toBeTrue();
+        ->and(File::exists($this->hostPath . '/config/cms.php'))->toBeTrue();
 });
 
 it('stays idempotent when the install is run a second time', function (): void {
@@ -122,4 +122,87 @@ it('installs a missing media module first — silently, as a dependency', functi
     expect($media)->not->toBeNull()
         ->and($media->tenants()->pluck('tenants.id')->all())->toContain($tenant->id)
         ->and(File::exists($this->hostPath . '/app-configs/media/navigation.yml'))->toBeTrue();
+});
+
+it('seeds the starter homepage on install for a fresh tenant — and the update never does', function (): void {
+    $tenant = Noerd\Models\Tenant::factory()->create(['name' => 'Zz Cms Fresh Tenant']);
+
+    $this->artisan('noerd:install-cms', ['--force' => true])
+        ->expectsQuestion('App title', 'CMS')
+        ->expectsConfirmation('Would you like to assign the app to tenants now?', 'yes')
+        ->expectsQuestion("Which tenants should 'CMS' be assigned to?", [$tenant->id])
+        ->expectsConfirmation('Would you like to run php artisan migrate now?', 'no')
+        ->expectsConfirmation('Would you like to run "npm run build" to compile frontend assets?', 'no')
+        ->assertExitCode(0);
+
+    $setting = Noerd\Cms\Models\CmsSetting::forTenant($tenant->id);
+    expect($setting->exists)->toBeTrue()
+        ->and($setting->homepage_page_id)->not->toBeNull()
+        // The app assignment created the tenant's default website language.
+        ->and(Noerd\Cms\Models\CmsLanguage::query()->ofTenant($tenant->id)->where('is_default', true)->exists())->toBeTrue();
+
+    // An admin clears the homepage and deletes the page: the update leaves it so.
+    Noerd\Cms\Models\Page::query()->ofTenant($tenant->id)->get()->each->delete();
+    Noerd\Cms\Models\CmsSetting::updateForTenant(['homepage_page_id' => null], $tenant->id);
+
+    $this->artisan('noerd:update-cms', ['--force' => true])->assertExitCode(0);
+
+    expect(Noerd\Cms\Models\Page::query()->ofTenant($tenant->id)->count())->toBe(0)
+        ->and(Noerd\Cms\Models\CmsSetting::forTenant($tenant->id)->homepage_page_id)->toBeNull();
+});
+
+it('moves the host copies of the renamed screens and rewrites the form yaml on update', function (): void {
+    runZzCmsInstall($this)->assertExitCode(0);
+
+    $configs = $this->hostPath . '/app-configs/cms';
+    File::delete($configs . '/settings/cms-settings-page.yml');
+    File::put($configs . '/settings/settings-page.yml', "title: Project Settings\nfields: []\n");
+    File::put($configs . '/lists/articles-list.yml', "title: Old\ncolumns: []\n");
+    File::put($configs . '/forms/zz-legacy.yml', "key: zz-legacy\ntitle: Legacy\nsend_email: true\nemail_subject: Hi\nfields:\n  - name: email\n    error_messages:\n      required: Required\n");
+
+    expect(Illuminate\Support\Facades\Artisan::call('noerd:update-cms', ['--no-interaction' => true]))->toBe(0)
+        ->and(Illuminate\Support\Facades\Artisan::output())
+        ->toContain('Moved app-configs/cms/settings/settings-page.yml to settings/cms-settings-page.yml')
+        ->toContain('Removed app-configs/cms/lists/articles-list.yml');
+
+    expect(File::exists($configs . '/settings/settings-page.yml'))->toBeFalse()
+        // Moved, not replaced: the project's own version survives.
+        ->and(File::get($configs . '/settings/cms-settings-page.yml'))->toContain('Project Settings')
+        ->and(File::exists($configs . '/lists/articles-list.yml'))->toBeFalse()
+        ->and(File::exists($configs . '/lists/cms-articles-list.yml'))->toBeTrue();
+
+    $legacy = File::get($configs . '/forms/zz-legacy.yml');
+    expect($legacy)->toContain('sendEmail: true')
+        ->toContain('sendConfirmation: true')
+        ->toContain('confirmationSubject: Hi')
+        ->toContain('errorMessages:')
+        ->not->toContain('send_email');
+});
+
+it('keeps a project on config/noerd_cms.php and publishes no config/cms.php beside it', function (): void {
+    File::put($this->hostPath . '/config/noerd_cms.php', "<?php\n\nreturn ['website_url' => 'https://legacy.test'];\n");
+
+    runZzCmsInstall($this)->assertExitCode(0);
+
+    expect(File::exists($this->hostPath . '/config/cms.php'))->toBeFalse()
+        ->and(File::get($this->hostPath . '/config/noerd_cms.php'))->toContain('legacy.test');
+});
+
+
+it('reads a project\'s earlier config/noerd_cms.php over the cms defaults for the 0.6 line', function (): void {
+    File::put($this->hostPath . '/config/noerd_cms.php', "<?php\n\nreturn ['website_url' => 'https://legacy.test'];\n");
+    config(['noerd_cms' => ['website_url' => 'https://legacy.test'], 'cms.website_url' => '']);
+
+    Noerd\Cms\Support\LegacyCmsConfig::apply($this->app);
+
+    expect(config('cms.website_url'))->toBe('https://legacy.test')
+        // The defaults the earlier file does not name stay.
+        ->and(config('cms.collection_field_types'))->toHaveKey('elementCollection');
+
+    // A project with config/cms.php of its own is not touched by the earlier file.
+    File::put($this->hostPath . '/config/cms.php', "<?php\n\nreturn [];\n");
+    config(['cms.website_url' => 'https://new.test']);
+    Noerd\Cms\Support\LegacyCmsConfig::apply($this->app);
+
+    expect(config('cms.website_url'))->toBe('https://new.test');
 });

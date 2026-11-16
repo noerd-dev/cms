@@ -23,7 +23,7 @@ This command sets up the required database tables and initial configuration.
 | [Articles](articles.md) | Blog/news articles with authors and publication scheduling |
 | [Languages](languages.md) | Multi-language support with per-tenant language configuration |
 | [Global Parameters](global-parameters.md) | Key-value pairs for site-wide settings (footer text, social links) |
-| [Settings](settings.md) | Homepage selection, Google Analytics, cookie banner |
+| [Settings](settings.md) | Homepage selection, cookie banner, Google tag |
 | [API](api.md) | REST API for form submissions with token authentication |
 
 ## Database Tables
@@ -64,7 +64,7 @@ app-modules/cms/src/Helpers/    # FieldHelper, CollectionHelper
 app-modules/cms/src/Services/   # FormTypeSyncService, FieldTypeConverter
 app-modules/cms/routes/         # Web and API routes
 app-modules/cms/resources/      # Views, translations, lang files
-app-modules/cms/config/         # noerd_cms.php (published to config/ by noerd:install-cms)
+app-modules/cms/config/         # cms.php (published to config/ by noerd:install-cms)
 ```
 
 ## Routes
@@ -90,23 +90,26 @@ All CMS web routes are prefixed with `/cms` and protected by the `noerd` middlew
 
 ## Configuration
 
-`noerd:install-cms` publishes the configuration to `config/noerd_cms.php` (the
-module defaults stay merged, so every key is optional):
+`noerd:install-cms` publishes the configuration to `config/cms.php` (`cms.*`; the module defaults
+stay merged, so every key is optional — a project still on the earlier `config/noerd_cms.php` keeps it
+for the 0.6 line, see [Settings](settings.md)):
 
 ```php
 return [
     'website_url' => env('CMS_WEBSITE_URL', ''),
     'page_elements_path' => env('CMS_PAGE_ELEMENTS_PATH'),
-    'layout_path' => env('CMS_LAYOUT_PATH', 'app-modules/website/resources/views/components/layouts'),
+    'layout_path' => env('CMS_LAYOUT_PATH'),
+    'reserved_slug_prefixes' => [],
     'collection_field_types' => [/* type => label */],
 ];
 ```
 
-Set `CMS_WEBSITE_URL` in your `.env` file to configure the website URL used for live preview links, `CMS_PAGE_ELEMENTS_PATH` to add a project-level element directory and `CMS_LAYOUT_PATH` to point the page editor at the frontend layouts.
+Set `CMS_WEBSITE_URL` in your `.env` file to configure the website URL used for live preview links, `CMS_PAGE_ELEMENTS_PATH` to add a project-level element directory and `CMS_LAYOUT_PATH` to point the page editor at the frontend layouts (left empty, they are the
+`components/layouts` folder of the installed website module's `website` view namespace).
 
 ## Multi-Tenancy
 
-Content models use the `BelongsToTenant` trait (`CmsSetting` is a tenant singleton keyed explicitly; `ContentElement` is scoped through its content). Content is automatically scoped to the current tenant. When a new tenant is created, a default English language is automatically set up via `CmsLanguage::ensureDefaultLanguageForTenant()`.
+Content models use the `BelongsToTenant` trait (`CmsSetting` is a tenant singleton keyed explicitly; `ContentElement` is scoped through its content). Content is automatically scoped to the current tenant; code without a signed-in user names its tenant (`TenantHelper::currentTenantId()`, `ofTenant()`, `TenantContext::run()`). When the CMS app is assigned to a tenant (`TenantAppAssigned`), its default English website language is set up via `CmsLanguage::ensureDefaultLanguageForTenant()` — a tenant without the CMS gets none.
 
 ## Access Control
 

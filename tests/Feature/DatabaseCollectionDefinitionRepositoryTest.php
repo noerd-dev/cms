@@ -8,6 +8,7 @@ use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Support\CollectionDefinitionData;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Helpers\TenantHelper;
+use Noerd\Support\TenantContext;
 
 uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
@@ -26,7 +27,7 @@ it('returns an empty collection when the tenant has no definitions', function ()
 it('persists a new definition via save with current user as creator', function (): void {
     ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
     $this->actingAs($user);
-    TenantHelper::setSelectedTenantId($tenant->id);
+    TenantContext::set($tenant->id);
 
     $repo = new DatabaseCollectionDefinitionRepository();
     $data = new CollectionDefinitionData(
@@ -49,7 +50,7 @@ it('persists a new definition via save with current user as creator', function (
 
 it('updates an existing definition identified by originalFilename', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
-    TenantHelper::setSelectedTenantId($tenant->id);
+    TenantContext::set($tenant->id);
 
     $repo = new DatabaseCollectionDefinitionRepository();
 
@@ -67,7 +68,7 @@ it('updates an existing definition identified by originalFilename', function ():
 
 it('copies a definition with filename, key, title and title_list all suffixed with 2', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
-    TenantHelper::setSelectedTenantId($tenant->id);
+    TenantContext::set($tenant->id);
 
     $repo = new DatabaseCollectionDefinitionRepository();
     $repo->save(new CollectionDefinitionData('contacts', 'CONTACTS', 'Kontakt', 'Kontakte', null, false, [
@@ -86,7 +87,7 @@ it('copies a definition with filename, key, title and title_list all suffixed wi
 
 it('throws when copy target already exists', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
-    TenantHelper::setSelectedTenantId($tenant->id);
+    TenantContext::set($tenant->id);
 
     $repo = new DatabaseCollectionDefinitionRepository();
     $repo->save(new CollectionDefinitionData('contacts', 'CONTACTS', 'Kontakt', 'Kontakte', null, false, []));
@@ -97,7 +98,7 @@ it('throws when copy target already exists', function (): void {
 
 it('deletes a definition and invalidates cache', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
-    TenantHelper::setSelectedTenantId($tenant->id);
+    TenantContext::set($tenant->id);
 
     $repo = new DatabaseCollectionDefinitionRepository();
     $repo->save(new CollectionDefinitionData('contacts', 'CONTACTS', 'Kontakt', 'Kontakte', null, false, []));
@@ -112,7 +113,7 @@ it('deletes a definition and invalidates cache', function (): void {
 
 it('treats deleting a nonexistent definition as a no-op', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
-    TenantHelper::setSelectedTenantId($tenant->id);
+    TenantContext::set($tenant->id);
 
     $repo = new DatabaseCollectionDefinitionRepository();
     $repo->save(new CollectionDefinitionData('contacts', 'CONTACTS', 'Kontakt', 'Kontakte', null, false, []));
@@ -124,7 +125,7 @@ it('treats deleting a nonexistent definition as a no-op', function (): void {
 
 it('returns the resolved definition payload from resolveFields', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
-    TenantHelper::setSelectedTenantId($tenant->id);
+    TenantContext::set($tenant->id);
 
     $repo = new DatabaseCollectionDefinitionRepository();
     $repo->save(new CollectionDefinitionData(
@@ -151,7 +152,7 @@ it('returns the resolved definition payload from resolveFields', function (): vo
 
 it('preserves explicit registered relation field types through save and resolveFields', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
-    TenantHelper::setSelectedTenantId($tenant->id);
+    TenantContext::set($tenant->id);
 
     $repo = new DatabaseCollectionDefinitionRepository();
     $repo->save(new CollectionDefinitionData(

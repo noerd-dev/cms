@@ -3,10 +3,9 @@
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
-use Noerd\Cms\Mail\FormConfirmation;
+use Noerd\Cms\Forms\FormMailer;
 use Noerd\Cms\Models\FormRequest;
 use Noerd\Cms\Models\FormType;
-use Noerd\Communication\Services\Communicator;
 use Noerd\Traits\NoerdDetail;
 
 new class extends Component {
@@ -36,23 +35,26 @@ new class extends Component {
         ];
     }
 
+    /**
+     * Resending writes on the request's behalf (a mail goes out, the log
+     * records it): it needs the write permission on form requests, and the
+     * form type is read from the stored request — never from the client state.
+     */
     #[Computed]
     public function canResendNotification(): bool
     {
-        if (! $this->detailData['form_type_id']) {
+        if (! $this->canWriteObject()) {
             return false;
         }
 
-        $formType = FormType::find($this->detailData['form_type_id']);
+        $formType = $this->storedFormType();
 
         if (! $formType) {
             return false;
         }
 
-        return $formType->send_email
-            && ! empty($formType->notification_email)
-            && ! empty($formType->email_subject)
-            && ! empty($formType->email_body);
+        // The notification goes to the form recipients only (FormMailer).
+        return app(FormMailer::class)->canNotify($formType);
     }
 
     #[Computed]
@@ -96,9 +98,8 @@ new class extends Component {
         }
 
         try {
-            $formType = FormType::find($this->detailData['form_type_id']);
-
-            $formRequest = FormRequest::find($this->modelId);
+            $formRequest = $this->modelId ? FormRequest::find($this->modelId) : null;
+            $formType = $this->storedFormType();
 
             if (! $formType || ! $formRequest) {
                 $this->dispatch('toast', [
@@ -111,17 +112,7 @@ new class extends Component {
 
             RateLimiter::hit($key, 30);
 
-            $emailSubject = $formType->replacePlaceholders($formRequest, $formType->email_subject);
-            $emailBody = $formType->replacePlaceholders($formRequest, $formType->email_body, escapeHtml: true);
-
-            app(Communicator::class)->send(
-                mailable: new FormConfirmation(
-                    $formRequest,
-                    $emailSubject,
-                    $emailBody,
-                ),
-                to: $formType->notification_email,
-            );
+            $recipients = app(FormMailer::class)->sendNotification($formRequest);
 
             logger()->info('Notification email resent for form request', [
                 'form_request_id' => $this->modelId,
@@ -129,8 +120,8 @@ new class extends Component {
             ]);
 
             $this->dispatch('toast', [
-                'title' => __('Sent'),
-                'description' => __('Notification was resent to :email.', ['email' => $formType->notification_email]),
+                'title' => __('Notification sent'),
+                'description' => __('Notification was resent to :email.', ['email' => implode(', ', $recipients)]),
             ]);
         } catch (\Exception $e) {
             logger()->error('Failed to resend notification email', [
@@ -145,6 +136,15 @@ new class extends Component {
         }
     }
 
+    /**
+     * The form type of the stored form request (tenant scoped).
+     */
+    private function storedFormType(): ?FormType
+    {
+        $formTypeId = $this->modelId ? FormRequest::query()->whereKey($this->modelId)->value('form_type_id') : null;
+
+        return $formTypeId ? FormType::find($formTypeId) : null;
+    }
 } ?>
 
 <x-noerd::page>
@@ -225,7 +225,7 @@ new class extends Component {
                                 </template>
                             </span>
                             <span wire:loading wire:target="resendNotificationEmail">
-                                {{ __('Sending...') }}
+                                {{ __('Sending mail...') }}
                             </span>
                         </x-noerd::button>
                     </div>

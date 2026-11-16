@@ -9,6 +9,7 @@ use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Cms\Support\MediaValues;
+use Noerd\Cms\Support\RichTextValues;
 use Noerd\Cms\Traits\HandlesPageElements;
 
 class PageElementService
@@ -34,7 +35,9 @@ class PageElementService
         $data = $this->injectElementCollections($page, $data);
         $data = $this->handlesLocalizeArray($data, $language);
 
-        return MediaValues::resolve($data, $this->collectionFields($page));
+        $fields = $this->collectionFields($page);
+
+        return RichTextValues::sanitize(MediaValues::resolve($data, $fields), $fields);
     }
 
 
@@ -87,8 +90,10 @@ class PageElementService
                 $rowFields = $elementCollection->element_fields ?? [];
 
                 $data[$elementCollection->owner_field] = $elementCollection->rows
+                    ->filter(fn($row): bool => (bool) ($row->is_active ?? true))
                     ->map(fn($row) => is_array($row->data) ? $row->data : [])
-                    ->map(fn(array $row): array => MediaValues::resolve($row, $rowFields))
+                    ->map(fn(array $row): array => RichTextValues::sanitize(MediaValues::resolve($row, $rowFields), $rowFields))
+                    ->values()
                     ->all();
             });
 

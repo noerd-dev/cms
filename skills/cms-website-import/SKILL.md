@@ -87,8 +87,8 @@ Every `content_elements.data` field that the yml declares as `translatableText` 
 
 For every `<form>` found:
 
-1. Convert each input to a YAML field (`name`, `label`, `type`, `required`, `validation`, optional `error_messages`, `placeholder`).
-2. Save as `app-configs/cms/forms/{key}.yml`, modeled on `templates/form.yml.stub`.
+1. Convert each input to a YAML field (`name`, `label`, `type`, `required`, `validation`, optional `errorMessages`, `placeholder`). The form YAML is camelCase only (`sendEmail`, `emailSubject`, `emailBody`, `notificationEmail`, `sendConfirmation`, `confirmationField`, `confirmationSubject`, `confirmationBody`, `successMessage`, `submitButtonText`); `required: true` and a `required` rule mean the same — write one of them.
+2. Save as `app-configs/cms/forms/{key}.yml`, modeled on `templates/form.yml.stub`. The NOTIFICATION (`sendEmail`) goes to the form recipients only, the CONFIRMATION (`sendConfirmation`) to the sender's address in `confirmationField` — write a text for each. A submission is refused while the form YAML is missing (fail-closed), so the file must exist before the form goes live; website forms submit through `Noerd\Cms\Forms\FormSubmissionService::submit()`.
 3. Append `php artisan cms:sync-form-types --force` to the post-migration step list.
 4. Replace the original `<form>` in any leftover Blade with the CMS form-render component (or rely on the new CMS page).
 

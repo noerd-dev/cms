@@ -66,7 +66,10 @@ class Page extends Model
         static::deleting(function (self $page): void {
             $elementPageIds = $page->elements()->pluck('id')->all();
 
+            // The page's own tenant, named — a headless delete (command, job)
+            // has no tenant context of its own.
             Collection::query()
+                ->ofTenant((int) $page->tenant_id)
                 ->where('is_element_collection', true)
                 ->where(function ($query) use ($page, $elementPageIds): void {
                     $query->where('page_id', $page->id)

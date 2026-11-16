@@ -4,8 +4,14 @@ columns:
     label: Key
   - field: title
     label: Title
+  - field: is_active
+    label: Active
+    type: bool
   - field: send_email
-    label: Email
+    label: Notification
+    type: bool
+  - field: send_confirmation
+    label: Confirmation
     type: bool
   - field: yml_synced_at
     label: Synced At

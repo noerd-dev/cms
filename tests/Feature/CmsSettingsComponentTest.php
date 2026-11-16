@@ -32,7 +32,7 @@ it('loads and displays page options with localized names and saves selection', f
     ]);
 
     $component = Livewire::actingAs($user)
-        ->test('cms::settings-page');
+        ->test('cms::cms-settings-page');
 
     // Page options render the localized display name of every page
     $component->assertSee(\Noerd\Support\RelationFieldDefinition::normalizeDisplayValue($page1->name));
@@ -58,7 +58,7 @@ it('does not create a settings row as a render side effect', function (): void {
     $user = $this->user;
     $tenant = $this->tenant;
 
-    Livewire::actingAs($user)->test('cms::settings-page');
+    Livewire::actingAs($user)->test('cms::cms-settings-page');
 
     // The tenant singleton is created lazily on the first save.
     expect(CmsSetting::where('tenant_id', $tenant->id)->exists())->toBeFalse();
@@ -71,7 +71,7 @@ it('rejects a homepage page belonging to another tenant', function (): void {
     $foreignPage = Page::factory()->create(['tenant_id' => $foreignTenant->id]);
 
     Livewire::actingAs($user)
-        ->test('cms::settings-page')
+        ->test('cms::cms-settings-page')
         ->set('detailData.homepage_page_id', (string) $foreignPage->id)
         ->call('store')
         ->assertHasErrors('detailData.homepage_page_id');
@@ -82,7 +82,7 @@ it('saves comma separated form recipients and rejects invalid email addresses', 
     $tenant = $this->tenant;
 
     $component = Livewire::actingAs($user)
-        ->test('cms::settings-page');
+        ->test('cms::cms-settings-page');
 
     $component
         ->set('detailData.form_recipients', 'one@example.com, two@example.com')
@@ -115,7 +115,7 @@ it('saves the cookie consent duration and rejects values outside the allowed ran
         ?: CmsSetting::DEFAULT_COOKIE_LIFETIME_DAYS;
 
     $component = Livewire::actingAs($user)
-        ->test('cms::settings-page');
+        ->test('cms::cms-settings-page');
 
     $component->assertSet('detailData.cookie_lifetime_days', $expectedDefault);
 

@@ -51,34 +51,6 @@ class FieldHelper
         return $fields;
     }
 
-    public static function parseElementToData(string $element, ?array $data): ?array
-    {
-        $model = [];
-        $elementFields = self::getElementFields($element);
-
-        if (! $elementFields) {
-            return null;
-        }
-
-        $flattenedFields = self::flattenFields($elementFields['fields'] ?? []);
-
-        $translatableTypes = ['translatableText', 'translatableRichText', 'translatableTextarea'];
-
-        foreach ($flattenedFields as $elementField) {
-            $baseKey = preg_replace('/^\w+\./', '', $elementField['name']);
-
-            if (in_array($elementField['type'], $translatableTypes)) {
-                foreach (CmsLanguageCodes::active() as $lang) {
-                    $model[$baseKey][$lang] = $data[$baseKey][$lang] ?? $data[$baseKey] ?? '';
-                }
-            } else {
-                $model[$baseKey] = $data[$baseKey] ?? $elementField['default'] ?? '';
-            }
-        }
-
-        return $model;
-    }
-
     public static function parseComponentToData(string $component, array $data): array
     {
         $datas = [];

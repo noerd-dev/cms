@@ -10,7 +10,7 @@ new class extends Component {
 <div class="grid lg:grid-cols-2 gap-8 pb-28">
     <div class="text-block-header-links text-2xl lg:text-3xl mt-auto uppercase font-light text-gray-900">
         @if(!empty($element->toppage))
-            <a href="/{{ strtolower($element->toppage) }}">{{ $element->toppage }}</a> /
+            <a href="/{{ rawurlencode(mb_strtolower((string) $element->toppage)) }}">{{ $element->toppage }}</a> /
         @endif
 
         {{ $element->title ?? '' }}

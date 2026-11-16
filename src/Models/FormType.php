@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace Noerd\Cms\Models;
 
-use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\File;
 use Noerd\Cms\Database\Factories\FormTypeFactory;
+use Noerd\Cms\Forms\FormDefinition;
 use Noerd\Helpers\FormatHelper;
 use Noerd\Models\Tenant;
 use Noerd\Traits\BelongsToTenant;
-use Symfony\Component\Yaml\Yaml;
 
 class FormType extends Model
 {
@@ -50,34 +49,37 @@ class FormType extends Model
     }
 
     /**
-     * Load YML configuration from file
+     * The form YAML this type was synced from, read in the current vocabulary
+     * (FormDefinition) — null when the file is missing or broken. The path is
+     * stored relative to the project root (written by FormTypeSyncService,
+     * never by a screen).
      */
-    public function loadYmlConfig(): ?array
+    public function definition(): ?FormDefinition
     {
-        if (! $this->yml_path) {
+        if (! is_string($this->yml_path) || $this->yml_path === '') {
             return null;
         }
 
-        // Support both relative and absolute paths
-        $fullPath = str_starts_with($this->yml_path, '/')
-            ? $this->yml_path
-            : base_path($this->yml_path);
+        return FormDefinition::fromFile(str_starts_with($this->yml_path, '/') ? $this->yml_path : base_path($this->yml_path));
+    }
 
-        if (! File::exists($fullPath)) {
-            return null;
-        }
+    /**
+     * The field of a submission holding the visitor's address for the
+     * confirmation.
+     */
+    public function confirmationField(): string
+    {
+        $field = $this->confirmation_field;
 
-        try {
-            return Yaml::parseFile($fullPath);
-        } catch (Exception $e) {
-            logger()->error('Failed to load YML config for FormType', [
-                'form_type_id' => $this->id,
-                'yml_path' => $fullPath,
-                'error' => $e->getMessage(),
-            ]);
+        return is_string($field) && $field !== '' ? $field : FormDefinition::DEFAULT_CONFIRMATION_FIELD;
+    }
 
-            return null;
-        }
+    /**
+     * @param  Builder<FormType>  $query
+     */
+    public function scopeActive(Builder $query): void
+    {
+        $query->where('is_active', true);
     }
 
     /**
@@ -131,18 +133,10 @@ class FormType extends Model
      */
     public function getFieldPlaceholders(): array
     {
-        $config = $this->loadYmlConfig();
-        if (! $config || ! isset($config['fields'])) {
-            return [];
-        }
-
         $placeholders = [];
-        foreach ($config['fields'] as $field) {
-            $fieldName = $field['name'] ?? null;
-            $fieldLabel = $field['label'] ?? $fieldName;
-            if ($fieldName) {
-                $placeholders["{{field:{$fieldName}}}"] = $fieldLabel;
-            }
+
+        foreach ($this->definition()?->fields() ?? [] as $field) {
+            $placeholders['{{field:' . $field['name'] . '}}'] = (string) ($field['label'] ?? $field['name']);
         }
 
         return $placeholders;
@@ -159,7 +153,9 @@ class FormType extends Model
     protected function casts(): array
     {
         return [
+            'is_active' => 'boolean',
             'send_email' => 'boolean',
+            'send_confirmation' => 'boolean',
             'yml_synced_at' => 'datetime',
         ];
     }

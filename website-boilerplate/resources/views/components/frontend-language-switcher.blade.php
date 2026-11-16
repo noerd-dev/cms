@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Component;
+use Noerd\Cms\Support\SafeUrl;
 use Noerd\Website\Models\Language;
 use Noerd\Website\Models\Page;
 
@@ -23,14 +24,14 @@ new class extends Component {
                 ->get(['code', 'name'])
                 ->toArray();
 
-            if (!session('selectedLanguage') && count($this->languages) > 0) {
+            if (! session(\Noerd\Website\Support\WebsiteLanguage::SESSION_KEY) && count($this->languages) > 0) {
                 $default = Language::where('tenant_id', $tenantId)
                     ->where('is_active', true)
                     ->where('is_default', true)
                     ->orderBy('sort_order')
                     ->first();
                 if ($default) {
-                    session(['selectedLanguage' => $default->code]);
+                    session([\Noerd\Website\Support\WebsiteLanguage::SESSION_KEY => $default->code]);
                 }
             }
         }
@@ -38,23 +39,33 @@ new class extends Component {
 
     public function setLanguage(string $code)
     {
-        $requestUrl = request()->headers->get('referer');
+        // Only a language this switcher offers (an active language of the
+        // tenant) — the code is client input.
+        if (! in_array($code, array_column($this->languages, 'code'), true)) {
+            return null;
+        }
 
-        $slug = parse_url($requestUrl, PHP_URL_PATH);
+        // The page the visitor came from — only its PATH, and only when it is
+        // a path of this site (a referer `https://site//evil.com` has the path
+        // `//evil.com`, which a redirect would send to another host).
+        $path = parse_url((string) request()->headers->get('referer'), PHP_URL_PATH);
+        $path = SafeUrl::isSitePath($path) ? $path : '/';
 
-        $page = Page::whereJsonContains('slug->' . session('selectedLanguage'), $slug)
-            ->where('tenant_id', session('selectedTenantId'))
-            ->first();
+        $currentLanguage = (string) \Noerd\Website\Support\WebsiteLanguage::current();
+        $page = preg_match('/^[a-z]{2,8}(-[a-z0-9]{2,8})?$/i', $currentLanguage)
+            ? Page::whereJsonContains('slug->' . $currentLanguage, $path)
+                ->where('tenant_id', session('selectedTenantId'))
+                ->where('is_active', true)
+                ->first()
+            : null;
 
-        session(['selectedLanguage' => $code]);
+        session([\Noerd\Website\Support\WebsiteLanguage::SESSION_KEY => $code]);
 
         // Redirect to the page's slug in the target language when it exists;
         // otherwise stay on (or fall back to) the start page.
-        if ($page && ! empty($page->slug[$code])) {
-            return redirect($page->slug[$code]);
-        }
+        $target = is_array($page?->slug) ? ($page->slug[$code] ?? null) : null;
 
-        return redirect($slug ?: '/');
+        return redirect(SafeUrl::isSitePath($target) ? $target : $path);
     }
 } ?>
 <div class="w-full flex">
@@ -63,9 +74,9 @@ new class extends Component {
             @foreach($this->languages as $language)
                 <a @class([
                     'cursor-pointer ml-2',
-                    'text-black underline' => session('selectedLanguage') === $language['code'],
-                    'text-gray-500' => session('selectedLanguage') !== $language['code'],
-                ]) wire:click="setLanguage('{{$language['code']}}')">
+                    'text-black underline' => \Noerd\Website\Support\WebsiteLanguage::current() === $language['code'],
+                    'text-gray-500' => \Noerd\Website\Support\WebsiteLanguage::current() !== $language['code'],
+                ]) wire:click="setLanguage({{ \Illuminate\Support\Js::from($language['code']) }})">
                     {{ strtoupper($language['code']) }}
                 </a>
             @endforeach

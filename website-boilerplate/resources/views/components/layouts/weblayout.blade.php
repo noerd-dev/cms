@@ -1,23 +1,55 @@
-@props(['title' => 'CMS Frontend'])
+@props(['title' => null, 'meta' => []])
 
 @php
+    // Cookie banner and Google tag of the tenant — the ONE gate is the CMS's
+    // WebsiteTrackingService (the tag only with the banner, after consent and
+    // on a host that shares no session with the backend).
+    $websiteTenantId = (int) (request()->attributes->get('tenant_id') ?? 0);
+    $tracking = $websiteTenantId > 0
+        ? app(\Noerd\Cms\Services\WebsiteTrackingService::class)->forRequest($websiteTenantId, request()->getHost())
+        : null;
+
     // Navigation active state logic - inline to avoid function redeclaration errors
     $currentUrl = request()->url();
     $currentPath = parse_url($currentUrl, PHP_URL_PATH);
+
+    // Page meta (Noerd\Cms\Support\PageMeta::of()): meta_title, meta_description,
+    // meta_noindex and the Open Graph image (an absolute delivery URL).
+    $meta = is_array($meta) ? $meta : [];
+    $pageTitle = $meta['title'] ?? $title ?? ($globals['siteTitle'] ?? 'CMS Frontend');
+    $turnstileEnabled = config('services.turnstile.enabled')
+        && class_exists('RyanChandler\LaravelCloudflareTurnstile\Rules\Turnstile');
 @endphp
 
-    <!doctype html>
+<!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title }}</title>
+    <title>{{ $pageTitle }}</title>
+    @if (! empty($meta['description']))
+        <meta name="description" content="{{ $meta['description'] }}">
+    @endif
+    @if (! empty($meta['noindex']))
+        <meta name="robots" content="noindex, nofollow">
+    @endif
+    <meta property="og:title" content="{{ $pageTitle }}">
+    @if (! empty($meta['description']))
+        <meta property="og:description" content="{{ $meta['description'] }}">
+    @endif
+    @if (! empty($meta['image']))
+        <meta property="og:image" content="{{ $meta['image'] }}">
+    @endif
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
-    @if (config('services.turnstile.enabled'))
-        <x-turnstile.scripts />
+    {{-- Cloudflare Turnstile is optional: only with the package installed and configured.
+         A dynamic component, because a static <x-turnstile…> tag is resolved
+         when the view compiles and fails without the package. --}}
+    @if ($turnstileEnabled)
+        <x-dynamic-component component="turnstile.scripts" />
     @endif
+    @include('website::partials.tracking-head', ['tracking' => $tracking])
 </head>
 <body class="min-h-screen flex flex-col bg-gray-50 text-gray-900">
 
@@ -45,11 +77,24 @@
                                     ? 'bg-gray-900 text-white'
                                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900';
                             @endphp
-                            <a href="{{ $link['href'] }}"
-                               @if(($link['new_tab'] ?? false)) target="_blank" rel="noopener" @endif
-                               class="rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 {{ $activeClasses }}">
-                                {{ $link['name'] }}
-                            </a>
+                            <div class="relative group">
+                                <a href="{{ \Noerd\Cms\Support\SafeUrl::href($link['href'] ?? null) }}"
+                                   @if(($link['new_tab'] ?? false)) target="_blank" rel="noopener noreferrer" @endif
+                                   class="block rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 {{ $activeClasses }}">
+                                    {{ $link['name'] }}
+                                </a>
+                                @if (! empty($link['children']))
+                                    <div class="absolute left-0 z-10 hidden min-w-48 rounded-md border border-gray-200 bg-white py-1 shadow-sm group-hover:block group-focus-within:block">
+                                        @foreach ($link['children'] as $child)
+                                            <a href="{{ \Noerd\Cms\Support\SafeUrl::href($child['href'] ?? null) }}"
+                                               @if(($child['new_tab'] ?? false)) target="_blank" rel="noopener noreferrer" @endif
+                                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                {{ $child['name'] }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
                         @empty
                             <a href="#" class="rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">Home</a>
                         @endforelse
@@ -89,11 +134,18 @@
                         ? 'bg-gray-900 text-white'
                         : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900';
                 @endphp
-                <a href="{{ $link['href'] }}"
-                   @if(($link['new_tab'] ?? false)) target="_blank" rel="noopener" @endif
+                <a href="{{ \Noerd\Cms\Support\SafeUrl::href($link['href'] ?? null) }}"
+                   @if(($link['new_tab'] ?? false)) target="_blank" rel="noopener noreferrer" @endif
                    class="block rounded-md px-3 py-2 text-base font-medium transition-colors duration-200 {{ $mobileActiveClasses }}">
                     {{ $link['name'] }}
                 </a>
+                @foreach (($link['children'] ?? []) as $child)
+                    <a href="{{ \Noerd\Cms\Support\SafeUrl::href($child['href'] ?? null) }}"
+                       @if(($child['new_tab'] ?? false)) target="_blank" rel="noopener noreferrer" @endif
+                       class="block rounded-md py-2 pr-3 pl-6 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900">
+                        {{ $child['name'] }}
+                    </a>
+                @endforeach
             @endforeach
             <div class="border-t border-gray-200 my-2"></div>
             <div class="px-3 py-2">
@@ -129,7 +181,8 @@
                                 ? 'text-white font-semibold'
                                 : 'text-gray-300 hover:text-white';
                         @endphp
-                        <a href="{{ $link['href'] }}"
+                        <a href="{{ \Noerd\Cms\Support\SafeUrl::href($link['href'] ?? null) }}"
+                           @if(($link['new_tab'] ?? false)) target="_blank" rel="noopener noreferrer" @endif
                            class="transition-colors duration-200 {{ $footerActiveClasses }}">
                             {{ $link['name'] }}
                         </a>
@@ -141,7 +194,7 @@
             @if(!empty($globals['phone']))
                 <div>
                     <h3 class="text-lg font-semibold mb-4">{{ __('Contact') }}</h3>
-                    <a href="tel:{{ $globals['phone'] }}" class="text-gray-300 hover:text-white transition-colors duration-200">
+                    <a href="tel:{{ preg_replace('/[^0-9+]/', '', (string) $globals['phone']) }}" class="text-gray-300 hover:text-white transition-colors duration-200">
                         {{ $globals['phone'] }}
                     </a>
                 </div>
@@ -155,12 +208,13 @@
 
         <!-- Footer Bottom -->
         <div class="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-400">
-            <p>&copy; {{ date('Y') }} {{ $globals['siteTitle'] ?? 'CMS Frontend' }}. {{ __('All rights reserved.') }}</p>
+            <p>&copy; {{ now()->year }} {{ $globals['siteTitle'] ?? 'CMS Frontend' }}. {{ __('All rights reserved.') }}</p>
         </div>
     </div>
 </footer>
 
 @livewireScripts
+@include('website::partials.cookie-consent', ['tracking' => $tracking])
 </body>
 </html>
 

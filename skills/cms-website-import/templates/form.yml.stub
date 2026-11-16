@@ -2,15 +2,17 @@ key: '{{ form_key_lowercase_snake }}'
 title: '{{ Form title shown in admin UI }}'
 description: '{{ One-line description }}'
 
-# Email behavior — set send_email: true to dispatch a notification on submit.
-# Placeholders inside email_subject / email_body:
+# Two separate mails (noerd/cms 0.6). Placeholders in every subject and body:
 #   {{form_title}}        — value of `title` above
 #   {{submission_date}}   — formatted submission date
 #   {{field:<name>}}      — value of any submitted field
-send_email: true
-notification_email: '{{ recipient@example.com }}'
-email_subject: '{{ Email subject — supports {{form_title}} and {{field:name}} }}'
-email_body: |
+#
+# The NOTIFICATION goes to the form recipients of the CMS settings, else to
+# notificationEmail — never to the visitor.
+sendEmail: true
+notificationEmail: '{{ recipient@example.com }}'
+emailSubject: '{{ Email subject — supports {{form_title}} and {{field:name}} }}'
+emailBody: |
   <h2>{{form_title}}</h2>
   <p><strong>Name:</strong> {{field:name}}</p>
   <p><strong>Email:</strong> {{field:email}}</p>
@@ -19,18 +21,26 @@ email_body: |
   <hr>
   <p><small>Submitted on {{submission_date}}</small></p>
 
+# The CONFIRMATION goes to the visitor: the address in confirmationField.
+sendConfirmation: true
+confirmationField: email
+confirmationSubject: 'Thank you for your message'
+confirmationBody: |
+  <p>Hello {{field:name}},</p>
+  <p>thank you for your message. We will get back to you soon.</p>
+
 # Field types: text, email, tel, textarea, select, checkbox, radio, date, file
-# Validation array uses Laravel validation rules.
+# `validation` takes Laravel rules. `required: true` and a `required` rule mean
+# the same — write one of them. A field that is not required is nullable.
 fields:
   - name: name
     label: Name
     type: text
     required: true
     validation:
-      - required
       - string
       - 'max:255'
-    error_messages:
+    errorMessages:
       required: 'Name is required.'
     placeholder: 'Your full name'
 
@@ -39,10 +49,9 @@ fields:
     type: email
     required: true
     validation:
-      - required
       - email
       - 'max:255'
-    error_messages:
+    errorMessages:
       required: 'Email address is required.'
       email: 'Please enter a valid email address.'
     placeholder: 'you@example.com'
@@ -53,11 +62,10 @@ fields:
     required: true
     rows: 4
     validation:
-      - required
       - string
       - 'max:2000'
-    error_messages:
+    errorMessages:
       required: 'A message is required.'
 
-success_message: 'Thank you! Your message has been sent.'
-submit_button_text: 'Send message'
+successMessage: 'Thank you! Your message has been sent.'
+submitButtonText: 'Send message'

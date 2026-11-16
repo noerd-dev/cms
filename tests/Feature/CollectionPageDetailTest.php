@@ -22,7 +22,7 @@ beforeEach(function (): void {
     DatabaseCollectionDefinitionRepository::resetCache();
 });
 
-it('uploads an image via images.field binding and stores path into model', function (): void {
+it('uploads an image via the imageUploads.field binding and stores the media id', function (): void {
     Storage::fake('media');
 
     $collection = $this->zzCollectionDefinition($this->tenant->id, 'projects', [
@@ -40,7 +40,7 @@ it('uploads an image via images.field binding and stores path into model', funct
     $before = MediaModel::count();
 
     Livewire::test('cms::page-detail', ['pageId' => $entry->id, 'collectionKey' => 'projects'])
-        ->set('images.image', UploadedFile::fake()->image('photo.jpg', 1200, 800))
+        ->set('imageUploads.image', UploadedFile::fake()->image('photo.jpg', 1200, 800))
         // The id is stored, not a URL: the media disk mirrors the folder tree,
         // so a path would only be true until the file is moved.
         ->assertSet('detailData.image', fn($value) => is_numeric($value) && (int) $value > 0);
@@ -105,7 +105,7 @@ it('does not update image on mediaSelected when token mismatches; updates when t
     // The token is minted server-side when the picker modal opens; it lives in
     // a locked property, never in the mass-assigned detailData payload.
     $component->call('openSelectMediaModal', 'image');
-    $token = $component->get('mediaToken');
+    $token = $component->get('mediaSelectToken');
     expect($token)->toBeString()->not->toBe('');
 
     $component->call('mediaSelected', $media->id, 'image', 'wrong-token')
@@ -113,7 +113,7 @@ it('does not update image on mediaSelected when token mismatches; updates when t
 
     $component->call('mediaSelected', $media->id, 'image', $token)
         ->assertSet('detailData.image', $media->id)
-        ->assertSet('mediaToken', null);
+        ->assertSet('mediaSelectToken', null);
 });
 
 it('handles collections without page features (hasPage: false)', function (): void {

@@ -9,6 +9,7 @@ use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Cms\Support\ElementDirectories;
 use Noerd\Cms\Support\MediaValues;
+use Noerd\Cms\Support\RichTextValues;
 
 trait HandlesPageElements
 {
@@ -53,17 +54,21 @@ trait HandlesPageElements
                 $rowFields = $elementCollection->element_fields ?? [];
 
                 $rawData[$elementCollection->owner_field] = $elementCollection->rows
+                    ->filter(fn($row): bool => (bool) ($row->is_active ?? true))
                     ->map(fn($row) => is_array($row->data) ? $row->data : [])
-                    ->map(fn(array $row): array => MediaValues::resolve($row, $rowFields))
+                    ->map(fn(array $row): array => RichTextValues::sanitize(MediaValues::resolve($row, $rowFields), $rowFields))
+                    ->values()
                     ->all();
             }
 
             // Image fields hold the media id; the URL is resolved on the way
-            // out, so a file that moved in the library still renders.
-            $data = MediaValues::resolveElement(
+            // out, so a file that moved in the library still renders. Rich text
+            // is printed raw by the element templates and is sanitized here,
+            // whatever wrote it.
+            $data = RichTextValues::sanitizeElement($elementKey, MediaValues::resolveElement(
                 $elementKey,
                 $this->localizeElementData($rawData, $selectedLanguage),
-            );
+            ));
 
             $elements[] = [
                 'id' => $pageElement->id,
@@ -87,7 +92,7 @@ trait HandlesPageElements
     {
         $mapping = [];
 
-        $customElementsPath = config('noerd_cms.page_elements_path');
+        $customElementsPath = config('cms.page_elements_path');
         $bladeFiles = [];
 
         if (! empty($customElementsPath) && is_dir(base_path($customElementsPath))) {
@@ -114,20 +119,6 @@ trait HandlesPageElements
         }
 
         return $mapping;
-    }
-
-    /**
-     * Check whether both the Blade component and the YAML definition exist
-     */
-    public function elementDefinitionExists(string $componentName): bool
-    {
-        $parts = explode('.', $componentName);
-        $fileBase = end($parts) ?: $componentName;
-
-        $bladeMatches = ElementDirectories::files($fileBase . '.blade.php');
-        $ymlMatches = ElementDirectories::files($fileBase . '.yml');
-
-        return ! empty($bladeMatches) && ! empty($ymlMatches);
     }
 
     /**

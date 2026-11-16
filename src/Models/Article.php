@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Noerd\Cms\Database\Factories\ArticleFactory;
 use Noerd\Traits\BelongsToTenant;
 
@@ -29,11 +30,21 @@ class Article extends Model
         return $this->belongsTo(Author::class);
     }
 
-    public function scopePublished(Builder $query): Builder
+    /**
+     * Active articles whose publication date has come. "Today" is the date in
+     * the application's timezone (noerd keeps no timezone per tenant) unless
+     * the caller names it (`Y-m-d`). A plain comparison on the date column
+     * ("before tomorrow" — a stored time part never hides today's article), so
+     * the index (tenant_id, is_active, publication_date) is used — never
+     * DATE(column).
+     */
+    public function scopePublished(Builder $query, ?string $today = null): Builder
     {
-        return $query->where('is_active', true)
-            ->whereNotNull('publication_date')
-            ->whereDate('publication_date', '<=', now()->toDateString());
+        $today = $today !== null ? Carbon::parse($today) : now(config('app.timezone'));
+
+        return $query->where($this->qualifyColumn('is_active'), true)
+            ->whereNotNull($this->qualifyColumn('publication_date'))
+            ->where($this->qualifyColumn('publication_date'), '<', $today->copy()->addDay()->toDateString());
     }
 
     protected static function newFactory(): ArticleFactory

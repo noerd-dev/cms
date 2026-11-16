@@ -1,7 +1,8 @@
 title: Navigation
 actions:
   - label: New Navigation Item
-    route: cms.navigation.detail
+    modalRoute: cms.navigation.detail
+    modalComponent: cms::navigation-detail
 defaultSort:
   field: sort_order
   direction: asc
@@ -19,7 +20,8 @@ columns:
   - field: link
     label: Link
   - field: sort_order
-    label: Sort Order
+    label: Sort position
     width: 0.5
   - field: new_tab
     label: 'New Tab'
+    type: bool

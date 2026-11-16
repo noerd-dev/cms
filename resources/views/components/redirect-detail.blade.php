@@ -64,16 +64,27 @@ new class extends Component {
             return;
         }
 
-        $data = collect($this->detailData)
-            ->except(['created_at', 'updated_at'])
-            ->toArray();
-        $data['tenant_id'] = $tenantId;
-        $data['target_page_id'] = (int) $data['target_page_id'];
-        $data['is_active'] = ! empty($data['is_active']);
+        // Only what the form declares — never the id or the tenant from the
+        // client state.
+        $data = $this->writableDetailData(Redirect::class);
+        $data['source_path'] = $path;
+        $data['target_page_id'] = (int) $this->detailData['target_page_id'];
+        $data['is_active'] = ! empty($this->detailData['is_active']);
 
-        $redirect = Redirect::updateOrCreate(['id' => $this->modelId], $data);
+        if ($this->modelId) {
+            $redirect = Redirect::find($this->modelId);
 
-        $this->storeProcess($redirect);
+            // An id the tenant scope cannot resolve stores nothing — never a new redirect.
+            if (! $redirect instanceof Redirect) {
+                return;
+            }
+
+            $redirect->fill($data)->save();
+        } else {
+            $redirect = Redirect::create($data);
+        }
+
+        $this->finishStore($redirect);
     }
 }; ?>
 

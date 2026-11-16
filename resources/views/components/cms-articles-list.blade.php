@@ -14,7 +14,7 @@ new class extends Component {
 
     public ?string $detailRoute = 'cms.article.detail';
 
-    public $detailComponent = 'cms::article-detail';
+    public $detailComponent = 'cms::cms-article-detail';
 
     protected array $listWith = ['author'];
 

@@ -67,21 +67,25 @@ Entries are simple data records without a dedicated page. The data is stored in 
 | `translatableRichText` | Rich text editor with per-language values |
 | `translatableTextarea` | Textarea with per-language values |
 | `text` | Simple text input |
-| `image` | Image upload field |
+| `image` | Image field — an upload or a pick from the media library; stores the media id |
 
 ## Creating Collection Definitions
 
 Navigate to `/cms/collection-definitions` to manage collections through the UI. The collection definition detail view allows you to:
 
 - Set the collection key, title, and description
-- Define fields with name, label, and type
+- Define fields with name, label, type and width. A field name starts with a letter and holds only
+  letters, digits, `_` and `-`; the page columns (`id`, `tenant_id`, `content_id`, `collection_id`,
+  `data`, `sort`, `custom_attributes`, timestamps) are reserved. Renaming a field asks whether the
+  existing entries' data is renamed too — the renames are derived on the server and applied in the
+  same transaction that saves the definition
 - Toggle `hasPage` to enable page generation
 
 Definitions can also be seeded programmatically via the `CollectionDefinition` model or the repository's `save()` method.
 
 ## Collection Entries
 
-Collection entries are listed at `/cms/collections`. The list view dynamically renders columns based on the collection's field definitions, using `CollectionHelper::getCollectionTable()` to build the table configuration.
+Collection entries are listed at `/cms/collections`. The list view dynamically renders columns based on the collection's field definitions.
 
 ## Data Storage
 
@@ -108,7 +112,6 @@ This conversion runs automatically in the `Page` model's boot method.
 The `CollectionHelper` class provides methods for working with collection definitions:
 
 - `getCollectionFields(collection)` — Resolves field definitions via the repository
-- `getCollectionTable(collection)` — Builds table column configuration for list views
 
 It is registered as a singleton in the service container for mockability in tests.
 

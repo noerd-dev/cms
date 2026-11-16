@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Noerd\Cms\Models\Page;
 
 /**
- * Copies a website page together with a content of its own and the elements.
+ * Copies a website page together with a content of its own, the elements and
+ * the element collections of the page and of its elements.
  */
 final class PageCopyService
 {
@@ -44,6 +45,10 @@ final class PageCopyService
             }
 
             $copy->save();
+
+            // Element collections (slider rows, …) are records of their own:
+            // the copy gets copies, never a share of the original's.
+            app(ElementCollectionService::class)->copyOwned($source, $copy);
 
             return $copy;
         });

@@ -33,7 +33,7 @@ trait CreatesElementFixtures
     }
 
     /**
-     * The element key of the fixture element declaring an `element-collection`
+     * The element key of the fixture element declaring an `elementCollection`
      * field named `items`.
      */
     protected function zzCollectionElementKey(): string
@@ -98,7 +98,7 @@ trait CreatesElementFixtures
                 colspan: 12
               - name: detailData.items
                 label: Items
-                type: element-collection
+                type: elementCollection
                 colspan: 12
                 fields:
                   - name: image
@@ -157,6 +157,15 @@ trait CreatesElementFixtures
                 type: image
                 colspan: 12
             YAML);
+    }
+
+    /**
+     * Write a fixture element with the given YAML (removed by
+     * removeElementFixtures()). Call createElementFixtures() first.
+     */
+    protected function createCustomElementFixture(string $fileBase, string $yaml): void
+    {
+        $this->writeElementFixture($fileBase, $yaml);
     }
 
     /**

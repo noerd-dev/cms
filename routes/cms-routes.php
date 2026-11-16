@@ -28,10 +28,10 @@ Route::prefix('cms')
 
         Route::livewire('/authors', 'cms::authors-list')->name('authors');
         Route::livewire('/author/{modelId}', 'cms::author-detail')->name('author.detail');
-        Route::livewire('/articles', 'cms::articles-list')->name('articles');
-        Route::livewire('/article/{modelId}', 'cms::article-detail')->name('article.detail');
+        Route::livewire('/articles', 'cms::cms-articles-list')->name('articles');
+        Route::livewire('/article/{modelId}', 'cms::cms-article-detail')->name('article.detail');
 
-        Route::livewire('/settings', 'cms::settings-page')->name('settings');
+        Route::livewire('/settings', 'cms::cms-settings-page')->name('settings');
         Route::livewire('/languages', 'cms::languages-list')->name('languages');
         Route::livewire('/language/{modelId}', 'cms::language-detail')->name('language.detail');
     });

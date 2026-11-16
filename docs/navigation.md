@@ -90,6 +90,11 @@ Each navigation item links to either a CMS page or an external URL:
 
 These are mutually exclusive — use one or the other.
 
+A link is at most 255 characters and must be a safe URL: `http(s)://…`, `mailto:`, `tel:` or a path
+of the website (`/kontakt`). `javascript:`, `data:` and protocol-relative links (`//other-host`) are
+refused when the item is saved, and the website renders every link through
+`Noerd\Cms\Support\SafeUrl` as well.
+
 ## Hierarchical Navigation
 
 Navigation supports parent-child relationships via `parent_id`:
@@ -98,6 +103,8 @@ Navigation supports parent-child relationships via `parent_id`:
 - Child items are nested under their parent
 - Sort order is controlled by `sort_order`
 - Children are automatically ordered by `sort_order`
+- Parent, page and collection must be records of the current tenant, and an item can never be
+  placed below itself or one of its sub items
 
 ## Multi-Language Names
 

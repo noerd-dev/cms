@@ -50,9 +50,9 @@ interface CollectionDefinitionRepositoryContract
      * Resolve field definitions in the array shape used by CollectionHelper
      * (fields prefixed with "detailData.").
      *
-     * Returns null if the definition does not exist.
+     * Returns null if the definition does not exist (or no tenant is known).
      *
      * @return array{title?: string, titleList?: string, key?: string, description?: string, hasPage?: bool, fields?: array<int, array<string, mixed>>}|null
      */
-    public function resolveFields(string $filename): ?array;
+    public function resolveFields(string $filename, ?int $tenantId = null): ?array;
 }

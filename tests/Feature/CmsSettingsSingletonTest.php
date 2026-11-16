@@ -21,11 +21,11 @@ it('keeps exactly one settings row per tenant', function (): void {
     expect(fn() => CmsSetting::create(['tenant_id' => $this->tenantId]))->toThrow(QueryException::class);
 
     // The settings page updates the singleton instead of inserting a second row.
-    Livewire::test('cms::settings-page')->set('detailData.google_analytics_id', 'G-1')->call('store');
-    Livewire::test('cms::settings-page')->set('detailData.google_analytics_id', 'G-2')->call('store');
+    Livewire::test('cms::cms-settings-page')->set('detailData.google_analytics_id', 'G-ABCD1')->call('store');
+    Livewire::test('cms::cms-settings-page')->set('detailData.google_analytics_id', 'G-ABCD2')->call('store');
 
     expect(CmsSetting::where('tenant_id', $this->tenantId)->count())->toBe(1)
-        ->and(CmsSetting::where('tenant_id', $this->tenantId)->value('google_analytics_id'))->toBe('G-2');
+        ->and(CmsSetting::where('tenant_id', $this->tenantId)->value('google_analytics_id'))->toBe('G-ABCD2');
 });
 
 it('allows a global parameter key once per tenant and reports a duplicate as a validation error', function (): void {

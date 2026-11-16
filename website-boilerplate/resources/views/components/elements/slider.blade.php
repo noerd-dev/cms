@@ -17,8 +17,8 @@ new class extends Component {
                     @if(isset($slider['data']['description']))
                         <p class="text-gray-600 mt-2">{{ $slider['data']['description'] }}</p>
                     @endif
-                    @if(isset($slider['data']['image']))
-                        <img src="{{ $slider['data']['image'] }}" alt="{{ $slider['data']['title'] ?? 'Slider Image' }}"
+                    @if(\Noerd\Cms\Support\SafeUrl::orNull($slider['data']['image'] ?? null))
+                        <img src="{{ \Noerd\Cms\Support\SafeUrl::href($slider['data']['image']) }}" alt="{{ $slider['data']['title'] ?? 'Slider Image' }}"
                              class="mt-2 max-w-sm rounded">
                     @endif
                 </div>

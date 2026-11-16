@@ -17,11 +17,14 @@ const TEXT_EXTENSIONS = [StarterKit.configure({ heading: { levels: [1, 2, 3] }, 
  * (`{ language, sections }`); the server merges it on save and on a language
  * switch (EditsContentDocument). The root is wire:ignore: the server only
  * talks to the editor through the browser events `content-document-load`
- * (language switch) and `content-document-saved`.
+ * (language switch) and `content-document-saved`. Both are window events and
+ * name the Livewire component they are for (`owner`): with two editors on one
+ * page each one handles only its own.
  */
 export function documentEditor(config) {
     return {
         editor: null,
+        owner: config.owner || null,
         language: config.language,
         editable: config.editable,
         catalog: config.catalog || [],
@@ -141,7 +144,18 @@ export function documentEditor(config) {
         /**
          * Language switch: the server sends the document in the new language.
          */
+        /**
+         * Whether a server event is meant for this editor: its `owner` is the
+         * Livewire component that renders this editor.
+         */
+        isForMe(detail) {
+            return !this.owner || detail?.owner === this.owner;
+        },
+
         load(detail) {
+            if (!this.isForMe(detail)) {
+                return;
+            }
             const next = detail?.config ?? detail;
             if (!next) {
                 return;
@@ -164,6 +178,9 @@ export function documentEditor(config) {
          * collections can be managed) — without touching text or cursor.
          */
         saved(detail) {
+            if (!this.isForMe(detail)) {
+                return;
+            }
             const editor = this.raw();
             const saved = new Set(detail?.saved || []);
             this.collectionCounts = detail?.collectionCounts || this.collectionCounts;
@@ -186,7 +203,7 @@ export function documentEditor(config) {
         defaultData(key) {
             const data = {};
             for (const field of this.definition(key)?.fields || []) {
-                if (['spacer', 'element-collection'].includes(field.type)) {
+                if (['spacer', 'elementCollection'].includes(field.type)) {
                     continue;
                 }
                 if (field.type.startsWith('translatable')) {

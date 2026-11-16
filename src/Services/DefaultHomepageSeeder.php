@@ -11,42 +11,53 @@ use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Models\Tenant;
 use Noerd\Support\TenantContext;
 
+/**
+ * The starter homepage of a FRESH CMS: one page plus the settings row naming it,
+ * created by `noerd:install-cms` — and only for a tenant that has neither a
+ * single page nor a settings row yet. A tenant that ever had a CMS (a page, a
+ * settings row with or without homepage) is never touched again; in particular
+ * `noerd:update-cms` creates no homepage, even when an admin cleared it.
+ */
 class DefaultHomepageSeeder
 {
     /**
-     * Create a default homepage page and cms_settings entry for every CMS tenant
-     * that does not yet have a homepage configured. Idempotent: tenants that
-     * already have a homepage_page_id are skipped, so it is safe to run on every
-     * install and update.
+     * @return list<int> the tenants that got a starter homepage
      */
-    public function seedMissingHomepages(): void
+    public function seedMissingHomepages(): array
     {
-        $tenantIdsWithHomepage = CmsSetting::query()
-            ->whereNotNull('homepage_page_id')
-            ->pluck('tenant_id');
+        $seeded = [];
 
-        $tenantsWithoutHomepage = Tenant::query()
+        $tenantIds = Tenant::query()
             ->whereHas('tenantApps', fn($query) => $query->where('name', 'CMS'))
-            ->whereNotIn('id', $tenantIdsWithHomepage)
             ->pluck('id');
 
-        // Headless (install/update command): each tenant's homepage is written
-        // inside its own tenant context.
-        foreach ($tenantsWithoutHomepage as $tenantId) {
-            TenantContext::run((int) $tenantId, fn() => $this->seedHomepage((int) $tenantId));
+        // Headless (install command): each tenant's homepage is written inside
+        // its own tenant context.
+        foreach ($tenantIds as $tenantId) {
+            $tenantId = (int) $tenantId;
+
+            if (TenantContext::run($tenantId, fn(): bool => $this->seedFreshTenant($tenantId))) {
+                $seeded[] = $tenantId;
+            }
         }
+
+        return $seeded;
     }
 
-    private function seedHomepage(int $tenantId): void
+    private function seedFreshTenant(int $tenantId): bool
     {
+        if (CmsSetting::existsForTenant($tenantId) || Page::query()->withoutGlobalScopes()->where('tenant_id', $tenantId)->exists()) {
+            return false;
+        }
+
         // One slot per language the tenant runs (the default language first,
         // without a language prefix) — never a hard-coded language list.
-        $codes = CmsLanguage::forTenant($tenantId)
+        $codes = CmsLanguage::query()->ofTenant($tenantId)
             ->where('is_active', true)
             ->orderBy('is_default', 'desc')
             ->orderBy('sort_order')
             ->pluck('code')
-            ->all() ?: CmsLanguageCodes::FALLBACK;
+            ->all() ?: [CmsLanguageCodes::defaultFor($tenantId)];
 
         $name = [];
         $slug = [];
@@ -63,9 +74,8 @@ class DefaultHomepageSeeder
             'layout' => null,
         ]);
 
-        CmsSetting::updateOrCreate(
-            ['tenant_id' => $tenantId],
-            ['homepage_page_id' => $page->id],
-        );
+        CmsSetting::updateForTenant(['homepage_page_id' => $page->id], $tenantId);
+
+        return true;
     }
 }

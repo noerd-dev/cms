@@ -1,6 +1,5 @@
-# Dependencies
+# Dependencies (package-lock.json is committed: it pins the editor build)
 node_modules/
-package-lock.json
 
 # Composer dependencies (excluded to prevent class conflicts when used as path repository)
 vendor/

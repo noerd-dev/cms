@@ -11,17 +11,23 @@ composer require noerd/cms
 php artisan noerd:install-cms
 ```
 
+Upgrading from 0.5: `composer update noerd/cms`, `php artisan migrate`, `php artisan noerd:update-cms`
+(it moves the renamed screens' YAML, rewrites the form YAML to the 0.6 vocabulary and syncs the
+form types) and rename `config/noerd_cms.php` to `config/cms.php`. See the release notes.
+
 ## Configuration
 
-`noerd:install-cms` publishes `config/noerd_cms.php` (also available through
+`noerd:install-cms` publishes `config/cms.php` (`cms.*`; also available through
 `php artisan vendor:publish --tag=cms-config`; `noerd:update-cms` publishes it
-when missing):
+when the project has no CMS config at all). A project still on the earlier
+`config/noerd_cms.php` keeps it working for the 0.6 line — rename it:
 
 ```php
 return [
     'website_url' => env('CMS_WEBSITE_URL', ''),
     'page_elements_path' => env('CMS_PAGE_ELEMENTS_PATH'),
-    'layout_path' => env('CMS_LAYOUT_PATH', 'app-modules/website/resources/views/components/layouts'),
+    'layout_path' => env('CMS_LAYOUT_PATH'), // empty: the website module's components/layouts
+    'reserved_slug_prefixes' => [],
     'collection_field_types' => [/* type => label */],
 ];
 ```
@@ -39,13 +45,13 @@ instance (`element_page_id`). Each owner+field pair maps to one collection
 via a deterministic key (`ELEMENT_{ownerId}_{FIELD}` or
 `ELEMENT_EP_{elementPageId}_{FIELD}`).
 
-Use the field type `element-collection` in any element or detail YAML:
+Use the field type `elementCollection` in any element or detail YAML:
 
 ```yaml
 fields:
   - name: detailData.items
     label: Items
-    type: element-collection
+    type: elementCollection
     colspan: 12
     fields:
       - name: title

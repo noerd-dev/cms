@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Noerd\Cms\Services;
 
+use Illuminate\Database\Eloquent\Builder;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Support\TenantContext;
@@ -78,6 +79,49 @@ class ElementCollectionService
     }
 
     /**
+     * Give $to copies of every element collection $from owns — those of the
+     * entry itself (page_id) and those of its elements (element_page_id),
+     * matched onto the copy's elements by their position — with copies of
+     * their rows. Used when a page is copied or an element-collection row is
+     * duplicated: the copy must never share (and later delete) the original's
+     * collections. Row pages get contents of their own (ExtendsContent) and
+     * their own element collections are copied the same way.
+     */
+    public function copyOwned(Page $from, Page $to, int $depth = 0): void
+    {
+        if ($depth > 5 || ! $from->getKey() || ! $to->getKey()) {
+            return;
+        }
+
+        $tenantId = (int) $to->tenant_id;
+
+        foreach ($this->ownedQuery((int) $from->tenant_id)->where('page_id', $from->getKey())->get() as $collection) {
+            $this->copyCollection($collection, self::OWNER_PAGE, (int) $to->getKey(), $tenantId, $depth);
+        }
+
+        $fromElements = $from->elements()->orderBy('sort')->orderBy('id')->pluck('id')->values();
+        $toElements = $to->elements()->orderBy('sort')->orderBy('id')->pluck('id')->values();
+
+        if ($fromElements->isEmpty()) {
+            return;
+        }
+
+        $owned = $this->ownedQuery((int) $from->tenant_id)->whereIn('element_page_id', $fromElements->all())->get()->groupBy('element_page_id');
+
+        foreach ($fromElements as $index => $elementId) {
+            $targetId = $toElements->get($index);
+
+            if ($targetId === null) {
+                continue;
+            }
+
+            foreach ($owned->get($elementId, collect()) as $collection) {
+                $this->copyCollection($collection, self::OWNER_ELEMENT_PAGE, (int) $targetId, $tenantId, $depth);
+            }
+        }
+    }
+
+    /**
      * Build the resolved definition array (as CollectionHelper consumers expect)
      * from an element collection's stored row schema.
      *
@@ -104,6 +148,51 @@ class ElementCollectionService
         $label = mb_trim((string) (preg_split('/[—–-]/u', $fieldLabel)[0] ?? $fieldLabel));
 
         return mb_trim($label . ' ' . $ownerName);
+    }
+
+    private function copyCollection(Collection $collection, string $ownerType, int $ownerId, int $tenantId, int $depth): void
+    {
+        $field = (string) $collection->owner_field;
+        $key = $this->keyFor($ownerType, $ownerId, $field);
+        $ownerColumn = $ownerType === self::OWNER_ELEMENT_PAGE ? 'element_page_id' : 'page_id';
+
+        // Idempotent: a copy that already exists is not filled twice.
+        $exists = Collection::query()->ofTenant($tenantId)
+            ->where('collection_key', $key)
+            ->exists();
+
+        if ($exists) {
+            return;
+        }
+
+        TenantContext::run($tenantId, function () use ($collection, $key, $ownerColumn, $ownerId, $tenantId, $depth): void {
+            $copy = $collection->replicate(['id', 'page_id', 'element_page_id']);
+            $copy->collection_key = $key;
+            $copy->setAttribute($ownerColumn, $ownerId);
+            $copy->tenant_id = $tenantId;
+            $copy->save();
+
+            // Every row of the collection, past the read guard: a copy is complete.
+            $rows = Page::query()->withoutGlobalScopes()
+                ->where('tenant_id', $collection->tenant_id)
+                ->where('collection_id', $collection->getKey())
+                ->orderBy('sort')
+                ->orderBy('id')
+                ->get();
+
+            foreach ($rows as $row) {
+                $rowCopy = $row->replicate(['id']);
+                $rowCopy->collection_id = $copy->getKey();
+                $rowCopy->save();
+
+                $this->copyOwned($row, $rowCopy, $depth + 1);
+            }
+        });
+    }
+
+    private function ownedQuery(int $tenantId): Builder
+    {
+        return Collection::query()->ofTenant($tenantId)->where('is_element_collection', true);
     }
 
     /**

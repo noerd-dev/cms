@@ -18,7 +18,13 @@ use Noerd\Cms\Models\Content;
  *         modelClass: Post::class,
  *         detailRoute: 'blog.post.detail',
  *         detailComponent: 'blog::post-detail',
+ *         languageSource: ContentLanguageSource::Cms,
  *     );
+ *
+ * `languageSource` names the languages the type's document is written in:
+ * the tenant's website languages (`Cms`, the default — a type the website
+ * renders) or the backend's setup languages (`Setup` — content of a module
+ * that is no website). The editor follows it (ContentLanguageSource).
  *
  * It is the single place a content's `type` maps to its extension model and
  * to the screen that opens it.
@@ -37,8 +43,17 @@ final class ContentTypeRegistry
         string $modelClass,
         ?string $detailRoute = null,
         ?string $detailComponent = null,
+        ContentLanguageSource $languageSource = ContentLanguageSource::Cms,
     ): void {
-        $this->types[$key] = new ContentType($key, $label, $modelClass, $detailRoute, $detailComponent);
+        $this->types[$key] = new ContentType($key, $label, $modelClass, $detailRoute, $detailComponent, $languageSource);
+    }
+
+    /**
+     * The language source of a type — `Cms` for a type nobody registered.
+     */
+    public function languageSource(string $key): ContentLanguageSource
+    {
+        return $this->forType($key)?->languageSource ?? ContentLanguageSource::Cms;
     }
 
     public function forType(string $key): ?ContentType

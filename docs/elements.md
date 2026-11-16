@@ -182,8 +182,7 @@ Translatable fields are stored as JSON objects with language codes as keys:
 
 - Element file names use **kebab-case** (`text-block-1-column.blade.php`), while `element_key` uses **snake_case** (`text_block_1_column`)
 - `FieldHelper::getElementFields()` loads the YAML config colocated with the Blade component
-- `FieldHelper::parseElementToData()` initializes translatable fields with empty values for each active language
-- The `CMS_PAGE_ELEMENTS_PATH` environment variable (read through `config('noerd_cms.page_elements_path')`) can override the default element discovery path
+- The `CMS_PAGE_ELEMENTS_PATH` environment variable (read through `config('cms.page_elements_path')`) can override the default element discovery path
 
 ## Next Steps
 

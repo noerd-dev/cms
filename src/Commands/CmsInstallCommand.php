@@ -6,15 +6,36 @@ namespace Noerd\Cms\Commands;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 use Noerd\Cms\Commands\Concerns\EnsuresWebsiteLinkButton;
+use Noerd\Cms\Forms\FormYamlMigrator;
+use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Services\DefaultHomepageSeeder;
+use Noerd\Cms\Services\FormTypeSyncService;
+use Noerd\Cms\Support\LegacyCmsConfig;
 use Noerd\Commands\Concerns\HasModuleInstallation;
 use Noerd\Commands\Support\ModuleInstallContext;
+use Noerd\Models\Tenant;
+use Noerd\Support\TenantContext;
 
 class CmsInstallCommand extends Command
 {
     use EnsuresWebsiteLinkButton;
-    use HasModuleInstallation;
+    use HasModuleInstallation {
+        runModuleUpdate as runHasModuleUpdate;
+    }
+
+    /**
+     * The YAML of the screens renamed in 0.6 (their bare names collided with
+     * other modules'): earlier path => current path, below app-configs/cms.
+     *
+     * @var array<string, string>
+     */
+    public const RENAMED_CONFIGS = [
+        'settings/settings-page.yml' => 'settings/cms-settings-page.yml',
+        'details/article-detail.yml' => 'details/cms-article-detail.yml',
+        'lists/articles-list.yml' => 'lists/cms-articles-list.yml',
+    ];
 
     protected $signature = 'noerd:install-cms';
 
@@ -70,7 +91,23 @@ class CmsInstallCommand extends Command
      */
     protected function getConfigFiles(): array
     {
-        return ['noerd_cms.php'];
+        // A project still on config/noerd_cms.php keeps it (read for the 0.6
+        // line, LegacyCmsConfig) — config/cms.php is published only when the
+        // project has neither.
+        return LegacyCmsConfig::inUse() ? [] : [LegacyCmsConfig::FILE];
+    }
+
+    /**
+     * Before anything is published: the host copies of renamed screens move to
+     * their new names (keeping the project's edits) and the form YAML is
+     * rewritten to the 0.6 vocabulary.
+     */
+    protected function runModuleUpdate(): int
+    {
+        $this->moveRenamedConfigs();
+        $this->migrateFormYaml();
+
+        return $this->runHasModuleUpdate();
     }
 
     /**
@@ -79,36 +116,115 @@ class CmsInstallCommand extends Command
      */
     protected function publishModuleExtras(bool $update): void
     {
+        if (LegacyCmsConfig::inUse()) {
+            $this->line('<comment>config/noerd_cms.php is deprecated: rename it to config/cms.php (same keys, read as cms.*). It is read for noerd/cms 0.6 only.</comment>');
+        }
+
         if (! $update && ! ModuleInstallContext::isDependencyInstall()) {
             $this->installWebsiteIfNeeded();
         }
     }
 
     /**
-     * Idempotent: tenants created since the install get their starter homepage,
-     * and the quick-menu keeps the "To Website" button — the shared writer
-     * replaces a same-component entry wholesale, so an installation still
-     * carrying the removed `policy: canCms` gate migrates to the `apps:` key,
-     * and a former bare component name is renamed to the namespaced one.
+     * Idempotent, on install AND update: every CMS tenant has its default
+     * language, the form types follow app-configs/cms/forms (a form whose YAML
+     * is gone turns inactive) and the quick-menu keeps the "To Website" button
+     * — the shared writer replaces a same-component entry wholesale, so an
+     * installation still carrying the removed `policy: canCms` gate migrates to
+     * the `apps:` key, and a former bare component name is renamed to the
+     * namespaced one. Only the INSTALL seeds the starter homepage.
      */
     protected function ensureModuleSetup(): void
     {
-        $this->seedDefaultHomepage();
+        $this->ensureDefaultLanguages();
+
+        if (! $this->isUpdateCommand()) {
+            $this->seedDefaultHomepage();
+        }
+
+        $this->syncFormTypes();
         $this->ensureWebsiteLinkButton();
     }
 
     /**
-     * Seed a default homepage (page + cms_settings) for every tenant that does
-     * not have one yet. Runs once tenants have been assigned and the migrations
-     * were offered, so a fresh installation starts with a usable starter page.
+     * The starter homepage (page + cms_settings) of a tenant that has no page
+     * and no settings row yet — a fresh installation starts with a usable page.
      */
     protected function seedDefaultHomepage(): void
     {
         try {
-            (new DefaultHomepageSeeder())->seedMissingHomepages();
-            $this->line('<info>Default homepage ensured for all tenants.</info>');
+            $seeded = (new DefaultHomepageSeeder())->seedMissingHomepages();
+
+            if ($seeded !== []) {
+                $this->line(sprintf('<info>Starter homepage created for %d tenant(s).</info>', count($seeded)));
+            }
         } catch (Exception $e) {
             $this->warn('Could not seed default homepage: ' . $e->getMessage());
+        }
+    }
+
+    protected function ensureDefaultLanguages(): void
+    {
+        try {
+            Tenant::query()
+                ->whereHas('tenantApps', fn($query) => $query->where('name', 'CMS'))
+                ->pluck('id')
+                ->each(fn($tenantId) => TenantContext::run((int) $tenantId, fn() => CmsLanguage::ensureDefaultLanguageForTenant((int) $tenantId)));
+        } catch (Exception $e) {
+            $this->warn('Could not ensure the default CMS languages: ' . $e->getMessage());
+        }
+    }
+
+    protected function syncFormTypes(): void
+    {
+        try {
+            $results = app(FormTypeSyncService::class)->sync();
+
+            $this->line(sprintf(
+                '<info>Form types synced:</info> %d synced, %d unchanged, %d deactivated%s',
+                $results['synced'],
+                $results['skipped'],
+                $results['deactivated'],
+                $results['errors'] > 0 ? ", {$results['errors']} error(s) — run php artisan cms:sync-form-types -v" : '',
+            ));
+        } catch (Exception $e) {
+            $this->warn('Could not sync the form types: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Move the host copies of the screens renamed in 0.6 to their new names.
+     * When the new file exists already, the earlier one is removed: its bare
+     * name would be picked up by another module's screen of the same name.
+     */
+    protected function moveRenamedConfigs(): void
+    {
+        $base = base_path('app-configs/cms');
+
+        foreach (self::RENAMED_CONFIGS as $from => $to) {
+            $source = $base . '/' . $from;
+
+            if (! is_file($source)) {
+                continue;
+            }
+
+            if (is_file($base . '/' . $to)) {
+                File::delete($source);
+                $this->line("<comment>Removed app-configs/cms/{$from} (replaced by {$to}).</comment>");
+
+                continue;
+            }
+
+            File::ensureDirectoryExists(dirname($base . '/' . $to));
+            File::move($source, $base . '/' . $to);
+            $this->line("<info>Moved app-configs/cms/{$from} to {$to}.</info>");
+        }
+    }
+
+    protected function migrateFormYaml(): void
+    {
+        foreach (app(FormYamlMigrator::class)->migrate(MigrateFormYamlCommand::paths()) as $file) {
+            $this->line('<info>Updated the form YAML to the current vocabulary:</info> ' . str_replace(base_path() . DIRECTORY_SEPARATOR, '', $file));
         }
     }
 

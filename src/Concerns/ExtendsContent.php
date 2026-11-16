@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Noerd\Cms\Exceptions\ForeignContentException;
 use Noerd\Cms\Models\Content;
 use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Services\ContentElementEditorService;
@@ -61,12 +62,21 @@ trait ExtendsContent
     public static function bootExtendsContent(): void
     {
         static::creating(function (Model $model): void {
-            if ($model->getAttributeFromArray('content_id')) {
+            $contentId = $model->getAttributeFromArray('content_id');
+
+            // A record may be created onto an existing content (a data import)
+            // only when that content is free: of the record's tenant and type,
+            // and extended by no other record. Never another tenant's content.
+            if ($contentId) {
+                if (! static::contentIsAdoptable($model, $contentId)) {
+                    throw ForeignContentException::forAdoption($model::class, $contentId);
+                }
+
                 return;
             }
 
-            $content = Content::query()->withoutGlobalScopes()->create([
-                'tenant_id' => $model->getAttributeFromArray('tenant_id') ?? TenantHelper::currentTenantId(),
+            $content = Content::query()->create([
+                'tenant_id' => static::contentTenantId($model),
                 'type' => static::contentType(),
                 ...$model->pendingContentAttributes,
             ]);
@@ -74,6 +84,25 @@ trait ExtendsContent
             $model->setAttribute('content_id', $content->getKey());
             $model->setRelation('content', $content);
             $model->pendingContentAttributes = [];
+        });
+
+        // A saved record keeps the content it was created with: a changed
+        // content_id would hand the record (and every write through it — name,
+        // document) someone else's content. A legacy row without a content may
+        // adopt a free one of its own tenant and type.
+        static::updating(function (Model $model): void {
+            if (! $model->isDirty('content_id')) {
+                return;
+            }
+
+            $original = $model->getOriginal('content_id');
+            $contentId = $model->getAttributeFromArray('content_id');
+
+            if ($original === null && $contentId && static::contentIsAdoptable($model, $contentId)) {
+                return;
+            }
+
+            throw ForeignContentException::forSwap($model::class, $original, $contentId);
         });
 
         // A replica never shares the original's content: it gets its own, with
@@ -85,7 +114,7 @@ trait ExtendsContent
                 return;
             }
 
-            $source = Content::query()->withoutGlobalScopes()->find($sourceId);
+            $source = static::ownContentQuery($replica)->find($sourceId);
 
             foreach (static::contentAttributes() as $key) {
                 if (! array_key_exists($key, $replica->pendingContentAttributes)) {
@@ -95,7 +124,7 @@ trait ExtendsContent
 
             $replica->offsetUnset('content_id');
             $replica->unsetRelation('content');
-            $replica->replicatedFromContentId = (int) $sourceId;
+            $replica->replicatedFromContentId = $source ? (int) $source->getKey() : null;
         });
 
         static::created(function (Model $model): void {
@@ -103,8 +132,8 @@ trait ExtendsContent
                 return;
             }
 
-            $source = Content::query()->withoutGlobalScopes()->find($model->replicatedFromContentId);
-            $copy = $model->content()->withoutGlobalScopes()->first();
+            $source = static::ownContentQuery($model)->find($model->replicatedFromContentId);
+            $copy = static::ownContentQuery($model)->find($model->getAttributeFromArray('content_id'));
             $model->replicatedFromContentId = null;
 
             if ($source && $copy) {
@@ -117,7 +146,7 @@ trait ExtendsContent
                 return;
             }
 
-            $content = $model->content()->withoutGlobalScopes()->first();
+            $content = $model->ownContent();
 
             if ($content) {
                 $content->forceFill($model->pendingContentAttributes)->save();
@@ -132,7 +161,7 @@ trait ExtendsContent
                 return;
             }
 
-            $content = $model->content()->withoutGlobalScopes()->first();
+            $content = $model->ownContent();
 
             if (! $content) {
                 return;
@@ -142,6 +171,23 @@ trait ExtendsContent
             $content->elements()->get()->each->delete();
             $content->delete();
         });
+    }
+
+    /**
+     * The record's own content: the one its content_id names, IN THE RECORD'S
+     * TENANT and of its content type — never the row of another tenant, whatever
+     * content_id says. Resolved without the current tenant context, so headless
+     * callers (jobs, imports) find it too.
+     */
+    public function ownContent(): ?Content
+    {
+        $contentId = $this->getAttributeFromArray('content_id');
+
+        if (! $contentId) {
+            return null;
+        }
+
+        return static::ownContentQuery($this)->find($contentId);
     }
 
     public function content(): BelongsTo
@@ -179,7 +225,7 @@ trait ExtendsContent
     public function scopeOrderByContentName(Builder $query, string $language, string $direction = 'asc'): void
     {
         $query->orderBy(
-            Content::query()->withoutGlobalScopes()
+            Content::query()->acrossTenants()
                 ->select("name->{$language}")
                 ->whereColumn('contents.id', $this->qualifyColumn('content_id')),
             $direction === 'desc' ? 'desc' : 'asc',
@@ -240,6 +286,56 @@ trait ExtendsContent
     }
 
     /**
+     * Whether $contentId may become the content of $model: a content of the
+     * record's tenant and content type that no other record extends.
+     */
+    protected static function contentIsAdoptable(Model $model, mixed $contentId): bool
+    {
+        if (! is_numeric($contentId)) {
+            return false;
+        }
+
+        if (! static::ownContentQuery($model)->whereKey((int) $contentId)->exists()) {
+            return false;
+        }
+
+        $takenBy = $model->newQueryWithoutScopes()->where($model->qualifyColumn('content_id'), (int) $contentId);
+
+        if ($model->exists) {
+            $takenBy->whereKeyNot($model->getKey());
+        }
+
+        return ! $takenBy->exists();
+    }
+
+    /**
+     * The contents a record of this type may own: those of its tenant and type.
+     */
+    protected static function ownContentQuery(Model $model): Builder
+    {
+        $tenantId = static::contentTenantId($model);
+
+        if ($tenantId === null) {
+            return Content::query()->acrossTenants()->whereRaw('1 = 0');
+        }
+
+        return Content::query()
+            ->ofTenant($tenantId)
+            ->where('type', static::contentType());
+    }
+
+    /**
+     * The tenant of the record (the current one while it is being created
+     * without a tenant of its own).
+     */
+    protected static function contentTenantId(Model $model): ?int
+    {
+        $tenantId = $model->getAttributeFromArray('tenant_id') ?? TenantHelper::currentTenantId();
+
+        return $tenantId === null ? null : (int) $tenantId;
+    }
+
+    /**
      * Pending value first, then a value a query selected onto the row (a
      * listing joining `contents`), then the content itself.
      */
@@ -261,7 +357,7 @@ trait ExtendsContent
         }
 
         if (! $this->relationLoaded('content')) {
-            $this->setRelation('content', $this->content()->withoutGlobalScopes()->first());
+            $this->setRelation('content', $this->ownContent());
         }
 
         return $this->getRelation('content')?->getAttribute($key);

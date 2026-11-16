@@ -37,7 +37,10 @@ class ContentElement extends Model
         // Remove element collections owned by this element instance. Their row
         // pages cascade away via the pages.collection_id foreign key.
         static::deleting(function (self $element): void {
+            // An element has no tenant column; its id names the collections it
+            // owns in whatever tenant — and a headless delete has no context.
             Collection::query()
+                ->acrossTenants()
                 ->where('is_element_collection', true)
                 ->where('element_page_id', $element->id)
                 ->get()

@@ -155,7 +155,7 @@ new class extends Component {
                         $fieldKey = str_replace('detailData.', '', $fieldName);
 
                         // Skip non-text fields for search
-                        if (in_array($field['type'] ?? '', ['image', 'element-collection'], true)) {
+                        if (in_array($field['type'] ?? '', ['image', 'elementCollection'], true)) {
                             continue;
                         }
 
@@ -213,7 +213,7 @@ new class extends Component {
                     $fieldType = $field['type'] ?? '';
 
                     $value = '';
-                    if ($fieldType === 'element-collection') {
+                    if ($fieldType === 'elementCollection') {
                         // Element-collection data lives in a separate hidden collection
                         // owned by this entry; show its row count.
                         $elementCollection = Collection::query()

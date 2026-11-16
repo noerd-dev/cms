@@ -10,25 +10,32 @@ use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Models\CollectionDefinition;
 use Noerd\Cms\Support\CollectionDefinitionData;
 use Noerd\Helpers\TenantHelper;
+use Noerd\Support\RequestState;
 use RuntimeException;
 
+/**
+ * The collection definitions of a tenant (`cms_collection_definitions`). Every
+ * method takes the tenant explicitly or resolves it through
+ * TenantHelper::currentTenantId() — the tenant context first, then the signed-in
+ * user's selection — and fails closed without one.
+ */
 class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepositoryContract
 {
     /**
-     * Per-request resolveFields cache keyed by "tenantId:filename".
-     *
-     * @var array<string, array<string, mixed>|null>
+     * The request-scoped memo (RequestState: dropped before every Octane
+     * request and queued job) of all() and resolveFields(), keyed by
+     * "all:{tenant}" / "{tenant}:{filename}".
      */
-    private static array $requestCache = [];
+    private const MEMO = 'cms.collection-definitions';
 
     public static function resetCache(): void
     {
-        self::$requestCache = [];
+        RequestState::forget(self::MEMO);
     }
 
     public function all(?int $tenantId = null): Collection
     {
-        $tenantId ??= TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::currentTenantId();
 
         // Fail closed: without a tenant context there is nothing to list. An
         // unscoped query would leak every tenant's definitions.
@@ -38,7 +45,9 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
 
         // Memoized per request: the two navigation providers and the lists
         // ask for the same definitions on one page render.
-        return self::$requestCache['all:' . $tenantId] ??= CollectionDefinition::query()
+        $memo = &RequestState::bucket(self::MEMO);
+
+        return $memo['all:' . $tenantId] ??= CollectionDefinition::query()
             ->ofTenant($tenantId)
             ->orderBy('title_list')
             ->get()
@@ -54,7 +63,7 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
 
     public function findByKey(string $key, ?int $tenantId = null): ?CollectionDefinitionData
     {
-        $tenantId ??= TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::currentTenantId();
 
         if ($tenantId === null) {
             return null;
@@ -73,26 +82,27 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
         return $this->findModel($filename, $tenantId) !== null;
     }
 
-    public function resolveFields(string $filename): ?array
+    public function resolveFields(string $filename, ?int $tenantId = null): ?array
     {
-        $tenantId = TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::currentTenantId();
 
         if ($tenantId === null) {
             return null;
         }
 
         $cacheKey = $tenantId . ':' . $filename;
+        $memo = &RequestState::bucket(self::MEMO);
 
-        if (array_key_exists($cacheKey, self::$requestCache)) {
-            return self::$requestCache[$cacheKey];
+        if (array_key_exists($cacheKey, $memo)) {
+            return $memo[$cacheKey];
         }
 
-        return self::$requestCache[$cacheKey] = $this->resolveFieldsUncached($filename, $tenantId);
+        return $memo[$cacheKey] = $this->resolveFieldsUncached($filename, $tenantId);
     }
 
     public function save(CollectionDefinitionData $data, ?string $originalFilename = null, ?int $tenantId = null): string
     {
-        $tenantId ??= TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::currentTenantId();
         if ($tenantId === null) {
             throw new RuntimeException('Cannot save a collection definition without a tenant context.');
         }
@@ -127,7 +137,7 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
 
     public function copy(string $filename, ?int $tenantId = null): string
     {
-        $tenantId ??= TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::currentTenantId();
         $source = $this->findModel($filename, $tenantId);
         if (! $source) {
             throw new RuntimeException("Definition '{$filename}' not found.");
@@ -206,7 +216,7 @@ class DatabaseCollectionDefinitionRepository implements CollectionDefinitionRepo
 
     private function findModel(string $filename, ?int $tenantId): ?CollectionDefinition
     {
-        $tenantId ??= TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::currentTenantId();
 
         // Fail closed — see all(): no tenant, no rows.
         if ($tenantId === null) {

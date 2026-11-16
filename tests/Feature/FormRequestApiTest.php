@@ -3,29 +3,27 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Queue;
 use Noerd\Cms\Jobs\SendFormConfirmationEmail;
+use Noerd\Cms\Jobs\SendFormNotificationEmail;
 use Noerd\Cms\Models\FormType;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
+use Noerd\Cms\Tests\Traits\CreatesFormFixtures;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Models\NoerdUser;
 use Noerd\Models\Tenant;
 
 uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
-uses(CreatesCmsUser::class);
+uses(CreatesCmsUser::class, CreatesFormFixtures::class);
 
 it('stores a form request via API using user api token', function (): void {
     // Arrange: create a tenant, its form type and a user with api token
     $tenant = $this->createCmsTenant();
-    $formType = FormType::factory()->create([
-        'tenant_id' => $tenant->id,
-        'key' => 'contact',
-    ]);
+    $formType = $this->formTypeWithYaml($tenant->id);
     $user = NoerdUser::factory()->create([
         'api_token' => 'test_token_123',
     ]);
-    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+    $this->selectTenantForToken($user, $tenant);
 
     $payload = [
         'form' => 'contact',
@@ -52,7 +50,7 @@ it('stores a form request via API using user api token', function (): void {
 it('rejects a submission for an unknown form type', function (): void {
     $tenant = $this->createCmsTenant();
     $user = NoerdUser::factory()->create(['api_token' => 'unknown_form_token']);
-    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+    $this->selectTenantForToken($user, $tenant);
 
     $this->withHeader('Authorization', 'Bearer unknown_form_token')
         ->postJson('/api/cms/form-requests', [
@@ -64,49 +62,35 @@ it('rejects a submission for an unknown form type', function (): void {
     $this->assertDatabaseMissing('cms_form_requests', ['form' => 'does-not-exist']);
 });
 
-it('validates the submission against the form YAML and dispatches the email job', function (): void {
+it('validates the submission against the form YAML and dispatches the mail jobs', function (): void {
     Queue::fake();
 
     $tenant = $this->createCmsTenant();
-
-    // FormType::loadYmlConfig() accepts an ABSOLUTE path, so the fixture lives in
-    // the throwaway testing storage instead of the host's tracked app-configs.
-    $fixtureDir = storage_path('framework/testing/zz-cms-form-api');
-    File::deleteDirectory($fixtureDir);
-    File::ensureDirectoryExists($fixtureDir);
-    $ymlPath = $fixtureDir . '/contact.yml';
-    File::put($ymlPath, implode("\n", [
+    $this->formTypeWithYaml($tenant->id, attributes: ['send_email' => true, 'send_confirmation' => true], yaml: implode("\n", [
         'key: contact',
         'title: Contact',
-        'send_email: true',
         'fields:',
         '  - name: email',
         '    label: Email',
+        '    required: true',
         '    validation:',
-        '      - required',
         '      - email',
     ]));
-
-    FormType::factory()->create([
-        'tenant_id' => $tenant->id,
-        'key' => 'contact',
-        'send_email' => true,
-        'yml_path' => $ymlPath,
-    ]);
     $user = NoerdUser::factory()->create(['api_token' => 'yaml_validation_token']);
-    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+    $this->selectTenantForToken($user, $tenant);
 
-    // Invalid per the YAML rules: no email field
+    // Invalid per the YAML rules: `required: true` alone makes the field required.
     $this->withHeader('Authorization', 'Bearer yaml_validation_token')
         ->postJson('/api/cms/form-requests', [
             'form' => 'contact',
             'data' => ['name' => 'Max', 'undeclared' => 'dropped'],
         ])
-        ->assertStatus(422);
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('email', 'errors');
 
     Queue::assertNothingPushed();
 
-    // Valid submission: stored (only declared fields) and job dispatched
+    // Valid submission: stored (only declared fields) and both mails queued
     $response = $this->withHeader('Authorization', 'Bearer yaml_validation_token')
         ->postJson('/api/cms/form-requests', [
             'form' => 'contact',
@@ -123,9 +107,56 @@ it('validates the submission against the form YAML and dispatches the email job'
         'data->undeclared' => 'dropped',
     ]);
 
+    Queue::assertPushed(SendFormNotificationEmail::class, 1);
     Queue::assertPushed(SendFormConfirmationEmail::class, 1);
+});
 
-    File::deleteDirectory($fixtureDir);
+it('queues only the mails a form type sends', function (): void {
+    Queue::fake();
+
+    $tenant = $this->createCmsTenant();
+    $this->formTypeWithYaml($tenant->id, attributes: ['send_email' => true, 'send_confirmation' => false]);
+    $user = NoerdUser::factory()->create(['api_token' => 'only_notification_token']);
+    $this->selectTenantForToken($user, $tenant);
+
+    $this->withHeader('Authorization', 'Bearer only_notification_token')
+        ->postJson('/api/cms/form-requests', ['form' => 'contact', 'data' => ['email' => 'max@example.com']])
+        ->assertCreated();
+
+    Queue::assertPushed(SendFormNotificationEmail::class, 1);
+    Queue::assertNotPushed(SendFormConfirmationEmail::class);
+});
+
+it('refuses a submission when the form definition is missing (fail-closed)', function (): void {
+    Queue::fake();
+
+    $tenant = $this->createCmsTenant();
+    // The factory's yml_path resolves to no file.
+    FormType::factory()->create(['tenant_id' => $tenant->id, 'key' => 'contact', 'send_email' => true]);
+    $user = NoerdUser::factory()->create(['api_token' => 'missing_yaml_token']);
+    $this->selectTenantForToken($user, $tenant);
+
+    $this->withHeader('Authorization', 'Bearer missing_yaml_token')
+        ->postJson('/api/cms/form-requests', ['form' => 'contact', 'data' => ['email' => 'max@example.com']])
+        ->assertStatus(422)
+        ->assertJson(['message' => 'The form definition is missing.']);
+
+    $this->assertDatabaseCount('cms_form_requests', 0);
+    Queue::assertNothingPushed();
+});
+
+it('refuses a submission for an inactive form type', function (): void {
+    $tenant = $this->createCmsTenant();
+    $this->formTypeWithYaml($tenant->id, attributes: ['is_active' => false]);
+    $user = NoerdUser::factory()->create(['api_token' => 'inactive_form_token']);
+    $this->selectTenantForToken($user, $tenant);
+
+    $this->withHeader('Authorization', 'Bearer inactive_form_token')
+        ->postJson('/api/cms/form-requests', ['form' => 'contact', 'data' => ['email' => 'max@example.com']])
+        ->assertStatus(422)
+        ->assertJson(['message' => 'Unknown form type.']);
+
+    $this->assertDatabaseCount('cms_form_requests', 0);
 });
 
 it('stores the form request under the tenant the token user persisted', function (): void {
@@ -134,17 +165,11 @@ it('stores the form request under the tenant the token user persisted', function
     // request — a session belongs to the signed-in user only.
     $persistedTenant = $this->createCmsTenant();
     $sessionTenant = $this->createCmsTenant();
-    FormType::factory()->create([
-        'tenant_id' => $persistedTenant->id,
-        'key' => 'contact',
-    ]);
-    FormType::factory()->create([
-        'tenant_id' => $sessionTenant->id,
-        'key' => 'contact',
-    ]);
+    $this->formTypeWithYaml($persistedTenant->id);
+    $this->formTypeWithYaml($sessionTenant->id);
 
     $user = NoerdUser::factory()->create(['api_token' => 'tenant_precedence_token']);
-    $user->setting->update(['selected_tenant_id' => $persistedTenant->id]);
+    $this->selectTenantForToken($user, $persistedTenant);
 
     // A session selection of nobody in particular must not decide the tenant.
     TenantHelper::setSelectedTenantId($sessionTenant->id);
@@ -178,7 +203,7 @@ it('rejects a form key that belongs to another tenant', function (): void {
     ]);
 
     $user = NoerdUser::factory()->create(['api_token' => 'cross_tenant_token']);
-    $user->setting->update(['selected_tenant_id' => $tenantA->id]);
+    $this->selectTenantForToken($user, $tenantA);
 
     $this->withHeader('Authorization', 'Bearer cross_tenant_token')
         ->postJson('/api/cms/form-requests', [
@@ -189,4 +214,34 @@ it('rejects a form key that belongs to another tenant', function (): void {
 
     $this->assertDatabaseMissing('cms_form_requests', ['form' => 'foreign-contact']);
     $this->assertDatabaseMissing('cms_form_requests', ['form_type_id' => $foreignFormType->id]);
+});
+
+it('refuses the token of a user removed from the tenant', function (): void {
+    $tenant = $this->createCmsTenant();
+    FormType::factory()->create(['tenant_id' => $tenant->id, 'key' => 'contact']);
+    $user = NoerdUser::factory()->create(['api_token' => 'removed_member_token']);
+    $this->selectTenantForToken($user, $tenant);
+
+    $tenant->removeMember($user);
+
+    $this->withHeader('Authorization', 'Bearer removed_member_token')
+        ->postJson('/api/cms/form-requests', ['form' => 'contact', 'data' => ['name' => 'Max']])
+        ->assertStatus(401)
+        ->assertJson(['message' => 'Unauthorized']);
+
+    $this->assertDatabaseMissing('cms_form_requests', ['tenant_id' => $tenant->id]);
+});
+
+it('refuses a stored selection of a tenant the user is no member of', function (): void {
+    $tenant = $this->createCmsTenant();
+    FormType::factory()->create(['tenant_id' => $tenant->id, 'key' => 'contact']);
+    $user = NoerdUser::factory()->create(['api_token' => 'stale_selection_token']);
+    $user->setting->update(['selected_tenant_id' => $tenant->id]);
+
+    $this->withHeader('Authorization', 'Bearer stale_selection_token')
+        ->postJson('/api/cms/form-requests', ['form' => 'contact', 'data' => ['name' => 'Max']])
+        ->assertStatus(401)
+        ->assertJson(['message' => 'Unauthorized']);
+
+    $this->assertDatabaseMissing('cms_form_requests', ['tenant_id' => $tenant->id]);
 });

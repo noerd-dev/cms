@@ -15,4 +15,4 @@ columns:
     label: Default
     type: bool
   - field: sort_order
-    label: Sort Order
+    label: Sort position

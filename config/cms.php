@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/*
+ | The CMS configuration, read as `config('cms.*')`. Publish it with
+ | `php artisan noerd:install-cms` (or `vendor:publish --tag=cms-config`); a
+ | project that still has the earlier `config/noerd_cms.php` keeps it working
+ | for the 0.6 line, but should rename it to `config/cms.php`.
+ */
 return [
     /*
     |--------------------------------------------------------------------------
@@ -33,10 +39,25 @@ return [
     |
     | Directory (relative to the project root) holding the frontend layouts a
     | page can choose from. Every `*.blade.php` file that does not start with
-    | an underscore is offered in the page editor.
+    | an underscore is offered in the page editor. Left empty, the layouts are
+    | found in the `components/layouts` folder of the `website` view namespace
+    | (the installed website module), wherever that module lives.
     |
     */
-    'layout_path' => env('CMS_LAYOUT_PATH', 'app-modules/website/resources/views/components/layouts'),
+    'layout_path' => env('CMS_LAYOUT_PATH'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reserved Slug Prefixes
+    |--------------------------------------------------------------------------
+    |
+    | Path prefixes no page slug may start with, on top of the built-in list
+    | (PageSlugService::RESERVED_PREFIXES: /api, /cms, /livewire, /noerd,
+    | /storage, …). Add the prefixes of the project's own routes here, e.g.
+    | ['/shop', '/account'].
+    |
+    */
+    'reserved_slug_prefixes' => [],
 
     /*
     |--------------------------------------------------------------------------
@@ -55,9 +76,9 @@ return [
         'image' => 'Image',
         'email' => 'Email',
         'tel' => 'Phone',
-        'number' => 'Number',
+        'number' => 'Number field',
         'checkbox' => 'Checkbox',
         'pageRelation' => 'Page',
-        'element-collection' => 'Element Collection',
+        'elementCollection' => 'Element Collection',
     ],
 ];

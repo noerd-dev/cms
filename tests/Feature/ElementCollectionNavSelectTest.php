@@ -3,13 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Navigation\CollectionsNavigationProvider;
 use Noerd\Cms\Navigation\PageCollectionsNavigationProvider;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
-use Noerd\Services\FieldTypeRegistry;
 
 uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
@@ -35,34 +33,4 @@ it('excludes element collections from the navigation providers', function (): vo
         ->implode(' ');
 
     expect(mb_strtoupper($links))->not->toContain('ELEMENT');
-});
-
-it('excludes element collections from the collection-select field options', function (): void {
-    $this->actingAs($this->user);
-
-    Collection::factory()->create([
-        'tenant_id' => $this->tenant->id,
-        'collection_key' => 'NORMALCOLL',
-        'name' => 'Sichtbare Collection',
-        'is_element_collection' => false,
-    ]);
-
-    $owner = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Demo']]);
-    app(ElementCollectionService::class)->ensure(
-        ElementCollectionService::OWNER_PAGE,
-        $owner->id,
-        $owner->tenant_id,
-        'triggers_items',
-        [['name' => 'text', 'type' => 'translatableTextarea']],
-        'Versteckte Triggers',
-    );
-
-    // The options are resolved by the registered field type, never in the template.
-    $props = app(FieldTypeRegistry::class)
-        ->get('collection-select')
-        ->resolveProps(['name' => 'rel', 'label' => 'Relation', 'type' => 'collection-select']);
-    $labels = collect($props['field']['options'])->pluck('label')->all();
-
-    expect($labels)->toContain('Sichtbare Collection')
-        ->and($labels)->not->toContain('Versteckte Triggers');
 });

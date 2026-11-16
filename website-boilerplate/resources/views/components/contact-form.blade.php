@@ -2,10 +2,28 @@
 
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
-use Noerd\Website\Models\FormRequest;
-use RyanChandler\LaravelCloudflareTurnstile\Rules\Turnstile;
+use Noerd\Cms\Exceptions\FormSubmissionException;
+use Noerd\Cms\Forms\FormSubmissionService;
 
+/*
+ | The website's contact form. The submission goes through the CMS
+ | (FormSubmissionService) like a token API submission: the form type `contact`
+ | must be active and its form YAML (app-configs/cms/forms/contact.yml)
+ | decides the fields, the rules and the mails — the notification of the form
+ | recipients and the confirmation of the sender. A missing form definition
+ | refuses the submission (fail-closed).
+ |
+ | Cloudflare Turnstile is OPTIONAL: the package
+ | (ryangjchandler/laravel-cloudflare-turnstile) is not a dependency of this
+ | module. The check runs only when the package is installed AND
+ | services.turnstile.enabled is set; then it is fail-closed (a missing or
+ | invalid token rejects the submission).
+ */
 new class extends Component {
+    private const TURNSTILE_RULE = 'RyanChandler\\LaravelCloudflareTurnstile\\Rules\\Turnstile';
+
+    /** The key of the form type this component submits. */
+    private const FORM = 'contact';
 
     public string $name = '';
     public string $email = '';
@@ -16,38 +34,9 @@ new class extends Component {
     public bool $showSuccess = false;
     public string $errorMessage = '';
 
-    /**
-     * @return array<string, array<int, mixed>>
-     */
-    protected function rules(): array
+    public function turnstileEnabled(): bool
     {
-        $rules = [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:255'],
-            'message' => ['required', 'string', 'max:2000'],
-        ];
-
-        if (config('services.turnstile.enabled')) {
-            $rules['turnstileToken'] = ['required', new Turnstile];
-        }
-
-        return $rules;
-    }
-
-    protected function messages(): array
-    {
-        return [
-            'name.required' => __('The name is required.'),
-            'name.max' => __('The name may not be longer than 255 characters.'),
-            'email.required' => __('The email address is required.'),
-            'email.email' => __('Please enter a valid email address.'),
-            'email.max' => __('The email address may not be longer than 255 characters.'),
-            'phone.max' => __('The phone number may not be longer than 255 characters.'),
-            'message.required' => __('The message is required.'),
-            'message.max' => __('The message may not be longer than 2000 characters.'),
-            'turnstileToken.required' => __('Please confirm that you are not a robot.'),
-        ];
+        return (bool) config('services.turnstile.enabled') && class_exists(self::TURNSTILE_RULE);
     }
 
     public function submit()
@@ -57,57 +46,51 @@ new class extends Component {
         $this->errorMessage = '';
 
         try {
-            $this->validate();
+            if ($this->turnstileEnabled()) {
+                $rule = self::TURNSTILE_RULE;
+                $this->validate(
+                    ['turnstileToken' => ['required', new $rule()]],
+                    ['turnstileToken.required' => __('Please confirm that you are not a robot.')],
+                );
+            }
+
+            // The tenant the website middleware resolved for this visit.
+            $tenantId = (int) session('selectedTenantId');
+
+            if ($tenantId === 0) {
+                $this->errorMessage = __('Error: Tenant information is missing. Please reload the page.');
+                $this->isSubmitting = false;
+
+                return;
+            }
+
+            app(FormSubmissionService::class)->submit($tenantId, self::FORM, [
+                'name' => $this->name,
+                'email' => $this->email,
+                'phone' => $this->phone,
+                'message' => $this->message,
+            ]);
         } catch (ValidationException $e) {
             // Turnstile tokens are single-use; clearing it re-renders the widget.
             $this->reset('turnstileToken');
             $this->isSubmitting = false;
 
-            throw $e; // Re-throw validation exceptions so Livewire can handle them
-        }
-
-        // Get tenant_id from session (set by middleware)
-        $tenantId = session('selectedTenantId');
-
-        if (!$tenantId) {
-            // Try to get tenant via uuid from session
-            $uuid = session('uuid');
-            if ($uuid) {
-                $tenant = \Noerd\Website\Models\Tenant::where('uuid', $uuid)->first();
-                $tenantId = $tenant?->id;
-                if ($tenantId) {
-                    session(['selectedTenantId' => $tenantId]);
-                }
-            }
-        }
-
-        if (!$tenantId) {
-            $this->errorMessage = __('Error: Tenant information is missing. Please reload the page.');
+            throw $e; // The field errors are keyed like the properties.
+        } catch (FormSubmissionException) {
+            $this->errorMessage = __('The form is not available at the moment. Please try again later.');
             $this->isSubmitting = false;
+
             return;
-        }
-
-        try {
-            FormRequest::create([
-                'form' => 'contact',
-                'tenant_id' => $tenantId,
-                'data' => [
-                    'name' => $this->name,
-                    'email' => $this->email,
-                    'phone' => $this->phone,
-                    'message' => $this->message,
-                ],
-            ]);
-
-            $this->reset(['name', 'email', 'phone', 'message', 'turnstileToken']);
-            $this->showSuccess = true;
-
         } catch (\Exception $e) {
+            report($e);
             $this->errorMessage = __('An error occurred. Please try again later.');
             $this->isSubmitting = false;
+
             return;
         }
 
+        $this->reset(['name', 'email', 'phone', 'message', 'turnstileToken']);
+        $this->showSuccess = true;
         $this->isSubmitting = false;
     }
 
@@ -203,8 +186,8 @@ new class extends Component {
             </div>
 
             {{-- Cloudflare Turnstile --}}
-            @if (config('services.turnstile.enabled'))
-                <x-turnstile id="footer_contact" wire:model="turnstileToken" />
+            @if ($this->turnstileEnabled())
+                <x-dynamic-component component="turnstile" id="footer_contact" wire:model="turnstileToken" />
             @endif
 
             @error('turnstileToken')

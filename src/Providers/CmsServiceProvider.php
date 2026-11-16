@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Noerd\Cms\Providers;
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Noerd\Cms\Commands\CheckSlugsCommand;
 use Noerd\Cms\Commands\CmsInstallCommand;
 use Noerd\Cms\Commands\CmsUpdateCommand;
 use Noerd\Cms\Commands\InstallWebsiteBoilerplateCommand;
+use Noerd\Cms\Commands\MigrateFormYamlCommand;
+use Noerd\Cms\Commands\PruneOrphanedContentsCommand;
 use Noerd\Cms\Commands\SyncFormTypesCommand;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Http\Controllers\AssetController;
 use Noerd\Cms\Http\Middleware\CmsApiAuth;
+use Noerd\Cms\Listeners\EnsureDefaultCmsLanguage;
 use Noerd\Cms\Models\Author;
-use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Navigation\CollectionsNavigationProvider;
 use Noerd\Cms\Navigation\PageCollectionsNavigationProvider;
@@ -22,8 +26,10 @@ use Noerd\Cms\Repositories\DatabaseCollectionDefinitionRepository;
 use Noerd\Cms\Repositories\ElementAwareCollectionDefinitionRepository;
 use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Support\CollectionSelectOptions;
+use Noerd\Cms\Support\ContentLanguageSource;
 use Noerd\Cms\Support\ContentTypeRegistry;
-use Noerd\Models\Tenant;
+use Noerd\Cms\Support\LegacyCmsConfig;
+use Noerd\Events\TenantAppAssigned;
 use Noerd\Providers\NoerdModuleServiceProvider;
 use Noerd\Services\DynamicNavigationRegistry;
 use Noerd\Support\ComponentAccessGuard;
@@ -39,24 +45,31 @@ class CmsServiceProvider extends NoerdModuleServiceProvider
         CmsUpdateCommand::class,
         InstallWebsiteBoilerplateCommand::class,
         SyncFormTypesCommand::class,
+        PruneOrphanedContentsCommand::class,
+        CheckSlugsCommand::class,
+        MigrateFormYamlCommand::class,
     ];
 
     /** Merged before registerModule(), so the container bindings can read it. */
-    protected array $configs = ['noerd_cms'];
+    protected array $configs = ['cms'];
 
     protected function registerModule(): void
     {
+        // The earlier config/noerd_cms.php is read for the 0.6 line.
+        LegacyCmsConfig::apply($this->app);
+
         // Decorated so element collections resolve their schema from the owning
-        // DB collection's stored element_fields.
-        $this->app->singleton(CollectionDefinitionRepositoryContract::class, fn($app) => new ElementAwareCollectionDefinitionRepository(
+        // DB collection's stored element_fields. Scoped: rebuilt for every
+        // Octane request and queued job.
+        $this->app->scoped(CollectionDefinitionRepositoryContract::class, fn($app) => new ElementAwareCollectionDefinitionRepository(
             new DatabaseCollectionDefinitionRepository(),
             $app->make(ElementCollectionService::class),
         ));
 
         $this->app->singleton(ContentTypeRegistry::class);
 
-        // Register CollectionHelper as singleton for mockability in tests
-        $this->app->singleton(CollectionHelper::class, fn($app) => new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class)));
+        // Scoped like the repository it wraps (mockable in tests).
+        $this->app->scoped(CollectionHelper::class, fn($app) => new CollectionHelper($app->make(CollectionDefinitionRepositoryContract::class)));
 
         // Soft integration point: the website module resolves its
         // PageElementService from the container; when website is not installed
@@ -88,22 +101,16 @@ class CmsServiceProvider extends NoerdModuleServiceProvider
     protected function fieldTypes(): array
     {
         return [
-            // Both selects resolve their options here (once per render, never in
-            // the template) and render through the active theme's select element.
-            'collection-select' => FieldTypeDefinition::include(
-                'cms::components.forms.input-collection-select',
-                resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
-                    'field' => $field + ['options' => CollectionSelectOptions::collections($field['required_fields'] ?? [])],
-                ],
-            ),
-            // Dynamic page select used by the CMS settings page (homepage picker).
-            'homepage-select' => FieldTypeDefinition::include(
+            // Dynamic page select used by the CMS settings page (homepage picker):
+            // the options are resolved here (once per render, never in the
+            // template) and render through the active theme's select element.
+            'homepageSelect' => FieldTypeDefinition::include(
                 'cms::components.forms.input-homepage-select',
                 resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
                     'field' => $field + ['options' => CollectionSelectOptions::pages(), 'placeholder' => 'None selected'],
                 ],
             ),
-            'element-collection' => FieldTypeDefinition::livewire(
+            'elementCollection' => FieldTypeDefinition::livewire(
                 'cms::element-collection-field',
                 resolver: fn(array $field, mixed $component, mixed $detailData, mixed $modelId): array => [
                     // A page-element editor exposes an `elementKey` property; a collection
@@ -154,7 +161,7 @@ class CmsServiceProvider extends NoerdModuleServiceProvider
         // need no extra middleware — and deliberately not `setup`, which would
         // switch the selected app away from CMS.
         ComponentAccessGuard::registerAdminComponents([
-            'cms::settings-page',
+            'cms::cms-settings-page',
             'cms::languages-list',
             'cms::language-detail',
             'cms::collection-definitions-list',
@@ -172,12 +179,12 @@ class CmsServiceProvider extends NoerdModuleServiceProvider
             modelClass: Page::class,
             detailRoute: 'cms.page.detail',
             detailComponent: 'cms::page-detail',
+            languageSource: ContentLanguageSource::Cms,
         );
 
-        // Create default English language when a new tenant is created
-        Tenant::created(function (Tenant $tenant): void {
-            CmsLanguage::ensureDefaultLanguageForTenant($tenant->id);
-        });
+        // A tenant that gets the CMS app gets its default website language —
+        // a tenant without the CMS gets none (existing rows stay).
+        Event::listen(TenantAppAssigned::class, EnsureDefaultCmsLanguage::class);
     }
 
     /**

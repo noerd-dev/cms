@@ -4,104 +4,196 @@ declare(strict_types=1);
 
 namespace Noerd\Website\Services;
 
+use Illuminate\Support\Collection;
+use Noerd\Cms\Support\CmsLanguageCodes;
+use Noerd\Cms\Support\SafeUrl;
 use Noerd\Website\Models\GlobalParameter;
-use Noerd\Website\Models\Language;
 use Noerd\Website\Models\Navigation;
 use Noerd\Website\Models\Page;
 
+/**
+ * Globals and navigation of the website. Bound as a SCOPED instance: the
+ * memo below lives for one request (or job) only.
+ */
 class WebsiteService
 {
+    /** @var array<string, mixed> */
+    private array $memo = [];
+
     public function getGlobals(int $tenantId): array
     {
-        // Get the current language (from session or default)
-        $selectedLanguage = session('selectedLanguage');
-        if (! $selectedLanguage) {
-            $defaultLanguage = Language::where('tenant_id', $tenantId)
-                ->where('is_default', true)
-                ->where('is_active', true)
-                ->first();
-            $selectedLanguage = $defaultLanguage ? $defaultLanguage->code : 'en';
-        }
+        $selectedLanguage = $this->language();
 
-        return GlobalParameter::where('tenant_id', $tenantId)->get()
+        return $this->memo['globals:' . $tenantId . ':' . $selectedLanguage] ??= GlobalParameter::where('tenant_id', $tenantId)->get()
             ->mapWithKeys(function ($item) use ($selectedLanguage) {
-                $decoded = json_decode($item->value, true);
+                $decoded = json_decode((string) $item->value, true);
 
-                // Handle different data types properly
                 if (is_array($decoded)) {
-                    // Check if this is a multilingual parameter (array with language keys)
+                    // A multilingual parameter: the selected language, else the first one.
                     if (isset($decoded[$selectedLanguage])) {
-                        // Return the value for the selected language
                         return [$item->key => $decoded[$selectedLanguage]];
                     }
 
-                    // If selected language doesn't exist, try to find any language value
-                    if (! empty($decoded)) {
-                        // Return the first available language value
-                        return [$item->key => reset($decoded)];
-                    }
-
-                    // If array is empty, return empty string
-                    return [$item->key => ''];
+                    return [$item->key => $decoded !== [] ? reset($decoded) : ''];
                 }
 
-                // If not an array, return the decoded value (could be string, number, etc.)
                 return [$item->key => $decoded ?? $item->value ?? ''];
             })->toArray();
     }
 
-    public function getNavigation(int $tenantId, string $group = 'main', string $language = 'de', ?string $uuid = null): array
+    /**
+     * Every navigation group of the tenant, keyed by the lower-case
+     * navigation key (`main`, `footer`, …) — one query for the items, one for
+     * the pages they link.
+     *
+     * @return array<string, list<array{name: string, href: string, new_tab: bool, children: list<array<string, mixed>>}>>
+     */
+    public function getNavigations(int $tenantId, string $language, ?string $uuid = null): array
     {
-        $query = Navigation::query()->where('tenant_id', $tenantId);
-        $hasGroup = (clone $query)->where('navigation_key', $group)->exists();
-        if ($hasGroup) {
-            $query->where('navigation_key', $group);
+        return $this->memo['navigations:' . $tenantId . ':' . $language . ':' . $uuid] ??= $this->items($tenantId)
+            ->groupBy(fn(Navigation $item): string => mb_strtolower((string) $item->navigation_key))
+            ->map(fn(Collection $items): array => $this->tree($items, $tenantId, $language, $uuid))
+            ->all();
+    }
+
+    /**
+     * One navigation group. A group the tenant has not created yet answers
+     * with every item (the behaviour single-menu sites rely on).
+     *
+     * @return list<array{name: string, href: string, new_tab: bool, children: list<array<string, mixed>>}>
+     */
+    public function getNavigation(int $tenantId, string $group = 'main', ?string $language = null, ?string $uuid = null): array
+    {
+        $language ??= $this->language();
+        $items = $this->items($tenantId);
+        $inGroup = $items->filter(fn(Navigation $item): bool => mb_strtolower((string) $item->navigation_key) === mb_strtolower($group));
+
+        return $this->tree($inGroup->isNotEmpty() ? $inGroup : $items, $tenantId, $language, $uuid);
+    }
+
+    /**
+     * @return Collection<int, Navigation>
+     */
+    private function items(int $tenantId): Collection
+    {
+        return $this->memo['items:' . $tenantId] ??= Navigation::query()
+            ->where('tenant_id', $tenantId)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['id', 'navigation_key', 'parent_id', 'sort_order', 'name', 'page_id', 'link', 'new_tab']);
+    }
+
+    /**
+     * The items as a tree (top level + their children, by sort_order). Items
+     * linking an inactive page, a page of another tenant or no target at all
+     * are left out, a link that is no safe URL too.
+     *
+     * @param  Collection<int, Navigation>  $items
+     * @return list<array<string, mixed>>
+     */
+    private function tree(Collection $items, int $tenantId, string $language, ?string $uuid): array
+    {
+        $pages = $this->pages($tenantId, $items->pluck('page_id')->filter()->unique()->values()->all());
+        $ids = $items->pluck('id')->all();
+        $byParent = $items->groupBy(fn(Navigation $item): int => in_array($item->parent_id, $ids, false) ? (int) $item->parent_id : 0);
+
+        $build = function (int $parentId, int $depth) use (&$build, $byParent, $pages, $language, $uuid): array {
+            $nodes = [];
+
+            foreach ($byParent->get($parentId, collect()) as $item) {
+                $node = $this->node($item, $pages, $language, $uuid);
+
+                if ($node === null) {
+                    continue;
+                }
+
+                $node['children'] = $depth < 3 ? $build((int) $item->id, $depth + 1) : [];
+                $nodes[] = $node;
+            }
+
+            return $nodes;
+        };
+
+        return $build(0, 0);
+    }
+
+    /**
+     * @param  array<int, Page>  $pages
+     * @return array{name: string, href: string, new_tab: bool}|null
+     */
+    private function node(Navigation $item, array $pages, string $language, ?string $uuid): ?array
+    {
+        $href = null;
+
+        if (! empty($item->link)) {
+            $href = SafeUrl::orNull($item->link);
+        } elseif (! empty($item->page_id)) {
+            $page = $pages[(int) $item->page_id] ?? null;
+
+            if ($page === null) {
+                return null;
+            }
+
+            $slugs = $this->decode($page->slug);
+
+            if (is_array($slugs) && $slugs !== []) {
+                $href = SafeUrl::orNull($slugs[$language] ?? ($slugs[CmsLanguageCodes::active()[0]] ?? reset($slugs)));
+            } elseif (is_string($slugs) && $slugs !== '') {
+                $href = SafeUrl::orNull($slugs);
+            } else {
+                $href = route('website.index', ['uuid' => $uuid, 'page' => $item->page_id]);
+            }
+        } else {
+            $href = '#';
         }
 
-        $items = $query->orderBy('id')->get(['name', 'page_id', 'link', 'new_tab']);
+        if ($href === null) {
+            return null;
+        }
 
-        return $items->map(function ($item) use ($language, $uuid) {
-            $label = $item->name;
-            if (is_string($label)) {
-                $decoded = json_decode($label, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    $label = $decoded[$language] ?? ($decoded['de'] ?? (is_array($decoded) ? reset($decoded) : ''));
-                }
-            }
+        $label = $this->decode($item->name);
 
-            $href = '#';
-            if (! empty($item->link)) {
-                $href = $item->link;
-            } elseif (! empty($item->page_id)) {
-                $page = Page::find($item->page_id);
-                if ($page && $page->slug) {
-                    // Extract slug for current language - handle both array and JSON string
-                    $slugs = $page->slug;
+        return [
+            'name' => is_array($label) ? (string) ($label[$language] ?? (reset($label) ?: '')) : (string) ($label ?? ''),
+            'href' => $href,
+            'new_tab' => (bool) $item->new_tab,
+        ];
+    }
 
-                    // If it's a JSON string, decode it
-                    if (is_string($slugs)) {
-                        $decoded = json_decode($slugs, true);
-                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                            $slugs = $decoded;
-                        }
-                    }
+    /**
+     * The ACTIVE pages of the tenant among the ids, keyed by id — one query.
+     *
+     * @param  array<int, mixed>  $ids
+     * @return array<int, Page>
+     */
+    private function pages(int $tenantId, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
 
-                    if (is_array($slugs)) {
-                        $href = $slugs[$language] ?? ($slugs['de'] ?? reset($slugs));
-                    } else {
-                        $href = (string) $slugs; // Fallback if neither array nor valid JSON
-                    }
-                } else {
-                    $href = route('website.index', ['uuid' => $uuid, 'page' => $item->page_id]);
-                }
+        return Page::query()
+            ->where('tenant_id', $tenantId)
+            ->where('is_active', true)
+            ->whereIn('id', $ids)
+            ->get(['id', 'slug'])
+            ->keyBy('id')
+            ->all();
+    }
 
-            }
+    private function decode(mixed $value): mixed
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
 
-            return [
-                'name' => is_array($label) ? ($label[$language] ?? reset($label)) : ($label ?? ''),
-                'href' => $href,
-                'new_tab' => (bool) $item->new_tab,
-            ];
-        })->toArray();
+            return json_last_error() === JSON_ERROR_NONE ? $decoded : $value;
+        }
+
+        return $value;
+    }
+
+    private function language(): string
+    {
+        return (string) \Noerd\Website\Support\WebsiteLanguage::current();
     }
 }

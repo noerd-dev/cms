@@ -74,11 +74,10 @@ new class extends Component {
             'detailData.value' => ['required'],
         ]);
 
-        $data = collect($this->detailData)
-            ->except(['created_at', 'updated_at'])
-            ->toArray();
-        $data['tenant_id'] = TenantHelper::currentTenantId();
-        $data['is_translatable'] = (bool) ($data['is_translatable'] ?? false);
+        // Only what the form declares — never the id or the tenant from the
+        // client state.
+        $data = $this->writableDetailData(GlobalParameter::class);
+        $data['is_translatable'] = (bool) ($this->detailData['is_translatable'] ?? false);
 
         $value = $this->detailData['value'];
 
@@ -91,9 +90,20 @@ new class extends Component {
             $data['value'] = json_encode((string) $value);
         }
 
-        $globalParameter = GlobalParameter::updateOrCreate(['id' => $this->modelId], $data);
+        if ($this->modelId) {
+            $globalParameter = GlobalParameter::find($this->modelId);
 
-        $this->storeProcess($globalParameter);
+            // An id the tenant scope cannot resolve stores nothing — never a new parameter.
+            if (! $globalParameter instanceof GlobalParameter) {
+                return;
+            }
+
+            $globalParameter->fill($data)->save();
+        } else {
+            $globalParameter = GlobalParameter::create($data);
+        }
+
+        $this->finishStore($globalParameter);
     }
 
     #[On('languageChanged')]

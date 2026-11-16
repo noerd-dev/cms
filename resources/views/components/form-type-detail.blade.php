@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Noerd\Cms\Models\FormType;
@@ -14,7 +15,11 @@ new class extends Component {
 
     public $detailModel = FormType::class;
 
-    public ?array $ymlConfig = null;
+    /**
+     * Which of the two mails the preview and the test mail show:
+     * `notification` (recipients) or `confirmation` (sender).
+     */
+    public string $mailPreview = 'notification';
 
     #[Computed]
     public function emailPlaceholders(): array
@@ -42,7 +47,6 @@ new class extends Component {
         }
 
         $this->detailData = $formType->toArray();
-        $this->ymlConfig = $formType->loadYmlConfig();
     }
 
     public function store(): void
@@ -51,32 +55,64 @@ new class extends Component {
             return;
         }
 
-        $this->validate([
-            'detailData.send_email' => ['boolean'],
-            'detailData.email_subject' => ['nullable', 'string', 'max:255'],
-            'detailData.email_body' => ['nullable', 'string'],
-            'detailData.notification_email' => ['nullable', 'email', 'max:255'],
-        ]);
-
         $formType = FormType::find($this->modelId);
 
         if (! $formType) {
             return;
         }
 
-        $formType->update([
-            'send_email' => $this->detailData['send_email'] ?? false,
-            'email_subject' => $this->detailData['email_subject'] ?? null,
-            'email_body' => $this->detailData['email_body'] ?? null,
-            'notification_email' => $this->detailData['notification_email'] ?? null,
+        $this->validate([
+            'detailData.send_email' => ['boolean'],
+            'detailData.email_subject' => ['nullable', 'string', 'max:255'],
+            'detailData.email_body' => ['nullable', 'string'],
+            'detailData.notification_email' => ['nullable', 'email', 'max:255'],
+            'detailData.send_confirmation' => ['boolean'],
+            'detailData.confirmation_subject' => ['nullable', 'string', 'max:255'],
+            'detailData.confirmation_body' => ['nullable', 'string'],
+            // The sender's address must be a field the form declares.
+            'detailData.confirmation_field' => ['nullable', 'string', Rule::in($formType->definition()?->fieldNames() ?? [])],
         ]);
 
-        $this->storeProcess($formType);
+        $formType->update([
+            'send_email' => (bool) ($this->detailData['send_email'] ?? false),
+            'email_subject' => $this->detailData['email_subject'] ?? null,
+            'email_body' => $this->detailData['email_body'] ?? null,
+            'notification_email' => ($this->detailData['notification_email'] ?? null) ?: null,
+            'send_confirmation' => (bool) ($this->detailData['send_confirmation'] ?? false),
+            'confirmation_subject' => $this->detailData['confirmation_subject'] ?? null,
+            'confirmation_body' => $this->detailData['confirmation_body'] ?? null,
+            'confirmation_field' => ($this->detailData['confirmation_field'] ?? null) ?: null,
+        ]);
+
+        $this->finishStore($formType);
     }
 
+    /**
+     * Show the preview of one of the two mails.
+     */
+    public function previewMail(string $mail): void
+    {
+        $this->mailPreview = $mail === 'confirmation' ? 'confirmation' : 'notification';
+        $this->openPreview();
+    }
+
+    /**
+     * The mail the preview shows, in the keys HasEmailPreview reads.
+     *
+     * @return array<string, mixed>
+     */
     protected function getEmailData(): array
     {
-        return $this->detailData;
+        if ($this->mailPreview !== 'confirmation') {
+            return $this->detailData;
+        }
+
+        return [
+            ...$this->detailData,
+            'send_email' => $this->detailData['send_confirmation'] ?? false,
+            'email_subject' => $this->detailData['confirmation_subject'] ?? null,
+            'email_body' => $this->detailData['confirmation_body'] ?? null,
+        ];
     }
 
     protected function getEmailRateLimitPrefix(): string
@@ -116,7 +152,7 @@ new class extends Component {
      */
     protected function additionalDetailFields(): array
     {
-        return ['detailData.email_body'];
+        return ['detailData.email_body', 'detailData.confirmation_body'];
     }
 } ?>
 
@@ -137,7 +173,7 @@ new class extends Component {
                                     {{ __('Hybrid configuration') }}
                                 </p>
                                 <p class="text-sm text-blue-700 mt-1">
-                                    {{ __('Form fields are managed via YML files. Email texts can be edited directly here.') }}
+                                    {{ __('Form fields are managed via YML files. The notification and the confirmation can be edited directly here.') }}
                                 </p>
                             </div>
                         </div>
@@ -168,10 +204,17 @@ new class extends Component {
 
                 <x-slot:tab1>
                     <div class="mt-4">
-                        <x-noerd::input-label class="pb-2" value="{{ __('Email body') }}"/>
+                        <x-noerd::input-label class="pb-2" value="{{ __('Notification body') }}"/>
                         <x-noerd::forms.tiptap
                             :field="'detailData.email_body'"
                             :content="$detailData['email_body'] ?? ''"/>
+                    </div>
+
+                    <div class="mt-4">
+                        <x-noerd::input-label class="pb-2" value="{{ __('Confirmation body') }}"/>
+                        <x-noerd::forms.tiptap
+                            :field="'detailData.confirmation_body'"
+                            :content="$detailData['confirmation_body'] ?? ''"/>
                     </div>
 
                     {{-- Email Placeholders --}}
@@ -196,9 +239,14 @@ new class extends Component {
             <div class="flex items-center w-full gap-2">
                 @if($this->canShowPreview)
                     <div class="flex gap-2 mr-auto">
-                        <x-noerd::button variant="secondary" wire:click="openPreview">
-                            {{ __('Email preview') }}
+                        <x-noerd::button variant="secondary" wire:click="previewMail('notification')">
+                            {{ __('Notification preview') }}
                         </x-noerd::button>
+                        @if (! empty($detailData['send_confirmation']) && ! empty($detailData['confirmation_body']))
+                            <x-noerd::button variant="secondary" wire:click="previewMail('confirmation')">
+                                {{ __('Confirmation preview') }}
+                            </x-noerd::button>
+                        @endif
 
                         <div x-data="{
                             cooldown: @js($this->canSendTestEmail ? 0 : $this->testEmailCooldownSeconds),
@@ -233,7 +281,7 @@ new class extends Component {
                                     </template>
                                 </span>
                                 <span wire:loading wire:target="sendTestEmail">
-                                    {{ __('Sending...') }}
+                                    {{ __('Sending mail...') }}
                                 </span>
                             </x-noerd::button>
                         </div>

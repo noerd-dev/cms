@@ -19,7 +19,7 @@ beforeEach(function (): void {
 });
 
 it('stores a new article for the current tenant', function (): void {
-    Livewire::test('cms::article-detail')
+    Livewire::test('cms::cms-article-detail')
         ->set('detailData', validDetailPayload(Article::class, ['tenant_id' => $this->tenantId]))
         ->set('detailData.title', ['de' => 'Neuigkeiten', 'en' => 'News'])
         ->call('store')
@@ -32,14 +32,14 @@ it('stores a new article for the current tenant', function (): void {
 
 it('requires a title', function (): void {
     // The title rule is hard-coded in the component (translatable array), not YAML.
-    Livewire::test('cms::article-detail')
+    Livewire::test('cms::cms-article-detail')
         ->set('detailData.title', null)
         ->call('store')
         ->assertHasErrors(['detailData.title']);
 });
 
 it('derives a language-prefixed slug from the title once', function (): void {
-    $component = Livewire::test('cms::article-detail')
+    $component = Livewire::test('cms::cms-article-detail')
         ->set('detailData.title.de', 'Über uns')
         ->set('detailData.title.en', 'About us');
 
@@ -54,7 +54,7 @@ it('derives a language-prefixed slug from the title once', function (): void {
 it('updates an existing article', function (): void {
     $article = Article::factory()->create(['tenant_id' => $this->tenantId]);
 
-    Livewire::test('cms::article-detail', ['modelId' => $article->id])
+    Livewire::test('cms::cms-article-detail', ['modelId' => $article->id])
         ->set('detailData.title.de', 'Geändert')
         ->call('store')
         ->assertHasNoErrors();
@@ -66,7 +66,7 @@ it('cannot attach an author of another tenant', function (): void {
     $own = Author::factory()->create(['tenant_id' => $this->tenantId, 'name' => 'Own Author']);
     $foreign = Author::factory()->create(['tenant_id' => Tenant::factory()->create()->id, 'name' => 'Foreign Author']);
 
-    $component = Livewire::test('cms::article-detail');
+    $component = Livewire::test('cms::cms-article-detail');
 
     $component->call('authorSelected', $foreign->id)
         ->assertSet('detailData.author_id', null);

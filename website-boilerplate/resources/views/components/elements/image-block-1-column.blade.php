@@ -8,14 +8,20 @@ new class extends Component {
 
 }; ?>
 
+@php
+    // Editor data: the video link and the image URL pass the safe-URL rule;
+    // the image is encoded for the CSS url().
+    $videoUrl = \Noerd\Cms\Support\SafeUrl::orNull($element->videoUrl ?? null);
+    $imageUrl = \Noerd\Cms\Support\SafeUrl::cssUrl(config('website.media_url') . ($element->image ?? ''));
+@endphp
+
 <div>
     <div class="py-4">
         <div class="overflow-hidden group">
-            <a @if(isset($element->videoUrl) && $element->videoUrl) href="{{ $element->videoUrl }}" target="_blank" @else href="#" @endif
-               style="background: url('{{ config('website.media_url') . ($element->image ?? '') }}')"
+            <a @if($videoUrl) href="{{ $videoUrl }}" target="_blank" rel="noopener noreferrer" @else href="#" @endif
+               style="background: url('{{ $imageUrl }}')"
                class="h-full bg-gray-300 flex aspect-[1280/600] !bg-cover transition-transform transition-opacity opacity-100 transition-transform
-
-              @if(isset($element->videoUrl) && $element->videoUrl) hover:scale-105 @endif
+               @if($videoUrl) hover:scale-105 @endif
                bg-center !bg-cover">
             </a>
         </div>

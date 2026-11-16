@@ -1,6 +1,8 @@
 # Forms & Form Requests
 
-The CMS form system provides YAML-defined forms with field validation, email notifications, and an API endpoint for receiving submissions.
+The CMS form system provides YAML-defined forms with field validation, two separate mails (the
+notification of the form recipients and the confirmation of the sender) and one way in for every
+submission — the token API and the website's own forms alike.
 
 ## File Locations
 
@@ -12,6 +14,7 @@ app-configs/cms/forms/{form-key}.yml
 YAML Configurations:
 ```
 app-configs/cms/lists/form-requests-list.yml
+app-configs/cms/lists/form-types-list.yml
 app-configs/cms/details/form-type-detail.yml
 ```
 
@@ -25,23 +28,34 @@ app-modules/cms/resources/views/components/form-types-list.blade.php
 
 ## Form Definition YAML
 
-Each form is defined by a YAML file. Example: `app-configs/cms/forms/contact.yml`
+Each form is defined by a YAML file in camelCase keys (`Noerd\Cms\Forms\FormDefinition`). Example:
+`app-configs/cms/forms/contact.yml`
 
 ```yaml
 key: contact
 title: Contact Form
 description: 'General contact form for customer inquiries'
-send_email: true
+sendEmail: true
+emailSubject: 'New contact request from {{field:name}}'
+emailBody: |
+  <h2>New contact request</h2>
+  <p><strong>Name:</strong> {{field:name}}</p>
+  <p><strong>Message:</strong><br>{{field:message}}</p>
+sendConfirmation: true
+confirmationField: email
+confirmationSubject: 'Thank you for your message'
+confirmationBody: |
+  <p>Hello {{field:name}},</p>
+  <p>thank you for your message. We will get back to you soon.</p>
 fields:
   - name: name
     label: Name
     type: text
     required: true
     validation:
-      - required
       - string
       - 'max:255'
-    error_messages:
+    errorMessages:
       required: 'Name is required.'
     placeholder: 'Your full name'
   - name: email
@@ -49,36 +63,28 @@ fields:
     type: email
     required: true
     validation:
-      - required
       - email
       - 'max:255'
-    error_messages:
+    errorMessages:
       required: 'Email address is required.'
       email: 'Please enter a valid email address.'
     placeholder: your@email.com
   - name: phone
     label: Phone
     type: tel
-    required: false
     validation:
-      - nullable
       - string
       - 'max:255'
-    placeholder: '+49 ...'
   - name: message
     label: Message
     type: textarea
     required: true
     rows: 4
     validation:
-      - required
       - string
       - 'max:2000'
-    error_messages:
-      required: 'Please enter a message.'
-    placeholder: 'Your message...'
-success_message: 'Thank you! Your message has been sent successfully.'
-submit_button_text: 'Send Message'
+successMessage: 'Thank you! Your message has been sent successfully.'
+submitButtonText: 'Send Message'
 ```
 
 ## Form YAML Properties
@@ -88,13 +94,18 @@ submit_button_text: 'Send Message'
 | `key` | Unique form identifier (used in API requests) |
 | `title` | Form display title |
 | `description` | Optional description |
-| `send_email` | Whether to send email notification on submission |
-| `email_subject` | Email subject line (supports placeholders) |
-| `email_body` | HTML email body (supports placeholders) |
-| `notification_email` | Recipient email address for notifications |
+| `sendEmail` | Send the NOTIFICATION to the form recipients |
+| `emailSubject` / `emailBody` | Subject and HTML body of the notification (placeholders) |
+| `notificationEmail` | Recipient of the notification when the CMS settings name no form recipients |
+| `sendConfirmation` | Send the CONFIRMATION to the sender |
+| `confirmationField` | The field holding the sender's address (default `email`) |
+| `confirmationSubject` / `confirmationBody` | Subject and HTML body of the confirmation (placeholders) |
 | `fields` | Array of form field definitions |
-| `success_message` | Message shown after successful submission |
-| `submit_button_text` | Label for the submit button |
+| `successMessage` | Message shown after successful submission |
+| `submitButtonText` | Label for the submit button |
+
+A key the file does not declare leaves the column of the form type alone: what an admin edited on
+the form type screen survives a re-sync.
 
 ## Field Properties
 
@@ -103,55 +114,77 @@ submit_button_text: 'Send Message'
 | `name` | Field identifier |
 | `label` | Display label |
 | `type` | Input type: `text`, `email`, `tel`, `textarea` |
-| `required` | Whether the field is mandatory |
-| `validation` | Array of Laravel validation rules |
-| `error_messages` | Custom validation error messages |
+| `required` | Whether the field is mandatory — `required: true` and a `required` rule mean the same, write one of them |
+| `validation` | Laravel validation rules (a list or `a\|b`); a field that is not required is `nullable` |
+| `errorMessages` | Custom validation error messages (English translation keys) |
 | `placeholder` | Input placeholder text |
 | `rows` | Number of rows for textarea fields |
 
-## Email Notifications
+The earlier snake_case keys (`send_email`, `email_subject`, `email_body`, `notification_email`,
+`success_message`, `submit_button_text`, `error_messages`) are no longer read. `noerd:update-cms`
+rewrites them (see "Vocabulary rewrite" below); `cms:sync-form-types` refuses a file that still
+carries one.
 
-When `send_email: true`, the CMS sends an email notification on each form submission. The email subject and body support placeholders:
+## The Two Mails
+
+`Noerd\Cms\Forms\FormMailer` decides who gets which mail:
+
+- the **notification** (`sendEmail`) goes to the form recipients of the CMS settings, else to the form
+  type's `notificationEmail` — never to an address the visitor typed (job `SendFormNotificationEmail`)
+- the **confirmation** (`sendConfirmation`) goes to the valid address in the field
+  `confirmationField` of the submission — and only there (job `SendFormConfirmationEmail`)
+
+Both are queued after the submission was stored and run in the submission's tenant. Subjects and
+bodies support placeholders:
 
 | Placeholder | Description |
 |-------------|-------------|
 | `{{form_title}}` | Title of the form |
-| `{{submission_date}}` | Date and time of submission |
+| `{{submission_date}}` | Date and time of submission (tenant locale) |
 | `{{field:name}}` | Value of the field named `name` |
-| `{{field:email}}` | Value of the field named `email` |
 
-Example with email configuration:
+The `FormType` model's `replacePlaceholders()` method handles placeholder substitution at send time;
+in the HTML body every substituted value is escaped.
 
-```yaml
-key: newsletter
-title: Newsletter Signup
-send_email: true
-email_subject: 'Newsletter Signup: {{field:email}}'
-email_body: |
-  <h2>New Newsletter Signup</h2>
-  <p><strong>Email:</strong> {{field:email}}</p>
-  <p><strong>Name:</strong> {{field:name}}</p>
-  <hr>
-  <p><small>Signed up on {{submission_date}}</small></p>
-notification_email: newsletter@example.com
-```
+## Submissions
 
-The `FormType` model's `replacePlaceholders()` method handles placeholder substitution at send time.
+`Noerd\Cms\Forms\FormSubmissionService::submit($tenantId, $formKey, $data)` is the ONE way a
+submission enters the CMS. It is fail-closed:
+
+- the form type must exist for the tenant and be active, its form YAML must be readable and declare
+  fields — otherwise `FormSubmissionException` (nothing is stored, no mail goes out)
+- the data is narrowed to the declared fields and validated by their rules (`ValidationException`)
+- the encoded data may not exceed 64 KB
+
+The token API ([API](api.md)) and the website's contact form use it.
 
 ## Syncing Form Types
 
-Form YAML files are synced to the database using the artisan command:
+`noerd:install-cms` and `noerd:update-cms` sync the form YAML into `cms_form_types`
+(`FormTypeSyncService`); run it by hand with:
 
 ```bash
-php artisan cms:sync-form-types
+php artisan cms:sync-form-types [--tenant=ID] [--force]
 ```
 
-The `FormTypeSyncService` handles synchronization:
+- Scans `app-configs/cms/forms/` and creates or updates a form type per CMS tenant
+- Skips unchanged files (modification time) unless `--force`
+- A form type whose YAML file disappeared is switched inactive (`is_active`): the API refuses it,
+  the row and its requests stay. The file coming back switches it active again
 
-- Scans `app-configs/cms/forms/` for YAML files
-- Creates or updates `FormType` records for each tenant
-- Tracks file modification time to skip unchanged files
-- Use `--force` to re-sync all files regardless of modification time
+## Vocabulary Rewrite
+
+`noerd:update-cms` rewrites the project's form YAML (`app-configs/cms/forms/*.yml`) to the camelCase
+vocabulary before it syncs — line by line, comments and formatting stay, idempotent. Look first with:
+
+```bash
+php artisan cms:migrate-form-yaml --dry-run
+```
+
+Up to 0.5 `send_email: true` mailed the recipients AND the visitor, with the same texts. A file that
+switched it on and declares no confirmation gets `sendConfirmation: true` plus a copy of the subject
+and body as `confirmationSubject` / `confirmationBody`, so visitors keep receiving a mail — review that
+text, it was written for the recipients. The database migration does the same for existing form types.
 
 ## Form Requests
 
@@ -160,20 +193,21 @@ Submitted form data is stored in the `cms_form_requests` table. Each request con
 | Column | Description |
 |--------|-------------|
 | `form` | Form key (matches YAML `key`) |
+| `form_type_id` | The form type |
 | `tenant_id` | Tenant that received the submission |
 | `data` | JSON-encoded form field values |
 | `created_at` | Submission timestamp |
 
-View submissions at `/cms/form-requests`.
+View submissions at `/cms/form-requests`. "Resend notification" sends the notification again to the
+form recipients (write permission on form requests).
 
 ## Admin Panel
 
 The form type detail view (`/cms/form-type/{id}`) allows administrators to:
 
-- View and edit form type configuration
-- Preview email templates with placeholder highlighting
-- Test email sending
-- View associated form submissions
+- switch the notification and the confirmation and edit their subjects and bodies
+- pick the field that holds the sender's address
+- preview both mails with sample data and send a test mail
 
 ## Built-in Forms
 
@@ -181,10 +215,6 @@ The form type detail view (`/cms/form-type/{id}`) allows administrators to:
 |------|-----|-------------|
 | Contact | `contact` | Name, email, phone, message |
 | Newsletter | `newsletter` | Email signup with optional name |
-
-## API Submission
-
-Form submissions can be sent via the REST API. See [API](api.md) for endpoint details.
 
 ## Next Steps
 

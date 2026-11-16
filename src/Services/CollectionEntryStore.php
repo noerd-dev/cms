@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Noerd\Cms\Services;
 
+use Illuminate\Support\Facades\DB;
 use Noerd\Cms\Contracts\CollectionDefinitionRepositoryContract;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Page;
 use Noerd\Cms\Support\PageLayouts;
+use Noerd\Cms\Support\RichTextValues;
 
 /**
  * Persists collection entries (pages of a collection) and the rows of element
@@ -106,12 +108,25 @@ final class CollectionEntryStore
             $errors['detailData.slug'] = __('validation.required', ['attribute' => __('URL')]);
         }
 
+        // A slug naming another host or a reserved application path is never
+        // stored — whichever language it is typed in.
+        foreach (is_array($detailData['slug'] ?? null) ? $detailData['slug'] : [] as $language => $slug) {
+            if (is_scalar($slug) && mb_trim((string) $slug) !== '') {
+                $violation = $this->slugs->violation((string) $slug);
+
+                if ($violation !== null) {
+                    $errors['detailData.slug' . ($language === $defaultLanguageCode ? '' : '.' . $language)] = $violation;
+                }
+            }
+        }
+
         return $errors;
     }
 
     /**
      * Create or update a collection entry from the editor's form state. The
      * caller validates first (requiredFieldErrors()) for entries with pages.
+     * Null when $modelId does not name an entry of this collection.
      *
      * @param  array<string, mixed>|null  $layout
      * @param  array<string, mixed>  $detailData
@@ -124,14 +139,17 @@ final class CollectionEntryStore
         int $tenantId,
         ?int $createdBy,
         string $defaultLanguageCode,
-    ): Page {
+    ): ?Page {
         $parentCollection = $this->parentCollection($collectionKey, $tenantId, $createdBy);
         $hasPageFeatures = $layout['hasPage'] ?? true;
 
         $data = [
             'tenant_id' => $tenantId,
             'collection_id' => $parentCollection->id,
-            'data' => FieldTypeConverter::convertCollectionData($this->extract($layout, $detailData), $collectionKey),
+            'data' => FieldTypeConverter::convertCollectionData(
+                RichTextValues::sanitize($this->extract($layout, $detailData), $layout['fields'] ?? []),
+                $collectionKey,
+            ),
             'sort' => (int) ($detailData['sort'] ?? 0),
             'layout' => $detailData['layout'] ?? PageLayouts::default(),
             'is_active' => true,
@@ -142,17 +160,19 @@ final class CollectionEntryStore
         if ($hasPageFeatures) {
             $names = array_filter(is_array($detailData['name'] ?? null) ? $detailData['name'] : [], fn($value): bool => ! empty($value));
 
-            $slugs = [];
+            // Typed slugs are normalized and made unique across every language
+            // of the tenant; an empty slug is derived from the name.
+            $typed = [];
             foreach (is_array($detailData['slug'] ?? null) ? $detailData['slug'] : [] as $language => $slug) {
                 if (! empty($slug)) {
-                    $slugs[$language] = $slug;
+                    $typed[$language] = $slug;
                 } elseif (! empty($names[$language] ?? '')) {
-                    $slugs[$language] = $this->slugs->uniqueFor($names[$language], (string) $language, $defaultLanguageCode, $tenantId, $modelId);
+                    $typed[$language] = $this->slugs->generate((string) $names[$language], (string) $language, $defaultLanguageCode);
                 }
             }
 
             $data['name'] = $names;
-            $data['slug'] = $slugs;
+            $data['slug'] = $this->slugs->prepare($typed, $tenantId, $modelId)['slugs'];
             $data['is_active'] = (bool) ($detailData['is_active'] ?? true);
 
             foreach (self::PAGE_SEO_FIELDS as $field) {
@@ -162,31 +182,52 @@ final class CollectionEntryStore
             }
         }
 
-        return $modelId
-            ? Page::updateOrCreate(['id' => $modelId], $data)
-            : Page::create($data);
+        if ($modelId === null) {
+            return Page::create($data);
+        }
+
+        // An id is never turned into a new record: it must resolve (the tenant
+        // scope hides another tenant's page) and belong to this collection.
+        $page = Page::query()->where('collection_id', $parentCollection->id)->find($modelId);
+
+        if (! $page instanceof Page) {
+            return null;
+        }
+
+        $page->fill($data)->save();
+
+        return $page;
     }
 
     /**
      * Create or update a row of an element collection. New rows are appended
-     * after the existing ones.
+     * after the existing ones. Null when $modelId names no row of it.
      *
      * @param  array<string, mixed>|null  $layout
      * @param  array<string, mixed>  $detailData
      */
-    public function persistRow(Collection $elementCollection, ?array $layout, array $detailData, ?int $modelId): Page
+    public function persistRow(Collection $elementCollection, ?array $layout, array $detailData, ?int $modelId): ?Page
     {
         $attributes = [
             'tenant_id' => $elementCollection->tenant_id,
             'collection_id' => $elementCollection->id,
-            'data' => $this->extract($layout, $detailData),
+            'data' => RichTextValues::sanitize($this->extract($layout, $detailData), $layout['fields'] ?? []),
             'is_active' => true,
         ];
 
         if ($modelId) {
-            $attributes['sort'] = (int) ($detailData['sort'] ?? 0);
+            // Only a row OF THIS element collection is updated — never another
+            // page, and never a new record for an id that does not resolve.
+            $row = Page::query()->where('collection_id', $elementCollection->id)->find($modelId);
 
-            return Page::updateOrCreate(['id' => $modelId], $attributes);
+            if (! $row instanceof Page) {
+                return null;
+            }
+
+            $attributes['sort'] = (int) ($detailData['sort'] ?? 0);
+            $row->fill($attributes)->save();
+
+            return $row;
         }
 
         $attributes['sort'] = (int) ($elementCollection->rows()->max('sort') ?? -1) + 1;
@@ -204,10 +245,15 @@ final class CollectionEntryStore
             ->where('sort', '>', $row->sort ?? 0)
             ->increment('sort');
 
-        $copy = $row->replicate(['id']);
-        $copy->sort = ($row->sort ?? 0) + 1;
-        $copy->save();
+        return DB::transaction(function () use ($row): Page {
+            $copy = $row->replicate(['id']);
+            $copy->sort = ($row->sort ?? 0) + 1;
+            $copy->save();
 
-        return $copy;
+            // The copy owns copies of the row's element collections, never the originals.
+            app(ElementCollectionService::class)->copyOwned($row, $copy);
+
+            return $copy;
+        });
     }
 }

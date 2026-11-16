@@ -16,6 +16,9 @@ uses(CreatesCmsUser::class);
 
 beforeEach(function (): void {
     ['user' => $this->user, 'tenant' => $this->tenant] = $this->createUserWithCmsAccess();
+    // The repository resolves the tenant through TenantHelper::currentTenantId():
+    // the tenant context or the signed-in user's selection — never the bare session.
+    $this->actingAs($this->user);
 
     $this->repo = app(CollectionDefinitionRepositoryContract::class);
     $owner = Page::factory()->create(['tenant_id' => $this->tenant->id, 'name' => ['de' => 'Demo']]);

@@ -27,10 +27,10 @@ fields:
     label: 'Collection as Subpages (optional)'
     type: select
     optionsMethod: collectionOptions
-    placeholder: 'Please select...'
+    placeholder: 'Please choose...'
     colspan: 6
   - name: detailData.sort_order
-    label: Sort Order
+    label: Sort position
     type: number
     colspan: 6
   - name: detailData.new_tab

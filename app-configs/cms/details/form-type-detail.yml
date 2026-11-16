@@ -3,14 +3,26 @@ description: ''
 cols: 6
 fields:
   - name: detailData.send_email
-    label: Send email notification
+    label: Notify the form recipients
     type: checkbox
     colspan: 6
   - name: detailData.email_subject
-    label: Email subject
+    label: Notification subject
     type: text
     colspan: 6
   - name: detailData.notification_email
     label: Notification email (optional)
+    type: text
+    colspan: 6
+  - name: detailData.send_confirmation
+    label: Send a confirmation to the sender
+    type: checkbox
+    colspan: 6
+  - name: detailData.confirmation_field
+    label: Field with the sender's email address
+    type: text
+    colspan: 6
+  - name: detailData.confirmation_subject
+    label: Confirmation subject
     type: text
     colspan: 6

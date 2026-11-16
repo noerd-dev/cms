@@ -26,14 +26,6 @@ class ElementAwareCollectionDefinitionRepository implements CollectionDefinition
         private readonly ElementCollectionService $elementCollections,
     ) {}
 
-    /**
-     * The wrapped repository.
-     */
-    public function inner(): CollectionDefinitionRepositoryContract
-    {
-        return $this->inner;
-    }
-
     public function all(?int $tenantId = null): SupportCollection
     {
         return $this->inner->all($tenantId);
@@ -67,15 +59,15 @@ class ElementAwareCollectionDefinitionRepository implements CollectionDefinition
             || $this->inner->exists($filename, $tenantId);
     }
 
-    public function resolveFields(string $filename): ?array
+    public function resolveFields(string $filename, ?int $tenantId = null): ?array
     {
-        $elementCollection = $this->findElement($filename, null);
+        $elementCollection = $this->findElement($filename, $tenantId);
 
         if ($elementCollection) {
             return $this->elementCollections->schemaFor($elementCollection);
         }
 
-        return $this->inner->resolveFields($filename);
+        return $this->inner->resolveFields($filename, $tenantId);
     }
 
     public function save(CollectionDefinitionData $data, ?string $originalFilename = null, ?int $tenantId = null): string
@@ -103,7 +95,7 @@ class ElementAwareCollectionDefinitionRepository implements CollectionDefinition
 
     private function findElement(string $key, ?int $tenantId): ?Collection
     {
-        $tenantId ??= TenantHelper::currentTenantId() ?? TenantHelper::getSelectedTenantId();
+        $tenantId ??= TenantHelper::currentTenantId();
 
         if (! $tenantId) {
             return null;

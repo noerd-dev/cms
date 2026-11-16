@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Noerd\Cms\Traits;
 
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
+use Noerd\Cms\Exceptions\ForeignContentException;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Content;
 use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Services\ContentDocumentService;
 use Noerd\Cms\Services\ElementCollectionService;
+use Noerd\Cms\Support\ContentLanguageSource;
+use Noerd\Cms\Support\ContentTypeRegistry;
 use Noerd\Contracts\MediaResolverContract;
 use Noerd\Facades\Noerd;
-use Noerd\Models\SetupLanguage;
+use Noerd\Helpers\TenantHelper;
 
 /**
  * The document editor of a detail component whose record extends a content
@@ -22,7 +26,7 @@ use Noerd\Models\SetupLanguage;
  *
  *     <x-cms::content-document :config="$this->contentDocumentConfig()" />
  *
- * and call `persistContentDocument($record->content)` at the end of `store()`.
+ * and call `persistContentDocument($record->ownContent(), $record)` at the end of `store()`.
  *
  * The editor writes its state into `$contentDocumentDraft` (untrusted, no round
  * trip); the server merges it into the locked working document
@@ -71,7 +75,7 @@ trait EditsContentDocument
     public function renderingEditsContentDocument(): void
     {
         if (array_key_exists('name', $this->detailData) && ! is_array($this->detailData['name'])) {
-            $this->detailData['name'] = [SetupLanguage::selectedCode() => (string) ($this->detailData['name'] ?? '')];
+            $this->detailData['name'] = [$this->contentDocumentLanguageSource()->selectedCode() => (string) ($this->detailData['name'] ?? '')];
         }
     }
 
@@ -96,6 +100,9 @@ trait EditsContentDocument
         }
 
         return [
+            // The window events of the editor name their component: two
+            // editors on one page never act on each other's events.
+            'owner' => $this->getId(),
             'sections' => $service->forEditor($this->contentDocument, $this->contentDocumentLanguage),
             'language' => $this->contentDocumentLanguage,
             'catalog' => array_values(array_map(fn(array $entry): array => array_diff_key($entry, ['fields' => true]), $catalog)),
@@ -119,9 +126,17 @@ trait EditsContentDocument
             return;
         }
 
-        $language = is_string($draft['language'] ?? null) && preg_match('/^[a-z]{2,8}(-[A-Za-z]{2,8})?$/', $draft['language'])
-            ? $draft['language']
-            : $this->contentDocumentLanguage;
+        // The draft names the language its running text is written in — one
+        // of the languages of the content type's source (Cms: the website
+        // languages, Setup: the backend languages); a draft in any other is
+        // refused, its text would land in a language nobody edits.
+        $language = $draft['language'] ?? $this->contentDocumentLanguage;
+
+        $languageCodes = ContentDocumentService::editableLanguageCodes($this->contentDocumentType());
+
+        if (! is_string($language) || ! in_array($language, $languageCodes, true)) {
+            return;
+        }
 
         $service = $this->contentDocumentService();
         $this->contentDocument = $service->apply(
@@ -129,18 +144,27 @@ trait EditsContentDocument
             $draft['sections'],
             $language,
             $service->allowedKeys($this->contentDocumentType()),
+            $languageCodes,
         );
     }
 
     /**
-     * Write the document into the content's rows — the end of `store()`.
+     * Write the document into the content's rows — the end of `store()`. Pass
+     * the saved record as well (`persistContentDocument($record->ownContent(),
+     * $record)`): the document is only ever written into the record's OWN
+     * content, of its tenant and of this editor's content type. Without the
+     * record the content must be the one editableContent() answers.
      */
-    public function persistContentDocument(?Content $content): void
+    public function persistContentDocument(?Content $content, ?Model $record = null): void
     {
         $this->applyContentDocumentDraft();
 
         if ($content === null || ! $this->canSaveObject()) {
             return;
+        }
+
+        if (! $this->ownsContentDocument($content, $record)) {
+            throw ForeignContentException::forDocument($content->getKey());
         }
 
         $service = $this->contentDocumentService();
@@ -150,6 +174,7 @@ trait EditsContentDocument
         // elements are saved now — element collections need a saved element.
         $this->dispatch(
             'content-document-saved',
+            owner: $this->getId(),
             saved: array_values(array_column(array_filter($this->contentDocument, fn(array $section): bool => $section['kind'] === 'element' && $section['id'] !== null), 'uid')),
             collectionCounts: (object) $service->collectionCounts($this->contentDocument),
         );
@@ -170,7 +195,7 @@ trait EditsContentDocument
     public function contentDocumentLanguageChanged(): void
     {
         $this->applyContentDocumentDraft();
-        $this->contentDocumentLanguage = SetupLanguage::selectedCode();
+        $this->contentDocumentLanguage = $this->contentDocumentLanguageSource()->selectedCode();
         $this->dispatchContentDocument();
     }
 
@@ -179,6 +204,12 @@ trait EditsContentDocument
      */
     public function contentDocumentMediaPreview(int $mediaId): ?string
     {
+        // A client-callable action: only someone who may edit the record asks
+        // for previews, and the resolver answers within the tenant scope.
+        if (! $this->canSaveObject()) {
+            return null;
+        }
+
         return app(MediaResolverContract::class)->getPreviewUrl($mediaId);
     }
 
@@ -213,7 +244,7 @@ trait EditsContentDocument
         $element = ContentElement::query()->where('content_id', $content->getKey())->find($section['id']);
         $definition = collect(FieldHelper::flattenFields(FieldHelper::getElementFields($section['key'])['fields'] ?? []))
             ->first(fn(array $candidate): bool => preg_replace('/^\w+\./', '', (string) ($candidate['name'] ?? '')) === $field
-                && ($candidate['type'] ?? null) === 'element-collection');
+                && ($candidate['type'] ?? null) === 'elementCollection');
 
         if ($element === null || $definition === null) {
             return;
@@ -236,6 +267,34 @@ trait EditsContentDocument
         ]);
     }
 
+    /**
+     * Whether $content is the content of the edited record: of this editor's
+     * content type and of the record's tenant (the current one), and the very
+     * content the given record extends — or, without one, editableContent().
+     */
+    private function ownsContentDocument(Content $content, ?Model $record): bool
+    {
+        if ((string) $content->type !== $this->contentDocumentType()) {
+            return false;
+        }
+
+        $tenantId = $record?->getAttribute('tenant_id') ?? TenantHelper::currentTenantId();
+
+        if ($tenantId === null || (int) $content->tenant_id !== (int) $tenantId) {
+            return false;
+        }
+
+        if ($record !== null) {
+            return (int) $record->getAttribute('content_id') === (int) $content->getKey();
+        }
+
+        // The action is client-callable (a content id binds to the parameter):
+        // without the record, only the content of the edited record is written.
+        $own = $this->editableContent();
+
+        return $own !== null && (int) $own->getKey() === (int) $content->getKey();
+    }
+
     private function ensureContentDocument(): void
     {
         if ($this->contentDocumentLoaded) {
@@ -243,7 +302,7 @@ trait EditsContentDocument
         }
 
         $this->contentDocument = $this->contentDocumentService()->load($this->editableContent());
-        $this->contentDocumentLanguage ??= SetupLanguage::selectedCode();
+        $this->contentDocumentLanguage ??= $this->contentDocumentLanguageSource()->selectedCode();
         $this->contentDocumentLoaded = true;
     }
 
@@ -253,7 +312,15 @@ trait EditsContentDocument
      */
     private function dispatchContentDocument(): void
     {
-        $this->dispatch('content-document-load', config: $this->contentDocumentConfig());
+        $this->dispatch('content-document-load', owner: $this->getId(), config: $this->contentDocumentConfig());
+    }
+
+    /**
+     * The languages of the edited content type (ContentTypeRegistry).
+     */
+    private function contentDocumentLanguageSource(): ContentLanguageSource
+    {
+        return app(ContentTypeRegistry::class)->languageSource($this->contentDocumentType());
     }
 
     private function contentDocumentService(): ContentDocumentService

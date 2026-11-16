@@ -92,17 +92,17 @@ The `CmsApiAuth` middleware:
 1. Extracts the token from the `Authorization: Bearer` or `X-API-Key` header (never from the query string — query parameters end up in access logs)
 2. Looks up a `NoerdUser` with a matching `api_token`
 3. Verifies the user has a `selected_tenant_id`
-4. Validates the tenant exists and runs the CMS app
+4. Validates the tenant exists, that the user may still work in it (a member, or a super admin — removing the user from the tenant revokes the token's access) and that it runs the CMS app
 5. Attaches `tenant_id`, `tenant`, and `user` to the request attributes
 6. Returns `401 Unauthorized` JSON response on any failure
 
 ## Validation
 
-The `form` value must match an existing FormType `key` of the token's tenant — unknown forms are rejected with `422`. When the form's YAML definition declares `fields`, the submitted `data` is validated against each field's `validation` rules (with its `error_messages`), undeclared keys are dropped before persisting, and oversized payloads are rejected. The endpoint is rate limited (`throttle:60,1`).
+The submission goes through `FormSubmissionService` and is FAIL-CLOSED: the `form` value must match an ACTIVE FormType `key` of the token's tenant (`422 Unknown form type.` otherwise), and its form YAML must be readable and declare `fields` (`422 The form definition is missing.` — nothing is stored). The submitted `data` is narrowed to the declared fields and validated by their rules (with their `errorMessages`, `422 Validation failed` with `errors`), and oversized payloads are rejected (`422 Payload too large.`). The endpoint is rate limited (`throttle:60,1`).
 
 ## Email Notifications
 
-If the matching `FormType` has `send_email: true`, the confirmation email job is dispatched after a successful submission. See [Forms](forms.md) for email template configuration.
+After a successful submission the CMS queues the mails the form type sends: the notification of the form recipients (`sendEmail`) and the confirmation of the sender (`sendConfirmation`). See [Forms](forms.md).
 
 ## Next Steps
 

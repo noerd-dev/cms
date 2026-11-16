@@ -7,6 +7,7 @@ namespace Noerd\Cms\Support;
 use Illuminate\Support\Facades\Schema;
 use Noerd\Cms\Models\CmsLanguage;
 use Noerd\Helpers\TenantHelper;
+use Noerd\Support\RequestState;
 use Throwable;
 
 /**
@@ -20,11 +21,13 @@ use Throwable;
 final class CmsLanguageCodes
 {
     /**
-     * Codes assumed to exist before any language has been configured.
+     * Codes assumed to exist before any language has been configured — the
+     * default language a CMS tenant gets (`en`, CmsLanguage::ensureDefaultLanguageForTenant())
+     * first, so a fallback never names a language the tenant would not get.
      *
      * @var array<int, string>
      */
-    public const FALLBACK = ['de', 'en'];
+    public const FALLBACK = ['en', 'de'];
 
     /**
      * Baseline for recognising a stored translatable array. Always unioned with
@@ -36,16 +39,13 @@ final class CmsLanguageCodes
     public const BUILT_IN = ['de', 'en', 'fr', 'es', 'it', 'nl'];
 
     /**
-     * Memoized active codes, keyed by tenant id (0 = no tenant context) so a
-     * process serving several tenants (Octane, queue workers, tests) never
-     * serves one tenant's language list to another.
-     *
-     * @var array<int, array<int, string>>
+     * The request-scoped memo (RequestState: dropped before every Octane
+     * request and queued job): the active codes keyed by tenant id, the known
+     * codes under KNOWN.
      */
-    private static array $activeCache = [];
+    private const MEMO = 'cms.language-codes';
 
-    /** @var array<int, string>|null */
-    private static ?array $knownCache = null;
+    private const KNOWN = 'known';
 
     /**
      * Active codes of the CURRENT tenant, default language first — used to decide
@@ -55,7 +55,7 @@ final class CmsLanguageCodes
      */
     public static function active(): array
     {
-        $tenantId = (int) (TenantHelper::currentTenantId() ?? TenantHelper::getSelectedTenantId() ?? 0);
+        $tenantId = (int) (TenantHelper::currentTenantId() ?? 0);
 
         // Without a tenant context (console, queue) the global tenant scope
         // stays unscoped — never answer with the union of every tenant's codes.
@@ -63,8 +63,10 @@ final class CmsLanguageCodes
             return self::FALLBACK;
         }
 
-        if (isset(self::$activeCache[$tenantId])) {
-            return self::$activeCache[$tenantId];
+        $memo = &RequestState::bucket(self::MEMO);
+
+        if (isset($memo[$tenantId])) {
+            return $memo[$tenantId];
         }
 
         $codes = self::query(
@@ -77,7 +79,7 @@ final class CmsLanguageCodes
                 ->all(),
         );
 
-        return self::$activeCache[$tenantId] = $codes === [] ? self::FALLBACK : $codes;
+        return $memo[$tenantId] = $codes === [] ? self::FALLBACK : $codes;
     }
 
     /**
@@ -87,8 +89,8 @@ final class CmsLanguageCodes
     public static function defaultFor(int $tenantId): string
     {
         $codes = self::query(
-            fn(): array => CmsLanguage::withoutGlobalScopes()
-                ->where('tenant_id', $tenantId)
+            fn(): array => CmsLanguage::query()
+                ->ofTenant($tenantId)
                 ->where('is_active', true)
                 ->orderBy('is_default', 'desc')
                 ->orderBy('sort_order')
@@ -109,15 +111,17 @@ final class CmsLanguageCodes
      */
     public static function known(): array
     {
-        if (self::$knownCache !== null) {
-            return self::$knownCache;
+        $memo = &RequestState::bucket(self::MEMO);
+
+        if (isset($memo[self::KNOWN])) {
+            return $memo[self::KNOWN];
         }
 
         $configured = self::query(
-            fn(): array => CmsLanguage::withoutGlobalScopes()->distinct()->pluck('code')->all(),
+            fn(): array => CmsLanguage::query()->acrossTenants()->distinct()->pluck('code')->all(),
         );
 
-        return self::$knownCache = array_values(array_unique([...self::BUILT_IN, ...$configured]));
+        return $memo[self::KNOWN] = array_values(array_unique([...self::BUILT_IN, ...$configured]));
     }
 
     /**
@@ -139,8 +143,7 @@ final class CmsLanguageCodes
      */
     public static function clearCache(): void
     {
-        self::$activeCache = [];
-        self::$knownCache = null;
+        RequestState::forget(self::MEMO);
     }
 
     /**

@@ -20,6 +20,6 @@ fields:
     type: checkbox
     colspan: 4
   - name: detailData.sort_order
-    label: Sort Order
+    label: Sort position
     type: number
     colspan: 4

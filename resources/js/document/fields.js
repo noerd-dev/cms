@@ -223,7 +223,7 @@ const RENDERERS = {
     select,
     checkbox,
     image,
-    'element-collection': elementCollection,
+    'elementCollection': elementCollection,
 };
 
 export function isTranslatable(type) {

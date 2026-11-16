@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Noerd\Cms\Helpers\CollectionHelper;
@@ -7,6 +8,7 @@ use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Navigation;
 use Noerd\Cms\Models\Page;
+use Noerd\Cms\Support\SafeUrl;
 use Noerd\Facades\Noerd;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Support\RelationFieldDefinition;
@@ -87,47 +89,73 @@ new class extends Component {
             return;
         }
 
-        $parentId = ! empty($this->detailData['parent_id']) ? (int) $this->detailData['parent_id'] : null;
+        $tenantId = TenantHelper::currentTenantId();
+        $parentId = ! empty($this->detailData['parent_id']) ? $this->detailData['parent_id'] : null;
         $this->detailData['parent_id'] = $parentId;
         $isSub = $parentId !== null;
 
+        // Parent, page and collection must be records of the current tenant —
+        // the ids arrive from the client.
         $this->validate([
             'detailData.navigation_key' => [$isSub ? 'nullable' : 'required', 'string', 'max:255'],
             'detailData.name' => ['required', 'array'],
-            'detailData.parent_id' => ['nullable', 'numeric', 'exists:cms_navigations,id'],
+            'detailData.parent_id' => ['nullable', 'integer', Rule::exists('cms_navigations', 'id')->where('tenant_id', $tenantId)],
             'detailData.sort_order' => ['nullable', 'integer', 'min:0'],
-            'detailData.page_id' => ['nullable', 'numeric'],
-            'detailData.link' => ['nullable', 'string', 'max:2048'],
-            'detailData.collection_id' => ['nullable', 'numeric', 'exists:cms_collections,id'],
+            'detailData.page_id' => ['nullable', 'integer', Rule::exists('cms_pages', 'id')->where('tenant_id', $tenantId)],
+            // The column holds 255 characters; a link is printed into the
+            // public navigation, so only safe URLs (http(s), mailto, tel,
+            // site paths) are accepted — never javascript: or //other-host.
+            'detailData.link' => ['nullable', 'string', 'max:255', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (is_string($value) && mb_trim($value) !== '' && ! SafeUrl::isSafe($value)) {
+                    $fail(__('The link must be a web address (http/https), an e-mail or phone link, or a path on this website.'));
+                }
+            }],
+            'detailData.collection_id' => ['nullable', 'integer', Rule::exists('cms_collections', 'id')->where('tenant_id', $tenantId)],
             'detailData.new_tab' => ['nullable', 'boolean'],
         ]);
 
-        $data = collect($this->detailData)
-            ->except(['navigation_type', 'created_at', 'updated_at'])
-            ->toArray();
-        $data['tenant_id'] = TenantHelper::currentTenantId();
+        $parentId = $parentId !== null ? (int) $parentId : null;
+
+        if ($parentId !== null && $this->wouldCreateCycle($parentId)) {
+            $this->addError('detailData.parent_id', __('An item cannot be placed below itself or one of its sub items.'));
+
+            return;
+        }
+
+        $data = $this->writableDetailData(Navigation::class);
 
         if ($isSub) {
             $parent = Navigation::find($parentId);
-            $data['navigation_key'] = $parent?->navigation_key ?? $data['navigation_key'];
+            $data['navigation_key'] = $parent?->navigation_key ?? $data['navigation_key'] ?? null;
         }
 
-        $data['collection_id'] = !empty($data['collection_id']) ? (int) $data['collection_id'] : null;
+        $data['collection_id'] = ! empty($data['collection_id']) ? (int) $data['collection_id'] : null;
 
-        if (!empty(mb_trim((string) ($data['link'] ?? '')))) {
+        if (! empty(mb_trim((string) ($data['link'] ?? '')))) {
             $data['link'] = mb_trim((string) $data['link']);
             $data['page_id'] = null;
         } else {
             $data['link'] = null;
-            $data['page_id'] = !empty($data['page_id']) ? (int) $data['page_id'] : null;
+            $data['page_id'] = ! empty($data['page_id']) ? (int) $data['page_id'] : null;
         }
-        $data['new_tab'] = !empty($data['new_tab']) ? 1 : 0;
-        $data['parent_id'] = !empty($data['parent_id']) ? (int) $data['parent_id'] : null;
+        $data['new_tab'] = ! empty($data['new_tab']) ? 1 : 0;
+        $data['parent_id'] = $parentId;
         $data['sort_order'] = (int) ($data['sort_order'] ?? 0);
 
-        $navigation = Navigation::updateOrCreate(['id' => $this->modelId], $data);
+        if ($this->modelId) {
+            $navigation = Navigation::find($this->modelId);
 
-        $this->storeProcess($navigation);
+            // An id the tenant scope cannot resolve stores nothing — never a new item.
+            if (! $navigation instanceof Navigation) {
+                return;
+            }
+
+            $navigation->fill($data)->save();
+        } else {
+            $navigation = Navigation::create($data);
+        }
+
+        $this->finishStore($navigation);
     }
 
     public function openPageSelect(): void
@@ -170,6 +198,32 @@ new class extends Component {
             // Exclusivity: when link entered, clear relations
             $this->detailData['page_id'] = null;
         }
+    }
+
+    /**
+     * Whether placing this item below $parentId would make it its own
+     * ancestor — the parent itself, or any item up the parent's chain.
+     */
+    private function wouldCreateCycle(int $parentId): bool
+    {
+        if (! $this->modelId) {
+            return false;
+        }
+
+        $seen = [];
+        $currentId = $parentId;
+
+        while ($currentId !== null && ! isset($seen[$currentId])) {
+            if ($currentId === (int) $this->modelId) {
+                return true;
+            }
+
+            $seen[$currentId] = true;
+            $parent = Navigation::query()->whereKey($currentId)->value('parent_id');
+            $currentId = $parent !== null ? (int) $parent : null;
+        }
+
+        return $currentId !== null;
     }
 
     #[On('languageChanged')]

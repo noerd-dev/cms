@@ -7,10 +7,10 @@ namespace Noerd\Cms\Services;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\File;
+use Noerd\Cms\Forms\FormDefinition;
 use Noerd\Cms\Models\FormType;
 use Noerd\Models\Tenant;
 use Noerd\Support\TenantContext;
-use Symfony\Component\Yaml\Yaml;
 
 class FormTypeSyncService
 {
@@ -20,7 +20,11 @@ class FormTypeSyncService
     protected int $synced = 0;
     protected int $skipped = 0;
     protected int $errors = 0;
+    protected int $deactivated = 0;
     protected array $messages = [];
+
+    /** @var array<int, list<string>> tenant id => keys of the form YAML found */
+    protected array $presentKeys = [];
 
     /**
      * Sync form types from YML files to database
@@ -30,22 +34,16 @@ class FormTypeSyncService
         $this->synced = 0;
         $this->skipped = 0;
         $this->errors = 0;
+        $this->deactivated = 0;
         $this->messages = [];
+        $this->presentKeys = [];
 
         $formFilesPath = base_path('app-configs/cms/forms');
 
-        if (! File::exists($formFilesPath)) {
-            $this->messages[] = "Forms directory not found: {$formFilesPath}";
+        $ymlFiles = File::exists($formFilesPath) ? File::glob($formFilesPath . '/*.yml') : [];
 
-            return $this->getResults();
-        }
-
-        $ymlFiles = File::glob($formFilesPath . '/*.yml');
-
-        if (empty($ymlFiles)) {
+        if ($ymlFiles === []) {
             $this->messages[] = 'No YML files found in app-configs/cms/forms/';
-
-            return $this->getResults();
         }
 
         // Only tenants that actually run the CMS app get form types — syncing
@@ -75,6 +73,10 @@ class FormTypeSyncService
             }
         }
 
+        foreach ($tenants as $tenant) {
+            TenantContext::run((int) $tenant->id, fn() => $this->deactivateMissingFormTypes($tenant));
+        }
+
         return $this->getResults();
     }
 
@@ -84,22 +86,35 @@ class FormTypeSyncService
     protected function syncFormTypeForTenant(string $ymlFile, Tenant $tenant, bool $force): void
     {
         try {
-            $config = Yaml::parseFile($ymlFile);
+            $definition = FormDefinition::fromFile($ymlFile);
+            $key = $definition?->key();
 
-            if (! isset($config['key'])) {
+            if ($definition === null || $key === null) {
                 $this->errors++;
-                $this->messages[] = "YML file missing 'key' field: {$ymlFile}";
+                $this->messages[] = "YML file unreadable or missing 'key' field: {$ymlFile}";
 
                 return;
             }
 
-            $key = $config['key'];
+            // The file still exists: its form type stays active even when the
+            // file has to wait for a fix below.
+            $this->presentKeys[(int) $tenant->id][] = $key;
+
+            // 0.6 reads only the camelCase vocabulary — a file still in the
+            // earlier one would silently lose its mail settings.
+            if (($outdated = $definition->outdatedKeys()) !== []) {
+                $this->errors++;
+                $this->messages[] = "{$ymlFile} uses outdated keys (" . implode(', ', $outdated) . '): run php artisan cms:migrate-form-yaml';
+
+                return;
+            }
+
             $fileModifiedTime = Carbon::createFromTimestamp(File::lastModified($ymlFile));
 
             // Check if we need to sync
             $existingFormType = $this->existingFormTypes->get($tenant->id . ':' . $key);
 
-            if ($existingFormType && ! $force) {
+            if ($existingFormType && ! $force && $existingFormType->is_active) {
                 // Skip if file hasn't been modified since last sync
                 if ($existingFormType->yml_synced_at
                     && $existingFormType->yml_synced_at->greaterThanOrEqualTo($fileModifiedTime)) {
@@ -114,16 +129,12 @@ class FormTypeSyncService
             // columns the YAML actually declares — a re-sync must not wipe
             // values an admin edited in the UI.
             $formTypeData = [
-                'title' => $config['title'] ?? $key,
+                'title' => $definition->title(),
+                ...$definition->columns(),
                 'yml_path' => str_replace(base_path() . '/', '', $ymlFile),
                 'yml_synced_at' => now(),
+                'is_active' => true,
             ];
-
-            foreach (['description', 'send_email', 'email_subject', 'email_body', 'notification_email'] as $column) {
-                if (array_key_exists($column, $config)) {
-                    $formTypeData[$column] = $config[$column];
-                }
-            }
 
             FormType::updateOrCreate(
                 [
@@ -148,6 +159,20 @@ class FormTypeSyncService
     }
 
     /**
+     * A form type whose YAML disappeared is switched inactive: the API refuses
+     * it and the backend marks it — the row stays, its requests keep their
+     * form type.
+     */
+    protected function deactivateMissingFormTypes(Tenant $tenant): void
+    {
+        $this->deactivated += FormType::query()
+            ->ofTenant((int) $tenant->id)
+            ->where('is_active', true)
+            ->whereNotIn('key', $this->presentKeys[(int) $tenant->id] ?? [])
+            ->update(['is_active' => false]);
+    }
+
+    /**
      * Get sync results
      */
     protected function getResults(): array
@@ -156,6 +181,7 @@ class FormTypeSyncService
             'synced' => $this->synced,
             'skipped' => $this->skipped,
             'errors' => $this->errors,
+            'deactivated' => $this->deactivated,
             'messages' => $this->messages,
         ];
     }

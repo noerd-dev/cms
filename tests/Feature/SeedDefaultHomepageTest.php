@@ -61,20 +61,33 @@ it('does not overwrite an existing homepage', function (): void {
     expect(Page::query()->ofTenant($tenant->id)->count())->toBe(1);
 });
 
-it('creates homepage for tenant with cms_settings but no homepage_page_id', function (): void {
+it('never seeds a tenant that has a settings row, even one without homepage', function (): void {
     ['tenant' => $tenant] = $this->createUserWithCmsAccess();
 
-    CmsSetting::create([
-        'tenant_id' => $tenant->id,
-        'homepage_page_id' => null,
-    ]);
+    // The admin cleared the homepage: the CMS respects it.
+    CmsSetting::create(['tenant_id' => $tenant->id, 'homepage_page_id' => null]);
+
+    expect((new DefaultHomepageSeeder())->seedMissingHomepages())->toBe([]);
+
+    expect(CmsSetting::where('tenant_id', $tenant->id)->value('homepage_page_id'))->toBeNull()
+        ->and(Page::query()->ofTenant($tenant->id)->count())->toBe(0);
+});
+
+it('never seeds a tenant that already has a page', function (): void {
+    ['tenant' => $tenant] = $this->createUserWithCmsAccess();
+    Page::factory()->create(['tenant_id' => $tenant->id]);
 
     (new DefaultHomepageSeeder())->seedMissingHomepages();
 
-    $setting = CmsSetting::where('tenant_id', $tenant->id)->first();
-    expect($setting->homepage_page_id)->not->toBeNull();
+    expect(CmsSetting::existsForTenant($tenant->id))->toBeFalse()
+        ->and(Page::query()->ofTenant($tenant->id)->count())->toBe(1);
+});
 
-    $page = Page::query()->ofTenant($tenant->id)->find($setting->homepage_page_id);
-    expect($page)->not->toBeNull();
-    expect($page->tenant_id)->toBe($tenant->id);
+it('seeds a fresh tenant once — a second run adds nothing', function (): void {
+    ['tenant' => $tenant] = $this->createUserWithCmsAccess();
+
+    expect((new DefaultHomepageSeeder())->seedMissingHomepages())->toBe([$tenant->id])
+        ->and((new DefaultHomepageSeeder())->seedMissingHomepages())->toBe([]);
+
+    expect(Page::query()->ofTenant($tenant->id)->count())->toBe(1);
 });

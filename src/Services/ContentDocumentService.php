@@ -11,6 +11,7 @@ use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\Content;
 use Noerd\Cms\Models\ContentElement;
 use Noerd\Cms\Support\CmsLanguageCodes;
+use Noerd\Cms\Support\ContentTypeRegistry;
 use Noerd\Contracts\MediaResolverContract;
 use Noerd\Support\HtmlSanitizer;
 
@@ -34,11 +35,35 @@ final class ContentDocumentService
 {
     public const string TEXT_ELEMENT = 'rich_text';
 
+    /**
+     * Upper bounds of an editor draft (client input). Generous on purpose —
+     * they only stop a forged request from writing an unbounded document:
+     * at most MAX_SECTIONS blocks are taken from a draft, and a text value
+     * (running text, a field value of one language) longer than
+     * MAX_TEXT_LENGTH characters is refused and keeps its previous value.
+     */
+    public const int MAX_SECTIONS = 500;
+
+    public const int MAX_TEXT_LENGTH = 200_000;
+
     /** @var array<int, string> */
     private const array RICH_TEXT_TYPES = ['richText', 'translatableRichText'];
 
     /** @var array<int, string> */
     private const array TRANSLATABLE_TYPES = ['translatableText', 'translatableTextarea', 'translatableRichText'];
+
+    /**
+     * The language codes a document of the given content type may be written
+     * in, for the current tenant: the codes of the type's language source
+     * (ContentTypeRegistry, ContentLanguageSource). Every other code of a
+     * draft is client input nobody can edit and is refused.
+     *
+     * @return list<string>
+     */
+    public static function editableLanguageCodes(string $contentType): array
+    {
+        return app(ContentTypeRegistry::class)->languageSource($contentType)->codes();
+    }
 
     /**
      * The working document of a content, built from its rows.
@@ -52,7 +77,7 @@ final class ContentDocumentService
         }
 
         $sections = [];
-        $language = CmsLanguageCodes::defaultFor((int) $content->tenant_id);
+        $language = $this->defaultLanguageOf($content);
 
         foreach ($content->elements()->get() as $element) {
             $data = is_array($element->data) ? $element->data : (json_decode((string) $element->data, true) ?: []);
@@ -94,9 +119,11 @@ final class ContentDocumentService
      * @param  list<array<string, mixed>>  $working
      * @param  array<int, mixed>  $draft
      * @param  array<int, string>  $allowedKeys  element keys the content type may use
+     * @param  list<string>|null  $languageCodes  the codes a translatable field may take
+     *                                            (editableLanguageCodes() of the type); null = the website languages
      * @return list<array<string, mixed>>
      */
-    public function apply(array $working, array $draft, string $language, array $allowedKeys): array
+    public function apply(array $working, array $draft, string $language, array $allowedKeys, ?array $languageCodes = null): array
     {
         $byUid = [];
         foreach ($working as $section) {
@@ -105,8 +132,9 @@ final class ContentDocumentService
 
         $result = [];
         $seen = [];
+        $activeCodes = array_values(array_unique([$language, ...($languageCodes ?? CmsLanguageCodes::active())]));
 
-        foreach ($draft as $item) {
+        foreach (array_slice($draft, 0, self::MAX_SECTIONS) as $item) {
             if (! is_array($item)) {
                 continue;
             }
@@ -141,7 +169,15 @@ final class ContentDocumentService
                     unset($byUid[$absorbedUid]);
                 }
 
-                $section['text'][$language] = HtmlSanitizer::sanitize(is_string($item['html'] ?? null) ? $item['html'] : '');
+                $html = is_string($item['html'] ?? null) ? $item['html'] : '';
+
+                // An oversized text keeps what the section held before.
+                if (mb_strlen($html) <= self::MAX_TEXT_LENGTH) {
+                    $section['text'][$language] = HtmlSanitizer::sanitize($html);
+                } else {
+                    $section['text'][$language] ??= '';
+                }
+
                 $result[] = $section;
 
                 continue;
@@ -162,7 +198,16 @@ final class ContentDocumentService
                 ? $base
                 : ['kind' => 'element', 'uid' => $uid, 'id' => null, 'key' => $key, 'data' => []];
 
-            $section['data'] = $this->normalizeData($key, is_array($item['data'] ?? null) ? $item['data'] : [], $section['data']);
+            // An element whose YAML is gone keeps its stored data: the editor
+            // cannot show its fields, so nothing the client sends replaces it.
+            if ($this->isKnownElement($key)) {
+                $section['data'] = $this->normalizeData(
+                    $key,
+                    $this->acceptDraftData($key, is_array($item['data'] ?? null) ? $item['data'] : [], $section['data'], $activeCodes),
+                    [],
+                );
+            }
+
             $result[] = $section;
         }
 
@@ -232,7 +277,7 @@ final class ContentDocumentService
             }
 
             foreach ($this->fieldsOf($section['key']) as $field) {
-                if (($field['type'] ?? null) !== 'element-collection') {
+                if (($field['type'] ?? null) !== 'elementCollection') {
                     continue;
                 }
 
@@ -279,7 +324,7 @@ final class ContentDocumentService
 
                     $attributes = ['element_key' => self::TEXT_ELEMENT, 'data' => ['text' => $text]];
                 } else {
-                    $attributes = ['element_key' => $section['key'], 'data' => $this->normalizeData($section['key'], $section['data'], [])];
+                    $attributes = ['element_key' => $section['key'], 'data' => $this->normalizeData($section['key'], $section['data'], [], $this->defaultLanguageOf($content))];
                 }
 
                 $sort++;
@@ -354,28 +399,42 @@ final class ContentDocumentService
     /**
      * Keep only the element's YAML fields and give every value the shape of
      * its type; rich text is sanitized. Element collections are rows of their
-     * own and never part of the data. Values of a key the client did not send
+     * own and never part of the data. Values of a key the data does not hold
      * are taken from $previous.
+     *
+     * An element whose YAML is unknown (a retired element, a module that is
+     * not installed) keeps its data untouched — dropping every value would
+     * empty the element on the next save. A plain string stored in a
+     * translatable field (a row written before the field was translatable) is
+     * taken as the value of the default language instead of being dropped.
      *
      * @param  array<string, mixed>  $data
      * @param  array<string, mixed>  $previous
      * @return array<string, mixed>
      */
-    public function normalizeData(string $key, array $data, array $previous): array
+    public function normalizeData(string $key, array $data, array $previous, ?string $defaultLanguage = null): array
     {
+        if (! $this->isKnownElement($key)) {
+            return $data + $previous;
+        }
+
         $normalized = [];
 
         foreach ($this->fieldsOf($key) as $field) {
             $type = (string) ($field['type'] ?? 'text');
             $name = $this->fieldKey($field);
 
-            if ($name === '' || in_array($type, ['element-collection', 'spacer'], true)) {
+            if ($name === '' || in_array($type, ['elementCollection', 'spacer'], true)) {
                 continue;
             }
 
             $value = array_key_exists($name, $data) ? $data[$name] : ($previous[$name] ?? null);
 
             if (in_array($type, self::TRANSLATABLE_TYPES, true)) {
+                if (is_scalar($value) && ! is_bool($value) && (string) $value !== '') {
+                    $value = [$defaultLanguage ?? (CmsLanguageCodes::active()[0] ?? CmsLanguageCodes::FALLBACK[0]) => (string) $value];
+                }
+
                 $map = [];
                 foreach (is_array($value) ? $value : [] as $code => $text) {
                     if (is_string($code) && is_scalar($text)) {
@@ -389,13 +448,133 @@ final class ContentDocumentService
 
             $normalized[$name] = match (true) {
                 $type === 'checkbox' => (bool) $value,
-                $type === 'image' => is_numeric($value) ? (int) $value : (is_string($value) && $value !== '' ? $value : null),
+                $type === 'image' => is_int($value) || (is_string($value) && ctype_digit($value)) ? (int) $value : (is_string($value) && $value !== '' ? $value : null),
                 in_array($type, self::RICH_TEXT_TYPES, true) => HtmlSanitizer::sanitize(is_scalar($value) ? (string) $value : ''),
                 default => is_scalar($value) ? (string) $value : ($field['default'] ?? ''),
             };
         }
 
         return $normalized;
+    }
+
+    /**
+     * The default language of a content's tenant in its type's language source
+     * — the code a legacy scalar value is filed under.
+     */
+    private function defaultLanguageOf(Content $content): string
+    {
+        return app(ContentTypeRegistry::class)->languageSource((string) $content->type)->defaultFor((int) $content->tenant_id);
+    }
+
+    /**
+     * The client's values of an element merged onto the stored ones — the
+     * draft is client input and only narrowed values get through:
+     *
+     * - an image is a media id the tenant holds (the resolver answers within
+     *   the tenant scope); a stored legacy string (a path, a URL) stays as
+     *   long as the client sends it back unchanged, a new string is refused
+     * - a select with inline options takes one of its option values
+     * - a translatable map takes only codes the tenant edits in
+     *   (editableLanguageCodes() of the type); the stored values of other codes are kept
+     * - a text longer than MAX_TEXT_LENGTH is refused
+     *
+     * A refused value keeps the stored one.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $previous
+     * @param  array<int, string>  $activeCodes
+     * @return array<string, mixed>
+     */
+    private function acceptDraftData(string $key, array $data, array $previous, array $activeCodes): array
+    {
+        $accepted = $previous;
+        $resolver = app(MediaResolverContract::class);
+
+        foreach ($this->fieldsOf($key) as $field) {
+            $type = (string) ($field['type'] ?? 'text');
+            $name = $this->fieldKey($field);
+
+            if ($name === '' || ! array_key_exists($name, $data)) {
+                continue;
+            }
+
+            $value = $data[$name];
+            $stored = $previous[$name] ?? null;
+
+            if (in_array($type, self::TRANSLATABLE_TYPES, true)) {
+                if (! is_array($value)) {
+                    continue;
+                }
+
+                $map = is_array($stored) ? $stored : (is_scalar($stored) && (string) $stored !== '' ? [($activeCodes[0] ?? CmsLanguageCodes::FALLBACK[0]) => (string) $stored] : []);
+
+                foreach ($value as $code => $text) {
+                    if (is_string($code) && in_array($code, $activeCodes, true) && is_scalar($text) && mb_strlen((string) $text) <= self::MAX_TEXT_LENGTH) {
+                        $map[$code] = (string) $text;
+                    }
+                }
+
+                $accepted[$name] = $map;
+
+                continue;
+            }
+
+            if ($type === 'image') {
+                if ($value === null || $value === '') {
+                    $accepted[$name] = null;
+                } elseif ((is_int($value) || (is_string($value) && ctype_digit($value))) && (int) $value > 0 && $resolver->exists((int) $value)) {
+                    $accepted[$name] = (int) $value;
+                } elseif ($value === $stored) {
+                    $accepted[$name] = $stored;
+                }
+
+                continue;
+            }
+
+            if ($type === 'select' && ($options = $this->optionValues($field)) !== null) {
+                if ($value === null || $value === '' || (is_scalar($value) && in_array((string) $value, $options, true))) {
+                    $accepted[$name] = $value === null ? '' : (string) $value;
+                }
+
+                continue;
+            }
+
+            if (is_string($value) && mb_strlen($value) > self::MAX_TEXT_LENGTH) {
+                continue;
+            }
+
+            $accepted[$name] = $value;
+        }
+
+        return $accepted;
+    }
+
+    /**
+     * The values a select with inline options stores — the option itself for
+     * a plain list or map entry, `value` for an `{value, label}` entry, exactly
+     * like the core select renders them. Null for a select without inline
+     * options (`optionsMethod:`), whose values cannot be checked here.
+     *
+     * @param  array<string, mixed>  $field
+     * @return list<string>|null
+     */
+    private function optionValues(array $field): ?array
+    {
+        if (! is_array($field['options'] ?? null) || $field['options'] === []) {
+            return null;
+        }
+
+        $values = [];
+        foreach ($field['options'] as $option) {
+            $values[] = is_array($option) ? (string) ($option['value'] ?? '') : (string) $option;
+        }
+
+        return $values;
+    }
+
+    private function isKnownElement(string $key): bool
+    {
+        return FieldHelper::getElementFields($key) !== null;
     }
 
     /**
@@ -434,11 +613,13 @@ final class ContentDocumentService
      */
     private function editorField(array $field): array
     {
+        // An inline option is stored as itself — never its array index — the
+        // way the core select stores it, so the editor and the forms agree.
         $options = [];
-        foreach ((array) ($field['options'] ?? []) as $value => $option) {
+        foreach ((array) ($field['options'] ?? []) as $option) {
             $options[] = is_array($option)
                 ? ['value' => (string) ($option['value'] ?? ''), 'label' => __((string) ($option['label'] ?? $option['value'] ?? ''))]
-                : ['value' => (string) $value, 'label' => __((string) $option)];
+                : ['value' => (string) $option, 'label' => __((string) $option)];
         }
 
         return [

@@ -51,6 +51,24 @@ it('changes session language on click', function (): void {
     expect(session('selectedLanguage'))->toBe('en');
 });
 
+it('ignores a language code the tenant does not run', function (): void {
+    session()->forget('selectedLanguage');
+
+    ['user' => $user, 'tenant' => $tenant] = $this->createUserWithCmsAccess();
+    $this->actingAs($user);
+
+    CmsLanguage::where('tenant_id', $tenant->id)->delete();
+    CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'de', 'name' => 'Deutsch', 'is_default' => true, 'is_active' => true]);
+    CmsLanguage::create(['tenant_id' => $tenant->id, 'code' => 'en', 'name' => 'English', 'is_default' => false, 'is_active' => true]);
+    Noerd\Cms\Support\CmsLanguageCodes::clearCache();
+
+    Livewire::test('cms::language-switcher')
+        ->call('setLanguage', "x');alert(1);//")
+        ->assertNotDispatched('languageChanged');
+
+    expect(session('selectedLanguage'))->toBe('de');
+});
+
 it('does not render switcher if only one language exists', function (): void {
     session()->forget('selectedLanguage');
 

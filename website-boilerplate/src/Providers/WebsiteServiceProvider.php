@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Noerd\Website\Providers;
 
+use Illuminate\View\View;
 use Livewire\Livewire;
+use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Providers\NoerdModuleServiceProvider;
+use Noerd\Website\Commands\WebsiteUpdateCommand;
 use Noerd\Website\Controllers\WebsiteController;
 use Noerd\Website\Middleware\WebsiteMiddleware;
-use Noerd\Website\Models\Navigation;
 use Noerd\Website\Services\PageElementService;
 use Noerd\Website\Services\WebsiteService;
 
@@ -20,13 +22,18 @@ class WebsiteServiceProvider extends NoerdModuleServiceProvider
 {
     protected string $moduleKey = 'website';
 
+    protected array $commands = [
+        WebsiteUpdateCommand::class,
+    ];
+
     /**
      * The config is merged at runtime only — never published — so it is
      * merged here instead of through $configs (which would publish it).
      */
     protected function registerModule(): void
     {
-        $this->app->singleton(WebsiteService::class, fn() => new WebsiteService());
+        // Scoped: the service memoizes globals and navigation for ONE request.
+        $this->app->scoped(WebsiteService::class, fn() => new WebsiteService());
         $this->app->singleton(PageElementService::class, fn() => new PageElementService());
 
         $this->mergeConfigFrom($this->modulePath('config/website.php'), 'website');
@@ -45,31 +52,27 @@ class WebsiteServiceProvider extends NoerdModuleServiceProvider
             $this->registerCatchAllRoutes();
         });
 
-        // Share website data to views
-        view()->composer('*', function ($view): void {
+        // Globals and navigation for the layouts (and the page views that
+        // render them) — not for every view of the application; the service
+        // memoizes them, so several layouts of one request query once.
+        view()->composer([
+            'website::components.layouts.*',
+            'website::page',
+            'website::article',
+            'website::articles',
+            'website::welcome',
+        ], function (View $view): void {
             $tenantId = request()->attributes->get('tenant_id');
             if (! $tenantId) {
                 return;
             }
 
             $service = app(WebsiteService::class);
-            $lang = session('selectedLanguage', 'de');
+            $language = (string) \Noerd\Website\Support\WebsiteLanguage::current();
             $uuid = request()->query('uuid');
 
-            $globals = $service->getGlobals($tenantId);
-
-            $navigationKeys = Navigation::where('tenant_id', $tenantId)
-                ->distinct()
-                ->pluck('navigation_key')
-                ->toArray();
-
-            $navigation = [];
-            foreach ($navigationKeys as $key) {
-                $navigation[mb_strtolower($key)] = $service->getNavigation($tenantId, $key, $lang, $uuid);
-            }
-
-            $view->with('globals', $globals)
-                ->with('navigation', $navigation);
+            $view->with('globals', $service->getGlobals((int) $tenantId))
+                ->with('navigation', $service->getNavigations((int) $tenantId, $language, is_string($uuid) ? $uuid : null));
         });
     }
 

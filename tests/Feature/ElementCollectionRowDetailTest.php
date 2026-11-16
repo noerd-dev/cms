@@ -187,7 +187,7 @@ it('stores a picked media file in an image row field only for the matching token
         ->assertSet('detailData.logo', '');
 
     $component->call('openSelectMediaModal', 'logo');
-    $token = $component->get('mediaToken');
+    $token = $component->get('mediaSelectToken');
 
     expect($token)->toBeString()->not->toBeEmpty();
 
@@ -195,7 +195,7 @@ it('stores a picked media file in an image row field only for the matching token
     // a path would only be true until the file is moved.
     $component->call('mediaSelected', $media->id, 'logo', $token)
         ->assertSet('detailData.logo', $media->id)
-        ->assertSet('mediaToken', null)
+        ->assertSet('mediaSelectToken', null)
         ->call('store');
 
     expect($row->fresh()->data['logo'])->toBe($media->id);

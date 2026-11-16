@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * One registered kind of content: the extension model that carries its own
- * columns and the record route/component that opens it.
+ * columns, the record route/component that opens it and the languages its
+ * document is written in.
  */
 final readonly class ContentType
 {
@@ -21,5 +22,6 @@ final readonly class ContentType
         public string $modelClass,
         public ?string $detailRoute = null,
         public ?string $detailComponent = null,
+        public ContentLanguageSource $languageSource = ContentLanguageSource::Cms,
     ) {}
 }

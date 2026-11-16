@@ -48,8 +48,10 @@ it('creates form type rows for every tenant on the initial sync', function (): v
     zzWriteFormFixtureYaml($this->formsPath, 'fixture-contact.yml', <<<'YAML'
 key: fixture-contact
 title: Fixture Contact
-send_email: true
-notification_email: forms@example.com
+sendEmail: true
+notificationEmail: forms@example.com
+sendConfirmation: true
+confirmationSubject: Thanks
 YAML);
 
     $exitCode = Artisan::call('cms:sync-form-types');
@@ -63,6 +65,9 @@ YAML);
             'title' => 'Fixture Contact',
             'send_email' => 1,
             'notification_email' => 'forms@example.com',
+            'send_confirmation' => 1,
+            'confirmation_subject' => 'Thanks',
+            'is_active' => 1,
         ]);
     }
 
@@ -162,7 +167,7 @@ it('handles a missing or empty forms directory gracefully', function (): void {
     $result = $service->sync();
     expect($result['synced'])->toBe(0);
     expect($result['errors'])->toBe(0);
-    expect(implode(' ', $result['messages']))->toContain('Forms directory not found');
+    expect(implode(' ', $result['messages']))->toContain('No YML files found');
 
     // An existing but empty directory is reported as "no files" without errors.
     File::makeDirectory($this->formsPath, 0755, true);
@@ -192,4 +197,52 @@ YAML);
             ->where('key', 'fixture-idempotent')
             ->count(),
     )->toBe(1);
+});
+
+it('refuses a yaml file in the earlier snake_case vocabulary', function (): void {
+    $tenant = $this->createCmsTenant();
+
+    zzWriteFormFixtureYaml($this->formsPath, 'fixture-legacy.yml', <<<'YAML'
+key: fixture-legacy
+title: Fixture Legacy
+send_email: true
+YAML);
+
+    $result = (new FormTypeSyncService())->sync();
+
+    expect($result['errors'])->toBe(1)
+        ->and(implode(' ', $result['messages']))->toContain('send_email')
+        ->and(FormType::query()->ofTenant($tenant->id)->count())->toBe(0);
+});
+
+it('marks a form type inactive once its yaml file is gone and active again when it returns', function (): void {
+    $tenant = $this->createCmsTenant();
+
+    $file = zzWriteFormFixtureYaml($this->formsPath, 'fixture-gone.yml', <<<'YAML'
+key: fixture-gone
+title: Fixture Gone
+YAML);
+
+    $service = new FormTypeSyncService();
+    $service->sync();
+    $formType = FormType::query()->ofTenant($tenant->id)->where('key', 'fixture-gone')->firstOrFail();
+    \Noerd\Cms\Models\FormRequest::create(['tenant_id' => $tenant->id, 'form_type_id' => $formType->id, 'form' => 'fixture-gone', 'data' => []]);
+
+    File::delete($file);
+    $result = $service->sync();
+
+    // The row (and its requests) stay — only the switch changes.
+    expect($result['deactivated'])->toBe(1)
+        ->and($formType->fresh()->is_active)->toBeFalse()
+        ->and(\Noerd\Cms\Models\FormRequest::query()->ofTenant($tenant->id)->where('form_type_id', $formType->id)->count())->toBe(1);
+
+    expect($service->sync()['deactivated'])->toBe(0);
+
+    zzWriteFormFixtureYaml($this->formsPath, 'fixture-gone.yml', <<<'YAML'
+key: fixture-gone
+title: Fixture Gone
+YAML);
+    $service->sync();
+
+    expect($formType->fresh()->is_active)->toBeTrue();
 });

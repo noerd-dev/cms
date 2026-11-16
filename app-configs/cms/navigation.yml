@@ -42,7 +42,7 @@
           route: cms.articles
           heroicon: newspaper
           newModalRoute: cms.article.detail
-          newModalComponent: cms::article-detail
+          newModalComponent: cms::cms-article-detail
         - title: Authors
           route: cms.authors
           heroicon: user-group

@@ -13,7 +13,7 @@ use Noerd\Traits\TenantSingleton;
 /**
  * The CMS settings of a tenant: ONE row per tenant (unique `tenant_id`), read
  * through CmsSetting::forTenant() (TenantSingleton) and edited on the settings
- * page (cms::settings-page).
+ * page (cms::cms-settings-page).
  */
 class CmsSetting extends Model implements TenantSingletonContract
 {
@@ -21,6 +21,13 @@ class CmsSetting extends Model implements TenantSingletonContract
     use TenantSingleton;
 
     public const DEFAULT_COOKIE_LIFETIME_DAYS = 182;
+
+    /**
+     * A Google tag ID the website may load: a Tag Manager container (`GTM-…`)
+     * or a Google tag / Analytics measurement ID (`G-…`). The strict pattern
+     * also keeps the value safe inside the JavaScript that loads it.
+     */
+    public const GOOGLE_TAG_PATTERN = '/^(GTM-[A-Z0-9]{4,12}|G-[A-Z0-9]{4,15})$/';
 
     protected $table = 'cms_settings';
 

@@ -64,7 +64,7 @@ abstract class TestCase extends ModuleTestCase
         $app['config']->set('media.private', false);
 
         // Never inherit a host .env: the tests set their own paths and URLs.
-        $app['config']->set('noerd_cms.page_elements_path', null);
-        $app['config']->set('noerd_cms.website_url', '');
+        $app['config']->set('cms.page_elements_path', null);
+        $app['config']->set('cms.website_url', '');
     }
 }

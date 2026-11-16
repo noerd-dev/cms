@@ -177,7 +177,7 @@ it('renders element-collection fields in the list with their row count', functio
         [
             'name' => 'detailData.activities_items',
             'label' => 'Activities',
-            'type' => 'element-collection',
+            'type' => 'elementCollection',
             'fields' => [
                 ['name' => 'text', 'label' => 'Text', 'type' => 'translatableTextarea'],
             ],

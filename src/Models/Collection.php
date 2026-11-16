@@ -45,6 +45,23 @@ class Collection extends Model
         return CollectionFactory::new();
     }
 
+    protected static function booted(): void
+    {
+        // The rows would cascade away through the cms_pages.collection_id
+        // foreign key — past the model hooks, leaving their contents, elements
+        // and element collections behind. Delete them through the models.
+        static::deleting(function (self $collection): void {
+            // Every row, past the read guard too: a deletion leaves none behind.
+            Page::query()
+                ->withoutGlobalScopes()
+                ->where('tenant_id', $collection->tenant_id)
+                ->where('collection_id', $collection->getKey())
+                ->get()
+                ->each
+                ->delete();
+        });
+    }
+
     /**
      * @return array<string, string>
      */

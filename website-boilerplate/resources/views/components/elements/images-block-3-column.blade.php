@@ -8,47 +8,33 @@ new class extends Component {
 
 }; ?>
 
+@php
+    // Editor data: video links pass the safe-URL rule and reach the Alpine
+    // expression through Js::from() — never inside a quoted string, where a
+    // quote in the value would end it. Images are encoded for the CSS url().
+    $columns = [];
+    foreach ([['image', 'videoUrl'], ['image2', 'videoUrl2'], ['image3', 'videoUrl3']] as [$imageField, $videoField]) {
+        $columns[] = [
+            'image' => \Noerd\Cms\Support\SafeUrl::cssUrl(config('website.media_url') . ($element->{$imageField} ?? '')),
+            'video' => \Noerd\Cms\Support\SafeUrl::orNull($element->{$videoField} ?? null),
+        ];
+    }
+@endphp
+
 <div>
     <div class="grid md:grid-cols-3 gap-8 py-4">
-        <div>
+        @foreach ($columns as $column)
             <div>
                 <div class="relative w-full aspect-[405/540] !bg-cover bg-center overflow-hidden group">
-                    <a @if(isset($element->videoUrl[session('selectedLanguage')]) && $element->videoUrl[session('selectedLanguage')]) href="#/"
-                       @click.prevent="openLightbox('{{ $element->videoUrl[session('selectedLanguage')] }}')" @endisset
-                       style="background: url('{{ config('website.media_url') . ($element->image ?? '') }}')"
+                    <a @if($column['video']) href="#/" @click.prevent="openLightbox({{ \Illuminate\Support\Js::from($column['video']) }})" @endif
+                       style="background: url('{{ $column['image'] }}')"
                        class="h-full bg-gray-300 flex transition-opacity opacity-100 transition-transform
-                 @if(isset($element->videoUrl[session('selectedLanguage')]) && $element->videoUrl[session('selectedLanguage')]) hover:scale-105 @endif
-                   bg-center !bg-cover">
+                       @if($column['video']) hover:scale-105 @endif
+                       bg-center !bg-cover">
                     </a>
                 </div>
             </div>
-        </div>
-        <div>
-            <div>
-                <div class="relative w-full aspect-[405/540] !bg-cover bg-center overflow-hidden group">
-                    <a @if(isset($element->videoUrl[session('selectedLanguage')]) && $element->videoUrl2[session('selectedLanguage')]) href="#/"
-                       @click.prevent="openLightbox('{{ $element->videoUrl2[session('selectedLanguage')] }}')" @endisset
-                       style="background: url('{{ config('website.media_url') . ($element->image2 ?? '') }}')"
-                       class="h-full bg-gray-300 flex transition-opacity opacity-100 transition-transform
-                 @if(isset($element->videoUrl2[session('selectedLanguage')]) && $element->videoUrl2[session('selectedLanguage')]) hover:scale-105 @endif
-                   bg-center !bg-cover">
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div>
-            <div>
-                <div class="relative w-full aspect-[405/540] !bg-cover bg-center overflow-hidden group">
-                    <a @if(isset($element->videoUrl[session('selectedLanguage')]) && $element->videoUrl3[session('selectedLanguage')]) href="#/"
-                       @click.prevent="openLightbox('{{ $element->videoUrl3[session('selectedLanguage')] }}')" @endisset
-                       style="background: url('{{ config('website.media_url') . ($element->image3 ?? '') }}')"
-                       class="h-full bg-gray-300 flex transition-opacity opacity-100 transition-transform
-                 @if(isset($element->videoUrl3[session('selectedLanguage')]) && $element->videoUrl3[session('selectedLanguage')]) hover:scale-105 @endif
-                   bg-center !bg-cover">
-                    </a>
-                </div>
-            </div>
-        </div>
+        @endforeach
     </div>
 
     <!-- Lightbox component placeholder - implement as needed -->

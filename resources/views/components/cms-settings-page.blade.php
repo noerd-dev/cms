@@ -15,12 +15,16 @@ new class extends Component {
 
     public function store(): void
     {
+        $this->detailData['google_analytics_id'] = mb_strtoupper(mb_trim((string) ($this->detailData['google_analytics_id'] ?? '')));
+
         $this->validate([
             'detailData.homepage_page_id' => [
                 'nullable',
-                Rule::exists('cms_pages', 'id')->where('tenant_id', TenantHelper::getSelectedTenantId()),
+                Rule::exists('cms_pages', 'id')->where('tenant_id', TenantHelper::currentTenantId()),
             ],
-            'detailData.google_analytics_id' => ['nullable', 'string', 'max:50'],
+            // GTM-… or G-…: the pattern also keeps the ID safe inside the
+            // JavaScript that loads it (WebsiteTrackingService).
+            'detailData.google_analytics_id' => ['nullable', 'string', 'regex:' . CmsSetting::GOOGLE_TAG_PATTERN],
             'detailData.show_cookie_banner' => ['boolean'],
             'detailData.cookie_lifetime_days' => ['required', 'integer', 'min:1', 'max:365'],
             'detailData.form_recipients' => ['nullable', 'string', 'max:255', function (string $attribute, mixed $value, Closure $fail): void {
@@ -30,10 +34,13 @@ new class extends Component {
                     }
                 }
             }],
+        ], [
+            'detailData.google_analytics_id.regex' => __('Enter a Google Tag Manager container (GTM-…) or a Google tag ID (G-…).'),
         ]);
 
         $this->detailData['homepage_page_id'] = ($this->detailData['homepage_page_id'] ?? null) ?: null;
         $this->detailData['form_recipients'] = ($this->detailData['form_recipients'] ?? null) ?: null;
+        $this->detailData['google_analytics_id'] = ($this->detailData['google_analytics_id'] ?? null) ?: null;
         $this->detailData['cookie_lifetime_days'] = (int) ($this->detailData['cookie_lifetime_days'] ?? 0);
 
         $this->validateFromLayout();

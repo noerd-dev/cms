@@ -1,8 +1,10 @@
 <?php
 
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Noerd\Cms\Helpers\CollectionHelper;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Collection;
 use Noerd\Cms\Models\ContentElement;
@@ -12,17 +14,32 @@ use Noerd\Facades\Noerd;
 use Noerd\Helpers\AccessHelper;
 use Noerd\Support\RelationFieldDefinition;
 
+/*
+ | The `elementCollection` field of a collection entry (or a page element):
+ | the count of its rows and the button that opens them. It has no route — the
+ | modal stack mounts it with what the browser names — so it asks for the CMS
+ | app and the page permissions itself. Owner and field name are locked, and
+ | the row schema of a NEW element collection comes from the owner's server-side
+ | definition (the collection definition or the element YAML), never from the
+ | mount arguments.
+ */
 new class extends Component {
+    #[Locked]
     public string $ownerType = ElementCollectionService::OWNER_PAGE;
 
+    #[Locked]
     public mixed $ownerId = null;
 
+    #[Locked]
     public string $fieldName = '';
 
+    #[Locked]
     public string $label = '';
 
-    public array $rowFields = [];
-
+    /**
+     * Accepted for the field-type resolver's mount arguments; the schema that is
+     * stored comes from the owner's definition (see ownerContext()).
+     */
     public function mount(
         string $ownerType = ElementCollectionService::OWNER_PAGE,
         mixed $ownerId = null,
@@ -30,11 +47,14 @@ new class extends Component {
         string $label = '',
         array $rowFields = [],
     ): void {
-        $this->ownerType = $ownerType;
-        $this->ownerId = $ownerId;
-        $this->fieldName = $fieldName;
+        abort_unless(AccessHelper::canUseApp('CMS') && AccessHelper::canReadObject(Page::class), 403);
+
+        $this->ownerType = in_array($ownerType, [ElementCollectionService::OWNER_PAGE, ElementCollectionService::OWNER_ELEMENT_PAGE], true)
+            ? $ownerType
+            : ElementCollectionService::OWNER_PAGE;
+        $this->ownerId = is_numeric($ownerId) ? (int) $ownerId : null;
+        $this->fieldName = str_replace('detailData.', '', $fieldName);
         $this->label = $label;
-        $this->rowFields = $rowFields;
     }
 
     /**
@@ -43,13 +63,13 @@ new class extends Component {
     public function manage(): void
     {
         // Creating the element collection writes to the owning page's data.
-        if (! $this->ownerId || ! AccessHelper::canWriteObject(Page::class)) {
+        if (! $this->ownerId || ! AccessHelper::canUseApp('CMS') || ! AccessHelper::canWriteObject(Page::class)) {
             return;
         }
 
-        [$tenantId, $ownerName] = $this->resolveOwnerContext();
+        $context = $this->ownerContext();
 
-        if ($tenantId === null) {
+        if ($context === null) {
             return;
         }
 
@@ -58,10 +78,10 @@ new class extends Component {
         $elementCollection = $service->ensure(
             $this->ownerType,
             (int) $this->ownerId,
-            (int) $tenantId,
+            $context['tenantId'],
             $this->fieldName,
-            $this->rowFields,
-            $service->displayName($this->label, $ownerName),
+            $context['rowFields'],
+            $service->displayName($context['label'], $context['ownerName']),
         );
 
         Noerd::modal('cms::collection-entries-list', [
@@ -96,35 +116,70 @@ new class extends Component {
     }
 
     /**
-     * Resolve [tenantId, ownerName] for the current owner.
+     * The owner in the current tenant and the definition of its field: a
+     * collection entry and the `elementCollection` field of its collection
+     * definition, or a page element and the field of its element YAML. Null
+     * when the owner is not of this tenant or declares no such field.
      *
-     * @return array{0: int|null, 1: string}
+     * @return array{tenantId: int, ownerName: string, label: string, rowFields: array<int, array<string, mixed>>}|null
      */
-    private function resolveOwnerContext(): array
+    private function ownerContext(): ?array
     {
         if ($this->ownerType === ElementCollectionService::OWNER_ELEMENT_PAGE) {
-            $element = ContentElement::find($this->ownerId);
+            $element = ContentElement::query()->find($this->ownerId);
+            // Tenant guard: the owning content resolves through the tenant scope.
+            $content = $element?->content()->first();
 
-            if (! $element) {
-                return [null, ''];
+            if (! $element || ! $content) {
+                return null;
             }
 
-            $title = FieldHelper::getElementFields($element->element_key)['title'] ?? $element->element_key;
+            $elementFields = FieldHelper::getElementFields((string) $element->element_key);
+            $definition = $this->collectionField(FieldHelper::flattenFields($elementFields['fields'] ?? []));
 
-            // Tenant guard: the owning content resolves through the tenant scope.
-            return [$element->content?->tenant_id, (string) $title];
+            return $definition === null ? null : [
+                'tenantId' => (int) $content->tenant_id,
+                'ownerName' => (string) ($elementFields['title'] ?? $element->element_key),
+                'label' => (string) ($definition['label'] ?? $this->fieldName),
+                'rowFields' => is_array($definition['fields'] ?? null) ? $definition['fields'] : [],
+            ];
         }
 
-        $page = Page::find($this->ownerId);
+        $page = Page::query()->find($this->ownerId);
+        $collection = $page?->collection_id ? Collection::query()->find($page->collection_id) : null;
 
-        if (! $page) {
-            return [null, ''];
+        if (! $page || ! $collection) {
+            return null;
         }
 
-        $names = is_array($page->name) ? $page->name : [];
-        $entryName = RelationFieldDefinition::normalizeDisplayValue($names);
+        $layout = CollectionHelper::getCollectionFields(mb_strtolower((string) $collection->collection_key));
+        $definition = $this->collectionField(FieldHelper::flattenFields($layout['fields'] ?? []));
 
-        return [$page->tenant_id, (string) $entryName];
+        return $definition === null ? null : [
+            'tenantId' => (int) $page->tenant_id,
+            'ownerName' => (string) RelationFieldDefinition::normalizeDisplayValue(is_array($page->name) ? $page->name : []),
+            'label' => (string) ($definition['label'] ?? $this->fieldName),
+            'rowFields' => is_array($definition['fields'] ?? null) ? $definition['fields'] : [],
+        ];
+    }
+
+    /**
+     * The `elementCollection` field named $fieldName among $fields.
+     *
+     * @param  array<int, array<string, mixed>>  $fields
+     * @return array<string, mixed>|null
+     */
+    private function collectionField(array $fields): ?array
+    {
+        foreach ($fields as $field) {
+            $name = preg_replace('/^(detailData|model)\./', '', (string) ($field['name'] ?? ''));
+
+            if ($name === $this->fieldName && ($field['type'] ?? null) === 'elementCollection') {
+                return $field;
+            }
+        }
+
+        return null;
     }
 }; ?>
 

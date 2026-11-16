@@ -51,6 +51,12 @@ class CmsApiAuth
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
+        // The selection is only a stored value: the token's user must still be
+        // allowed to work in that tenant (a removed member keeps the account).
+        if (! $user->canAccessTenant((int) $tenant->id)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         // A token only unlocks the CMS API for a tenant that runs the CMS app.
         if (! $tenant->tenantApps()->where('name', 'CMS')->exists()) {
             return response()->json(['message' => 'Unauthorized'], 401);

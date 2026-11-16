@@ -8,6 +8,7 @@ use Noerd\Cms\Support\CmsLanguageCodes;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Helpers\TenantHelper;
 use Noerd\Models\Tenant;
+use Noerd\Support\TenantContext;
 
 uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
 uses(CreatesCmsUser::class);
@@ -15,8 +16,8 @@ uses(CreatesCmsUser::class);
 it('ensures the default language of ANOTHER tenant while a user is signed in', function (): void {
     $this->actingAsCmsUser();
 
-    // Tenant::created already seeded the other tenant's default language; the
-    // explicit call must find it through the acting user's tenant scope …
+    // The first call creates the other tenant's default language past the
+    // acting user's tenant scope …
     $other = Tenant::factory()->create();
 
     $first = CmsLanguage::ensureDefaultLanguageForTenant($other->id);
@@ -24,7 +25,7 @@ it('ensures the default language of ANOTHER tenant while a user is signed in', f
     $second = CmsLanguage::ensureDefaultLanguageForTenant($other->id);
 
     expect($first->id)->toBe($second->id)
-        ->and(CmsLanguage::forTenant($other->id)->count())->toBe(1);
+        ->and(CmsLanguage::query()->ofTenant($other->id)->count())->toBe(1);
 });
 
 it('keeps exactly one default language per tenant when saving for a foreign tenant', function (): void {
@@ -33,8 +34,8 @@ it('keeps exactly one default language per tenant when saving for a foreign tena
 
     CmsLanguage::create(['tenant_id' => $other->id, 'code' => 'fr', 'name' => 'Français', 'is_active' => true, 'is_default' => true]);
 
-    expect(CmsLanguage::forTenant($other->id)->where('is_default', true)->count())->toBe(1)
-        ->and(CmsLanguage::forTenant($other->id)->where('is_default', true)->value('code'))->toBe('fr');
+    expect(CmsLanguage::query()->ofTenant($other->id)->where('is_default', true)->count())->toBe(1)
+        ->and(CmsLanguage::query()->ofTenant($other->id)->where('is_default', true)->value('code'))->toBe('fr');
 });
 
 it('never answers with the union of every tenant\'s codes outside a tenant context', function (): void {
@@ -48,8 +49,14 @@ it('never answers with the union of every tenant\'s codes outside a tenant conte
     session()->forget('noerd.selected_tenant_id');
     expect(CmsLanguageCodes::active())->toBe(CmsLanguageCodes::FALLBACK);
 
-    // A selected tenant in the session is enough to resolve that tenant's codes.
+    // A bare session selection is no tenant (C14): only the tenant context
+    // or the signed-in user's selection resolves one.
     TenantHelper::setSelectedTenantId($tenantA->id);
     CmsLanguageCodes::clearCache();
-    expect(CmsLanguageCodes::active())->toBe(['en', 'da']);
+    expect(CmsLanguageCodes::active())->toBe(CmsLanguageCodes::FALLBACK);
+
+    TenantContext::run($tenantA->id, function (): void {
+        CmsLanguageCodes::clearCache();
+        expect(CmsLanguageCodes::active())->toBe(['en', 'da']);
+    });
 });

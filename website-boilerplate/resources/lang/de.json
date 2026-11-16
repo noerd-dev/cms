@@ -1,6 +1,7 @@
 {
     "All rights reserved.": "Alle Rechte vorbehalten.",
     "An error occurred. Please try again later.": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
+    "Back to Blog": "Zurück zum Blog",
     "Contact": "Kontakt",
     "Email": "E-Mail",
     "Error: Tenant information is missing. Please reload the page.": "Fehler: Mandanten-Information fehlt. Bitte laden Sie die Seite neu.",
@@ -24,5 +25,18 @@
     "Your full name": "Ihr vollständiger Name",
     "your@email.com": "ihre@email.de",
     "Your message to us...": "Ihre Nachricht an uns...",
-    "Your phone number": "Ihre Telefonnummer"
+    "Your phone number": "Ihre Telefonnummer",
+    "Cookie Notice": "Cookie-Hinweis",
+    "We use cookies to analyse how our website is used and to improve it. Analytics cookies are only set with your consent.": "Wir verwenden Cookies, um zu verstehen, wie unsere Website genutzt wird, und sie zu verbessern. Analyse-Cookies setzen wir nur mit deiner Einwilligung.",
+    "Accept all": "Alle akzeptieren",
+    "Necessary only": "Nur notwendige",
+    "Manage settings": "Einstellungen verwalten",
+    "Save settings": "Einstellungen speichern",
+    "Cookie Settings": "Cookie-Einstellungen",
+    "Here you can choose which cookies you allow.": "Hier kannst du auswählen, welche Cookies du zulässt.",
+    "Necessary cookies": "Notwendige Cookies",
+    "These cookies are required for the website to work.": "Diese Cookies sind für die Funktion der Website erforderlich.",
+    "Analytics cookies": "Analyse-Cookies",
+    "These cookies help us understand how visitors use our website.": "Diese Cookies helfen uns zu verstehen, wie Besucher unsere Website nutzen.",
+    "The form is not available at the moment. Please try again later.": "Das Formular ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut."
 }

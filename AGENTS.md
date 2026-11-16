@@ -23,14 +23,16 @@ as its `app-modules/website` frontend module.
   every component as `cms::…`, the quick-menu button as `cms::quick-menu.website-link`)
 - `src/Models/`, `src/Services/`, `src/Repositories/` (collection definitions),
   `src/Helpers/` (FieldHelper, CollectionHelper), `src/Http/` (form API),
+  `src/Forms/` (form YAML, submissions, the two mails, the form YAML codemod),
   `src/Commands/` (`CmsInstallCommand`, `CmsUpdateCommand`, `SyncFormTypesCommand`,
-  `InstallWebsiteBoilerplateCommand`), `src/Providers/CmsServiceProvider.php`
-  (field types `collection-select`, `element-collection`, `homepage-select`; relation types
-  `pageRelation`, `authorRelation`)
+  `MigrateFormYamlCommand`, `InstallWebsiteBoilerplateCommand`), `src/Providers/CmsServiceProvider.php`
+  (field types `elementCollection`, `homepageSelect`; relation types `pageRelation`, `authorRelation`)
+- `config/cms.php` — the module config (`cms.*`); a project's earlier `config/noerd_cms.php` is read
+  for the 0.6 line (`Support\LegacyCmsConfig`)
 - `database/migrations|factories/`, `tests/` (Pest), `resources/lang/de.json`
 - `resources/js/` + `resources/css/cms-editor.css` — the document editor bundle (Tiptap 3, Alpine
-  `cmsDocumentEditor`). Build with `npm install && npm run build` inside the module and commit
-  `dist/build`; `npm run dev` writes `public/vendor/cms/hot`. The bundle is served by the route
+  `cmsDocumentEditor`). Build with `npm ci && npm run build` inside the module and commit
+  `dist/build` AND `package-lock.json` (it pins the build; the build tools are devDependencies); `npm run dev` writes `public/vendor/cms/hot`. The bundle is served by the route
   `cms.asset` (`Http\Controllers\AssetController`, only files of the manifest), nothing is copied
   into `public/`
 - The tenant app name is `CMS` (uppercase). Every table carries the `cms_` prefix and is created by
@@ -46,10 +48,18 @@ as its `app-modules/website` frontend module.
 ## Commands
 
 - `php artisan noerd:install-cms` — first installation (asks for the tenant assignment)
-- `php artisan noerd:update-cms` — idempotent YAML update + starter-homepage seeding,
-  discovered by `noerd:update-all`
-- `php artisan cms:sync-form-types` — sync `app-configs/cms/forms/*.yml` into `cms_form_types`
+- `php artisan noerd:install-cms` also seeds the starter homepage for a CMS tenant without pages and
+  settings row
+- `php artisan noerd:update-cms` — idempotent YAML update (moves the renamed screens' YAML, rewrites
+  the form YAML vocabulary), form type sync, default languages; discovered by `noerd:update-all`.
+  It never creates a homepage
+- `php artisan cms:sync-form-types [--tenant=] [--force]` — sync `app-configs/cms/forms/*.yml` into
+  `cms_form_types` (a form whose YAML is gone turns inactive)
+- `php artisan cms:migrate-form-yaml [--dry-run]` — rewrite the form YAML to the camelCase vocabulary
 - `php artisan noerd:install-website` — copy the website boilerplate into the project
+- `php artisan cms:check-slugs [--tenant=]` — report stored page slugs that break the slug rules (read only)
+- `php artisan cms:prune-orphaned-contents [--tenant=] [--force]` — report (with `--force` delete)
+  website-page contents no page references
 
 ## Working on the module
 
@@ -69,7 +79,10 @@ as its `app-modules/website` frontend module.
 - Never hardcode language codes — resolve them through `Noerd\Cms\Support\CmsLanguageCodes`
   (`active()` per tenant, `known()` as the recognition baseline)
 - A change to the website boilerplate must keep it consistent with the CMS schema and
-  services — it ships inside this package and is copied verbatim into projects
+  services — it ships inside this package and is copied verbatim into projects. Its
+  `composer.json` requires `noerd/cms` at the minor of this package's `version` or the next one
+  (`WebsiteBoilerplateComposerTest`); raise it with every minor release. Its tests in
+  `website-boilerplate/tests/` run in an installed copy (`app-modules/website/tests`)
 - When a feature changes: update the YAML in both places, `resources/lang/de.json`, the tests,
   `resources/boost/guidelines/core.blade.php`, the matching `docs/*.md` page and, if the import
   workflow is affected, `skills/cms-website-import/SKILL.md`

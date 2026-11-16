@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Noerd\Cms\Helpers\FieldHelper;
 use Noerd\Cms\Models\Collection;
@@ -14,6 +15,7 @@ use Noerd\Cms\Services\ElementCollectionService;
 use Noerd\Cms\Tests\Traits\CreatesCmsUser;
 use Noerd\Cms\Tests\Traits\CreatesElementFixtures;
 use Noerd\Enums\Profile;
+use Noerd\Media\Models\Media;
 use Noerd\Models\SetupLanguage;
 
 uses(Noerd\Cms\Tests\TestCase::class, RefreshDatabase::class);
@@ -66,12 +68,14 @@ it('stores the edited language and keeps the other languages of the text', funct
 });
 
 it('splits the running text around a new element and stores the order', function (): void {
+    Storage::fake('media');
+    $media = Media::factory()->file($this->tenantId, 'photo.jpg')->create();
     $text = zzText($this->page->content, 1, ['en' => '<p>One</p><p>Two</p>', 'de' => '<p>Eins</p><p>Zwei</p>']);
     $working = $this->service->load($this->page->content);
 
     $working = $this->service->apply($working, [
         ['kind' => 'text', 'uid' => 'r' . $text->id, 'html' => '<p>One</p>'],
-        ['kind' => 'element', 'uid' => 'nimage', 'key' => $this->zzImageElementKey(), 'data' => ['headline' => 'Between', 'image' => 3, 'evil' => 'x']],
+        ['kind' => 'element', 'uid' => 'nimage', 'key' => $this->zzImageElementKey(), 'data' => ['headline' => 'Between', 'image' => $media->id, 'evil' => 'x']],
         ['kind' => 'text', 'uid' => 'nrest', 'html' => '<p>Two</p>'],
     ], 'en', $this->service->allowedKeys('cms.page'));
     $this->service->persist($this->page->content, $working);
@@ -82,7 +86,7 @@ it('splits the running text around a new element and stores the order', function
         ->and($rows->pluck('sort')->all())->toBe([1, 2, 3])
         ->and($rows[0]->id)->toBe($text->id)
         ->and($rows[0]->data['text'])->toBe(['en' => '<p>One</p>', 'de' => '<p>Eins</p><p>Zwei</p>'])
-        ->and($rows[1]->data)->toBe(['headline' => 'Between', 'image' => 3])
+        ->and($rows[1]->data)->toBe(['headline' => 'Between', 'image' => $media->id])
         ->and($rows[2]->data['text'])->toBe(['en' => '<p>Two</p>']);
 });
 
@@ -187,6 +191,8 @@ describe('page editor', function (): void {
 
     it('hands the document in the other language to the editor on a language switch', function (): void {
         zzText($this->page->content, 1, ['en' => '<p>Hello</p>', 'de' => '<p>Hallo</p>']);
+        // A website page is written in the tenant's CMS languages.
+        $this->addLanguage('de', 'Deutsch');
         session([SetupLanguage::SESSION_KEY => 'en']);
 
         $component = Livewire::withUrlParams(['pageId' => $this->page->id])->test('cms::page-detail');

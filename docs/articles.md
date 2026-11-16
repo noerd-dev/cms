@@ -6,17 +6,17 @@ The CMS articles system provides a blog/news feature with authors, multilingual 
 
 YAML Configurations:
 ```
-app-configs/cms/details/article-detail.yml
+app-configs/cms/details/cms-article-detail.yml
 app-configs/cms/details/author-detail.yml
-app-configs/cms/lists/articles-list.yml
+app-configs/cms/lists/cms-articles-list.yml
 app-configs/cms/lists/authors-list.yml
 ```
 
 Livewire Components:
 ```
-app-modules/cms/resources/views/components/article-detail.blade.php
+app-modules/cms/resources/views/components/cms-article-detail.blade.php
 app-modules/cms/resources/views/components/author-detail.blade.php
-app-modules/cms/resources/views/components/articles-list.blade.php
+app-modules/cms/resources/views/components/cms-articles-list.blade.php
 app-modules/cms/resources/views/components/authors-list.blade.php
 ```
 
